@@ -1,0 +1,331 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:project="com.flexcapacitor.effects.project.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:services="com.flexcapacitor.effects.services.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:data="com.flexcapacitor.effects.collections.*" 
+		 width="400" height="300"
+		 >
+	
+	<fx:Declarations>
+		
+		<s:XMLListCollection id="listCollection">
+			<fx:XMLList >
+				<item name="Crimson" value="#DC143C"/>
+				<item name="Cyan" value="#00FFFF"/>
+				<item name="Dandelion" value="#FED85D"/>
+				<item name="Denim" value="#1560BD"/>
+				<item name="Ecru" value="#C2B280"/>
+				<item name="Emerald" value="#50C878"/>
+				<item name="French Rose" value="#F64A8A"/>
+				<item name="Asparagus" value="#7BA05B"/>
+				<item name="Beige" value="#F5F5DC"/>
+				<item name="Bistre" value="#3D2B1F"/>
+				<item name="Azure" value="#F0FFFF"/>
+				<item name="Blue" value="#0000FF"/>
+				<item name="Cardinal" value="#C41E3A"/>
+				<item name="Blue Green" value="#00DDDD"/>
+				<item name="Black" value="#000000"/>
+				<item name="Bondi Blue" value="#0095B6"/>
+				<item name="Camouflage Green" value="#78866B"/>
+				<item name="Amethyst" value="#9966CC"/>
+				<item name="Caput Mortuum" value="#592720"/>
+				<item name="Carmine" value="#960018"/>
+				<item name="Carrot orange" value="#ED9121"/>
+				<item name="Blue Violet" value="#8A2BE2"/>
+				<item name="Brass" value="#B5A642"/>
+				<item name="Bronze" value="#CD7F32"/>
+				<item name="Brown" value="#964B00"/>
+				<item name="Buff" value="#F0DC82"/>
+				<item name="Burgundy" value="#900020"/>
+				<item name="Burnt Orange" value="#CC5500"/>
+				<item name="Burnt Sienna" value="#E97451"/>
+				<item name="Burnt Umber" value="#8A3324"/>
+				<item name="Celadon" value="#ACE1AF"/>
+				<item name="Cream" value="#FFFDD0"/>
+				<item name="Cerise" value="#DE3163"/>
+				<item name="Cerulean" value="#007BA7"/>
+				<item name="Champagne" value="#F7E7CE"/>
+				<item name="Charcoal" value="#464646"/>
+				<item name="Chartreuse" value="#7FFF00"/>
+				<item name="Cherry Blossom Pink" value="#FFB7C5"/>
+				<item name="Chestnut" value="#CD5C5C"/>
+				<item name="Chocolate" value="#7B3F00"/>
+				<item name="Amber" value="#FFBF00"/>
+				<item name="Alizarin" value="#E32636"/>
+				<item name="Amaranth" value="#E52B50"/>
+				<item name="Auburn" value="#6D351A"/>
+				<item name="Cinnabar" value="#E34234"/>
+				<item name="Cinnamon" value="#D2691E"/>
+				<item name="Cobalt" value="#0047AB"/>
+				<item name="Copper" value="#B87333"/>
+				<item name="Coral" value="#FF7F50"/>
+				<item name="Apricot" value="#FBCEB1"/>
+				<item name="Aqua" value="#00FFFF"/>
+				<item name="Aquamarine" value="#7FFFD4"/>
+				<item name="Corn" value="#FBEC5D"/>
+				<item name="Cornflower" value="#6495ED"/>
+				<item name="Fuchsia" value="#FF00FF"/>
+				<item name="Gold" value="#D4AF37"/>
+				<item name="Goldenrod" value="#DAA520"/>
+				<item name="Eggplant" value="#614051"/>
+				<item name="Fern green" value="#4F7942"/>
+				<item name="Gamboge" value="#E49B0F"/>
+				<item name="Firebrick" value="#B22222"/>
+				<item name="Flax" value="#EEDC82"/>
+				<item name="Forest green" value="#228B22"/>
+				<item name="Green" value="#00FF00"/>
+				<item name="Grey" value="#808080"/>
+				<item name="Magenta" value="#FF00FF"/>
+				<item name="Hollywood Cerise" value="#F400A1"/>
+				<item name="Magnolia" value="#F8F4FF"/>
+				<item name="Falu red" value="#801818"/>
+				<item name="Malachite" value="#0BDA51"/>
+				<item name="Maroon" value="#800000"/>
+				<item name="Harlequin" value="#3FFF00"/>
+				<item name="Mauve" value="#E0B0FF"/>
+				<item name="Midnight Blue" value="#191970"/>
+				<item name="Mint green" value="#98FF98"/>
+				<item name="Misty rose" value="#FFE4E1"/>
+				<item name="Han Purple" value="#5218FA"/>
+				<item name="Heliotrope" value="#DF73FF"/>
+				<item name="Indigo" value="#00416A"/>
+				<item name="Ivory" value="#FFFFF0"/>
+				<item name="Jade " value="#00A86B"/>
+				<item name="Kelly green" value="#4CBB17"/>
+				<item name="Khaki" value="#C3B091"/>
+				<item name="Lavender" value="#B57EDC"/>
+				<item name="Lawn green" value="#7CFC00"/>
+				<item name="Lemon" value="#FDE910"/>
+				<item name="Lemon chiffon" value="#FFFACD"/>
+				<item name="Lilac" value="#C8A2C8"/>
+				<item name="Lime" value="#00FF00"/>
+				<item name="Lime green" value="#32CD32"/>
+				<item name="Linen" value="#FAF0E6"/>
+				<item name="Moss green" value="#ADDFAD"/>
+				<item name="Mustard" value="#FFDB58"/>
+				<item name="Myrtle" value="#21421E"/>
+				<item name="Navajo white" value="#FFDEAD"/>
+				<item name="Navy Blue" value="#000080"/>
+				<item name="Ochre" value="#CC7722"/>
+				<item name="Office green" value="#008000"/>
+				<item name="Olive" value="#808000"/>
+				<item name="Olivine" value="#9AB973"/>
+				<item name="Orange" value="#FF7F00"/>
+				<item name="Orchid" value="#DA70D6"/>
+				<item name="Papaya whip" value="#FFEFD5"/>
+				<item name="Peach" value="#FFE5B4"/>
+				<item name="Pear" value="#D1E231"/>
+				<item name="Periwinkle" value="#CCCCFF"/>
+				<item name="Persimmon" value="#EC5800"/>
+				<item name="Pine Green" value="#01796F"/>
+				<item name="Pink" value="#FFC0CB"/>
+				<item name="Platinum" value="#E5E4E2"/>
+				<item name="Plum" value="#CC99CC"/>
+				<item name="Ruby" value="#E0115F"/>
+				<item name="Powder blue" value="#B0E0E6"/>
+				<item name="Prussian blue" value="#003153"/>
+				<item name="Psychedelic purple" value="#DD00FF"/>
+				<item name="Pumpkin" value="#FF7518"/>
+				<item name="Purple" value="#800080"/>
+				<item name="Quartz Grey" value="#6C6961"/>
+				<item name="Raw umber" value="#734A12"/>
+				<item name="Razzmatazz" value="#E30B5C"/>
+				<item name="Red" value="#FF0000"/>
+				<item name="Robin egg blue" value="#00CCCC"/>
+				<item name="Rose" value="#FF007F"/>
+				<item name="Royal blue" value="#4169E1"/>
+				<item name="Puce" value="#CC8899"/>
+				<item name="Royal purple" value="#6B3FA0"/>
+				<item name="Rust" value="#B7410E"/>
+				<item name="Safety orange" value="#FF6600"/>
+				<item name="Saffron" value="#F4C430"/>
+				<item name="Salmon" value="#FF8C69"/>
+				<item name="Sandy brown" value="#F4A460"/>
+				<item name="Sangria" value="#92000A"/>
+				<item name="Sapphire" value="#082567"/>
+				<item name="Scarlet" value="#FF2400"/>
+				<item name="School bus yellow" value="#FFD800"/>
+				<item name="Russet" value="#80461B"/>
+				<item name="Sea Green" value="#2E8B57"/>
+				<item name="Seashell" value="#FFF5EE"/>
+				<item name="Sepia" value="#704214"/>
+				<item name="Shamrock green" value="#009E60"/>
+				<item name="Shocking Pink" value="#FC0FC0"/>
+				<item name="Smalt" value="#003399"/>
+				<item name="Silver" value="#C0C0C0"/>
+				<item name="Sky Blue" value="#87CEEB"/>
+				<item name="Slate grey" value="#708090"/>
+				<item name="Spring bud" value="#A7FC00"/>
+				<item name="Spring green" value="#00FF7F"/>
+				<item name="Steel blue" value="#4682B4"/>
+				<item name="Tan" value="#D2B48C"/>
+				<item name="White" value="#ffffff"/>
+				<item name="Terra cotta" value="#E2725B"/>
+				<item name="Thistle" value="#D8BFD8"/>
+				<item name="Titanium White" value="#fcfff0"/>
+				<item name="Zucchini" value="#506022"/>
+				<item name="Turquoise" value="#30D5C8"/>
+				<item name="Vermilion" value="#E34234"/>
+				<item name="Tyrian purple" value="#66023C"/>
+				<item name="Yellow" value="#FFFF00"/>
+				<item name="Ultramarine" value="#120A8F"/>
+				<item name="Tomato" value="#FF6347"/>
+				<item name="Violet" value="#8B00FF"/>
+				<item name="Viridian" value="#40826D"/>
+				<item name="Tangerine" value="#F28500"/>
+				<item name="Taupe" value="#483C32"/>
+				<item name="Wheat" value="#F5DEB3"/>
+				<item name="Van Dyke Brown" value="#413000"/>
+				<item name="Wisteria" value="#C9A0DC"/>
+				<item name="Xanthic" value="#EDED09"/>
+				<item name="Teal" value="#008080"/>
+				<item name="Tenné (Tawny)" value="#CD5700"/>
+			</fx:XMLList>
+		</s:XMLListCollection>
+		
+		<!-- SORT BY NAME 
+		<handlers:EventHandler eventName="click" target="{sortByName}">
+			<data:SortCollection target="{listCollection}" >
+				<data:fields>
+					<fx:Array>
+						<fx:String>@name</fx:String>
+					</fx:Array>
+				</data:fields>
+			</data:SortCollection>
+		</handlers:EventHandler>-->
+		
+		<!-- SORT BY COLOR 
+		<handlers:EventHandler eventName="click" target="{sortByColor}">
+			<data:SortCollection target="{listCollection}">
+				<data:fields>
+					<fx:Array>
+						<fx:String>@value</fx:String>
+					</fx:Array>
+				</data:fields>
+			</data:SortCollection>
+		</handlers:EventHandler>-->
+		
+		<!-- SORT BY NAME -->
+		<handlers:EventHandler eventName="click" target="{sortByName}">
+			<data:SortCollection target="{listCollection}" >
+				<data:fields>
+					<s:SortField name="@name" />
+				</data:fields>
+			</data:SortCollection>
+		</handlers:EventHandler>
+		
+		<!-- SORT BY COLOR -->
+		<handlers:EventHandler eventName="click" target="{sortByColor}">
+			<data:SortCollection target="{listCollection}">
+				<data:fields>
+					<s:SortField name="@value" />
+				</data:fields>
+			</data:SortCollection>
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			public function labelFunction(item:Object):String {
+				return item.@name + " #" + item.@value;
+			}
+		]]>
+	</fx:Script>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Sorts an XMLListCollection of name or color." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup verticalAlign="baseline">
+			<s:Button id="sortByName" label="Sort by Group and then value"/>
+			<s:Button id="sortByColor" label="Sort by Color"/>
+		</s:HGroup>
+		
+		<s:Spacer height="10"/>
+		
+		
+		<s:List id="list" 
+				minWidth="300"
+				height="100%" 
+				bottom="20"
+				dataProvider="{listCollection}"
+				borderVisible="false"
+				labelFunction="labelFunction"
+				contentBackgroundAlpha="0"
+				>
+			
+			<s:layout>
+				<s:VerticalLayout rowHeight="22"/>
+			</s:layout>
+			
+			<s:itemRenderer>
+				<fx:Component>
+					<s:ItemRenderer width="100%" 
+									height="100%" 
+									minHeight="22"
+									dataChange="itemrenderer1_dataChangeHandler(event)">
+						<s:layout>
+							<s:HorizontalLayout verticalAlign="middle" paddingLeft="10" paddingRight="10"/>
+						</s:layout>
+						
+						<fx:Script>
+							<![CDATA[
+								import mx.events.FlexEvent;
+								
+								protected function itemrenderer1_dataChangeHandler(event:FlexEvent):void {
+									var colorValue:String = String(data.@value).toUpperCase();
+									
+									labelDisplay.text = data.@name;
+									labelDisplay2.text = colorValue;
+									colorValue = colorValue.substr(1);
+									solidColor.color = parseInt(colorValue, 16);
+								}
+								
+							]]>
+						</fx:Script>
+						<s:Label id="labelDisplay" 
+								 minWidth="180"
+								 height="100%"
+								 textAlign="left" 
+								 verticalAlign="middle"/>
+						
+						<s:Label id="labelDisplay2" 
+								 minWidth="80"
+								 height="100%"
+								 textAlign="left" 
+								 verticalAlign="middle"/>
+						
+						<s:Spacer width="100%"/>
+						
+						<s:Rect width="80" height="16" verticalCenter="0">
+							<s:fill>
+								<s:SolidColor id="solidColor" />
+							</s:fill>
+							<s:stroke>
+								<s:SolidColorStroke color="#ffffff" weight="2"/>
+							</s:stroke>
+						</s:Rect>
+					</s:ItemRenderer>
+				</fx:Component>
+			</s:itemRenderer>
+		</s:List>
+	</s:Group>
+</s:Group>

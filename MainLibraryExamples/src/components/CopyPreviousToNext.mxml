@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" xmlns:status="com.flexcapacitor.effects.status.*"
+		 
+		 >
+	
+	<fx:Declarations>
+		
+		
+		<!-- COPY PREVIOUS TO NEXT -->
+		<!--- 
+		
+		* Copies a value from the effect directly before it to the effect directly after it.
+		
+		* It gets the value of the "data" property by default in the effect before and copies it to the data property
+		* by default in the effect after it. You can set the targetPropertyName and sourcePropertyName to any 
+		* property besides "data". 
+		
+		* If value in the data property of the previous or next effect is an object you can set the targetSubPropertyName
+		* and sourceSubPropertyName to get values on that object.
+		
+		* If value in the data property of the previous or next effect is an you can set the targetPropertyIndex 
+		* and sourcePropertyIndex to get the value at that index.
+		
+		* You can cast the value to a type by setting the valueType property. 
+		
+		* It is necessary to cast to type "String" when getting a String value from an XML object.
+		
+		* You can set the previousEffectIndex to target an effect at a different index than the index of the previous effect. 
+		* You can set the nextEffectIndex to target an effect at a different index than the index of the next effect. 
+		* You can set the targetEffectIndices to target multiple effects
+		
+		
+		-->
+		
+		<handlers:EventHandler target="{copyPreviousToNextButton}" eventName="click">
+			
+			<file:BrowseForFile targetAncestor="{this}"
+								allowMultipleSelection="false"
+								>
+			</file:BrowseForFile>
+
+			
+			<!--- Copies a value from the effect directly before it to the effect directly after it.-->
+			<core:CopyPreviousToNext sourcePropertyName="fileReference" 
+									 sourceSubPropertyName="name"
+									 targetPropertyName="message"/>
+			
+			<status:ShowStatusMessage />			
+			
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Copies a value from the effect directly before it to the effect directly after it. The BrowseForFile class has a fileReference property. The ShowStatusMessage class has a message property." 
+				 color="#333333"
+				 top="10" left="10"
+				 width="100%"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup top="10" left="10">
+			
+			<s:Button id="copyPreviousToNextButton" 
+					  label="Copy value from one effect to the next" 
+					  />
+			
+		</s:HGroup>	
+		
+		<s:Spacer height="10"/>
+	
+		<s:RichText top="60" 
+					left="10" 
+					width="100%" 
+					color="0x464646" 
+					fontFamily="Arial"
+					fontSize="12"
+					tabStops="S0 S50 S100 S150 S200 S250 S300 S350 S400 S450 S500 S550 S600 S650 S700"
+					whiteSpaceCollapse="preserve">
+			<s:textFlow>
+				<s:TextFlow>
+					<s:p>
+						<s:span color="#0000ff"><![CDATA[<]]><![CDATA[handlers:EventHandler ]]></s:span><s:span color="#000000">target="</s:span><s:span color="#000000">{</s:span><s:span color="#af0000">copyPreviousToNextButton</s:span><s:span color="#000000">}</s:span><s:span color="#000000">" eventName="</s:span><s:span color="#af0000">click</s:span><s:span color="#000000">"</s:span><s:span color="#0000ff"><![CDATA[>]]></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/><![CDATA[<]]>file:BrowseForFile /<![CDATA[>]]></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/><![CDATA[<]]><![CDATA[core:CopyPreviousToNext ]]></s:span><s:span color="#000000">sourcePropertyName="</s:span><s:span color="#af0000">fileReference</s:span><s:span color="#000000">" sourceSubPropertyName="</s:span><s:span color="#af0000">name</s:span><s:span color="#000000">"" targetPropertyName="</s:span><s:span color="#af0000">message</s:span><s:span color="#000000">"</s:span><s:span color="#0000ff">/<![CDATA[>]]></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/><![CDATA[<]]>status:ShowStatusMessage /<![CDATA[>]]></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><s:tab/></s:span>
+					</s:p>
+					<s:p>
+						<s:span color="#0000ff"><![CDATA[<]]>/handlers:EventHandler<![CDATA[>]]></s:span>
+					</s:p>
+				</s:TextFlow>
+			</s:textFlow>
+		</s:RichText>
+	
+	
+		
+	</s:Group>
+	
+	
+</s:Group>

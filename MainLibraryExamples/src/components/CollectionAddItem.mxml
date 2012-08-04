@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:services="com.flexcapacitor.effects.services.*" 
+		 xmlns:project="com.flexcapacitor.effects.project.*" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:data="com.flexcapacitor.effects.collections.*" 
+		 width="400" height="300"
+		 >
+	
+	<fx:Declarations>
+		<s:RadioButtonGroup id="locationGroup"/>
+		
+		<s:ArrayCollection id="arrayCollection">
+			<fx:String>Alizarin</fx:String>
+			<fx:String>Amaranth</fx:String>
+			<fx:String>Amber</fx:String>
+		</s:ArrayCollection>
+		
+		<!-- ADD ITEM -->
+		<handlers:EventHandler eventName="click" target="{addItemButton}">
+			<data:AddItem id="addItemEffect"
+						  target="{arrayCollection}"
+						  data="item"
+						  location="{locationGroup.selectedValue}"
+						  />
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Add an item to an ArrayCollection." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup verticalAlign="baseline">
+			<s:Button id="addItemButton" label="Add Item"/>
+			<s:Spacer width="10"/>
+			<s:RadioButton label="Start" groupName="locationGroup" selected="true" value="start"/>
+			<s:RadioButton label="End" groupName="locationGroup" value="end"/>
+		</s:HGroup>
+		
+		<s:Spacer height="10"/>
+		
+		<s:List id="list" 
+				minWidth="360"
+				height="100%" 
+				bottom="20"
+				dataProvider="{arrayCollection}"
+				borderVisible="false"
+				contentBackgroundAlpha="0"
+				>
+		</s:List>
+	</s:Group>
+</s:Group>

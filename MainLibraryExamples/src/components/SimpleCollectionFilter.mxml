@@ -1,0 +1,275 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:project="com.flexcapacitor.effects.project.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:services="com.flexcapacitor.effects.services.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:data="com.flexcapacitor.effects.collections.*" 
+		 width="400" height="300"
+		 >
+	
+	<fx:Declarations>
+		
+		<s:ArrayCollection id="arrayCollection">
+			<fx:String>Alizarin</fx:String>
+			<fx:String>Amaranth</fx:String>
+			<fx:String>Amber</fx:String>
+			<fx:String>Amethyst</fx:String>
+			<fx:String>Apricot</fx:String>
+			<fx:String>Aqua</fx:String>
+			<fx:String>Aquamarine</fx:String>
+			<fx:String>Asparagus</fx:String>
+			<fx:String>Auburn</fx:String>
+			<fx:String>Azure</fx:String>
+			<fx:String>Beige</fx:String>
+			<fx:String>Bistre</fx:String>
+			<fx:String>Black</fx:String>
+			<fx:String>Blue</fx:String>
+			<fx:String>Blue Green</fx:String>
+			<fx:String>Blue Violet</fx:String>
+			<fx:String>Bondi Blue</fx:String>
+			<fx:String>Brass</fx:String>
+			<fx:String>Bronze</fx:String>
+			<fx:String>Brown</fx:String>
+			<fx:String>Buff</fx:String>
+			<fx:String>Burgundy</fx:String>
+			<fx:String>Burnt Orange</fx:String>
+			<fx:String>Burnt Sienna</fx:String>
+			<fx:String>Burnt Umber</fx:String>
+			<fx:String>Camouflage Green</fx:String>
+			<fx:String>Caput Mortuum</fx:String>
+			<fx:String>Cardinal</fx:String>
+			<fx:String>Carmine</fx:String>
+			<fx:String>Carrot orange</fx:String>
+			<fx:String>Celadon</fx:String>
+			<fx:String>Cerise</fx:String>
+			<fx:String>Cerulean</fx:String>
+			<fx:String>Champagne</fx:String>
+			<fx:String>Charcoal</fx:String>
+			<fx:String>Chartreuse</fx:String>
+			<fx:String>Cherry Blossom Pink</fx:String>
+			<fx:String>Chestnut</fx:String>
+			<fx:String>Chocolate</fx:String>
+			<fx:String>Cinnabar</fx:String>
+			<fx:String>Cinnamon</fx:String>
+			<fx:String>Cobalt</fx:String>
+			<fx:String>Copper</fx:String>
+			<fx:String>Coral</fx:String>
+			<fx:String>Corn</fx:String>
+			<fx:String>Cornflower</fx:String>
+			<fx:String>Cream</fx:String>
+			<fx:String>Crimson</fx:String>
+			<fx:String>Cyan</fx:String>
+			<fx:String>Dandelion</fx:String>
+			<fx:String>Denim</fx:String>
+			<fx:String>Ecru</fx:String>
+			<fx:String>Emerald</fx:String>
+			<fx:String>Eggplant</fx:String>
+			<fx:String>Falu red</fx:String>
+			<fx:String>Fern green</fx:String>
+			<fx:String>Firebrick</fx:String>
+			<fx:String>Flax</fx:String>
+			<fx:String>Forest green</fx:String>
+			<fx:String>French Rose</fx:String>
+			<fx:String>Fuchsia</fx:String>
+			<fx:String>Gamboge</fx:String>
+			<fx:String>Gold</fx:String>
+			<fx:String>Goldenrod</fx:String>
+			<fx:String>Green</fx:String>
+			<fx:String>Grey</fx:String>
+			<fx:String>Han Purple</fx:String>
+			<fx:String>Harlequin</fx:String>
+			<fx:String>Heliotrope</fx:String>
+			<fx:String>Hollywood Cerise</fx:String>
+			<fx:String>Indigo</fx:String>
+			<fx:String>Ivory</fx:String>
+			<fx:String>Jade </fx:String>
+			<fx:String>Kelly green</fx:String>
+			<fx:String>Khaki</fx:String>
+			<fx:String>Lavender</fx:String>
+			<fx:String>Lawn green</fx:String>
+			<fx:String>Lemon</fx:String>
+			<fx:String>Lemon chiffon</fx:String>
+			<fx:String>Lilac</fx:String>
+			<fx:String>Lime</fx:String>
+			<fx:String>Lime green</fx:String>
+			<fx:String>Linen</fx:String>
+			<fx:String>Magenta</fx:String>
+			<fx:String>Magnolia</fx:String>
+			<fx:String>Malachite</fx:String>
+			<fx:String>Maroon</fx:String>
+			<fx:String>Mauve</fx:String>
+			<fx:String>Midnight Blue</fx:String>
+			<fx:String>Mint green</fx:String>
+			<fx:String>Misty rose</fx:String>
+			<fx:String>Moss green</fx:String>
+			<fx:String>Mustard</fx:String>
+			<fx:String>Myrtle</fx:String>
+			<fx:String>Navajo white</fx:String>
+			<fx:String>Navy Blue</fx:String>
+			<fx:String>Ochre</fx:String>
+			<fx:String>Office green</fx:String>
+			<fx:String>Olive</fx:String>
+			<fx:String>Olivine</fx:String>
+			<fx:String>Orange</fx:String>
+			<fx:String>Orchid</fx:String>
+			<fx:String>Papaya whip</fx:String>
+			<fx:String>Peach</fx:String>
+			<fx:String>Pear</fx:String>
+			<fx:String>Periwinkle</fx:String>
+			<fx:String>Persimmon</fx:String>
+			<fx:String>Pine Green</fx:String>
+			<fx:String>Pink</fx:String>
+			<fx:String>Platinum</fx:String>
+			<fx:String>Plum</fx:String>
+			<fx:String>Powder blue</fx:String>
+			<fx:String>Puce</fx:String>
+			<fx:String>Prussian blue</fx:String>
+			<fx:String>Psychedelic purple</fx:String>
+			<fx:String>Pumpkin</fx:String>
+			<fx:String>Purple</fx:String>
+			<fx:String>Quartz Grey</fx:String>
+			<fx:String>Raw umber</fx:String>
+			<fx:String>Razzmatazz</fx:String>
+			<fx:String>Red</fx:String>
+			<fx:String>Robin egg blue</fx:String>
+			<fx:String>Rose</fx:String>
+			<fx:String>Royal blue</fx:String>
+			<fx:String>Royal purple</fx:String>
+			<fx:String>Ruby</fx:String>
+			<fx:String>Russet</fx:String>
+			<fx:String>Rust</fx:String>
+			<fx:String>Safety orange</fx:String>
+			<fx:String>Saffron</fx:String>
+			<fx:String>Salmon</fx:String>
+			<fx:String>Sandy brown</fx:String>
+			<fx:String>Sangria</fx:String>
+			<fx:String>Sapphire</fx:String>
+			<fx:String>Scarlet</fx:String>
+			<fx:String>School bus yellow</fx:String>
+			<fx:String>Sea Green</fx:String>
+			<fx:String>Seashell</fx:String>
+			<fx:String>Sepia</fx:String>
+			<fx:String>Shamrock green</fx:String>
+			<fx:String>Shocking Pink</fx:String>
+			<fx:String>Silver</fx:String>
+			<fx:String>Sky Blue</fx:String>
+			<fx:String>Slate grey</fx:String>
+			<fx:String>Smalt</fx:String>
+			<fx:String>Spring bud</fx:String>
+			<fx:String>Spring green</fx:String>
+			<fx:String>Steel blue</fx:String>
+			<fx:String>Tan</fx:String>
+			<fx:String>Tangerine</fx:String>
+			<fx:String>Taupe</fx:String>
+			<fx:String>Teal</fx:String>
+			<fx:String>Tenné (Tawny)</fx:String>
+			<fx:String>Terra cotta</fx:String>
+			<fx:String>Thistle</fx:String>
+			<fx:String>Titanium White</fx:String>
+			<fx:String>Tomato</fx:String>
+			<fx:String>Turquoise</fx:String>
+			<fx:String>Tyrian purple</fx:String>
+			<fx:String>Ultramarine 	</fx:String>
+			<fx:String>Van Dyke Brown</fx:String>
+			<fx:String>Vermilion</fx:String>
+			<fx:String>Violet</fx:String>
+			<fx:String>Viridian</fx:String>
+			<fx:String>Wheat</fx:String>
+			<fx:String>White</fx:String>
+			<fx:String>Wisteria</fx:String>
+			<fx:String>Xanthic</fx:String>
+			<fx:String>Yellow</fx:String>
+			<fx:String>Zucchini</fx:String>
+		</s:ArrayCollection>
+		
+		<!-- SORT BY NAME -->
+		<handlers:EventHandler eventName="creationComplete" >
+			<data:SortCollection target="{arrayCollection}"  />
+		</handlers:EventHandler>
+		
+		
+		<!-- FILTER -->
+		<handlers:EventHandler eventName="change" targets="{[filterInput,showAllItemsOnEmpty,caseSensitive,searchAtStart]}">
+			<data:FilterCollection target="{arrayCollection}" 
+								   source="{filterInput}" 
+								   sourcePropertyName="text"
+								   showAllItemsOnEmpty="{showAllItemsOnEmpty.selected}"
+								   caseSensitive="{caseSensitive.selected}"
+								   searchAtStart="{searchAtStart.selected}"
+								   />
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Filter an ArrayCollection of String values." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup>
+			<s:TextInput id="filterInput" width="80%" prompt="Search"/>
+			<s:CheckBox id="showAllItemsOnEmpty" label="Show all items when empty" selected="true"/>
+			<s:CheckBox id="caseSensitive" label="Case sensitive" selected="false"/>
+			<s:CheckBox id="searchAtStart" label="Search at start of word" selected="false"/>
+		</s:HGroup>
+		
+		<s:Spacer height="10"/>
+		
+		<s:List id="list" 
+				minWidth="300"
+				height="100%" 
+				bottom="20"
+				dataProvider="{arrayCollection}"
+				borderVisible="false"
+				contentBackgroundAlpha="0"
+				>
+			
+			<s:layout>
+				<s:VerticalLayout rowHeight="22"/>
+			</s:layout>
+			
+			<s:itemRenderer>
+				<fx:Component>
+					<s:ItemRenderer width="100%" 
+									height="100%" 
+									minHeight="22"
+									dataChange="itemrenderer1_dataChangeHandler(event)">
+						<s:layout>
+							<s:HorizontalLayout verticalAlign="middle" paddingLeft="10" paddingRight="10"/>
+						</s:layout>
+						
+						<fx:Script>
+							<![CDATA[
+								import mx.events.FlexEvent;
+								
+								protected function itemrenderer1_dataChangeHandler(event:FlexEvent):void {
+									labelDisplay.text = data as String;
+								}
+								
+							]]>
+						</fx:Script>
+						<s:Label id="labelDisplay" 
+								 minWidth="180"
+								 height="100%"
+								 textAlign="left" 
+								 verticalAlign="middle"/>
+					</s:ItemRenderer>
+				</fx:Component>
+			</s:itemRenderer>
+		</s:List>
+	</s:Group>
+</s:Group>

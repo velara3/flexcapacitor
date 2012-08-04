@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*"
+		 
+		 >
+	
+	<file:BrowseForFile id="browseForFile"
+						targetAncestor="{this}"
+						allowMultipleSelection="false"/>
+	
+	<file:LoadFile id="loadFile" 
+				   fileReference="{browseForFile.fileReference}" />
+	
+	
+	<core:CopyValueToTarget source="{loadFile}" 
+							sourcePropertyName="bitmapData"
+							target="{asciiComponent}" 
+							targetPropertyName="bitmapData"/>
+	<fx:Declarations>
+
+		
+		<!-- BROWSE FOR FILE -->
+		<handlers:EventHandler target="{browseForFileButton}" eventName="click">
+			
+			<!--- 
+			Browse for file gets a reference to a file or files but does NOT load them by itself.
+			With BrowseForFile we only want to select the file. 
+			We don't make an assumption that we are loading, uploading, downloading or saving
+			
+			To load the file pass the fileReference to a LoadFile instance.
+			
+			Once LoadFile loads the file we can get a reference to the data
+			
+			// action = LoadFile instance
+			// loaderInfo is the loaded file
+			action.loaderInfo = loaderInfo;
+			action.byteArray = loaderInfo.bytes;
+			action.data = loaderInfo.content;
+			action.contentType = loaderInfo.contentType;
+			
+			if (loaderInfo.content is Bitmap) {
+				action.bitmapData = Bitmap(loaderInfo.content).bitmapData;
+			}
+			-->
+			<file:BrowseForFile id="browseForFile"
+								targetAncestor="{this}"
+								allowMultipleSelection="false"
+								fileTypes="jpeg,jpg,png,gif"
+								>
+			</file:BrowseForFile>
+			
+			<core:CopyPreviousToNext sourcePropertyName="fileReference" targetPropertyName="fileReference"/>
+			
+			<file:LoadFile id="loadFile" />
+			
+			
+			<core:CopyValueToTarget source="{loadFile}" 
+									sourcePropertyName="bitmapData"
+									target="{image}" 
+									targetPropertyName="source"/>
+			
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	<s:VGroup verticalCenter="0" horizontalCenter="0">
+		<s:Button id="browseForFileButton" label="Browse for File" />
+		<s:Image id="image" />
+	</s:VGroup>
+</s:Group>

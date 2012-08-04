@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 width="420" 
+		 implements="com.flexcapacitor.effects.status.supportClasses.IStatusMessage"
+		 creationCompleteEffect="{fadeEffect}"
+		 addedToStage="group1_addedToStageHandler(event)"
+		 mouseEnabledWhereTransparent="true">
+	
+	<s:states>
+		<s:State name="withBusyIndicator"/>
+		<s:State name="withoutBusyIndicator"/>
+	</s:states>
+	
+	<s:BorderContainer id="container" 
+					   minHeight="10"
+					   horizontalCenter="0"
+					   minWidth="10" 
+					   backgroundColor="0x333333" 
+					   maxWidth="{width}" 
+					   borderColor="0xffffff" 
+					   borderWeight="2" 
+					   cornerRadius="10" 
+					   color="#ECECEC" >
+		
+		<s:layout>
+			<s:HorizontalLayout paddingBottom="15" paddingTop="15" verticalAlign="middle"
+								paddingLeft="15" paddingRight="15" gap="20"/>
+		</s:layout>
+		
+		<!--<s:BusyIndicator id="busyIndicator" 
+						 width="50" height="50" 
+						 includeIn="withBusyIndicator" 
+						 symbolColor="#ffffff"/>-->
+		
+		<s:Label id="label" maxDisplayedLines="6" width="100%" 
+				 textAlign.withoutBusyIndicator="center"
+				 textAlign.withBusyIndicator="left"
+				 fontSize="24" 
+				 fontWeight="normal" 
+				 text="{message}"/>
+	</s:BorderContainer>
+	
+	<fx:Declarations>
+		<s:Sequence id="fadeEffect" 
+					effectEnd="fadeEffect_effectEndHandler(event)" 
+					target="{this}">
+			<s:Fade alphaFrom="0" alphaTo="1" duration="250"/>
+			<s:Pause duration="{duration-500}"/>
+			<s:Fade alphaFrom="1" alphaTo="0" duration="250"/>
+		</s:Sequence>
+	</fx:Declarations>
+	
+	<!--- Code -->
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.status.StatusManager;
+			
+			import mx.events.EffectEvent;
+			
+			private var _duration:int			= 1000;
+			
+			private var _title:String;
+			
+			private var _message:String;
+			
+			[Bindable]
+			public function get duration():int {
+				return _duration;
+			}
+
+			public function set duration(value:int):void {
+				if (value<1) value = 1;
+				_duration = value;
+			}
+
+			[Bindable]
+			public function get title():String {
+				return _title;
+			}
+
+			public function set title(value:String):void {
+				_title = value;
+			}
+
+			[Bindable]
+			public function get message():String {
+				return _message;
+			}
+
+			public function set message(value:String):void {
+				_message = value;
+			}
+
+			protected function group1_addedToStageHandler(event:Event):void {
+				maxWidth = parent.width;
+				width = parent.width;
+			}
+			
+			private var _showBusyIndicator:Boolean;
+			
+			public function get showBusyIndicator():Boolean { return _showBusyIndicator; }
+			
+			public function set showBusyIndicator(value:Boolean):void {
+				_showBusyIndicator = value;
+				currentState = value ? "withBusyIndicator" : "withoutBusyIndicator";
+			}
+			
+			protected function fadeEffect_effectEndHandler(event:EffectEvent):void {
+				dispatchEvent(new Event(Event.CLOSE));
+			}
+			
+		]]>
+	</fx:Script>
+	
+</s:Group>

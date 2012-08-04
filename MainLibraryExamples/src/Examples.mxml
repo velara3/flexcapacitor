@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:c="components.*"
+			   
+			   minWidth="300" 
+			   minHeight="300" 
+			   viewSourceURL="srcview/index.html"
+			   >
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace c "components.*";
+		
+		s|Scroller {
+			skinClass:ClassReference("com.flexcapacitor.skins.MinimalScrollerSkin")
+		}
+	</fx:Style>
+	
+	<fx:Declarations>
+		<s:ArrayCollection id="statesCollection" source="{states}"/>
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			protected function list1_changeHandler(event:IndexChangeEvent):void {
+				currentState = event.currentTarget.selectedItem.name;
+				title.text = getDisplayName(event.currentTarget.selectedItem);
+			}
+			
+			protected function getDisplayName(item:Object):String {
+				return String(item.name).split("_").join(" ");
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:states>
+		<s:State name="Introduction"/>
+		
+		<s:State name="Browse_For_File"/>
+		<s:State name="Load_File"/>
+		
+		<s:State name="Change_States"/>
+		
+		<s:State name="Save_Settings"/>
+		
+		<s:State name="Copy_Previous_to_Next"/>
+		
+		<s:State name="Branching_By_Runtime_Version"/>
+		
+		<s:State name="Simple_Collection_Sort" />
+		<s:State name="Complex_Collection_Sort"/>
+		<s:State name="Complex_Collection_Sort_2"/>
+		<s:State name="XML_Collection_Sort"/>
+		
+		<s:State name="Simple_Collection_Filtering"/>
+		<s:State name="Complex_Collection_Filtering"/>
+		<s:State name="Collection_Add_Item"/>
+	</s:states>
+	
+	<s:Rect width="240" height="100%" >
+		<s:fill>
+			<s:LinearGradient rotation="90" >
+				<s:GradientEntry color="#335CD6"/>
+				<s:GradientEntry color="#0033CC"/>
+			</s:LinearGradient>
+		</s:fill>
+	</s:Rect>
+	
+	<s:Group left="250" top="40" width="100%" height="100%" right="20">
+		<c:Introduction width="100%" height="100%" includeIn="Introduction" />
+		<c:SaveSettings width="100%" height="100%" includeIn="Save_Settings" />
+		<c:LoadFile width="100%" height="100%" includeIn="Load_File" />
+		<c:CopyPreviousToNext width="100%" height="100%" includeIn="Copy_Previous_to_Next" />
+		<c:SimpleCollectionSort width="100%" height="100%" includeIn="Simple_Collection_Sort" />
+		<c:ComplexCollectionSort width="100%" height="100%" includeIn="Complex_Collection_Sort" />
+		<c:ComplexCollectionSort2 width="100%" height="100%" includeIn="Complex_Collection_Sort_2" />
+		<c:XMLCollectionSort width="100%" height="100%" includeIn="XML_Collection_Sort" />
+		<c:SimpleCollectionFilter width="100%" height="100%" includeIn="Simple_Collection_Filtering" />
+		<c:ComplexCollectionFilter width="100%" height="100%" includeIn="Complex_Collection_Filtering" />
+		<c:CollectionAddItem width="100%" height="100%" includeIn="Collection_Add_Item" />
+		<c:BrowseForFile width="100%" height="100%" includeIn="Browse_For_File" />
+		<c:BranchingByRuntimeVersion width="100%" height="100%" includeIn="Branching_By_Runtime_Version" />
+		<c:ChangeStates width="100%" height="100%" includeIn="Change_States" />
+	</s:Group>
+	
+	<s:Label id="title" 
+			 top="20" 
+			 left="260" 
+			 fontWeight="bold"
+			 fontFamily="Verdana"
+			 typographicCase="uppercase"
+			 fontSize="16"
+			 text="Introduction"
+			 />
+	
+	<s:Label top="20" 
+			 left="20" 
+			 color="white"
+			 text="Examples"
+			 fontWeight="bold"
+			 fontFamily="Verdana"
+			 typographicCase="uppercase"
+			 fontSize="16"
+			 >
+		
+		<s:filters>
+			<s:DropShadowFilter blurX="4" blurY="4" distance="2" quality="1" strength=".50" />
+		</s:filters>
+	</s:Label>
+	
+	<!--- navigation based on states -->
+	<s:List top="50" 
+			left="20" 
+			width="200"
+			color="#ffffff"
+			contentBackgroundAlpha="0"
+			dataProvider="{statesCollection}"
+			labelFunction="getDisplayName"
+			borderVisible="false"
+			horizontalScrollPolicy="off"
+			selectedIndex="0"
+			change="list1_changeHandler(event)"
+			>
+		<s:layout>
+			<s:VerticalLayout />
+		</s:layout>
+		
+		<s:itemRenderer>
+			<fx:Component>
+				<s:ItemRenderer width="100%" height="100%" minHeight="22"
+								autoDrawBackground="false"
+								useHandCursor="true"
+								buttonMode="true"
+								>
+					
+					<s:states>
+						<s:State name="normal"/>
+						<s:State name="selected" />
+					</s:states>
+					
+					<s:Label id="labelDisplay" 
+							 paddingLeft="10"
+							 paddingRight="10"
+							 height="100%"
+							 textAlign="left" 
+							 verticalAlign="middle"
+							 >
+						
+						<s:filters.selected>
+							<s:DropShadowFilter blurX="3" blurY="3" distance="0" quality="1" strength="8" color="#585858"/>
+						</s:filters.selected>
+					</s:Label>
+					
+				</s:ItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+	
+	
+</s:Application>

@@ -1,0 +1,249 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" xmlns:utils="com.flexcapacitor.utils.*" xmlns:states="com.flexcapacitor.effects.states.*" xmlns:status="com.flexcapacitor.effects.status.*"
+		 
+		 >
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayCollection;
+			
+			protected function loadFile_progressHandler(event:ProgressEvent):void {
+				files.itemUpdated(loadFile.currentFile);
+				return;
+				trace('progress ' + loadFile.currentFile.name + ', ' + event.bytesLoaded + ' of ' + event.bytesTotal);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+
+		
+		<!-- BROWSE FOR FILE -->
+		<!--- 
+		
+		We browse for file to get a reference to a file or files. That does NOT load them by itself.
+		
+		To load the file pass the fileReference or fileReferenceList to a LoadFile instance.
+		
+		Once LoadFile loads the file we can get the data through the properties
+		
+		// action = LoadFile instance
+
+		action.byteArray = loaderInfo.bytes;
+		action.data = loaderInfo.content;
+		action.contentType = loaderInfo.contentType;
+		// loaderInfo is the loaded file
+		action.loaderInfo = loaderInfo;
+		
+		
+		if (loaderInfo.content is Bitmap) {
+			action.bitmapData = Bitmap(loaderInfo.content).bitmapData;
+		}
+		
+		-->
+		
+		<handlers:EventHandler target="{loadFileButton}" eventName="click">
+			
+			<file:BrowseForFile id="browseForFile"
+								targetAncestor="{this}"
+								allowMultipleSelection="true"
+								>
+			</file:BrowseForFile>
+			
+			<core:CopyPreviousToNext sourcePropertyName="fileReferenceList" 
+									 targetPropertyName="fileReferenceList"/>
+			
+			
+			<file:LoadFile id="loadFile" 
+						   
+						   loadIntoLoader="true"
+						   
+						   complete="trace('complete ' + loadFile.currentFile.name)"
+						   ioError="trace('ioError ' + loadFile.currentFile.name + ', error ' + event.text )"
+						   open="trace('open ' + loadFile.currentFile.name)"
+						   progress="loadFile_progressHandler(event)"
+						   
+						   
+						   asyncError="trace('async error')"
+						   init="trace('init')"
+						   loaderComplete="trace('loader complete')"
+						   loaderIOError="trace('loader ioError ' + event.text)"
+						   loaderOpen="trace('loader open ' + loadFile.currentLoaderInfo.bytesTotal)"
+						   loaderProgress="trace('loader progress ' + loadFile.currentLoaderInfo.bytesLoaded+' of ' + event.bytesTotal)"
+						   securityError="trace('security error')"
+						   unload="trace('unload')"
+						   />
+			
+			
+			<!--- get the loaded value, in this case the bitmap data -->
+			<core:CopyDataToTarget source="{loadFile}" 
+									sourcePropertyName="bitmapData"
+									target="{image}" 
+									targetPropertyName="source"/>
+			
+		</handlers:EventHandler>
+		
+		
+		<handlers:EventHandler target="{cancelLoadButton}" eventName="click">
+			<file:CancelFileLoad target="{browseForFile.fileReferenceList}"/>
+			<core:SetAction target="{files}" property="source"
+							value="{[]}"/>
+			<status:ShowStatusMessage message="File loading has been canceled"/>
+		</handlers:EventHandler>
+			
+		
+		<s:ArrayCollection id="files" source="{loadFile.fileReferenceList.fileList}"/>
+		
+	</fx:Declarations>
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Open a browse for file dialog and load files." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup>
+			<s:Button id="loadFileButton" 
+					  label="Load Files" 
+					  top="10" left="10"/>
+			<s:Button id="cancelLoadButton" 
+					  label="Cancel All" 
+					  top="10" left="10"/>
+		</s:HGroup>
+		
+		
+		<!--- The contents below this line are not a required part of this example -->
+		
+		<s:List top="40" left="10"
+				width="450"
+				borderAlpha=".25"
+				dataProvider="{files}"
+				minHeight="300"
+				>
+			<s:itemRenderer>
+				<fx:Component>
+					<s:ItemRenderer width="100%" height="32">
+						
+						<fx:Script>
+							<![CDATA[
+								override public function set data(item:Object):void {
+									super.data = item;
+									var ratio:Number;
+									var total:int;
+									var value:int;
+									var event:ProgressEvent;
+									
+									if (labelDisplay.text!=item.name) {
+										labelDisplay.text = item.name;
+									}
+									
+									event = outerDocument.loadFile.currentProgressEvent;
+									
+									if (event) {
+										total = event.bytesTotal;
+										value = event.bytesLoaded;
+										ratio = value / total;
+										
+										
+										if (value==total) {
+											this.currentState = "loadComplete";
+										}
+										else {
+											if (currentState!="loading") {
+												currentState = "loading";
+											}
+										}
+										
+										progressBar.percentWidth = 100 * ratio;
+										
+										cancelFile.target = item;
+									}
+									
+								}
+							]]>
+						</fx:Script>
+						
+						<fx:Declarations>
+							
+							<handlers:EventHandler target="{cancelLabel}" eventName="click">
+								<file:CancelFileLoad id="cancelFile" />
+								<states:ChangeStates state="ready" target="{this}"/>
+							</handlers:EventHandler>
+						</fx:Declarations>
+						
+						<s:states>
+							<s:State name="ready"/>
+							<s:State name="loading"/>
+							<s:State name="loadComplete"/>
+						</s:states>
+						
+						<!--- transition the progress bar out - looks unnatural without it -->
+						<s:transitions>
+							<s:Transition fromState="loading" toState="loadComplete">
+								<s:Sequence>
+									<s:Fade target="{progressBar}" duration="250"/>
+									<s:AddAction startDelay="250" target="{loadCompleteLabel}"/>
+								</s:Sequence>
+							</s:Transition>
+						</s:transitions>
+						
+						<s:HGroup id="groupContainer" 
+								  width="100%" 
+								  height="100%"
+								  minHeight="36"
+								  verticalAlign="middle" 
+								  paddingBottom="10" paddingRight="10"
+								  paddingTop="10" paddingLeft="10">
+							
+							<s:Label id="labelDisplay" width="150" height="100%"
+									 verticalAlign="middle"
+									 maxDisplayedLines="1"/>
+							
+							<s:Group id="barContainer" width="100%" height="100%">
+								
+								<s:Rect id="progressBar"
+										height="100%" 
+										width="100%"
+										includeIn="loading"
+										itemCreationPolicy="immediate" 
+										>
+									<s:fill>
+										<s:SolidColor color="#0000FF" />
+									</s:fill>
+								</s:Rect>
+							</s:Group>
+							
+							<s:Label id="loadCompleteLabel" text="Load Complete" includeIn="loadComplete"/>
+							
+							<s:Label id="notLoadedLabel" text="Not loaded" includeIn="ready"/>
+							
+							<s:Button id="cancelLabel" label="Cancel" includeIn="loading" />
+						</s:HGroup>
+						
+						
+					</s:ItemRenderer>
+				</fx:Component>
+			</s:itemRenderer>
+		</s:List>
+		
+	</s:Group>
+	
+	<s:Image id="image"
+			 top="40" 
+			 left="500"
+			 width="250"
+			 height="250"/>
+	
+</s:Group>

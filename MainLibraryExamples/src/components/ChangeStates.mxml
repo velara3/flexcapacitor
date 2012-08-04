@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:states="com.flexcapacitor.effects.states.*" 
+		 >
+	
+	
+	<fx:Declarations>
+		
+		<!-- GO TO STATE 1 -->
+		<handlers:EventHandler target="{changeStatesButton}" eventName="click">
+			<states:ChangeStates state="state1" target="{this}"/>
+		</handlers:EventHandler>
+		
+		<!-- GO TO STATE 2 -->
+		<handlers:EventHandler target="{changeStatesButton2}" eventName="click">
+			<states:ChangeStates state="state2" target="{this}"/>
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="state1"/>
+		<s:State name="state2"/>
+	</s:states>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Switches to another state" 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		
+		<s:HGroup top="30" left="10">
+			
+			<s:Button id="changeStatesButton" 
+					  label="Go to state 1" 
+					  />
+			
+			<s:Button id="changeStatesButton2" 
+					  label="Go to state 2" 
+					  />
+			
+		</s:HGroup>
+		
+		<s:Spacer height="10" />
+		
+		<s:RichText top="10" left="10">
+			<s:text.state1>This text is visible only in the first state</s:text.state1>
+			<s:text.state2>This text is visible only is the second state</s:text.state2>
+		</s:RichText>
+	
+	</s:Group>
+	
+	
+</s:Group>

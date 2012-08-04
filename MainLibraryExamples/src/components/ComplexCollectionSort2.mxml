@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:project="com.flexcapacitor.effects.project.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:services="com.flexcapacitor.effects.services.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:data="com.flexcapacitor.effects.collections.*" 
+		 width="400" height="300"
+		 >
+	
+	<fx:Declarations>
+		
+		<s:ArrayCollection id="arrayCollection">
+			<s:DataItem name="Beige" group="B" value="#F5F5DC"/>
+			<s:DataItem name="Bistre" group="B" value="#3D2B1F"/>
+			<s:DataItem name="Black" group="B" value="#000000"/>
+			<s:DataItem name="Blue" group="B" value="#0000FF"/>
+			<s:DataItem name="Blue Green" group="B" value="#00DDDD"/>
+			<s:DataItem name="Blue Violet" group="B" value="#8A2BE2"/>
+			<s:DataItem name="Bondi Blue" group="B" value="#0095B6"/>
+			<s:DataItem name="Brass" group="B" value="#B5A642"/>
+			<s:DataItem name="Bronze" group="B" value="#CD7F32"/>
+			<s:DataItem name="Brown" group="B" value="#964B00"/>
+			<s:DataItem name="Buff" group="B" value="#F0DC82"/>
+			<s:DataItem name="Burgundy" group="B" value="#900020"/>
+			<s:DataItem name="Burnt Orange" group="B" value="#CC5500"/>
+			<s:DataItem name="Burnt Sienna" group="B" value="#E97451"/>
+			<s:DataItem name="Burnt Umber" group="B" value="#8A3324"/>
+			<s:DataItem name="Han Purple" group="H" value="#5218FA"/>
+			<s:DataItem name="Harlequin" group="H" value="#3FFF00"/>
+			<s:DataItem name="Heliotrope" group="H" value="#DF73FF"/>
+			<s:DataItem name="Hollywood Cerise" group="H" value="#F400A1"/>
+			<s:DataItem name="Camouflage Green" group="C" value="#78866B"/>
+			<s:DataItem name="Caput Mortuum" group="C" value="#592720"/>
+			<s:DataItem name="Cardinal" group="C" value="#C41E3A"/>
+			<s:DataItem name="Carmine" group="C" value="#960018"/>
+			<s:DataItem name="Carrot orange" group="C" value="#ED9121"/>
+			<s:DataItem name="Celadon" group="C" value="#ACE1AF"/>
+			<s:DataItem name="Cerise" group="C" value="#DE3163"/>
+			<s:DataItem name="Cerulean" group="C" value="#007BA7"/>
+			<s:DataItem name="Champagne" group="C" value="#F7E7CE"/>
+			<s:DataItem name="Charcoal" group="C" value="#464646"/>
+			<s:DataItem name="Chartreuse" group="C" value="#7FFF00"/>
+			<s:DataItem name="Cherry Blossom Pink" group="C" value="#FFB7C5"/>
+			<s:DataItem name="Chestnut" group="C" value="#CD5C5C"/>
+			<s:DataItem name="Chocolate" group="C" value="#7B3F00"/>
+			<s:DataItem name="Cinnabar" group="C" value="#E34234"/>
+			<s:DataItem name="Cinnamon" group="C" value="#D2691E"/>
+			<s:DataItem name="Cobalt" group="C" value="#0047AB"/>
+			<s:DataItem name="Copper" group="C" value="#B87333"/>
+			<s:DataItem name="Coral" group="C" value="#FF7F50"/>
+			<s:DataItem name="Corn" group="C" value="#FBEC5D"/>
+			<s:DataItem name="Cornflower" group="C" value="#6495ED"/>
+			<s:DataItem name="Cream" group="C" value="#FFFDD0"/>
+			<s:DataItem name="Crimson" group="C" value="#DC143C"/>
+			<s:DataItem name="Cyan" group="C" value="#00FFFF"/>
+			<s:DataItem name="Alizarin" group="A" value="#E32636"/>
+			<s:DataItem name="Amaranth" group="A" value="#E52B50"/>
+			<s:DataItem name="Amber" group="A" value="#FFBF00"/>
+			<s:DataItem name="Amethyst" group="A" value="#9966CC"/>
+			<s:DataItem name="Apricot" group="A" value="#FBCEB1"/>
+			<s:DataItem name="Aqua" group="A" value="#00FFFF"/>
+			<s:DataItem name="Aquamarine" group="A" value="#7FFFD4"/>
+			<s:DataItem name="Asparagus" group="A" value="#7BA05B"/>
+			<s:DataItem name="Auburn" group="A" value="#6D351A"/>
+			<s:DataItem name="Azure" group="A" value="#F0FFFF"/>
+			<s:DataItem name="Dandelion" group="D" value="#FED85D"/>
+			<s:DataItem name="Denim" group="D" value="#1560BD"/>
+			<s:DataItem name="Ecru" group="E" value="#C2B280"/>
+			<s:DataItem name="Emerald" group="E" value="#50C878"/>
+			<s:DataItem name="Eggplant" group="E" value="#614051"/>
+			<s:DataItem name="Wheat" group="W" value="#F5DEB3"/>
+			<s:DataItem name="White" group="W" value="#ffffff"/>
+			<s:DataItem name="Wisteria" group="W" value="#C9A0DC"/>
+			<s:DataItem name="Falu red" group="F" value="#801818"/>
+			<s:DataItem name="Fern green" group="F" value="#4F7942"/>
+			<s:DataItem name="Firebrick" group="F" value="#B22222"/>
+			<s:DataItem name="Flax" group="F" value="#EEDC82"/>
+			<s:DataItem name="Forest green" group="F" value="#228B22"/>
+			<s:DataItem name="French Rose" group="F" value="#F64A8A"/>
+			<s:DataItem name="Fuchsia" group="F" value="#FF00FF"/>
+			<s:DataItem name="Xanthic" group="X" value="#EDED09"/>
+			<s:DataItem name="Gamboge" group="G" value="#E49B0F"/>
+			<s:DataItem name="Gold" group="G" value="#D4AF37"/>
+			<s:DataItem name="Goldenrod" group="G" value="#DAA520"/>
+			<s:DataItem name="Green" group="G" value="#00FF00"/>
+			<s:DataItem name="Grey" group="G" value="#808080"/>
+			<s:DataItem name="Indigo" group="I" value="#00416A"/>
+			<s:DataItem name="Ivory" group="I" value="#FFFFF0"/>
+			<s:DataItem name="Jade " group="J" value="#00A86B"/>
+			<s:DataItem name="Kelly green" group="K" value="#4CBB17"/>
+			<s:DataItem name="Khaki" group="K" value="#C3B091"/>
+			<s:DataItem name="Lavender" group="L" value="#B57EDC"/>
+			<s:DataItem name="Lawn green" group="L" value="#7CFC00"/>
+			<s:DataItem name="Lemon" group="L" value="#FDE910"/>
+			<s:DataItem name="Lemon chiffon" group="L" value="#FFFACD"/>
+			<s:DataItem name="Lilac" group="L" value="#C8A2C8"/>
+			<s:DataItem name="Lime" group="L" value="#00FF00"/>
+			<s:DataItem name="Lime green" group="L" value="#32CD32"/>
+			<s:DataItem name="Linen" group="L" value="#FAF0E6"/>
+			<s:DataItem name="Magenta" group="M" value="#FF00FF"/>
+			<s:DataItem name="Magnolia" group="M" value="#F8F4FF"/>
+			<s:DataItem name="Malachite" group="M" value="#0BDA51"/>
+			<s:DataItem name="Maroon" group="M" value="#800000"/>
+			<s:DataItem name="Mauve" group="M" value="#E0B0FF"/>
+			<s:DataItem name="Midnight Blue" group="M" value="#191970"/>
+			<s:DataItem name="Mint green" group="M" value="#98FF98"/>
+			<s:DataItem name="Misty rose" group="M" value="#FFE4E1"/>
+			<s:DataItem name="Moss green" group="M" value="#ADDFAD"/>
+			<s:DataItem name="Mustard" group="M" value="#FFDB58"/>
+			<s:DataItem name="Myrtle" group="M" value="#21421E"/>
+			<s:DataItem name="Navajo white" group="N" value="#FFDEAD"/>
+			<s:DataItem name="Navy Blue" group="N" value="#000080"/>
+			<s:DataItem name="Ochre" group="O" value="#CC7722"/>
+			<s:DataItem name="Office green" group="O" value="#008000"/>
+			<s:DataItem name="Olive" group="O" value="#808000"/>
+			<s:DataItem name="Olivine" group="O" value="#9AB973"/>
+			<s:DataItem name="Orange" group="O" value="#FF7F00"/>
+			<s:DataItem name="Orchid" group="O" value="#DA70D6"/>
+			<s:DataItem name="Van Dyke Brown" group="V" value="#413000"/>
+			<s:DataItem name="Vermilion" group="V" value="#E34234"/>
+			<s:DataItem name="Violet" group="V" value="#8B00FF"/>
+			<s:DataItem name="Viridian" group="V" value="#40826D"/>
+			<s:DataItem name="Yellow" group="Y" value="#FFFF00"/>
+			<s:DataItem name="Zucchini" group="Z" value="#506022"/>
+			<s:DataItem name="Papaya whip" group="P" value="#FFEFD5"/>
+			<s:DataItem name="Peach" group="P" value="#FFE5B4"/>
+			<s:DataItem name="Pear" group="P" value="#D1E231"/>
+			<s:DataItem name="Periwinkle" group="P" value="#CCCCFF"/>
+			<s:DataItem name="Persimmon" group="P" value="#EC5800"/>
+			<s:DataItem name="Pine Green" group="P" value="#01796F"/>
+			<s:DataItem name="Pink" group="P" value="#FFC0CB"/>
+			<s:DataItem name="Platinum" group="P" value="#E5E4E2"/>
+			<s:DataItem name="Plum" group="P" value="#CC99CC"/>
+			<s:DataItem name="Powder blue" group="P" value="#B0E0E6"/>
+			<s:DataItem name="Puce" group="P" value="#CC8899"/>
+			<s:DataItem name="Prussian blue" group="P" value="#003153"/>
+			<s:DataItem name="Psychedelic purple" group="P" value="#DD00FF"/>
+			<s:DataItem name="Pumpkin" group="P" value="#FF7518"/>
+			<s:DataItem name="Purple" group="P" value="#800080"/>
+			<s:DataItem name="Quartz Grey" group="Q" value="#6C6961"/>
+			<s:DataItem name="Safety orange" group="S" value="#FF6600"/>
+			<s:DataItem name="Saffron" group="S" value="#F4C430"/>
+			<s:DataItem name="Salmon" group="S" value="#FF8C69"/>
+			<s:DataItem name="Sandy brown" group="S" value="#F4A460"/>
+			<s:DataItem name="Sangria" group="S" value="#92000A"/>
+			<s:DataItem name="Sapphire" group="S" value="#082567"/>
+			<s:DataItem name="Scarlet" group="S" value="#FF2400"/>
+			<s:DataItem name="School bus yellow" group="S" value="#FFD800"/>
+			<s:DataItem name="Sea Green" group="S" value="#2E8B57"/>
+			<s:DataItem name="Seashell" group="S" value="#FFF5EE"/>
+			<s:DataItem name="Sepia" group="S" value="#704214"/>
+			<s:DataItem name="Shamrock green" group="S" value="#009E60"/>
+			<s:DataItem name="Shocking Pink" group="S" value="#FC0FC0"/>
+			<s:DataItem name="Silver" group="S" value="#C0C0C0"/>
+			<s:DataItem name="Sky Blue" group="S" value="#87CEEB"/>
+			<s:DataItem name="Slate grey" group="S" value="#708090"/>
+			<s:DataItem name="Smalt" group="S" value="#003399"/>
+			<s:DataItem name="Spring bud" group="S" value="#A7FC00"/>
+			<s:DataItem name="Spring green" group="S" value="#00FF7F"/>
+			<s:DataItem name="Steel blue" group="S" value="#4682B4"/>
+			<s:DataItem name="Tan" group="T" value="#D2B48C"/>
+			<s:DataItem name="Tangerine" group="T" value="#F28500"/>
+			<s:DataItem name="Taupe" group="T" value="#483C32"/>
+			<s:DataItem name="Teal" group="T" value="#008080"/>
+			<s:DataItem name="Tenné (Tawny)" group="T" value="#CD5700"/>
+			<s:DataItem name="Terra cotta" group="T" value="#E2725B"/>
+			<s:DataItem name="Thistle" group="T" value="#D8BFD8"/>
+			<s:DataItem name="Titanium White" group="T" value="#fcfff0"/>
+			<s:DataItem name="Tomato" group="T" value="#FF6347"/>
+			<s:DataItem name="Turquoise" group="T" value="#30D5C8"/>
+			<s:DataItem name="Tyrian purple" group="T" value="#66023C"/>
+			<s:DataItem name="Ultramarine" group="U" value="#120A8F"/>
+			<s:DataItem name="Raw umber" group="R" value="#734A12"/>
+			<s:DataItem name="Razzmatazz" group="R" value="#E30B5C"/>
+			<s:DataItem name="Red" group="R" value="#FF0000"/>
+			<s:DataItem name="Robin egg blue" group="R" value="#00CCCC"/>
+			<s:DataItem name="Rose" group="R" value="#FF007F"/>
+			<s:DataItem name="Royal blue" group="R" value="#4169E1"/>
+			<s:DataItem name="Royal purple" group="R" value="#6B3FA0"/>
+			<s:DataItem name="Ruby" group="R" value="#E0115F"/>
+			<s:DataItem name="Russet" group="R" value="#80461B"/>
+			<s:DataItem name="Rust" group="R" value="#B7410E"/>
+		</s:ArrayCollection>
+		
+		<!-- SORT BY GROUP AND COLOR -->
+		<handlers:EventHandler eventName="click" target="{sortByName}">
+			<data:SortCollection target="{arrayCollection}" >
+				<data:fields>
+					<s:SortField name="group" />
+					<s:SortField name="value" />
+				</data:fields>
+			</data:SortCollection>
+		</handlers:EventHandler>
+		
+		<!-- SORT BY COLOR -->
+		<handlers:EventHandler eventName="click" target="{sortByColor}">
+			<data:SortCollection target="{arrayCollection}">
+				<data:fields>
+					<fx:Array>
+						<fx:String>value</fx:String>
+					</fx:Array>
+				</data:fields>
+			</data:SortCollection>
+		</handlers:EventHandler>
+		
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			public function labelFunction(item:Object):String {
+				return item.name + " #" + item.value;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Sorts an ArrayCollection of Objects by 'group' and then 'value'." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup verticalAlign="baseline">
+			<s:Button id="sortByName" label="Sort by Group and then value"/>
+			<s:Button id="sortByColor" label="Sort by Color"/>
+		</s:HGroup>
+		
+		<s:Spacer height="10"/>
+		
+		
+		<s:List id="list" 
+				minWidth="300"
+				height="100%" 
+				bottom="20"
+				dataProvider="{arrayCollection}"
+				borderVisible="false"
+				labelFunction="labelFunction"
+				contentBackgroundAlpha="0"
+				>
+			
+			<s:layout>
+				<s:VerticalLayout rowHeight="22"/>
+			</s:layout>
+			
+			<s:itemRenderer>
+				<fx:Component>
+					<s:ItemRenderer width="100%" 
+									height="100%" 
+									minHeight="22"
+									dataChange="itemrenderer1_dataChangeHandler(event)">
+						<s:layout>
+							<s:HorizontalLayout verticalAlign="middle" paddingLeft="10" paddingRight="10"/>
+						</s:layout>
+						
+						<fx:Script>
+							<![CDATA[
+								import mx.events.FlexEvent;
+								
+								protected function itemrenderer1_dataChangeHandler(event:FlexEvent):void {
+									labelDisplay.text = data.group;
+									labelDisplay2.text = data.value;
+									labelDisplay3.text = data.name;;
+								}
+								
+							]]>
+						</fx:Script>
+						<s:Label id="labelDisplay" 
+								 minWidth="20"
+								 height="100%"
+								 textAlign="left" 
+								 verticalAlign="middle"/>
+						
+						<s:Label id="labelDisplay2" 
+								 minWidth="80"
+								 height="100%"
+								 textAlign="right" 
+								 verticalAlign="middle"/>
+						
+						<s:Label id="labelDisplay3" 
+								 minWidth="120"
+								 height="100%"
+								 textAlign="right" 
+								 verticalAlign="middle"/>
+						
+						<s:Spacer width="100%"/>
+						
+						<s:Rect width="80" height="16" verticalCenter="0">
+							<s:fill>
+								<s:SolidColor color="{data.value}" />
+							</s:fill>
+							<s:stroke>
+								<s:SolidColorStroke color="#ffffff" weight="2"/>
+							</s:stroke>
+						</s:Rect>
+					</s:ItemRenderer>
+				</fx:Component>
+			</s:itemRenderer>
+		</s:List>
+	</s:Group>
+</s:Group>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:status="com.flexcapacitor.effects.status.*" 
+		 >
+	
+	
+	<fx:Declarations>
+		
+		
+		
+		
+		<!-- BROWSE FOR FILE -->
+		<!--- 
+		
+		The PlayerType runs different code based on the player type you are running.
+		
+		
+		-->
+		
+		<handlers:EventHandler target="{playerTypeButton}" eventName="click">
+
+			<core:PlayerType>
+				
+				<!-- DESKTOP or DEVICE (or launched when debugging) -->
+				<core:desktopPlayerTypeEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="This message only appears when running on the desktop or device"/>
+					</s:Sequence>
+				</core:desktopPlayerTypeEffect>
+				
+				
+				<!-- RUNNING IN THE BROWSER -->
+				<core:plugInPlayerTypeEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="This message only appears when running in the browser"/>
+					</s:Sequence>
+				</core:plugInPlayerTypeEffect>
+				
+				
+				<!-- RUNNING IN THE STANDALONE PLAYER -->
+				<core:standAlonePlayerTypeEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="This message only appears when running in the standalone"/>
+					</s:Sequence>
+				</core:standAlonePlayerTypeEffect>
+				
+				
+				<!-- RUNNING IN THE ACTIVE X PLAYER -->
+				<core:activeXPlayerTypeEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="This message only appears when running in the Active X player"/>
+					</s:Sequence>
+				</core:activeXPlayerTypeEffect>
+				
+				
+				<!-- RUNNING IN THE EXTERNAL PLAYER -->
+				<core:externalPlayerTypeEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="This message only appears when running in an external player"/>
+					</s:Sequence>
+				</core:externalPlayerTypeEffect>
+				
+			</core:PlayerType>
+	
+	
+		</handlers:EventHandler>
+	
+	</fx:Declarations>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Runs different code based on the player type." 
+				 color="#333333"
+				 top="10" left="10"
+				 width="100%"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		<s:Button id="playerTypeButton" 
+				  label="Run" 
+				  top="10" left="10"/>
+	</s:Group>
+	
+</s:Group>

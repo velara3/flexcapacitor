@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" xmlns:status="com.flexcapacitor.effects.status.*"
+		 
+		 >
+	
+	<fx:Declarations>
+
+		
+		<!-- BROWSE FOR FILE -->
+		<!--- 
+		
+		Browse for file gets a reference to a file or files but does NOT load them by itself.
+		With BrowseForFile we only want to select the file. 
+		We don't make an assumption that we are loading, uploading, downloading or saving
+		
+		To load the file pass the fileReference to a LoadFile instance.
+		
+		Once LoadFile loads the file we can get a reference to the data
+		
+		// action = LoadFile instance
+		
+		// loaderInfo is the loaded file
+		action.loaderInfo = loaderInfo;
+		action.byteArray = loaderInfo.bytes;
+		action.data = loaderInfo.content;
+		action.contentType = loaderInfo.contentType;
+		
+		if (loaderInfo.content is Bitmap) {
+			action.bitmapData = Bitmap(loaderInfo.content).bitmapData;
+		}
+		
+		-->
+		
+		<handlers:EventHandler target="{browseForFileButton}" eventName="click">
+			
+			<file:BrowseForFile id="browseForFile"
+								targetAncestor="{this}"
+								allowMultipleSelection="{allowMultipleSelections.selected}"
+								fileTypes="jpeg,jpg,png,gif"
+								>
+				<file:cancelEffect>
+					<status:ShowStatusMessage message="You didn't select any files :(..."/>
+				</file:cancelEffect>
+				<file:selectionEffect>
+					<s:Sequence>
+						<core:SetAction target="{filesCollection}" property="source"
+										value="{[]}"/>
+					</s:Sequence>
+				</file:selectionEffect>
+				<file:multipleSelectionEffect>
+					<s:Sequence>
+						<core:CopyDataToTarget source="{browseForFile}" 
+												sourcePropertyName="fileReferenceList"
+												sourceSubPropertyName="fileList"
+												target="{filesCollection}"
+												targetPropertyName="source"
+												/>
+					</s:Sequence>
+				</file:multipleSelectionEffect>
+			</file:BrowseForFile>
+			
+			<status:ShowStatusMessage message="You selected {browseForFile.hasMultipleSelections ? 'multiple files' : browseForFile.fileName}"/>
+			
+			<!--you would get a reference to the fileReference or fileReferenceList to get the files that were selected. see loadfiles example-->
+			
+		</handlers:EventHandler>
+		
+		<s:ArrayCollection id="filesCollection"/>
+	</fx:Declarations>
+	
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="Open a browse for file dialog and select files. Use Load File to get the file data." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		<s:HGroup>
+			<s:Button id="browseForFileButton" 
+					  label="Browse for File" 
+					  top="10" left="10"/>
+			
+			<s:CheckBox id="allowMultipleSelections"
+						top="40" left="10"
+						label="Allow multiple selections"/>
+		</s:HGroup>
+		
+		<!--- The contents below this line are not a required part of this example -->
+		
+		<s:List id="selectedFiles" 
+				top="40" left="10"
+				width="450"
+				borderAlpha=".25"
+				labelField="name"
+				dataProvider="{filesCollection}"
+				minHeight="300"
+				>
+		</s:List>
+	</s:Group>
+		
+	
+	
+</s:Group>

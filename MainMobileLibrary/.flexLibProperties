@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="true" version="3">
+  <includeClasses>
+    <classEntry path="com.flexcapacitor.effects.application.ExitApplication"/>
+    <classEntry path="com.flexcapacitor.effects.application.GoIntoFullscreen"/>
+    <classEntry path="com.flexcapacitor.effects.application.supportClasses.GoIntoFullScreenInstance"/>
+    <classEntry path="com.flexcapacitor.effects.application.supportClasses.ExitApplicationInstance"/>
+  </includeClasses>
+  <includeResources/>
+  <namespaceManifests/>
+</flexLibProperties>

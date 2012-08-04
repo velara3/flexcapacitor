@@ -1,0 +1,356 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:file="com.flexcapacitor.effects.file.*" 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:status="com.flexcapacitor.effects.status.*" 
+		 xmlns:settings="com.flexcapacitor.effects.settings.*" 
+		 xmlns:collections="com.flexcapacitor.effects.collections.*" 
+		 xmlns:display="com.flexcapacitor.effects.display.*" 
+		 xmlns:list="com.flexcapacitor.effects.list.*" 
+		 
+		 >
+	
+	<fx:Declarations>
+
+		
+		<!-- GET SETTING -->
+		
+		<!-- CREATION COMPLETE - GET SAVED SETTINGS -->
+		<handlers:EventHandler eventName="creationComplete">
+			<core:PlayEffect effect="{getAllSettingsSequence}"/>
+		</handlers:EventHandler>
+		
+		
+		<!-- GET ALL SETTINGS -->
+		<handlers:EventHandler target="{getAllSettingsButton}" eventName="click">
+			
+			<core:IsPropertySet target="{groupNameInput}" targetPropertyName="text">
+				<core:propertyNotSetEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="Please enter a group name for the settings"/>
+						<core:Cancel />
+					</s:Sequence>
+				</core:propertyNotSetEffect>
+			</core:IsPropertySet>
+			
+			<s:Sequence id="getAllSettingsSequence">
+				<settings:GetSettings name="{groupNameInput.text}">
+					<settings:valueNotSetEffect>
+						<s:Sequence >
+							<display:ShowElement target="{groupDoesNotExistLabel}"/>
+							<core:SetAction target="{propertiesCollection}" 
+											property="source"
+											value="{[]}"
+											/>
+							<core:SetAction target="{settingValueTextarea}" 
+											property="text"
+											value=""
+											/>
+							<core:Cancel />
+						</s:Sequence>
+					</settings:valueNotSetEffect>
+					<settings:valueSetEffect>
+						<s:Sequence >
+							<display:HideElement target="{groupDoesNotExistLabel}"/>
+						</s:Sequence>
+					</settings:valueSetEffect>
+				</settings:GetSettings>
+				
+				<core:CopyPreviousToNext sourcePropertyName="properties"/>
+				
+				<core:CopyDataToTarget target="{propertiesCollection}" 
+									   targetPropertyName="source"
+									   />
+			</s:Sequence>
+			
+		</handlers:EventHandler>
+		
+		
+		<!-- ADD NEW SETTING -->
+		<handlers:EventHandler target="{saveSettingButton}" eventName="click">
+			
+			<core:IsPropertySet target="{settingNameInput}" targetPropertyName="text">
+				<core:propertyNotSetEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="Please enter a name for the setting"/>
+						<core:Cancel />
+					</s:Sequence>
+				</core:propertyNotSetEffect>
+			</core:IsPropertySet>
+			
+			<core:IsPropertySet target="{groupNameInput}" targetPropertyName="text">
+				<core:propertyNotSetEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="Please enter a group name for the settings"/>
+						<core:Cancel />
+					</s:Sequence>
+				</core:propertyNotSetEffect>
+			</core:IsPropertySet>
+			
+			<!--- In this example we are not setting the value here. We set it in the update value sequence -->
+			<settings:SaveSetting name="{settingNameInput.text}" 
+								  group="{groupNameInput.text}">
+				<settings:savedEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="Setting was added successfully"/>
+						<core:PlayEffect effect="{getAllSettingsSequence}"/>
+					</s:Sequence>
+				</settings:savedEffect>
+				<settings:pendingEffect>
+					<status:ShowStatusMessage message="Setting will be added on exit"/>
+				</settings:pendingEffect>
+				<settings:errorEffect>
+					<status:ShowStatusMessage message="An error occured when attempting to save!"/>
+				</settings:errorEffect>
+			</settings:SaveSetting>
+			
+			<core:SetAction target="{settingNameInput}" property="text" value=""/> 
+			<core:SetAction target="{settingValueTextarea}" property="text" value=""/> 
+			
+		</handlers:EventHandler>
+		
+		
+		<!-- UPDATED SAVED VALUE -->
+		<handlers:EventHandler target="{updateValueButton}" eventName="click">
+			
+			<core:IsPropertySet target="{settingsList}" targetPropertyName="selectedItem">
+				<core:propertyNotSetEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="Please add or select an item from the list"/>
+						<core:Cancel cancelAncestorEffects="true" />
+					</s:Sequence>
+				</core:propertyNotSetEffect>
+			</core:IsPropertySet>
+			
+			<settings:SaveSetting name="{settingsList.selectedItem}" 
+								  data="{settingValueTextarea.text}" 
+								  group="{groupNameInput.text}">
+				<settings:savedEffect>
+					<s:Sequence>
+						<status:ShowStatusMessage message="Value is was saved successfully"/>
+						<core:PlayEffect effect="{getAllSettingsSequence}"/>
+					</s:Sequence>
+				</settings:savedEffect>
+				<settings:pendingEffect>
+					<status:ShowStatusMessage message="Value will be saved on exit"/>
+				</settings:pendingEffect>
+				<settings:errorEffect>
+					<status:ShowStatusMessage message="An error occured when attempting to save!"/>
+				</settings:errorEffect>
+			</settings:SaveSetting>
+			
+			
+		</handlers:EventHandler>
+		
+		
+		
+		<!-- GROUP NAME CHANGE - GET ALL SETTINGS -->
+		<handlers:EventHandler target="{groupNameInput}" 
+							   eventName="change">
+			
+			<core:IsPropertySet target="{groupNameInput}" targetPropertyName="text">
+				<core:propertySetEffect>
+					<core:PlayEffect effect="{getAllSettingsSequence}"/>
+				</core:propertySetEffect>
+				<core:propertyNotSetEffect>
+					<core:SetAction target="{propertiesCollection}" 
+									property="source"
+									value="{[]}"
+									/>
+				</core:propertyNotSetEffect>
+			</core:IsPropertySet>
+			
+		</handlers:EventHandler>
+		
+		
+		<!-- LIST ROW CHANGE - GET SELECTED SETTING -->
+		<handlers:EventHandler target="{settingsList}" 
+							   eventName="change">
+			
+			<list:GetSelectedItem target="{settingsList}"/>
+			
+			<core:CopyPreviousToNext targetPropertyName="name" />
+			
+			<settings:GetSetting group="{groupNameInput.text}">
+				<settings:valueNotSetEffect>
+					<s:Sequence >
+						<status:ShowStatusMessage message="There is no setting with that name"/>
+						<core:Cancel />
+					</s:Sequence>
+				</settings:valueNotSetEffect>
+			</settings:GetSetting>
+			
+			<core:CopyPreviousToNext />
+			
+			<core:CopyDataToTarget target="{settingValueTextarea}" targetPropertyName="text"/>
+			
+		</handlers:EventHandler>
+		
+		
+		<s:ArrayCollection id="propertiesCollection"/>
+	</fx:Declarations>
+	
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left" gap="12"/>
+		</s:layout>
+		
+		<s:Label text="Gets or saves a value in the local cache (SharedObject)." 
+				 color="#333333"
+				 top="10" left="10"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		
+		<s:HGroup verticalAlign="middle" width="100%">
+			
+			<s:Label id="groupNameLabel"
+					 text="Group Name:"
+					 minWidth="60"
+					 />
+			
+			<s:TextInput id="groupNameInput"
+						 prompt="Enter name of group"
+						 text="general"
+						 width="300"
+						 />
+			
+			<s:Spacer width="100%"/>
+			
+			<s:Label id="groupDoesNotExistLabel"
+					 text="Note: A group with this name doesn't exist yet. It will be created when a setting is added."
+					 visible="false"
+					 />
+			
+		</s:HGroup>
+		
+		<s:Line width="100%" >
+			<s:stroke>
+				<s:SolidColorStroke weight="1" />
+			</s:stroke>
+			<s:filters>
+				<s:DropShadowFilter angle="90" color="#EEEEEE" strength=".5" distance="1" blurX="0" blurY="0"/>
+			</s:filters>
+		</s:Line>
+		
+		<s:HGroup width="100%">
+			
+			
+			<s:VGroup width="100%" paddingRight="10">
+				
+				<s:HGroup verticalAlign="middle" width="100%">
+					<s:Label text="Saved Settings"/>
+				</s:HGroup>
+				<s:List id="settingsList" 
+						width="100%"
+						borderAlpha=".5"
+						minHeight="300"
+						dataProvider="{propertiesCollection}"
+						>
+					<s:itemRenderer>
+						<fx:Component>
+							<s:ItemRenderer width="100%" height="100%">
+								
+								<fx:Declarations>
+									<handlers:EventHandler target="{removeSettingLabel}" eventName="click">
+										<settings:RemoveSetting name="{data}" group="{outerDocument.groupNameInput.text}"/>
+										<core:PlayEffect target="{outerDocument.getAllSettingsSequence}"/>
+									</handlers:EventHandler>
+								</fx:Declarations>
+								
+								
+								<s:HGroup width="100%" 
+										  verticalAlign="middle" 
+										  paddingBottom="10" 
+										  paddingRight="10"
+										  paddingTop="10" 
+										  paddingLeft="10">
+									
+									<s:Label id="labelDisplay" 
+											 width="150" 
+											 maxDisplayedLines="1"/>
+									
+									<s:Spacer width="100%"/>
+									
+									<s:Button id="removeSettingLabel" 
+											  label="Remove Setting" />
+								</s:HGroup>
+								
+								
+							</s:ItemRenderer>
+						</fx:Component>
+					</s:itemRenderer>
+				</s:List>
+				<s:HGroup verticalAlign="middle" width="100%">
+					<s:Spacer width="100%"/>
+					<s:Button id="getAllSettingsButton" 
+							  label="Get All Settings" 
+							  top="10" left="10"/>
+				</s:HGroup>
+			</s:VGroup>
+			
+			
+			
+			<s:VGroup width="100%">
+				
+				<s:HGroup verticalAlign="middle" width="100%">
+					<s:Label text="Value"
+							 minWidth="60"
+							 />
+				</s:HGroup>
+				
+				<s:TextArea id="settingValueTextarea" 
+							width="100%"
+							height="300"
+							borderAlpha=".5"
+							prompt="Value of property"
+							>
+					
+				</s:TextArea>
+				
+				<s:HGroup verticalAlign="middle" width="100%">
+					<s:Spacer width="100%"/>
+					<s:Button id="updateValueButton" 
+							  label="Update Value" 
+							  top="10" left="10"/>
+				</s:HGroup>
+			</s:VGroup>
+			
+		</s:HGroup>
+		
+		
+		<s:Line width="100%" >
+			<s:stroke>
+				<s:SolidColorStroke weight="1" />
+			</s:stroke>
+			<s:filters>
+				<s:DropShadowFilter angle="90" color="#EEEEEE" strength=".5" distance="1" blurX="0" blurY="0"/>
+			</s:filters>
+		</s:Line>
+		
+		<s:HGroup verticalAlign="baseline" width="100%">
+			
+			<s:Label id="settingNameLabel"
+					 text="Add New Setting:"
+					 />
+			
+			<s:TextInput id="settingNameInput"
+						 prompt="name"
+						 />
+			
+			<s:Button id="saveSettingButton" 
+					  label="Add" 
+					  top="10" left="10"/>
+		</s:HGroup>
+	</s:Group>
+		
+	
+	
+</s:Group>
