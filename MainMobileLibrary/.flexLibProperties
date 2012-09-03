@@ -1,10 +1,29 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <flexLibProperties includeAllClasses="true" useMultiPlatformConfig="true" version="3">
   <includeClasses>
+    <classEntry path="MainLibraryTheme"/>
+    <classEntry path="com.flexcapacitor.controls.WebView"/>
     <classEntry path="com.flexcapacitor.effects.application.ExitApplication"/>
     <classEntry path="com.flexcapacitor.effects.application.GoIntoFullscreen"/>
-    <classEntry path="com.flexcapacitor.effects.application.supportClasses.GoIntoFullScreenInstance"/>
     <classEntry path="com.flexcapacitor.effects.application.supportClasses.ExitApplicationInstance"/>
+    <classEntry path="com.flexcapacitor.effects.application.supportClasses.GoIntoFullScreenInstance"/>
+    <classEntry path="com.flexcapacitor.effects.prompt.PromptAction"/>
+    <classEntry path="com.flexcapacitor.effects.prompt.supportClasses.PromptActionInstance"/>
+    <classEntry path="com.flexcapacitor.effects.view.OpenView"/>
+    <classEntry path="com.flexcapacitor.effects.view.RemoveView"/>
+    <classEntry path="com.flexcapacitor.effects.view.SelectTabView"/>
+    <classEntry path="com.flexcapacitor.effects.view.supportClasses.OpenViewInstance"/>
+    <classEntry path="com.flexcapacitor.effects.view.supportClasses.RemoveViewInstance"/>
+    <classEntry path="com.flexcapacitor.effects.view.supportClasses.SelectTabViewInstance"/>
+    <classEntry path="com.flexcapacitor.prompt.PromptManager"/>
+    <classEntry path="com.flexcapacitor.prompt.supportClasses.IPrompt"/>
+    <classEntry path="com.flexcapacitor.prompt.supportClasses.PromptEvent"/>
+    <classEntry path="com.flexcapacitor.prompt.view.PromptDialog"/>
+    <classEntry path="com.flexcapacitor.transitions.FlipViewTransition"/>
+    <classEntry path="com.flexcapacitor.transitions.FlipViewTransitionMode"/>
+    <classEntry path="com.flexcapacitor.transitions.ViewTransitionDirection"/>
+    <classEntry path="com.flexcapacitor.transitions.ZoomViewTransition"/>
+    <classEntry path="com.flexcapacitor.transitions.ZoomViewTransitionMode"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -1387,16 +1387,6 @@ package com.flexcapacitor.handlers {
 				enterDebugger();
 			}
 			
-			// dispatch start event
-			if (hasEventListener(EVENT_START)) {
-				dispatchEvent(new Event(EVENT_START));
-			}
-			
-			// redispatch before running any effects
-			if (redispatchDuring=="before") {
-				redispatch(event);
-			}
-			
 			// store event
 			if (keepEvent) {
 				event = currentEvent;
@@ -1406,6 +1396,17 @@ package com.flexcapacitor.handlers {
 			if (keepEventTargets) {
 				eventTarget = currentEvent.target;
 				currentTarget = currentEvent.currentTarget;
+			}
+			
+			
+			// dispatch start event
+			if (hasEventListener(EVENT_START)) {
+				dispatchEvent(new Event(EVENT_START));
+			}
+			
+			// redispatch before running any effects
+			if (redispatchDuring=="before") {
+				redispatch(event);
 			}
 			
 			

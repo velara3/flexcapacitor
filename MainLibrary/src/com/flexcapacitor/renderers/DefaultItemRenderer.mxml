@@ -1,0 +1,151 @@
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark"  
+				width="100%"
+				height="100%"
+				minHeight="32"
+				autoDrawBackground="true"
+				opaqueBackground="#ffffff"
+				showsCaret="false"
+				>
+	
+
+	<fx:Script>
+		<![CDATA[
+			
+			import mx.events.FlexEvent;
+			import spark.utils.DataItem;
+			
+			override public function set data(value:Object):void {
+				super.data = value;
+				var item:Object = value;
+				
+				labelDisplay.text = item as String;
+			}
+			
+			override public function setCurrentState(stateName:String, playTransition:Boolean=true):void {
+				labelDisplay.text = stateName;
+				super.setCurrentState(stateName, playTransition);
+			}
+			
+		    /**
+		     *  @private
+		     */
+		    override protected function measure():void
+		    {
+		        super.measure();
+		        
+		        // label has padding of 3 on left and right and padding of 5 on top and bottom.
+		        measuredWidth = labelDisplay.getPreferredBoundsWidth() + 6;
+		        measuredHeight = labelDisplay.getPreferredBoundsHeight() + 10;
+		
+		        measuredMinWidth = labelDisplay.getMinBoundsWidth() + 6;
+		        measuredMinHeight = labelDisplay.getMinBoundsHeight() + 10;
+		    }
+			
+			/*
+			// HOW COLORS ARE DETERMINED
+	        if (down && downColor !== undefined)
+	        {
+	            backgroundColor = downColor;
+	        }
+	        else if (selected)
+	        {
+	            backgroundColor = getStyle("selectionColor");
+	        }
+	        else if (hovered)
+	        {
+	            backgroundColor = getStyle("rollOverColor");
+	        }
+	        else if (showsCaret)
+	        {
+	            backgroundColor = getStyle("selectionColor");
+	        }
+	        else 
+			{ 
+			    alternating colors
+			}
+			*/
+		]]>
+	</fx:Script>
+	
+	
+	<!--
+	
+     *  <p>In Flex 4.0, the 3 main states were "normal", "hovered", and "selected".
+     *  In Flex 4.5, "down" and "downAndSelected" have been added.</p>
+     * 
+     *  <p>The full set of states supported (in order of precedence) are: 
+     *    <ul>
+     *      <li>dragging</li>
+     *      <li>downAndSelected</li>
+     *      <li>selectedAndShowsCaret</li>
+     *      <li>hoveredAndShowsCaret</li>
+     *      <li>normalAndShowsCaret</li>
+     *      <li>down</li>
+     *      <li>selected</li>
+     *      <li>hovered</li>
+     *      <li>normal</li>
+     *    </ul>
+     *  </p>
+     * 
+	-->
+	<s:states>
+		<s:State name="dragging" />
+		<s:State name="downAndSelected" />
+		<s:State name="selectedAndShowsCaret" />
+		<s:State name="hoveredAndShowsCaret" />
+		<s:State name="normalAndShowsCaret" />
+		<s:State name="down"  />
+		<s:State name="selected" />
+		<s:State name="hovered" />
+		<s:State name="normal" />
+	</s:states>
+	
+<!-- 
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	|	Interaction		|	Style					|	Value for Spark theme	|	Value for Mobile theme			|
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+	|	none			|	contentBackgroundColor	|	0xFFFFFF (white)		|	0x464646 (dark grey)			|
+	|					|							|							|									|
+	|	hovered			|	rollOverColor			|	0xCEDBEF (light blue)	|	0xCEDBEF (light blue/grey)		|
+	|					|							|							|									|
+	|	selected		|	selectionColor			|	0xA8C6EE (dark blue)	|	0xB2B2B2 (light grey)			|
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+-->
+	
+	
+	<!--<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+			
+
+
+	s|ItemRenderer {
+	    selectionColor: #FF0000;
+	    rollOverColor: #00FF00;
+		downColor: #ffff00;
+		contentBackgroundColor: #d3e1A8;
+		alternatingItemColors:#ffffff,#f4f7f7;
+	}
+
+
+	</fx:Style>-->
+	
+	<!--<s:Rect left="0" right="0" top="0" bottom="0" 
+			>
+		<s:fill>
+			<s:SolidColor color.normal="0xffffff"
+						  color.down="#ffff00"
+						  color.downAndSelected="0xBAD4FC"
+						  color.selected="#0000ff"
+						  />
+		</s:fill>
+	</s:Rect>-->
+	
+	
+	<s:Label id="labelDisplay" 
+			 paddingLeft="3" paddingRight="3" 
+			 paddingTop="5" paddingBottom="5"
+			 verticalCenter="2"
+			 left="2"/>
+	
+</s:ItemRenderer>
