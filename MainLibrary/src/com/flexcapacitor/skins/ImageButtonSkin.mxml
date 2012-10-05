@@ -4,9 +4,9 @@
         xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
         alpha.disabled="0.5"
 		mouseDown="{filters=buttonDownFilters}" 
-		mouseOut="{filters=null}"
-		mouseUp="{filters=null}"
-		mouseDownOutside="{filters=null}">
+		mouseOut="{filters=buttonUpFilters}"
+		mouseUp="{filters=buttonUpFilters}"
+		mouseDownOutside="{filters=buttonUpFilters}">
     
     <s:states>
         <s:State name="uninitialized" />
@@ -15,10 +15,45 @@
         <s:State name="invalid" />
         <s:State name="disabled" />
         <s:State name="up" />
+        <s:State name="over" />
+        <s:State name="down" />
     </s:states>
-    
+	
     <fx:Script fb:purpose="styling">
-        <![CDATA[         
+        <![CDATA[
+			
+			private var buttonUpFilters:Array;
+			
+			
+			override public function setCurrentState(stateName:String, playTransition:Boolean=true):void {
+				//trace("STATE=" + stateName);
+				super.setCurrentState(stateName, playTransition);
+				
+				
+				// HOW COLORS ARE DETERMINED
+				
+		        /* if (down && downColor !== undefined)
+		        {
+		            backgroundColor = downColor;
+		        }
+		        else if (selected)
+		        {
+		            backgroundColor = getStyle("selectionColor");
+		        }
+		        else if (hovered)
+		        {
+		            backgroundColor = getStyle("rollOverColor");
+		        }
+		        else if (showsCaret)
+		        {
+		            backgroundColor = getStyle("selectionColor");
+		        }
+		        else 
+				{ 
+				    alternating colors
+				} */
+			}
+			
             /**
              *  @private
              */
@@ -38,9 +73,29 @@
                     bgFill.color = getStyle("backgroundColor");
                     bgFill.alpha = getStyle("backgroundAlpha");
                 }
-                
+				
+                if (getStyle("useButtonUpStyle")!==undefined && getStyle("useButtonUpStyle"))
+                {
+					if (buttonUpFilters != bevelFilters) 
+					{
+						buttonUpFilters = bevelFilters.concat();
+						
+						if (filters.length==0) 
+						{
+							filters = buttonUpFilters;
+						}
+					}
+				}
+				else 
+				{
+					buttonUpFilters = null;
+				}
+				
                 super.updateDisplayList(unscaledWidth, unscaledHeight);
+				
             }
+			
+			
         ]]>        
     </fx:Script>
     
@@ -63,6 +118,23 @@
 						   strength=".8" 
 						   blurX="2" blurY="2"
 						   highlightColor="0xffffff" 
+						   type="inner"/>
+		</fx:Array>
+		
+		
+
+		<fx:Array id="bevelFilters">
+			<s:BevelFilter id="bevelFilter" 
+						   angle="45.0" 
+						   blurX="1" blurY="1" 
+						   distance="0.4"
+						   highlightAlpha="1.0" 
+						   knockout="false"
+						   highlightColor="#FFFFFF" 
+						   shadowColor="#000000" 
+						   quality="3" 
+						   shadowAlpha="1.0" 
+						   strength="1.5"
 						   type="inner"/>
 		</fx:Array>
 	</fx:Declarations>

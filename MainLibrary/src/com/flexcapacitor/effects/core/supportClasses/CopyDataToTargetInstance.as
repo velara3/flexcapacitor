@@ -127,7 +127,8 @@ package com.flexcapacitor.effects.core.supportClasses {
 					}
 				}
 			}
-			else if (action.data) {
+			// else if (action.data!=undefined) { // because undefined or null or 0 or false may be desired
+			else {
 				value = action.data;
 			}
 			

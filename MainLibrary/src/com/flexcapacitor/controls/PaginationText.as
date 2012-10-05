@@ -17,12 +17,40 @@ package com.flexcapacitor.controls
 	
 	import spark.events.IndexChangeEvent;
 	
+	//--------------------------------------
+	//  Styles
+	//--------------------------------------
+	
+/**
+ *  The name of the font to use, or a comma-separated list of font names. 
+ * 
+ *  <p><b>For the Spark theme, see
+ *  flashx.textLayout.formats.ITextLayoutFormat.fontFamily.</b></p>
+ *
+ *  <p><b>For the Mobile theme, if using StyleableTextField,
+ *  see spark.components.supportClasses.StyleableTextField Style fontFamily,
+ *  and if using StyleableStageText,
+ *  see spark.components.supportClasses.StyleableStageText Style fontFamily.</b></p>
+ * 
+ *  <p>The default value for the Spark theme is <code>Arial</code>.
+ *  The default value for the Mobile theme is <code>_sans</code>.</p>
+ *
+ *  @see flashx.textLayout.formats.ITextLayoutFormat#fontFamily
+ *  @see spark.components.supportClasses.StyleableStageText#style:fontFamily
+ *  @see spark.components.supportClasses.StyleableTextField#style:fontFamily
+ *  
+ *  @langversion 3.0
+ *  @playerversion Flash 10
+ *  @playerversion AIR 1.5
+ *  @productversion Flex 4
+ */
+[Style(name="fontFamily", type="String", inherit="yes")]
+
 	/**
 	 * Creates a multicolumn text flow
 	 * 
 	 	&lt;c:PaginationText id="textBox" left="20" right="20" width="100%" height="100%"
 					  htmlText="{instructions}"
-					  
 					  selectable="false"
 					  replaceLinebreaksWithBreaks="true"/>
 					   
@@ -114,6 +142,19 @@ package com.flexcapacitor.controls
 		 *  Comment
 		 * */
 		public var config:Configuration;
+		
+		// some configuration values - ContainerFormat for all containers and constraints on container width
+		private var _containerFormat:TextLayoutFormat;
+
+		public function get containerFormat():TextLayoutFormat {
+			return _containerFormat;
+		}
+
+		public function set containerFormat(value:TextLayoutFormat):void {
+			_containerFormat = value;
+			pageView.containerFormat = value;
+		}
+
 		
 		/**
 		 *  @private
@@ -247,7 +288,19 @@ package com.flexcapacitor.controls
 			selectableChanged = true;
 			invalidateProperties();
 		}
-
+		
+		override public function styleChanged(styleProp:String):void {
+			super.styleChanged(styleProp);
+			var currentFormat:TextLayoutFormat = pageView.containerFormat;
+			
+			currentFormat.fontFamily = getStyle('fontFamily');
+			pageView.containerFormat = currentFormat;
+			pageView.containerFormat.setStyle("fontFamily", getStyle("fontFamily"));
+			if (pageView.textFlow) {
+				pageView.recomputeContainers();
+			}
+		}
+		
 		
 		//--------------------------------------------------------------------------
 		//
@@ -280,7 +333,7 @@ package com.flexcapacitor.controls
 			config = TextFlow.defaultConfiguration;
 			config.inactiveSelectionFormat = config.focusedSelectionFormat;
 			config.unfocusedSelectionFormat  = config.focusedSelectionFormat;
-			
+			//config.textFlowInitialFormat.fontFamily = getStyle("fontFamily");
 			chapters = new Array(contents.length);
 			
 			//setChapter(0);

@@ -53,7 +53,7 @@ package com.flexcapacitor.effects.core {
 		 * Value to assign to target. If the source is set this is not used.
 		 * */
 		[Bindable]
-		public var data:Object;
+		public var data:*;
 		
 		/**
 		 * Source object that is used if set. You can get a property value 

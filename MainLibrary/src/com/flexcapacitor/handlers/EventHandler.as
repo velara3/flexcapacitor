@@ -78,6 +78,8 @@ package com.flexcapacitor.handlers {
 	 * If you don't set the target then the target is set to the document 
 	 * (if declared in an IMXMLObject document) which all view components implement.<br/><br/>
 	 * 
+	 * Note: If the effects are not being played make sure the target on the effect is not null.<br/><br/>
+	 * 
 	 * <b>To Use:</b> 
 <pre>&lt;EventHandler eventName="click" target="{button}" >
 		&lt;s:Move duration="250"
@@ -1510,6 +1512,7 @@ package com.flexcapacitor.handlers {
 			_effect.addEventListener(EffectEvent.EFFECT_START, effectStart, false, 0, true);
 			_effect.addEventListener(EffectEvent.EFFECT_END, effectEnd, false, 0, true);
 			
+			// if the effects are not being played make sure the target on the effect is not null
 			effect.play();
 		}
 		

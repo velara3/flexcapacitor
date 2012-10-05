@@ -45,12 +45,12 @@
 			_pageList = new Array();
 			
 			// all containers formatted this way
-			_containerFormat = new TextLayoutFormat();
-			_containerFormat.columnCount = 1;
-			_containerFormat.paddingTop = paddingTop;
-			_containerFormat.paddingBottom = paddingBottom;
-			_containerFormat.paddingLeft = paddingLeft;
-			_containerFormat.paddingRight = paddingRight;
+			containerFormat = new TextLayoutFormat();
+			containerFormat.columnCount = 1;
+			containerFormat.paddingTop = paddingTop;
+			containerFormat.paddingBottom = paddingBottom;
+			containerFormat.paddingLeft = paddingLeft;
+			containerFormat.paddingRight = paddingRight;
 			
 			_containersToShow = 0;
 			
@@ -78,6 +78,18 @@
 		
 		// some configuration values - ContainerFormat for all containers and constraints on container width
 		private var _containerFormat:TextLayoutFormat;
+
+		public function get containerFormat():TextLayoutFormat {
+			return _containerFormat;
+		}
+
+		public function set containerFormat(value:TextLayoutFormat):void {
+			_containerFormat = value;
+			if (_textFlow) {
+				recomputeContainers();
+			}
+		}
+
 		private const _minContainerWidth:int = 100;
 		private const _maxContainerWidth:int = 10000;
 		
@@ -205,7 +217,7 @@
 		}
 		
 		/** The worker function.  Reflows based on the parameters computed in setSize */
-		private function recomputeContainers():void {
+		public function recomputeContainers():void {
 			var controller:ContainerController;
 			var oldPageCount:int;
 			var index:int;	// scratch
@@ -254,7 +266,7 @@
 					controller = new MyDisplayObjectContainerController(new Sprite(),_containerWidth,_containerHeight, this);
 					controller.horizontalScrollPolicy = ScrollPolicy.OFF;
 					controller.verticalScrollPolicy = ScrollPolicy.OFF;
-					controller.format = _containerFormat;
+					controller.format = containerFormat;
 					
 					_textFlow.flowComposer.addController(controller);
 				}
