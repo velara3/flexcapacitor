@@ -1,4 +1,4 @@
-	package com.flexcapacitor.utils {
+package com.flexcapacitor.utils {
 	
 	import flash.debugger.enterDebugger;
 	import flash.display.DisplayObject;
@@ -17,15 +17,18 @@
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
+	import mx.core.mx_internal;
 	import mx.managers.ISystemManager;
 	import mx.managers.SystemManager;
 	import mx.styles.CSSCondition;
 	import mx.styles.CSSConditionKind;
 	import mx.styles.CSSStyleDeclaration;
+	import mx.styles.IAdvancedStyleClient;
 	import mx.styles.IStyleClient;
 	import mx.styles.IStyleManager2;
 	import mx.styles.StyleManager;
 	import mx.utils.NameUtil;
+	import mx.utils.ObjectUtil;
 	
 	import spark.components.Application;
 
@@ -139,9 +142,20 @@
 		public var showEmbeddedFontInformation:Boolean;
 		
 		/**
+		 * Show all style declarations
+		 * @see showStyleInheritanceInformation 
+		 * */
+		public var showAllStyleDeclarations:Boolean;
+		
+		/**
 		 * Show embedded fonts information for the font famiily when showing style information
 		 * */
 		public var includeEmbeddedFontDetails:Boolean = true;
+		
+		/**
+		 * Space before some output text
+		 * */
+		public var prespace:String = "   ";
 		
 		/**
 		 * Show document information
@@ -364,9 +378,20 @@
 			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(event.target), rootComponent);
 			var target:DisplayObject = event.target as DisplayObject; // original clicked on item as reported by the mouse event
 			var componentTarget:Object = componentItem.target; // first component found to own the event.target that is also on the component tree
+			var selectedTarget:Object;
 			var message:String = "";
 			var styles:Array;
 			
+			
+			// get target
+			if (event.shiftKey) {
+				selectedTarget = target;
+			}
+			else {
+				selectedTarget = componentTarget;
+			}
+			
+			// show target information 
 			if (showDisplayObjectInformation) {
 				if (event.altKey) {
 					message = getComponentDetails(componentItem.accessPath, true);
@@ -384,18 +409,19 @@
 			// show styles
 			if (showStyleInheritanceInformation) {
 				if (message!="") message += "\n";
-				if (event.shiftKey) {
-					message += getStyleDetails(target, includeEmbeddedFontDetails);
-				}
-				else {
-					message += getStyleDetails(componentTarget, includeEmbeddedFontDetails);
-				}
+				message += getStyleDetails(selectedTarget, includeEmbeddedFontDetails);
 			}
 			
 			// show embedded fonts
 			if (showEmbeddedFontInformation) {
 				if (message!="") message += "\n";
-				message += getEmbeddedFontInformationDetails(componentTarget);
+				message += getEmbeddedFontInformationDetails(selectedTarget);
+			}
+			
+			// show all styles
+			if (showAllStyleDeclarations) {
+				if (message!="") message += "\n";
+				message += getAllStyleDeclarationsDetails(selectedTarget);
 			}
 			
 			trace(message);
@@ -418,6 +444,12 @@
 		
 		/**
 		 * Get's the style inheritance 
+		 * 
+		 * Getting TextInput / TextArea pseudo conditions is experimental
+		 * TextInput:normalWithPrompt etc
+		 * the ordering of pseudo style declarations is still under development
+		 * Also, doesn't get unqualified / unconditional styles so it will 
+		 * find "TextInput.myStyle" but not ".myStyle".
 		 * */
 		public function getStyleInheritance(styleClient:IStyleClient):Array {
 			if (styleClient==null) return [];
@@ -431,10 +463,45 @@
 			var applicationStyleManager:IStyleManager2 = Application(FlexGlobals.topLevelApplication).styleManager;
 			var sortType:Array = ["name"];
 			var declaration:CSSStyleDeclaration;
+			var advancedStyleClient:IAdvancedStyleClient = styleClient as IAdvancedStyleClient;
+			
+			var hasPseudoCondition:Boolean = styleManager.hasPseudoCondition("normalWithPrompt");
+			var hasAdvancedSelectors:Object = component.styleManager.hasAdvancedSelectors();
+			
 			
 			// get style declarations
 			classDeclarations = styleClient.getClassStyleDeclarations();
+			
+			var length:int = classDeclarations.length;
+			
+			
+			// add pseudo selectors
+			// experimental method to get TextInput / TextArea pseudo conditions
+			// TextInput:normalWithPrompt etc
+			// the ordering is still under development
+			for (var ii:int=0;ii<length;ii++) {
+				declaration = classDeclarations[ii];
+				var subjects:Object = styleManager.getStyleDeclarations(declaration.subject);
+				
+				for (var subject:String in subjects) {
+					var items:Array = subjects[subject];
+					
+					for (var jj:int = 0;jj<items.length;jj++) {
+						var item:CSSStyleDeclaration = items[jj];
+						
+						// the hard part is how to order them in???
+						if (classDeclarations.indexOf(item)==-1) {
+							trace("Found advanced selector:" + item.mx_internal::selectorString);
+							//item.setStyle("PSEUDO", ii);
+							//classDeclarations.unshift(item);
+							//classDeclarations.splice(ii, 0, item);
+						}
+					}
+				}
+			}
+			
 			classDeclarations.reverse();
+			
 			
 			// add inline styles 
 			var styleDeclaration:CSSStyleDeclaration = styleClient.styleDeclaration;
@@ -459,7 +526,30 @@
 				if (universalDeclaration) {
 					classDeclarations.push(universalDeclaration);
 				}
-			}	
+			}
+			
+			
+			// feeble attempt to get rogue selectors like .myStyle
+			// ie universal class selectors (or ID selectors?)
+			var allSelectors:Array = styleManager.selectors;
+			var styleClientMatches:Boolean;
+			length = allSelectors.length;
+			
+			for (var aa:int;aa<length;aa++) {
+				var selector:String = allSelectors[aa];
+				declaration = styleManager.getStyleDeclaration(selector);
+				styleClientMatches = declaration.matchesStyleClient(styleClient as IAdvancedStyleClient);
+				
+				if (styleClientMatches) {
+					var indexOf:int = classDeclarations.indexOf(declaration);
+					
+					// the hard part is how to order them in???
+					if (indexOf<0) {
+						trace("Found rogue selector:" + selector);
+						//classDeclarations.unshift(declaration);
+					}
+				}
+			}
 			
 			if (classDeclarations.length>0) {
 				
@@ -471,16 +561,16 @@
 					var conditions:Array;
 					var array:Array = [];
 					var outputArray:Array = [];
-					declaration = classDeclarations[i];
-					array = [];
+					var skipDuplicate:Boolean = false;
 					
-					// we could or should make this a method
+					declaration = classDeclarations[i];
+					
 					
 					// this is from an mxml inline attribute being set or calling setStyle in actionscript
 					if (declaration.overrides!=null) {
 						styleItem = new CSSStyleDeclarationItem();
 						styleItem.name = getStyleDeclarationDisplayName(declaration);
-						styleItem.declaration = classDeclarations[i];
+						styleItem.declaration = declaration;
 						targetStyleDeclarationsArray.push(styleItem);
 						styleItem.type = OVERRIDE;
 						overrides = declaration.overrides;
@@ -489,11 +579,13 @@
 						styleItem.styles = array;
 					}
 					
+					
+					
 					// this is from an applications stylesheet - type declaration (optionally matched by class or id)
 					if (declaration.factory!=null) {
 						styleItem = new CSSStyleDeclarationItem();
 						styleItem.name = getStyleDeclarationDisplayName(declaration);
-						styleItem.declaration = classDeclarations[i];
+						styleItem.declaration = declaration;
 						targetStyleDeclarationsArray.push(styleItem);
 						styleItem.type = FACTORY_FUNCTION;
 						factoryInstance = new declaration.factory();
@@ -502,11 +594,24 @@
 						styleItem.styles = array;
 					}
 					
+					// prevent duplicates where the default factory and 
+					// and the factory instances create the same object
+					// this is a result of the way we're looking up pseudo declarations
+					if (factoryInstance && declaration.defaultFactory!=null) {
+						defaultFactoryInstance = new declaration.defaultFactory();
+						var result:Object = ObjectUtil.compare(factoryInstance, defaultFactoryInstance);
+						
+						// results are the same
+						if (result==0) {
+							skipDuplicate = true;
+						}
+					}
+					
 					// this is from the theme defaults.css - default type declaration
-					if (declaration.defaultFactory!=null) {
+					if (declaration.defaultFactory!=null && !skipDuplicate) {
 						styleItem = new CSSStyleDeclarationItem();
 						styleItem.name = getStyleDeclarationDisplayName(declaration);
-						styleItem.declaration = classDeclarations[i];
+						styleItem.declaration = declaration;
 						targetStyleDeclarationsArray.push(styleItem);
 						styleItem.type = DEFAULT_FACTORY;
 						defaultFactoryInstance = new declaration.defaultFactory();
@@ -516,95 +621,7 @@
 					}
 				}
 			}
-			/*
-			// add global styles 
-			if (showGlobalStyles) {
-				var globalDeclaration:CSSStyleDeclaration = styleManager.getStyleDeclaration("global");
-				
-				if (globalDeclaration) {
-					styleItem = new CSSStyleDeclarationItem();
-					styleItem.name = getStyleDeclarationDisplayName(globalDeclaration);
-					styleItem.declaration = globalDeclaration;
-					targetStyleDeclarationsArray.push(styleItem);
-				}
-			}
 			
-			// add universal styles
-			if (showUniversalStyles) {
-				var universalDeclaration:CSSStyleDeclaration = styleManager.getStyleDeclaration("*");
-				
-				if (universalDeclaration) {
-					styleItem = new CSSStyleDeclarationItem();
-					styleItem.name = getStyleDeclarationDisplayName(universalDeclaration);
-					styleItem.declaration = universalDeclaration;
-					targetStyleDeclarationsArray.push(styleItem);
-				}
-			}*/
-			
-			/*var length:int = targetStyleDeclarationsArray.length;
-			
-			
-			for (var j:int=0;j<length;j++) {
-				var overrides:Object;
-				var defaultFactoryInstance:Object;
-				var factoryInstance:Object;
-				var selectorType:String = "";
-				var conditions:Array;
-				var array:Array = [];
-				var outputArray:Array = [];
-				var name:String = declaration.toString();
-				
-				styleItem = CSSStyleDeclarationItem(targetStyleDeclarationsArray[j]);
-				declaration = styleItem.declaration;
-				
-				// get display name ie s|TextInput.MyStyle
-				if (declaration.selector) {
-					name = declaration.selector.toString();
-					
-					if (declaration.selector.conditions) {
-						conditions = declaration.selector.conditions;
-						
-						for (var k:int;k<conditions.length;k++) {
-							selectorType = CSSCondition(conditions[k]).kind + ":" + CSSCondition(conditions[k]).value;
-						}
-					}
-				}
-				
-				// we should check for font embedding
-				
-				// check default factory
-				// THEME default declaration
-				defaultFactoryInstance = declaration.defaultFactory!=null ? new declaration.defaultFactory():null;
-				
-				if (styleItem.type==null && defaultFactoryInstance) {
-					array = getArrayFromObject(factoryInstance, DEFAULT_FACTORY, selectorType);
-					array.sortOn(sortType);
-					outputArray = outputArray.concat(array);
-				}
-				
-				// check factory - 
-				// Application stylesheet type declaration
-				factoryInstance = declaration.factory!=null ? new declaration.factory():null;
-				
-				if (factoryInstance) {
-					array = array.concat(getArrayFromObject(factoryInstance, FACTORY_FUNCTION, selectorType));
-					array.sortOn(sortType);
-					outputArray = outputArray.concat(array);
-				}
-				
-				// check overrides 
-				// if working with a UIComponent and a style attribute is set inline in MXML 
-				// or setStyle is called then the overrides are where they are held
-				overrides = declaration.overrides;
-				
-				if (overrides) {
-					array = array.concat(getArrayFromObject(overrides, OVERRIDE));
-					array.sortOn(sortType);
-					outputArray = outputArray.concat(array);
-				}
-				
-				styleItem.styles = outputArray;
-			}*/
 			
 			return targetStyleDeclarationsArray;
 		}
@@ -643,11 +660,13 @@
 							
 							if (!showFullPath) {
 								lastDotLocation = declaration.selector.subject.lastIndexOf(".");
-								selectorType = declaration.selector.subject;
+								selectorType = declaration.selector.toString();
+								//selectorType = declaration.selector.subject;
 								
 								if (lastDotLocation!=-1) {
 									className = selectorType.substr(lastDotLocation+1);
-									selectorType = className + "." + value;
+									//selectorType = className + "." + value;
+									selectorType = className;
 								}
 								
 							}
@@ -661,6 +680,41 @@
 			}
 			
 			return selectorType;
+		}
+		
+		/**
+		 * Gets all styles information
+		 * */
+		public function getAllStyleDeclarationsDetails(target:Object):String {
+			var component:UIComponent = target as UIComponent;
+			var styleManager:IStyleManager2 = StyleManager.getStyleManager(component ? component.moduleFactory: null);
+			var output:String = "";
+			var name:String;
+			
+			
+			output = showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
+			output += "All Style Declarations";
+			output += showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
+			
+			if (component==null) {
+				output += styleManager==null ? "Warning: Target is not a UIComponent. Using global style manager\n" : "";  
+			}
+			
+			var selectors:Array = styleManager.selectors;
+			var length:int = selectors.length;
+			
+			
+			for (var i:int;i<length;i++)
+			{
+				name = selectors[i];
+				
+				output += " " + name + "\n";
+			}
+			
+			output += showConsoleDividerMarks && showFooterConsoleDividerMarks ? "\n" + dividerMarks + "\n" : "";
+			
+			
+			return output;
 		}
 		
 		/**
@@ -703,7 +757,7 @@
 				paddedName = padString(name, minimumStyleNamePadding);
 				fontObject = getFontFamilyEmbedded(name, systemManager);
 				
-				output += "   " + paddedName;
+				output += prespace + paddedName;
 				
 				if (fontObject.embeddedCFF.length>0) {
 					output += "Embedded CFF: " + fontObject.embeddedCFF.join(", ");
@@ -768,11 +822,12 @@
 					value = items[j].value;
 					actualValue = items[j].value;
 					
+					
 					// check for embedded font
-					if (indicateEmbeddedFonts && name=="fontFamily") {
+					if (indicateEmbeddedFonts && name=="fontFamily" && actualValue!==undefined) {
 						var fontObject:Object = getFontFamilyEmbedded(value, systemManager);
 						
-						output += "   " + paddedName + "" + padString(value, Math.max(minimumStyleNamePadding, value.length+1));
+						output += prespace + paddedName + "" + padString(value, Math.max(minimumStyleNamePadding, value.length+1));
 						
 						if (fontObject.embeddedCFF.stylesLength>0) {
 							output += "EmbeddedCFF: " + fontObject.embeddedCFF.join(", ");
@@ -791,7 +846,7 @@
 						
 						// single color
 						if (!isNaN(actualValue)) {
-							output += "   " + paddedName + "#" + padLeft(Number(value).toString(16), 6);;
+							output += prespace + paddedName + "#" + padLeft(Number(value).toString(16), 6);;
 						}
 						// array of colors
 						else if (actualValue && actualValue is Array && actualValue.length>0 && !isNaN(actualValue[0])) {
@@ -800,21 +855,26 @@
 									actualValue[k] = "#" + padLeft(Number(actualValue[k]).toString(16), 6);
 								}
 							}
-							output += "   " + paddedName + "" + actualValue;
+							output += prespace + paddedName + "" + actualValue;
 						}
 						// false alarm
 						else {
-							output += "   " + paddedName + "" + value;
+							output += prespace + paddedName + "" + value;
 						}
 						
 					}
 					// check for skin classes
 					else if (name && value && actualValue is Class) {
 						var className:String = value ? getQualifiedClassName(actualValue) : "";
-						output += "   " + paddedName + "" + padString(value, minimumStyleNamePadding) + className;
+						output += prespace + paddedName + "" + padString(value, minimumStyleNamePadding) + className;
 					}
 					else {
-						output += "   " + paddedName + "" + value;
+						if (actualValue===undefined) {
+							output += prespace + paddedName + "undefined";
+						}
+						else {
+							output += prespace + paddedName + "" + value;
+						}
 					}
 					
 					output += "\n";
@@ -1079,7 +1139,7 @@
 			
 			// get document
 			if (showDocument) {
-				message += "\nIt's linked document " + getLinkedClassName(componentItem.document);
+				//message += "\nIt's linked document " + getLinkedClassName(componentItem.document);
 			}
 			
 			
@@ -1115,7 +1175,7 @@
 					message += "\nSearch in files with regexp " + searchPattern;
 				}
 				else {
-					message += "\nSearch in files with regexp \"" + searchPattern + "\". Add an ID to it to get a better search pattern";
+					message += "\nSearch in files with regexp \"" + searchPattern + "\"";
 				}
 			}
 			
@@ -1162,9 +1222,16 @@
 		 * */
 		public function getLinkedClassName(element:Object):String {
 			var name:String = flash.utils.getQualifiedClassName(element);
-			name = "(" + name.replace("::",".") + ".as:0)";
-			name += "(" + name.replace("::",".") + ".mxml:0)";
-			return name;
+			var output:String = "";
+			output += "(" + name.replace("::",".") + ".as:1)";
+			//output += "\n(" + name.replace("::",".") + ".mxml)";
+			output += "\n(" + name.replace("::",".") + ".mxml:1)";
+			/*output += "\nftp://" + name.replace("::",".") + ".mxml";
+			output += "\nhttp://" + name.replace("::",".") + ".mxml";
+			output += "\n(" + name.replace("::",".") + ".java:12)";
+			output += "\n./" + name.replace("::",".") + ".mxml";
+			output += "\n../" + name.replace("::",".") + ".mxml";*/
+			return output;
 		}
 		
 		/**
@@ -1530,4 +1597,3 @@ public var styles:Array;
 public var type:String;
 
 }
-		
