@@ -42,7 +42,19 @@ package com.flexcapacitor.handlers {
 	 * other parts of your application may not get the event.<br/><br/>
 	 * 
 	 * 
-	 * To Use: &lt;GestureEventHandler eventName="gestureSwipe" swipeDirection="left"/>
+	 * To Use: 
+	 * 	<pre>
+	 * &lt;fc:GestureEventHandler eventName="{TransformGestureEvent.GESTURE_SWIPE}" target="{image}" swipeDirection="left">
+	 * 	&lt;fc:Trace message="Swipe Left"/>
+	 * &lt;/fc:GestureEventHandler>
+	 * </pre>
+	 * 	<pre>
+	 * &lt;fc:GestureEventHandler id="zoomGestureHandler" eventName="{TransformGestureEvent.GESTURE_ZOOM}" 
+	 * 	target="{image}" swipeDirection="left">
+	 * 	&lt;s:SetAction target="{image}" property="scaleX" value="{gestureHandler.scaleX}"/>
+	 * 	&lt;s:SetAction target="{image}" property="scaleY" value="{gestureHandler.scaleY}"/>
+	 * &lt;/fc:GestureEventHandler>
+	 * </pre>
 	 * */
 	public class GestureEventHandler extends EventHandler {
 		
@@ -51,6 +63,7 @@ package com.flexcapacitor.handlers {
 		public static const RIGHT:String = "right";
 		public static const UP:String = "up";
 		public static const DOWN:String = "down";
+		
 		public static const ALL:String = "all";
 		public static const BEGIN:String = "begin";
 		public static const UPDATE:String = "update";
@@ -69,7 +82,7 @@ package com.flexcapacitor.handlers {
 		
 		/**
 		 * By default this is null which means it is not a requirement for the event 
-		 * to qualify. Some gestures may dispatch many events for all the different phases.
+		 * to qualify. Some gestures may dispatch many events for all the different phases.<br/>
 		 * 
 		 * @copy GesturePhase
 		 * */
@@ -86,13 +99,13 @@ package com.flexcapacitor.handlers {
 		 * 
 		 * */
 		[Bindable]
-		public var scaleX:Number;
+		public var scaleX:Number = 1;
 		
 		/**
 		 * 
 		 * */
 		[Bindable]
-		public var scaleY:Number;
+		public var scaleY:Number = 1;
 		
 		/**
 		 * 
@@ -106,11 +119,18 @@ package com.flexcapacitor.handlers {
 		[Bindable]
 		public var offsetX:Number;
 		
+		/**
+		 * Current phase
+		 * */
+		[Bindable]
+		public var currentPhase:String;
+		
 		override public function eventHandler(currentEvent:Event=null):void {
 			var transformGestureEvent:TransformGestureEvent = currentEvent as TransformGestureEvent;
 			var type:String = currentEvent ? currentEvent.type : null;
-			var currentPhase:String = currentEvent && currentEvent is GestureEvent ? GestureEvent(currentEvent).phase : currentPhase;
 			var supportsPhase:Boolean;
+			
+			currentPhase = currentEvent && currentEvent is GestureEvent ? GestureEvent(currentEvent).phase : currentPhase;
 			
 			///////////////////////////////////////////////////////////
 			// Swipe
@@ -214,8 +234,12 @@ package com.flexcapacitor.handlers {
 			// make sure we match the desired phase
 			if (supportsPhase && gesturePhase!=null) {
 				
+				// check what phase we're on to filter out events from phases
+				// we're not in
+				// not sure why we're not doing currentPhase!=gesturePhase
 				if (currentPhase==GesturePhase.ALL) {
 					
+					// if we're not in the 
 					if (gesturePhase!=ALL) {
 						if (stopPropagation) currentEvent.stopPropagation();
 						if (stopImmediatePropagation) currentEvent.stopImmediatePropagation();
