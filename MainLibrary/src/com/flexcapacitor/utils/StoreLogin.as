@@ -164,6 +164,15 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Shows the form. For testing purposes
+		 **/
+		public function hideForm():Boolean
+		{
+			var value:String = ExternalInterface.call("hideForm", FORM_ID);
+			return value!=null;
+		}
+		
+		/**
 		 * Submits an non-directing form request causing the browser to prompt to save the login info
 		 **/
 		public function invokeSavePasswordPrompt():String
@@ -436,6 +445,12 @@ package com.flexcapacitor.utils
 				function showForm(id) {
 					var form = DocumentManager.get(id);
 					form.style.display = "block";
+					return true;
+				}
+				
+				function hideForm(id) {
+					var form = DocumentManager.get(id);
+					form.style.display = "none";
 					return true;
 				}
 			
