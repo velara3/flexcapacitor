@@ -10,12 +10,19 @@ package com.flexcapacitor.effects.file {
 	
 	
 	/**
-	 * Opens a native Save as dialog to save data to a file. This effect MUST be called within the 
-	 * bubbling of a click event. If another effect is run before this one
-	 * this effect may not be run in time. 
-	 * If it is part of an event handler it must be called within the call stack of a click event.
-	 * Set the triggerButtonParent property to the parent a container of the button that will 
-	 * trigger this event.
+	 * Opens a native Save as dialog to save data to a file. 
+	 * 
+	 * NOTE! If nothing happens or you have to click the button twice
+	 * make sure that the button or *buttons* 
+	 * that are triggering this event have the targetAncestor set and 
+	 * that the target ancestor is a parent or owner of the button or buttons. 
+	 * and that there is no pause or duration effect between the click event and this effect
+	 * 
+	 * IE no other effect that has a duration can run before this one.
+	 * 
+	 * This effect MUST be called within the bubbling of a click event. 
+	 * If another effect is run before this one this effect may not be run in time. 
+	 * 
 	 * Must not have any effects before it that have any duration. 
 	 * */
 	public class PromptSaveAs extends ActionEffect {

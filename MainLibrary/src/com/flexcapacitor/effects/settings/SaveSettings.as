@@ -32,6 +32,9 @@ package com.flexcapacitor.effects.settings {
 	 * */
 	public class SaveSettings extends ActionEffect {
 		
+		public static const ERROR:String = "error";
+		public static const SAVED:String = "saved";
+		public static const PENDING:String = "pending";
 		
 		/**
 		 *  Constructor.

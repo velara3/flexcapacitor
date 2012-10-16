@@ -90,14 +90,30 @@ package com.flexcapacitor.handlers {
 &lt;/EventHandler>
 </pre>
 	 * 
-	 * To Use: 
+	 * <b>To Use:</b> 
 <pre>&lt;KeyboardEventHandler keyCode="{Keyboard.MENU}" 
 	target="{this}" effect="{sequence}"> 
-		&lt;s:Move duration="250"
-				yFrom="0" yTo="100"
-				target="{container}" 
-				/>
-		&lt;list:SelectItem target="{list}"/>
+&lt;/EventHandler>
+
+&lt;s:Sequence id="sequence">
+	&lt;list:SelectItem target="{list}"/>
+&lt;/s:Sequence>
+</pre>
+	 * 
+	 * <b>To redispatch:</b><br/>
+MyComponent.mxml,<br/>
+<pre>&lt;EventHandler eventName="{MouseEvent.CLICK}" 
+		target="{this}" 
+		redispatchToTarget="{FlexGlobals.topLevelApplication as IEventDispatcher}"
+		dispatchName="settingsUpdated"
+	>
+&lt;/EventHandler>
+
+MyOtherComponent.mxml,<br/>
+&lt;EventHandler eventName="settingsUpdated" 
+		target="{IEventDispatcher(FlexGlobals.topLevelApplication)}">
+			&lt;debugging:Trace message="settings updated"/>
+&lt;/EventHandler>
 </pre>
 	 * 
 	 * <b>Usage with Controller:</b><br/><br/>
@@ -393,12 +409,12 @@ package com.flexcapacitor.handlers {
 			_effect.removeEventListener(EffectEvent.EFFECT_END, effectEnd);
 			
 			// play controller effect if set
-			if (hasControllerEffects && playControllerEffectDuring=="after"){
+			if (hasControllerEffects && playControllerEffectDuring==AFTER){
 				playControllerEffect();
 			}
 			else {
 				// redispatch events 
-				if (redispatchDuring=="end") {
+				if (redispatchDuring==AFTER) {
 					redispatch(event);
 				}
 			}
@@ -435,7 +451,7 @@ package com.flexcapacitor.handlers {
 			else {
 				// no local effects
 				// redispatch events 
-				if (redispatchDuring=="end") {
+				if (redispatchDuring==AFTER) {
 					redispatch(event);
 				}
 			}
@@ -623,6 +639,18 @@ package com.flexcapacitor.handlers {
 			//throw new Error("Set the state object through setStaticState");
 			//return EventHandler.staticState;
 		}
+		
+		/**
+		 * When redispatching, creates an event that bubbles.
+		 * If redispatching the original event it inherits the value.
+		 * */
+		public var bubbles:Boolean;
+		
+		/**
+		 * When redispatching, creates an event that is cancelable. 
+		 * If redispatching the original event it inherits the value.
+		 * */
+		public var cancelable:Boolean;
 		
 		/**
 		 * When true the Control key must be pressed to trigger this event
@@ -1403,11 +1431,11 @@ package com.flexcapacitor.handlers {
 			
 			// dispatch start event
 			if (hasEventListener(EVENT_START)) {
-				dispatchEvent(new Event(EVENT_START));
+				dispatchEvent(new Event(EVENT_START, bubbles, cancelable));
 			}
 			
 			// redispatch before running any effects
-			if (redispatchDuring=="before") {
+			if (redispatchDuring==BEFORE) {
 				redispatch(event);
 			}
 			
@@ -1424,7 +1452,7 @@ package com.flexcapacitor.handlers {
 			
 			
 			// if controller effects exist and property is before then play first
-			if (hasControllerEffects && playControllerEffectDuring==null || playControllerEffectDuring=="before") {
+			if (hasControllerEffects && playControllerEffectDuring==null || playControllerEffectDuring==BEFORE) {
 				playControllerEffect();
 			}
 			else if (hasEffects) {
@@ -1433,13 +1461,13 @@ package com.flexcapacitor.handlers {
 			
 			// redispatch events 
 			// default is to dispatch immediately
-			if (redispatchDuring==null || redispatchDuring=="during") {
+			if (redispatchDuring==null || redispatchDuring==DURING) {
 				redispatch(event);
 			}
 			
 			// This is not always the end of the sequence - see effect end
 			if (hasEventListener(EVENT_END)) {
-				dispatchEvent(new Event(EVENT_END));
+				dispatchEvent(new Event(EVENT_END, bubbles, cancelable));
 			}
 			
 			if (stopPropagation) {
@@ -1529,18 +1557,18 @@ package com.flexcapacitor.handlers {
 			
 			// redispatch events to another static handler
 			if (staticController!=null && dispatchName!=null) {
-				staticController.dispatchEvent(new Event(dispatchName));
+				staticController.dispatchEvent(new Event(dispatchName, bubbles, cancelable));
 			}
 			
 			// redispatch events to another handler
 			if (controller!=null && dispatchName!=null) {
-				controller.dispatchEvent(new Event(dispatchName));
+				controller.dispatchEvent(new Event(dispatchName, bubbles, cancelable));
 			}
 			
 			// redispatch events to another handler
 			if (redispatchToTarget) {
 				if (dispatchName!=null) {
-					redispatchToTarget.dispatchEvent(new Event(dispatchName));
+					redispatchToTarget.dispatchEvent(new Event(dispatchName, bubbles, cancelable));
 				}
 				else {
 					redispatchToTarget.dispatchEvent(event);

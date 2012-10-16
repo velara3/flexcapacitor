@@ -1,0 +1,24 @@
+/* CSS file */
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace controls "com.flexcapacitor.controls.*";
+@namespace view "com.flexcapacitor.prompt.view.*";
+
+controls|ImageButton {
+	skinClass:ClassReference("com.flexcapacitor.skins.ImageButtonSkin");
+}
+
+view|PromptDialog {
+}
+
+view|PromptDialog {
+	horizontalAlign: center;
+	verticalAlign: middle;
+	paddingLeft: 10;
+	paddingRight: 10;
+	color: #ff0000;
+	chromeColor: #ECECEC;
+	fontFamily: _sans;
+	fontSize: 18;
+	fontWeight: normal;
+}
+

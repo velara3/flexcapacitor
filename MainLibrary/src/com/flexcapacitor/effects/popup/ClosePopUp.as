@@ -129,8 +129,8 @@ class ClosePopUpInstance extends ActionEffectInstance {
 		///////////////////////////////////////////////////////////
 		
 		if (validate) {
-			if (!popUp) {
-				dispatchErrorEvent("Please set the pop up class type");
+			if (!popUp && !popUpCanBeNull) {
+				dispatchErrorEvent("The pop up is null. Please set the pop up or set popUpCanBeNull to true.");
 			}
 			
 			if (popUp && !(popUp is IFlexDisplayObject)) {

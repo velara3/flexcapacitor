@@ -180,49 +180,49 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * */
 		private function openHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
-			trace("openHandler: name=" + file.name);
+			//trace("openHandler: name=" + file.name);
 		}
 		
 		private function progressHandler(event:ProgressEvent):void {
 			var file:FileReference = FileReference(event.target);
-			trace("progressHandler: name=" + file.name + " bytesLoaded=" + event.bytesLoaded + " bytesTotal=" + event.bytesTotal);
+			//trace("progressHandler: name=" + file.name + " bytesLoaded=" + event.bytesLoaded + " bytesTotal=" + event.bytesTotal);
 		}
 		
 		private function completeHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
-			trace("completeHandler: name=" + file.name);
+			//trace("completeHandler: name=" + file.name);
 			finish();
 		}
 		
 		private function httpErrorHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
-			trace("httpErrorHandler: name=" + file.name);
+			//trace("httpErrorHandler: name=" + file.name);
 			cancel("httpErrorHandler: name=" + file.name);
 		}
 		
 		private function ioErrorHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
-			trace("ioErrorHandler: name=" + file.name);
+			//trace("ioErrorHandler: name=" + file.name);
 			cancel("ioErrorHandler: name=" + file.name);
 		}
 		
 		private function securityErrorHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
-			trace("securityErrorHandler: name=" + file.name + " event=" + event.toString());
+			//trace("securityErrorHandler: name=" + file.name + " event=" + event.toString());
 			cancel("securityErrorHandler: name=" + file.name + " event=" + event.toString());
 		}
 		
 		private function cancelHandler(event:Event):void {
-			trace("cancelHandler: " + event);
+			//trace("cancelHandler: " + event);
 			cancel("cancelHandler: " + event);
 		}
 		
 		private function httpStatusHandler(event:HTTPStatusEvent):void {
-			trace("httpStatusHandler: " + event);
+			//trace("httpStatusHandler: " + event);
 		}
 		
 		private function uploadCompleteDataHandler(event:DataEvent):void {
-			trace("uploadCompleteData: " + event);
+			//trace("uploadCompleteData: " + event);
 		}
 		
 		//--------------------------------------------------------------------------
@@ -232,7 +232,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function fileReference_complete(event:Event):void {
 			var action:PromptSaveAs = PromptSaveAs(effect);
 			var loader:Loader = new Loader();
-			trace("fileReference_complete: " + event);
+			//trace("fileReference_complete: " + event);
 			
 			loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loader_complete);
 			

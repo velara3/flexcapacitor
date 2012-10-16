@@ -63,6 +63,7 @@ package com.flexcapacitor.effects.status.supportClasses {
 			var action:ShowStatusMessage = ShowStatusMessage(effect);
 			var statusMessageClass:Class = action.statusMessageClass;
 			var statusMessageProperties:Object = action.statusMessageProperties;
+			var keepReference:Boolean = action.keepReference;
 			var nonBlocking:Boolean = action.nonBlocking;
 			var location:String = action.location;
 			var parent:Sprite = action.parentView;
@@ -139,6 +140,10 @@ package com.flexcapacitor.effects.status.supportClasses {
 			//					action.showBusyIcon, action.parentView, action.modal, position);
 			
 			// and call finish there if requested
+			
+			if (keepReference) {
+				action.statusMessagePopUp = messageBox;
+			}
 			
 			///////////////////////////////////////////////////////////
 			// Finish the effect

@@ -123,8 +123,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.errorEvent = result as Event;
 				
 				// step through 
-				if (action.hasEventListener("error")) {
-					action.dispatchEvent(new Event("error"));
+				if (action.hasEventListener(SaveSettings.ERROR)) {
+					action.dispatchEvent(new Event(SaveSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -142,8 +142,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				
 				// shared object could not be created and is null
 				
-				if (action.hasEventListener("error")) {
-					action.dispatchEvent(new Event("error"));
+				if (action.hasEventListener(SaveSettings.ERROR)) {
+					action.dispatchEvent(new Event(SaveSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -199,8 +199,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				
 				if (status == SharedObjectFlushStatus.PENDING) {
 					
-					if (action.hasEventListener(SharedObjectFlushStatus.PENDING)) {
-						action.dispatchEvent(new Event(SharedObjectFlushStatus.PENDING));
+					if (action.hasEventListener(SaveSettings.PENDING)) {
+						action.dispatchEvent(new Event(SaveSettings.PENDING));
 					}
 					
 					if (action.pendingEffect) {
@@ -209,8 +209,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				}
 				else if (status==SharedObjectFlushStatus.FLUSHED) {
 					
-					if (action.hasEventListener("saved")) {
-						action.dispatchEvent(new Event("saved"));
+					if (action.hasEventListener(SaveSettings.SAVED)) {
+						action.dispatchEvent(new Event(SaveSettings.SAVED));
 					}
 					
 					if (action.savedEffect) {
@@ -247,8 +247,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			if (event.info=="error") {
 				
-				if (action.hasEventListener("error")) {
-					action.dispatchEvent(new Event("error"));
+				if (action.hasEventListener(SaveSettings.ERROR)) {
+					action.dispatchEvent(new Event(SaveSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -257,8 +257,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			}
 			else if (event.info==SharedObjectFlushStatus.FLUSHED) {
 				
-				if (action.hasEventListener("saved")) {
-					action.dispatchEvent(new Event("saved"));
+				if (action.hasEventListener(SaveSettings.SAVED)) {
+					action.dispatchEvent(new Event(SaveSettings.SAVED));
 				}
 				
 				if (action.savedEffect) {
@@ -270,8 +270,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 		protected function asyncErrorHandler(event:AsyncErrorEvent):void {
 			var action:SaveSettings = SaveSettings(effect);
 			
-			if (action.hasEventListener("error")) {
-				action.dispatchEvent(new Event("error"));
+			if (action.hasEventListener(SaveSettings.ERROR)) {
+				action.dispatchEvent(new Event(SaveSettings.ERROR));
 			}
 			
 			if (action.errorEffect) {

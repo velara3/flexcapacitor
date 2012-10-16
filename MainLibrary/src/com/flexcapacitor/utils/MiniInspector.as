@@ -377,7 +377,7 @@ package com.flexcapacitor.utils {
 			var rootComponent:ComponentItem = document ? createComponentTreeFromElement(document) : createComponentTreeFromElement(FlexGlobals.topLevelApplication);
 			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(event.target), rootComponent);
 			var target:DisplayObject = event.target as DisplayObject; // original clicked on item as reported by the mouse event
-			var componentTarget:Object = componentItem.target; // first component found to own the event.target that is also on the component tree
+			var componentTarget:Object = componentItem ? componentItem.target : target; // first component found to own the event.target that is also on the component tree
 			var selectedTarget:Object;
 			var message:String = "";
 			var styles:Array;
@@ -392,8 +392,8 @@ package com.flexcapacitor.utils {
 			}
 			
 			// show target information 
-			if (showDisplayObjectInformation) {
-				if (event.altKey) {
+			if (showDisplayObjectInformation && componentItem) {
+				if (event.shiftKey) {
 					message = getComponentDetails(componentItem.accessPath, true);
 				}
 				else {

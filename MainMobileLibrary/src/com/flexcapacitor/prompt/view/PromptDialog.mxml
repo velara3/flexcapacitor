@@ -40,19 +40,47 @@
 			
 			<s:Group width="100%" height="70" excludeFrom="none">
 				<s:BitmapImage source="{MainLibraryTheme.glossyButton}"/>
-				<s:HGroup bottom="0" width="100%" height="100%" horizontalAlign="center" verticalAlign="middle" paddingLeft="10" paddingRight="10">
-					<s:Button id="okButton" width.ok="100%" width.okCancel="50%" height="50" label="OK" includeIn="ok, okCancel"
-							  fontSize="18" fontFamily="_sans" fontWeight="normal" chromeColor="#ECECEC" 
-							  click="button_clickHandler(event)" color="#000000"/>
-					<s:Button id="cancelButton" width="50%" height="50" label="Cancel" includeIn="okCancel"
-							  fontSize="18" fontFamily="_sans" fontWeight="normal" chromeColor="#ECECEC" 
-							  click="button_clickHandler(event)" color="#000000"/>
-					<s:Button id="yesButton" width="50%" height="50" label="Yes" includeIn="yesNo"
-							  fontSize="18" fontFamily="_sans" fontWeight="normal" chromeColor="#ECECEC" 
-							  click="button_clickHandler(event)" color="#000000"/>
-					<s:Button id="noButton" width="50%" height="50" label="No" includeIn="yesNo"
-							  fontSize="18" fontFamily="_sans" fontWeight="normal" chromeColor="#ECECEC" 
-							  click="button_clickHandler(event)" color="#000000"/>
+				<s:HGroup bottom="0" width="100%" height="100%" 
+						  horizontalAlign="center" verticalAlign="middle" 
+						  paddingLeft="10" paddingRight="10"
+						  fontSize="20" 
+						  color="#000000"
+						  >
+					<s:Button id="okButton" 
+							  includeIn="ok, okCancel"
+							  label="OK" 
+							  width.ok="100%" width.okCancel="50%" height="50" 
+							  chromeColor="#ECECEC" 
+							  fontFamily="_sans" fontWeight="normal" 
+							  click="button_clickHandler(event)" 
+							  />
+					<s:Button id="cancelButton" 
+							  includeIn="okCancel"
+							  label="CANCEL" 
+							  width="50%" height="50" 
+							  color="#000000"
+							  chromeColor="#ECECEC" 
+							  fontFamily="_sans" fontWeight="normal" 
+							  click="button_clickHandler(event)" 
+							  />
+					<s:Button id="yesButton" 
+							  includeIn="yesNo"
+							  label="YES" 
+							  width="50%" height="50" 
+							  color="#000000"
+							  chromeColor="#ECECEC" 
+							  fontFamily="_sans" fontWeight="normal" 
+							  click="button_clickHandler(event)" 
+							  />
+					<s:Button id="noButton" 
+							  includeIn="yesNo"
+							  label="NO" 
+							  width="50%" height="50" 
+							  color="#000000"
+							  chromeColor="#ECECEC" 
+							  fontFamily="_sans" fontWeight="normal" 
+							  click="button_clickHandler(event)" 
+							  />
 				</s:HGroup>
 			</s:Group>
 		</s:VGroup>

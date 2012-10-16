@@ -118,5 +118,18 @@ package com.flexcapacitor.effects.status {
 		 * Otherwise the next effect starts at the end of this effects duration. 
 		 * */
 		public var nonBlocking:Boolean = true;
+		
+		/**
+		 * Keeps a reference of the status message object
+		 * */
+		public var keepReference:Boolean = false;
+		
+		/**
+		 * Reference to the status message object. Must set keep reference to true.
+		 *  
+		 * @see keepReference
+		 * */
+		[Bindable]
+		public var statusMessagePopUp:Object;
 	}
 }

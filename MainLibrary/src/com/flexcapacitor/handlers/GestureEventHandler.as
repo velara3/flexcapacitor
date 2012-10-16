@@ -50,9 +50,9 @@ package com.flexcapacitor.handlers {
 	 * </pre>
 	 * 	<pre>
 	 * &lt;fc:GestureEventHandler id="zoomGestureHandler" eventName="{TransformGestureEvent.GESTURE_ZOOM}" 
-	 * 	target="{image}" swipeDirection="left">
-	 * 	&lt;s:SetAction target="{image}" property="scaleX" value="{gestureHandler.scaleX}"/>
-	 * 	&lt;s:SetAction target="{image}" property="scaleY" value="{gestureHandler.scaleY}"/>
+	 * 	target="{image}" gesturePhase="update">
+	 * 	&lt;s:SetAction target="{image}" property="scaleX" value="{image.scaleX*zoomGestureHandler.scaleX}"/>
+	 * 	&lt;s:SetAction target="{image}" property="scaleY" value="{image.scaleY*zoomGestureHandler.scaleY}"/>
 	 * &lt;/fc:GestureEventHandler>
 	 * </pre>
 	 * */
