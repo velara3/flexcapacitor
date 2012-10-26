@@ -127,6 +127,10 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var fileName:String = action.fileName;
 			fileName = fileName.indexOf(".")==-1 && action.fileExtension ? fileName + "." + action.fileExtension : fileName;
 			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
 			// prevent this from opening two dialogs next time
 			action.targetAncestor.removeEventListener(MouseEvent.CLICK, buttonHandler);
 			
@@ -147,6 +151,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			action.fileReference.save(action.data, fileName);
 			
+			///////////////////////////////////////////////////////////
+			// Wait for handlers
+			///////////////////////////////////////////////////////////
 			waitForHandlers();
 		}
 		
@@ -161,14 +168,62 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function selectHandler(event:Event):void {
 			var action:PromptSaveAs = PromptSaveAs(effect);
 			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
 			// remove listeners
 			removeFileListeners(action.fileReference);
 			
+			// dispatch events and run effects
+			if (action.hasEventListener(PromptSaveAs.SAVE)) {
+				action.dispatchEvent(event);
+			}
+			
+			if (action.saveEffect) {
+				playEffect(action.saveEffect);
+			}
+		
 			// the reference to the file or files is in the effect
+			
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
 			finish();
 			
 		}
 		
+		
+		/**
+		 * Cancel button was pressed on the browse dialog
+		 * */
+		private function cancelHandler(event:Event):void {
+			var action:PromptSaveAs = PromptSaveAs(effect);
+			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
+			// remove listeners
+			removeFileListeners(action.fileReference);
+			
+			if (action.hasEventListener(PromptSaveAs.CANCEL)) {
+				action.dispatchEvent(event);
+			}
+			
+			if (action.cancelEffect) {
+				playEffect(action.cancelEffect);
+			}
+			
+			
+			
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
+			
+			finish();
+			
+		}
 		
 		//--------------------------------------------------------------------------
 		//  File Reference Handlers - candidates for removal
@@ -212,10 +267,6 @@ package com.flexcapacitor.effects.file.supportClasses {
 			cancel("securityErrorHandler: name=" + file.name + " event=" + event.toString());
 		}
 		
-		private function cancelHandler(event:Event):void {
-			//trace("cancelHandler: " + event);
-			cancel("cancelHandler: " + event);
-		}
 		
 		private function httpStatusHandler(event:HTTPStatusEvent):void {
 			//trace("httpStatusHandler: " + event);

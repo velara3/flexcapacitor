@@ -8,14 +8,28 @@ package com.flexcapacitor.effects.file {
 	import flash.display.DisplayObjectContainer;
 	import flash.net.FileReference;
 	
+	import mx.effects.IEffect;
+	
+	
+	/**
+	 * Dispatched on the file browse select event
+	 * @copy file.net.FileReference.select
+	 * */
+	[Event(name="save", type="flash.events.Event")]
+	
+	/**
+	 * Dispatched on the file browse cancel event
+	 * @copy file.net.FileReference.cancel
+	 * */
+	[Event(name="cancel", type="flash.events.Event")]
 	
 	/**
 	 * Opens a native Save as dialog to save data to a file. 
 	 * 
 	 * NOTE! If nothing happens or you have to click the button twice
 	 * make sure that the button or *buttons* 
-	 * that are triggering this event have the targetAncestor set and 
-	 * that the target ancestor is a parent or owner of the button or buttons. 
+	 * that are triggering this event have the targetAncestor property set and 
+	 * that the target ancestor is a parent or owner of the button or buttons 
 	 * and that there is no pause or duration effect between the click event and this effect
 	 * 
 	 * IE no other effect that has a duration can run before this one.
@@ -23,10 +37,11 @@ package com.flexcapacitor.effects.file {
 	 * This effect MUST be called within the bubbling of a click event. 
 	 * If another effect is run before this one this effect may not be run in time. 
 	 * 
-	 * Must not have any effects before it that have any duration. 
 	 * */
 	public class PromptSaveAs extends ActionEffect {
 		
+		public static const SAVE:String 		= "save";
+		public static const CANCEL:String 		= "cancel";
 		
 		/**
 		 *  Constructor.
@@ -106,6 +121,16 @@ package com.flexcapacitor.effects.file {
 		 * File extension. 
 		 * */
 		public var fileExtension:String = "txt";
+		
+		/**
+		 * Effect played on the file save event
+		 * */
+		public var saveEffect:IEffect;
+		
+		/**
+		 * Effect played on the file cancel event
+		 * */
+		public var cancelEffect:IEffect;
 		
 	}
 }

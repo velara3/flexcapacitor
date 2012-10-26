@@ -307,6 +307,7 @@
     <classEntry path="com.flexcapacitor.utils.supportClasses.ComponentDescription"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.GroupOptions"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.VisualElement"/>
+    <classEntry path="com.flexcapacitor.effects.popup.supportClasses.OpenPopUpInstance"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

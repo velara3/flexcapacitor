@@ -12,7 +12,32 @@ package com.flexcapacitor.effects.popup {
 	
 	
 	/**
-	 * Closes a pop up
+	 * Closes a pop up.<br/><br/>
+	 * 
+	 * Typically you use it with OpenPopUp or ShowStatusMessage.
+	 * 
+	 * Opening a pop up:<br/>
+	 * <pre>
+&lt;popup:OpenPopUp id="openExportToImageEffect" 
+		 popUpType="{ExportToImage}" 
+		 modalDuration="250"
+		 showDropShadow="true"
+		 modalBlurAmount="1"
+		 keepReference="true"
+		 options="{{source:myImage.source, data:dataGrid.selectedItem}}">
+&lt;/popup:OpenPopUp>
+					 
+	 * </pre>
+	 * 
+	 * To Use:<br/>
+	 * <pre>
+	 * 	&lt;popup:ClosePopUp popUp="{openExportToImageEffect.popUp}" />
+	 * </pre>
+	 * 
+	 * To Use when inside the pop up use:<br/>
+	 * <pre>
+	 * 	&lt;popup:ClosePopUp popUp="{this}" />
+	 * </pre>
 	 * */
 	public class ClosePopUp extends ActionEffect {
 		
