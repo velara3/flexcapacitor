@@ -23,13 +23,55 @@ package com.flexcapacitor.effects.database {
 	[Event(name="fault", type="flash.events.Event")]
 	
 	/**
+	 * Event dispatched when an error occurs
+	 * */
+	[Event(name="error", type="flash.events.Event")]
+	
+	
+	/**
 	 * Selects records from the database.
 	 * AIR Only
+<pre>
+		
+	&lt;s:ArrayCollection id="notes" source="{select.data}"/>
+ 
+	&lt;database:SQLConnection id="connection"/>
+ 
+	&lt;db:GetDatabase id="database" fileName="myData.db" connection="{connection}">
+		&lt;db:notCreatedEffect>
+			&lt;db:CreateTable connection="{connection}" tableName="notes" >
+				&lt;db:fields>
+					&lt;database:SQLColumn name="id" 
+										 autoIncrement="true" 
+										 dataType="INTEGER" 
+										 primaryKey="true"/>
+					&lt;database:SQLColumn name="title"  
+										 dataType="TEXT" />
+					&lt;database:SQLColumn name="content"  
+										 dataType="TEXT" />
+					&lt;database:SQLColumn name="creationDate"  
+										dataType="TEXT" />
+					&lt;database:SQLColumn name="modifyDate"  
+										dataType="TEXT" />
+				&lt;/db:fields>
+			&lt;/db:CreateTable>
+		&lt;/db:notCreatedEffect>
+	&lt;/db:GetDatabase>
+
+	
+	&lt;db:SelectRecords id="select" 
+					  tableName="notes" 
+					  connection="{connection}"
+					  itemClass="{Note}"
+					  >
+	&lt;/db:SelectRecords>
+</pre>
 	 * */
 	public class SelectRecords extends ActionEffect {
 		
 		public static const SUCCESS:String = "success";
 		public static const FAULT:String = "fault";
+		public static const ERROR:String = "error";
 		
 		/**
 		 *  Constructor.
@@ -110,6 +152,17 @@ package com.flexcapacitor.effects.database {
 		 * */
 		[Bindable]
 		public var data:Array;
+		
+		/**
+		 * Effect played on error
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
+		 * Reference to the error event
+		 * */
+		[Bindable]
+		public var errorEvent:Error;
 		
 	}
 }

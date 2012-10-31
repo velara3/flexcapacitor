@@ -64,15 +64,19 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var fileName:String = action.fileName;
 			var base:String = action.baseFilePath;
 			var fileExtension:String = action.fileExtension;
-			var fileMode:String = action.fileMode;
 			var connection:SQLConnection = action.connection;
+			var traceFilePaths:Boolean = action.traceFilePaths;
+			var backupPath:String = action.backupPath;
+			var fileMode:String = action.fileMode;
 			var async:Boolean = action.async;
 			var findFile:Boolean = true;
 			var fileContents:Object;
 			var fileLocation:String;
 			var fileExists:Boolean;
 			var stream:FileStream;
+			var backupFile:File;
 			var file:File;
+			
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -94,7 +98,6 @@ package com.flexcapacitor.effects.database.supportClasses {
 			
 			// add directory path if defined
 			if (directory) {
-				
 				if (directory.charAt(directory.length-1)!=File.separator) {
 					directory = directory + File.separator;
 				}
@@ -141,17 +144,73 @@ package com.flexcapacitor.effects.database.supportClasses {
 			action.nativeFilePath = file.nativePath;
 			action.relativeFilePath = fileLocation;
 			
-			if (action.traceFileURL) {
-				trace(action.className + " File URL: " + file.url);
+			if (traceFilePaths) {
+				traceMessage(action.className + " Target File Exists: " + (fileExists?"true":"false"));
+				traceMessage(action.className + " Target Defined File Path: " + fileLocation);
+				traceMessage(action.className + " Target File URL: " + file.url);
+				traceMessage(action.className + " Target Native File Path: " + file.nativePath);
 			}
 			
-			if (action.traceNativeFilePath) {
-				trace(action.className + " Native File Path: " + file.nativePath);
+			// copy backup database if it doesn't exist
+			if (!fileExists && backupPath) {
+				backupFile = File.applicationDirectory.resolvePath(backupPath);
+				
+				if (traceFilePaths) {
+					traceMessage(action.className + " Backup File Exists: " + (backupFile.exists ? "true":"false"));
+					traceMessage(action.className + " Backup Defined File Path: " + backupPath);
+					traceMessage(action.className + " Backup File URL: " + backupFile.url);
+					traceMessage(action.className + " Backup Native File Path: " + backupFile.nativePath);
+				}
+				
+				if (backupFile.exists) {
+					try {
+						backupFile.copyTo(file);
+						fileExists = true;
+						
+						// backup file used
+						if (action.hasEventListener(GetDatabase.BACKUP_FILE_USED)) {
+							dispatchEvent(new Event(GetDatabase.BACKUP_FILE_USED));
+						}
+						
+						if (action.backupFileUsedEffect) {
+							playEffect(action.backupFileUsedEffect);
+						}
+					}
+					catch (ee:Error) {
+						action.errorEvent = ee;
+					
+						if (action.traceErrors) {
+							traceMessage(action.className + " Database Error: " + ee.message);
+						}
+						
+						// file not found
+						if (action.hasEventListener(GetDatabase.ERROR)) {
+							dispatchEvent(new Event(GetDatabase.ERROR));
+						}
+						
+						if (action.errorEffect) {
+							playEffect(action.errorEffect);
+						}
+					}
+					
+					if (traceFilePaths) {
+						traceMessage(action.className + " Backup file was copied to: " + file.nativePath);
+					}
+				}
+				else {
+					
+					// file not found
+					if (action.hasEventListener(GetDatabase.BACKUP_FILE_NOT_FOUND)) {
+						dispatchEvent(new Event(GetDatabase.BACKUP_FILE_NOT_FOUND));
+					}
+					
+					if (action.backupFileNotFoundEffect) {
+						playEffect(action.backupFileNotFoundEffect);
+					}
+				}
 			}
 			
-			if (action.traceRelativeFilePath) {
-				trace(action.className + " Relative File Path: " + fileLocation);
-			}
+			// If a writable DB doesn't exist, we then copy it into the app folder so it's writteable
 			
 			////////////// CREATE CONNECTION /////////////
 			
@@ -164,15 +223,29 @@ package com.flexcapacitor.effects.database.supportClasses {
 			try {
 				if (!async) {
 					// open(reference:Object=null, openMode:String="create", autoCompact:Boolean=false, pageSize:int=1024, encryptionKey:ByteArray=null)
-					connection.open(file);
+					connection.open(file, action.fileMode, action.autoCompact, action.pageSize, action.encryptionKey);
 				}
 				else {
 					// openAsync(reference:Object=null, openMode:String="create", responder:Responder=null, autoCompact:Boolean=false, pageSize:int=1024, encryptionKey:ByteArray=null)
-					connection.openAsync(file);
+					connection.openAsync(file, action.fileMode, action.responder, action.autoCompact, action.pageSize, action.encryptionKey);
 				}
-				trace("connection opened");
+				//trace("connection opened");
 			} catch(error:Error) {
-				trace(error.message);
+				//trace(error.message);
+				action.errorEvent = error;
+			
+				if (action.traceErrors) {
+					traceMessage(action.className + " Database Error: " + error.message);
+				}
+				
+				// file not found
+				if (action.hasEventListener(GetDatabase.ERROR)) {
+					dispatchEvent(new Event(GetDatabase.ERROR));
+				}
+				
+				if (action.errorEffect) {
+					playEffect(action.errorEffect);
+				}
 			}
 			
 			action.connection = connection;
@@ -180,7 +253,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			// file found
 			if (fileExists) {
 			
-				if (hasEventListener(GetDatabase.SUCCESS)) {
+				if (action.hasEventListener(GetDatabase.SUCCESS)) {
 					dispatchEvent(new Event(GetDatabase.SUCCESS));
 				}
 				
@@ -191,7 +264,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			else {
 				
 				// file not found
-				if (hasEventListener(GetDatabase.FILE_NOT_FOUND)) {
+				if (action.hasEventListener(GetDatabase.FILE_NOT_FOUND)) {
 					dispatchEvent(new Event(GetDatabase.FILE_NOT_FOUND));
 				}
 				
@@ -226,7 +299,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			
 			removeFileStreamListeners(file);
 			
-			if (hasEventListener(GetDatabase.CLOSE)) {
+			if (action.hasEventListener(GetDatabase.CLOSE)) {
 				dispatchEvent(new Event(GetDatabase.CLOSE));
 			}
 			
@@ -244,7 +317,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var action:GetDatabase = GetDatabase(event);
 			var file:FileStream = FileStream(event.target);
 			
-			if (hasEventListener(GetDatabase.OUTPUT_PROGRESS)) {
+			if (action.hasEventListener(GetDatabase.OUTPUT_PROGRESS)) {
 				dispatchEvent(new Event(GetDatabase.OUTPUT_PROGRESS));
 			}
 			
@@ -258,7 +331,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var action:GetDatabase = GetDatabase(event);
 			var file:FileStream = FileStream(event.target);
 			
-			if (hasEventListener(GetDatabase.PROGRESS)) {
+			if (action.hasEventListener(GetDatabase.PROGRESS)) {
 				dispatchEvent(new Event(GetDatabase.PROGRESS));
 			}
 			
@@ -278,7 +351,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			
 			file.close();
 			
-			if (hasEventListener(GetDatabase.SUCCESS)) {
+			if (action.hasEventListener(GetDatabase.SUCCESS)) {
 				dispatchEvent(new Event(GetDatabase.SUCCESS));
 			}
 			
@@ -301,7 +374,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			file.close();
 			
 			
-			if (hasEventListener(GetDatabase.FAULT)) {
+			if (action.hasEventListener(GetDatabase.FAULT)) {
 				dispatchEvent(new Event(GetDatabase.FAULT));
 			}
 			
@@ -325,7 +398,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			file.close();
 			
 			
-			if (hasEventListener(GetDatabase.FAULT)) {
+			if (action.hasEventListener(GetDatabase.FAULT)) {
 				dispatchEvent(new Event(GetDatabase.FAULT));
 			}
 			

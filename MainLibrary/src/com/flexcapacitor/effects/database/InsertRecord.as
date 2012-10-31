@@ -24,6 +24,53 @@ package com.flexcapacitor.effects.database {
 	/**
 	 * Inserts a record into the database.
 	 * AIR Only
+<pre>
+ 
+	&lt;database:SQLConnection id="connection"/>
+ 
+	&lt;db:GetDatabase id="database" fileName="myData.db" connection="{connection}">
+		&lt;db:notCreatedEffect>
+			&lt;db:CreateTable connection="{connection}" tableName="notes" >
+				&lt;db:fields>
+					&lt;database:SQLColumn name="id" 
+										 autoIncrement="true" 
+										 dataType="INTEGER" 
+										 primaryKey="true"/>
+					&lt;database:SQLColumn name="title"  
+										 dataType="TEXT" />
+					&lt;database:SQLColumn name="content"  
+										 dataType="TEXT" />
+					&lt;database:SQLColumn name="creationDate"  
+										dataType="TEXT" />
+					&lt;database:SQLColumn name="modifyDate"  
+										dataType="TEXT" />
+				&lt;/db:fields>
+			&lt;/db:CreateTable>
+		&lt;/db:notCreatedEffect>
+	&lt;/db:GetDatabase>
+
+			
+	&lt;db:InsertRecord tableName="notes" connection="{connection}">
+		&lt;db:fields>
+			&lt;database:SQLColumnData name="title" value="USA" />
+			&lt;database:SQLColumnData name="content" value="Minneapolis" />
+		&lt;/db:fields>
+	&lt;/db:InsertRecord>
+	
+	&lt;db:InsertRecord tableName="notes" connection="{connection}">
+		&lt;db:fields>
+			&lt;database:SQLColumnData name="title" value="UK" />
+			&lt;database:SQLColumnData name="content" value="London" />
+		&lt;/db:fields>
+	&lt;/db:InsertRecord>
+	
+	&lt;db:SelectRecords id="select" 
+					  tableName="notes" 
+					  connection="{connection}"
+					  itemClass="{Note}"
+					  >
+	&lt;/db:SelectRecords>
+</pre>
 	 * */
 	public class InsertRecord extends ActionEffect {
 		

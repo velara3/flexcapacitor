@@ -6,6 +6,8 @@ package com.flexcapacitor.effects.database {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.data.SQLConnection;
+	import flash.net.Responder;
+	import flash.utils.ByteArray;
 	
 	import mx.effects.IEffect;
 	
@@ -40,13 +42,80 @@ package com.flexcapacitor.effects.database {
 	[Event(name="fileNotFound", type="flash.events.Event")]
 	
 	/**
+	 * Event dispatched when the backup file was not found
+	 * */
+	[Event(name="backupFileNotFound", type="flash.events.Event")]
+	
+	/**
+	 * Event dispatched when the backup file was used
+	 * */
+	[Event(name="backupFileUsed", type="flash.events.Event")]
+	
+	/**
 	 * Event dispatched when the database has not been created yet
 	 * */
 	[Event(name="notCreated", type="flash.events.Event")]
 	
 	/**
+	 * Event dispatched when an error occurs while opening the database
+	 * */
+	[Event(name="error", type="flash.events.Event")]
+	
+	/**
 	 * Get a database file. 
 	 * AIR ONLY
+	 * 
+
+<pre>
+ 
+	&lt;database:SQLConnection id="connection"/>
+ 
+	&lt;db:GetDatabase id="database" fileName="myData.db" connection="{connection}">
+		&lt;db:notCreatedEffect>
+			&lt;db:CreateTable connection="{connection}" tableName="notes" >
+				&lt;db:fields>
+					&lt;database:SQLColumn name="id" 
+										 autoIncrement="true" 
+										 dataType="INTEGER" 
+										 primaryKey="true"/>
+					&lt;database:SQLColumn name="title"  
+										 dataType="TEXT" />
+					&lt;database:SQLColumn name="content"  
+										 dataType="TEXT" />
+					&lt;database:SQLColumn name="creationDate"  
+										dataType="TEXT" />
+					&lt;database:SQLColumn name="modifyDate"  
+										dataType="TEXT" />
+				&lt;/db:fields>
+			&lt;/db:CreateTable>
+		&lt;/db:notCreatedEffect>
+	&lt;/db:GetDatabase>
+
+			
+	&lt;db:InsertRecord tableName="notes" connection="{connection}">
+		&lt;db:fields>
+			&lt;database:SQLColumnData name="title" value="USA" />
+			&lt;database:SQLColumnData name="content" value="Minneapolis" />
+		&lt;/db:fields>
+	&lt;/db:InsertRecord>
+	
+	&lt;db:InsertRecord tableName="notes" connection="{connection}">
+		&lt;db:fields>
+			&lt;database:SQLColumnData name="title" value="UK" />
+			&lt;database:SQLColumnData name="content" value="London" />
+		&lt;/db:fields>
+	&lt;/db:InsertRecord>
+	
+	&lt;db:SelectRecords id="select" 
+					  tableName="notes" 
+					  connection="{connection}"
+					  itemClass="{Note}"
+					  >
+	&lt;/db:SelectRecords>
+</pre>
+ * 
+ 	 * <b>Notes</b>:
+	 * Error #3125: Unable to open the database file.
 	 * */
 	public class GetDatabase extends ActionEffect {
 		
@@ -56,10 +125,14 @@ package com.flexcapacitor.effects.database {
 		public static const DOCUMENTS:String = "documents";
 		public static const USER:String = "user";
 		public static const ROOT:String = "root";
+		
 		public static const SUCCESS:String = "success";
 		public static const FAULT:String = "fault";
 		public static const FILE_NOT_FOUND:String = "fileNotFound";
+		public static const BACKUP_FILE_NOT_FOUND:String = "backupFileNotFound";
+		public static const BACKUP_FILE_USED:String = "backupFileUsed";
 		public static const NOT_CREATED:String = "notCreated";
+		public static const ERROR:String = "error";
 		public static const PROGRESS:String = "progress";
 		public static const OUTPUT_PROGRESS:String = "outputProgress";
 		public static const CLOSE:String = "close";
@@ -111,9 +184,27 @@ package com.flexcapacitor.effects.database {
 		public var directory:String;
 		
 		/**
-		 * Create the file if it doesn't exist. Default is true
+		 * Create the file if it doesn't exist. Default is false
+		 * 
+		 * @see createFromBackup
+		 * @see backupPath
 		 * */
 		public var createFile:Boolean;
+		
+		/**
+		 * Copies a database file from the backup location
+		 * 
+		 * @see backupPath
+		 * */
+		public var createFromBackup:Boolean;
+		
+		/**
+		 * Location of backup file if database does not exist in target location.
+		 * Create from backup must be set to true.
+		 * 
+		 * @see createFromBackup
+		 * */
+		public var backupPath:String;
 		
 		/**
 		 * File extension.
@@ -132,28 +223,45 @@ package com.flexcapacitor.effects.database {
 		/**
 		 * Prints the file URL to the console.
 		 * */
-		public var traceFileURL:Boolean;
+		public var traceFilePaths:Boolean;
 		
 		/**
-		 * Prints the file native path to the console.
+		 * Prints the errors to the console.
 		 * */
-		public var traceNativeFilePath:Boolean;
-		
-		/**
-		 * Prints the relative file path to the console.
-		 * */
-		public var traceRelativeFilePath:Boolean;
+		public var traceErrors:Boolean;
 		
 		/**
 		 * Reference to the file. You do not set this. 
 		 * */
+		[Bindable]
 		public var file:Object;
 		
 		/**
 		 * @copy flash.filesystem.FileMode
 		 * */
-		[Inspectable(enumeration="read,write,append,update")]
-		public var fileMode:String;
+		[Inspectable(enumeration="create,read,write,append,update")]
+		public var fileMode:String = "create";
+		
+		/**
+		 * @copy flash.data.SQLConnection.open()
+		 * */
+		public var autoCompact:Boolean;
+		
+		/**
+		 * @copy flash.data.SQLConnection.open()
+		 * */
+		public var pageSize:int = 1024;
+		
+		/**
+		 * @copy flash.data.SQLConnection.openAsync()
+		 * */
+		public var responder:Responder;
+		
+		/**
+		 * @copy flash.data.SQLConnection.open()
+		 * */
+		[Bindable]
+		public var encryptionKey:ByteArray;
 		
 		/**
 		 * Effect played if file open is successful.  
@@ -176,6 +284,16 @@ package com.flexcapacitor.effects.database {
 		public var fileNotFoundEffect:IEffect;
 		
 		/**
+		 * Effect played if backup file is not found. 
+		 * */
+		public var backupFileNotFoundEffect:IEffect;
+		
+		/**
+		 * Effect played if backup file was used. 
+		 * */
+		public var backupFileUsedEffect:IEffect;
+		
+		/**
 		 * Effect played on progress event  
 		 * */
 		public var progressEffect:IEffect;
@@ -189,6 +307,17 @@ package com.flexcapacitor.effects.database {
 		 * Effect played on close event
 		 * */
 		public var closeEffect:IEffect;
+		
+		/**
+		 * Effect played on error during opening of database
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
+		 * Reference to the error event
+		 * */
+		[Bindable]
+		public var errorEvent:Error;
 		
 		/**
 		 * Path to saved file. You do not set this. 

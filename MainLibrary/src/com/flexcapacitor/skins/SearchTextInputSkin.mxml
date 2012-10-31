@@ -418,7 +418,7 @@
 								horizontalCenter="0" verticalCenter="0"
 								width="60%" height="60%">
 							<s:stroke>
-								<s:SolidColorStroke weight="2" scaleMode="none" color="#ffffff"/>
+								<s:SolidColorStroke weight="2" color="#ffffff"/>
 							</s:stroke>
 						</s:Path>
 					</s:Group>

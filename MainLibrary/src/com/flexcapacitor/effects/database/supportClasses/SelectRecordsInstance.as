@@ -140,20 +140,34 @@ package com.flexcapacitor.effects.database.supportClasses {
 				result = statement.getResult();
 				successful = true;
 			} catch(error:Error) {
-				trace(error.message);
 				successful = false;
+				action.errorEvent = error;
+				
+				// file not found
+				if (action.hasEventListener(SelectRecords.ERROR)) {
+					dispatchEvent(new Event(SelectRecords.ERROR));
+				}
+				
+				if (action.errorEffect) {
+					playEffect(action.errorEffect);
+				}
 			}
 			
 			// sql result
 			action.result = result;
 
 			// records data
-			action.data = result.data;
+			if (result) {
+				action.data = result.data;
+			}
+			else {
+				action.data = [];
+			}
 			
 			// success
 			if (successful) {
 				
-				if (hasEventListener(SelectRecords.SUCCESS)) {
+				if (action.hasEventListener(SelectRecords.SUCCESS)) {
 					dispatchEvent(new Event(SelectRecords.SUCCESS));
 				}
 				
@@ -164,7 +178,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			else {
 				
 				// fault
-				if (hasEventListener(SelectRecords.FAULT)) {
+				if (action.hasEventListener(SelectRecords.FAULT)) {
 					dispatchEvent(new Event(SelectRecords.FAULT));
 				}
 				

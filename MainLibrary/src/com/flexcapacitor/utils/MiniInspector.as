@@ -27,6 +27,7 @@ package com.flexcapacitor.utils {
 	import mx.styles.IStyleClient;
 	import mx.styles.IStyleManager2;
 	import mx.styles.StyleManager;
+	import mx.utils.ArrayUtil;
 	import mx.utils.NameUtil;
 	import mx.utils.ObjectUtil;
 	
@@ -484,7 +485,7 @@ package com.flexcapacitor.utils {
 				var subjects:Object = styleManager.getStyleDeclarations(declaration.subject);
 				
 				for (var subject:String in subjects) {
-					var items:Array = subjects[subject];
+					var items:Array = ArrayUtil.toArray(subjects[subject]);
 					
 					for (var jj:int = 0;jj<items.length;jj++) {
 						var item:CSSStyleDeclaration = items[jj];

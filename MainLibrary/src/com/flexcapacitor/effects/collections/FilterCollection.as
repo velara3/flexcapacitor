@@ -7,6 +7,15 @@ package com.flexcapacitor.effects.collections {
 	
 	/**
 	 * Filters a list collection by the value specified
+	 * 
+	 * <pre>
+&lt;collections:FilterCollection target="{myArrayCollection}" 
+		source="{myTextInput}" 
+		sourcePropertyName="text"
+		showAllItemsOnEmpty="true"
+		fieldName="lastName"
+		/>
+</pre>
 	 * */
 	public class FilterCollection extends ActionEffect {
 		

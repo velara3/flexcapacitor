@@ -130,7 +130,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				
 				action.lastInsertRowID = connection.lastInsertRowID;
 				
-				if (hasEventListener(InsertRecord.SUCCESS)) {
+				if (action.hasEventListener(InsertRecord.SUCCESS)) {
 					dispatchEvent(new Event(InsertRecord.SUCCESS));
 				}
 				
@@ -142,7 +142,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				action.sqlError = executeError;
 				
 				// fault
-				if (hasEventListener(InsertRecord.FAULT)) {
+				if (action.hasEventListener(InsertRecord.FAULT)) {
 					dispatchEvent(new Event(InsertRecord.FAULT));
 				}
 				
@@ -151,7 +151,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				}
 				
 				if (action.traceSQLError) {
-					trace(executeError.details);
+					traceMessage(executeError.details);
 				}
 			}
 			
