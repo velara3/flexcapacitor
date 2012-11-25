@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Label xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:filters="com.flexcapacitor.filters.*"
+		 
+		 useHandCursor="true"
+		 buttonMode="true"
+		 rollOver="trace('rollover');rollOverAnimation.play(null, false)"
+		 rollOut="trace('rollout');rollOverAnimation.play(null, true)"
+		 filters="{[borderStrokeFilter]}"
+		 >
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.filters.BorderStrokeFilter;
+			
+			import spark.effects.animation.MotionPath;
+		
+		]]>
+	</fx:Script>
+
+	
+	<fx:Declarations>
+		<s:Linear id="easer" easeInFraction="0" easeOutFraction="0"
+				  />
+		<fx:int id="duration">150</fx:int>
+		<fx:Number id="borderWeight">1.5</fx:Number>
+		<fx:Number id="borderColor">0xff0000</fx:Number>
+		
+		<filters:BorderStrokeFilter id="borderStrokeFilter"
+									color="{borderColor}"
+									weight="0"/>
+		
+		<fx:Vector id="rollOverMotionPaths" 
+				   type="spark.effects.animation.MotionPath">
+            <s:SimpleMotionPath property="weight" 
+								valueFrom="0" 
+								valueTo="{borderWeight}"/>
+		</fx:Vector>
+		
+		
+		<s:Animate id="rollOverAnimation" 
+				   easer="{easer}"
+				   duration="{duration}" 
+				   target="{borderStrokeFilter}"
+				   motionPaths="{rollOverMotionPaths}"
+				   >
+			
+		</s:Animate>
+		
+	</fx:Declarations>
+	
+</s:Label>

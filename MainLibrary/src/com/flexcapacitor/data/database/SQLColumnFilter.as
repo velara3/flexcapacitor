@@ -18,5 +18,13 @@ package com.flexcapacitor.data.database {
 		 * */
 		public var operation:String = "=";
 		
+		/**
+		 * Type of join. For example,
+		 * AND, OR, INNER JOIN, OUTER JOIN etc 
+		 * 
+		 * Default is AND
+		 * */
+		public var join:String = "AND";
+		
 	}
 }

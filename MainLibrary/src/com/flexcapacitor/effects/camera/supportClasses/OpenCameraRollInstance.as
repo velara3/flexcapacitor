@@ -66,8 +66,10 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			// check for required properties
-			if (action.addToContainer && !action.container) {
-				throw new Error("The container is required.");
+			if (validate) {
+				if (action.addToContainer && !action.container) {
+					dispatchErrorEvent("The container is required.");
+				}
 			}
 			
 			// check if we have support for a gallery
@@ -89,7 +91,7 @@ package com.flexcapacitor.effects.camera.supportClasses {
 					playEffect(action.cameraRollNotSupportedEffect);
 				}
 				
-				cancel("This device does not support access to the Gallery");
+				finish();
 				return;
 			}
 			
@@ -147,6 +149,8 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			
 			//trace(promise.isAsync);
 			
+			action.mediaPromise = promise;
+			
 			// check if the camera roll is supported
 			if (action.cameraRollSupportedEffect) { 
 				playEffect(action.cameraRollSupportedEffect);
@@ -202,7 +206,7 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
-			// if we are testing we've manually set the bitmap data
+			// if we are testing we've manually set the bitmap data - event is null
 			bitmapData = event ? Bitmap(event.target.content).bitmapData : action.bitmapData;
 			bitmapWidth = bitmapData.width;
 			bitmapHeight = bitmapData.height;
@@ -264,6 +268,11 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			removeCameraRollListeners();
 			
 			cancel("Gallery error " + event.text);
+			
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
+			finish();
 		}
 		
 		/**
@@ -281,6 +290,11 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			}
 			
 			cancel("Gallery error " + event.text);
+			
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
+			finish();
 		}
 		
 		/**

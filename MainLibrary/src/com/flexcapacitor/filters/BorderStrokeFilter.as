@@ -99,8 +99,6 @@ package com.flexcapacitor.filters {
 			// values above or below lead to unexpected results
 			// this code does not factor that in
 			
-			trace("weight:"+ _weight+",blur:" + blurX+",strength="+strength);
-			
 		}
 	}
 }

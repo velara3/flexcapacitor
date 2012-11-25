@@ -7,7 +7,11 @@ package com.flexcapacitor.effects.states {
 	
 	/**
 	 * Toggles between one or more states on the component specified 
-	 * in the order the states are listed. 
+	 * in the order the states are listed. <br/><br/>
+	 * Usage:
+<pre>
+	&lt;states:ToggleStates target="{this}" targetStates="{['home','library']}"/>
+</pre>
 	 * */
 	public class ToggleStates extends ActionEffect {
 		

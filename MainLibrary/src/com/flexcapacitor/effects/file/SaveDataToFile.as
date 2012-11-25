@@ -2,7 +2,7 @@
 
 package com.flexcapacitor.effects.file {
 	
-	import com.flexcapacitor.effects.file.supportClasses.SaveContentsToFileInstance;
+	import com.flexcapacitor.effects.file.supportClasses.SaveDataToFileInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import mx.effects.IEffect;
@@ -36,7 +36,7 @@ package com.flexcapacitor.effects.file {
 	 * Save the data you supply to a file. Requires AIR.
 	 * @see PromptSaveAs
 	 * */
-	public class SaveContentsToFile extends ActionEffect {
+	public class SaveDataToFile extends ActionEffect {
 		
 		public static const APPLICATION_STORAGE:String = "applicationStorage";
 		public static const APPLICATION:String = "application";
@@ -44,8 +44,10 @@ package com.flexcapacitor.effects.file {
 		public static const DOCUMENTS:String = "documents";
 		public static const USER:String = "user";
 		public static const ROOT:String = "root";
+		
 		public static const SUCCESS:String = "success";
 		public static const FAULT:String = "fault";
+		public static const ERROR:String = "error";
 		public static const PROGRESS:String = "progress";
 		public static const OUTPUT_PROGRESS:String = "outputProgress";
 		public static const CLOSE:String = "close";
@@ -53,7 +55,7 @@ package com.flexcapacitor.effects.file {
 		/**
 		 *  Constructor.
 		 * */
-		public function SaveContentsToFile(target:Object = null) {
+		public function SaveDataToFile(target:Object = null) {
 			// Effect requires non-null targets, so if they didn't give us one
 			// we will create a dummy object to serve in its place. If the effect
 			// is being used to listen to events, then they will supply a real
@@ -65,7 +67,7 @@ package com.flexcapacitor.effects.file {
 			
 			super(target);
 			
-			instanceClass = SaveContentsToFileInstance;
+			instanceClass = SaveDataToFileInstance;
 			
 		}
 		
@@ -111,22 +113,34 @@ package com.flexcapacitor.effects.file {
 		 * Default is applicationStorage
 		 * */
 		[Inspectable(enumeration="application,applicationStorage,user,desktop,documents,root")]
-		public var baseFilePath:String = "applicationStorage";
+		public var baseFilePath:String = APPLICATION_STORAGE;
 		
 		/**
-		 * Prints the file URL to the console.
+		 * Prints the file URL, native path and relative file path to the console.
 		 * */
-		public var traceFileURL:Boolean;
+		public var traceFilePaths:Boolean;
 		
 		/**
-		 * Prints the file native path to the console.
+		 * Prints the errors to the console.
 		 * */
-		public var traceNativeFilePath:Boolean;
-
+		public var traceErrors:Boolean;
+		
 		/**
-		 * Prints the relative file path to the console.
+		 * Effect played on error during opening of database
 		 * */
-		public var traceRelativeFilePath:Boolean;
+		public var errorEffect:IEffect;
+		
+		/**
+		 * Reference to the error event
+		 * */
+		[Bindable]
+		public var errorEvent:Error;
+		
+		/**
+		 * Reference to the error message
+		 * */
+		[Bindable]
+		public var errorMessage:String;
 		
 		/**
 		 * Reference to the file
@@ -174,6 +188,12 @@ package com.flexcapacitor.effects.file {
 		 * Delimiter for auto generated file name
 		 * */
 		public var dateFileNameDelimiter:String = "-";
+		
+		/**
+		 * Space available
+		 * */
+		[Bindable]
+		public var spaceAvailable:int;
 		
 		/**
 		 * Path to saved file

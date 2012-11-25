@@ -1,25 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
-<!--
-
-    ADOBE SYSTEMS INCORPORATED
-    Copyright 2008 Adobe Systems Incorporated
-    All Rights Reserved.
-
-    NOTICE: Adobe permits you to use, modify, and distribute this file
-    in accordance with the terms of the license agreement accompanying it.
-
--->
-
-<!--- The default skin class for a Spark SkinnableContainer container.  
-
-     @see spark.components.SkinnableContainer
-        
-      @langversion 3.0
-      @playerversion Flash 10
-      @playerversion AIR 1.5
-      @productversion Flex 4
--->
 <s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" 
     xmlns:fb="http://ns.adobe.com/flashbuilder/2009" alpha.disabled="0.5">
 
@@ -30,7 +9,27 @@
          */
         [HostComponent("spark.components.SkinnableContainer")]
     ]]>
-    </fx:Metadata> 
+    </fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				
+				backgroundFill.color = uint(getStyle("backgroundColor"));
+				backgroundFill.alpha = Number(getStyle("backgroundAlpha"));
+				borderStroke.color = uint(getStyle("borderColor"));
+				borderStroke.weight = getStyle("borderWeight");
+				dropShadowFilter.distance = uint(getStyle("borderWeight"));
+				dropShadowFilter.color = uint(getStyle("insetColor"));
+				dropShadowFilter.alpha = Number(getStyle("insetAlpha"));
+				frameRect.radiusX = frameRect.radiusY = getStyle("cornerRadius");
+			}
+			
+		]]>
+	</fx:Script>
+	
     
     <s:states>
         <s:State name="normal" />
@@ -39,18 +38,20 @@
     
 	<!-- FRAME -->
     <!--- Defines the appearance of the SkinnableContainer class's background. -->
-	<s:Rect left="0"
+	<s:Rect id="frameRect" 
+			left="0"
 			right="0"
 			bottom="0"
 			top="0"
 			radiusX="10"
 			radiusY="10"
 			>
-		<!--<s:fill>
-			<s:SolidColor color="#ffffff"/>
-		</s:fill>-->
+		<s:fill>
+			<s:SolidColor id="backgroundFill" color="#ffffff" />
+		</s:fill>
 		<s:stroke>
-			<s:SolidColorStroke caps="round" 
+			<s:SolidColorStroke id="borderStroke" 
+								caps="round" 
 								color="#9a9b9d" 
 								joints="miter" 
 								miterLimit="4"
@@ -58,9 +59,17 @@
 								pixelHinting="true"/>
 		</s:stroke>
 		<s:filters>
-			<s:DropShadowFilter alpha="1" angle="90" blurX="0" blurY="0" color="#FFFFFF"
-								distance="1" hideObject="false" inner="false" knockout="false"
-								quality="2" strength="1"/>
+			<s:DropShadowFilter id="dropShadowFilter" 
+								alpha="1" 
+								angle="90" 
+								blurX="0" blurY="0" 
+								color="#FFFFFF"
+								distance="1" 
+								hideObject="false" 
+								inner="false" 
+								knockout="false"
+								quality="3" 
+								strength="1"/>
 		</s:filters>
 	</s:Rect>
     

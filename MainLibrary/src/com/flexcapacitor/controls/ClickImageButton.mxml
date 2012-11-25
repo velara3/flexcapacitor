@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Image xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:filters="com.flexcapacitor.filters.*"
+		 
+		 useHandCursor="true"
+		 buttonMode="true"
+		 click="rollOverAnimation.play(null, false)"
+		 >
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.filters.BorderStrokeFilter;
+			
+			import spark.effects.animation.MotionPath;
+		
+		]]>
+	</fx:Script>
+
+	
+	<fx:Declarations>
+		<s:Linear id="easer" easeInFraction="0" easeOutFraction="0"
+				  />
+		<fx:int id="duration">300</fx:int>
+		<fx:Number id="borderWeight">3</fx:Number>
+		<fx:Number id="borderColor">0xCCCCCC</fx:Number>
+		
+		<filters:BorderStrokeFilter id="borderStrokeFilter"
+									color="{borderColor}"
+									weight="0"
+									/>
+		
+		<fx:Vector id="rollOverMotionPaths" 
+				   type="spark.effects.animation.MotionPath">
+            <s:SimpleMotionPath property="weight" 
+								valueFrom="0" 
+								valueTo="{borderWeight}"/>
+		</fx:Vector>
+		
+		
+		<s:AnimateFilter id="rollOverAnimation" 
+						   easer="{easer}"
+						   target="{this}"
+						   duration="{duration}" 
+						   bitmapFilter="{borderStrokeFilter}"
+						   motionPaths="{rollOverMotionPaths}"
+						   >
+			
+		</s:AnimateFilter>
+		
+	</fx:Declarations>
+	
+</s:Image>

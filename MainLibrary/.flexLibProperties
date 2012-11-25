@@ -152,7 +152,7 @@
     <classEntry path="com.flexcapacitor.effects.file.GetFile"/>
     <classEntry path="com.flexcapacitor.effects.file.LoadFile"/>
     <classEntry path="com.flexcapacitor.effects.file.PromptSaveAs"/>
-    <classEntry path="com.flexcapacitor.effects.file.SaveContentsToFile"/>
+    <classEntry path="com.flexcapacitor.effects.file.SaveDataToFile"/>
     <classEntry path="com.flexcapacitor.effects.file.UploadFile"/>
     <classEntry path="com.flexcapacitor.effects.file.supportClasses.BrowseForFileInstance"/>
     <classEntry path="com.flexcapacitor.effects.file.supportClasses.CancelFileLoadInstance"/>
@@ -160,7 +160,7 @@
     <classEntry path="com.flexcapacitor.effects.file.supportClasses.GetFileInstance"/>
     <classEntry path="com.flexcapacitor.effects.file.supportClasses.LoadFileInstance"/>
     <classEntry path="com.flexcapacitor.effects.file.supportClasses.PromptSaveAsInstance"/>
-    <classEntry path="com.flexcapacitor.effects.file.supportClasses.SaveContentsToFileInstance"/>
+    <classEntry path="com.flexcapacitor.effects.file.supportClasses.SaveDataToFileInstance"/>
     <classEntry path="com.flexcapacitor.effects.file.supportClasses.UploadFileInstance"/>
     <classEntry path="com.flexcapacitor.effects.form.AddItem"/>
     <classEntry path="com.flexcapacitor.effects.form.CreateFormCode"/>
@@ -308,6 +308,7 @@
     <classEntry path="com.flexcapacitor.utils.supportClasses.GroupOptions"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.VisualElement"/>
     <classEntry path="com.flexcapacitor.effects.popup.supportClasses.OpenPopUpInstance"/>
+    <classEntry path="com.flexcapacitor.controls.FrameContainer"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

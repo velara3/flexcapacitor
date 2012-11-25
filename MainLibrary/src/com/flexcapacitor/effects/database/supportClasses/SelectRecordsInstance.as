@@ -1,7 +1,7 @@
 
 
 package com.flexcapacitor.effects.database.supportClasses {
-	import com.flexcapacitor.data.database.SQLColumn;
+	import com.flexcapacitor.data.database.SQLColumnData;
 	import com.flexcapacitor.data.database.SQLColumnFilter;
 	import com.flexcapacitor.effects.database.SelectRecords;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
@@ -59,14 +59,15 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var action:SelectRecords = SelectRecords(effect);
 			var connection:SQLConnection = action.connection;
 			var tableName:String = action.tableName;
-			var fields:Vector.<SQLColumn> = action.fields;
+			var fields:Vector.<SQLColumnData> = action.fields;
 			var filterFields:Vector.<SQLColumnFilter> = action.filterFields;
 			var itemClass:Class = action.itemClass;
 			var prefetch:int = action.prefetch;
-			var statement:SQLStatement;
-			var request:String;
-			var field:SQLColumn;
+			var request:String = action.SQL;
 			var filterField:SQLColumnFilter;
+			var SQL:String = action.SQL;
+			var statement:SQLStatement;
+			var field:SQLColumnData;
 			var fieldsLength:int;
 			var result:SQLResult;
 			var successful:Boolean;
@@ -96,44 +97,56 @@ package com.flexcapacitor.effects.database.supportClasses {
 			statement.itemClass = action.itemClass;
 			parameters = statement.parameters;
 			
-			// build request statement
-			request = "SELECT ";
 			
-			
-			fieldsLength = fields ? fields.length : 0;
-			
-			if (fieldsLength) {
-				// get column names
-				for (var i:int;i<fieldsLength;i++) {
-					if (i>0) request += ",";
-					field = fields[i];
-					request += field.name;
-				}
+			if (SQL) {
+				request = SQL;
 			}
 			else {
-				request += " *";
-			}
-			
-			request += " FROM " + tableName;
-			
-			fieldsLength = filterFields ? filterFields.length : 0;
-			
-			// where clause
-			if (fieldsLength>0) {
-				request += " WHERE ";
+				// build request statement
+				request = "SELECT ";
 				
-				// get column name and value
-				for (i=0;i<fieldsLength;i++) {
-					if (i>0) request += ",";
-					field = filterFields[i];
-					alias = ":" + field.name;
-					request += filterField.name + "=" + alias;
-					parameters[alias] = filterField.value;
+				fieldsLength = fields ? fields.length : 0;
+				
+				if (fieldsLength) {
+					// get column names
+					for (var i:int;i<fieldsLength;i++) {
+						if (i>0) request += ",";
+						field = fields[i];
+						request += field.name;
+					}
+				}
+				else {
+					request += " *";
+				}
+				
+				request += " FROM " + tableName;
+				
+				fieldsLength = filterFields ? filterFields.length : 0;
+				
+				// where clause
+				if (fieldsLength>0) {
+					request += " WHERE ";
+					
+					// get column name and value
+					for (i=0;i<fieldsLength;i++) {
+						filterField = filterFields[i];
+						
+						if (i != 0) {
+							request += " " + filterField.join + " ";
+						}
+						
+						request += filterField.tableName + filterField.name + filterField.operation;
+						request += filterField.dataType=="TEXT" ? "\""+filterField.value+"\"":filterField.value;
+					}
 				}
 			}
 			
 			// sql statement
 			statement.text = request;
+			
+			if (action.traceSQLStatement) {
+				traceMessage(request);
+			}
 			
 			try {
 				statement.execute(prefetch);
@@ -142,8 +155,12 @@ package com.flexcapacitor.effects.database.supportClasses {
 			} catch(error:Error) {
 				successful = false;
 				action.errorEvent = error;
+
 				
-				// file not found
+				if (action.traceErrorMessage) {
+					traceMessage(error.message);
+				}
+				
 				if (action.hasEventListener(SelectRecords.ERROR)) {
 					dispatchEvent(new Event(SelectRecords.ERROR));
 				}

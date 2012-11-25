@@ -3,10 +3,11 @@
 package com.flexcapacitor.effects.camera {
 	
 	import com.flexcapacitor.effects.camera.supportClasses.OpenCameraRollInstance;
+	import com.flexcapacitor.effects.camera.supportClasses.SaveToCameraRollInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.display.BitmapData;
-	import flash.media.MediaPromise;
+	import flash.events.ErrorEvent;
 	import flash.system.ApplicationDomain;
 	
 	import mx.effects.Effect;
@@ -25,15 +26,20 @@ package com.flexcapacitor.effects.camera {
 	[Event(name="cameraRollSupported", type="flash.events.Event")]
 	
 	/**
-	 * Event dispatched when there is an error when loading the content.
-	 * Usually file name or path is incorrect.
+	 * Event dispatched when complete
 	 * */
-	[Event(name="contentLoaderError", type="flash.events.Event")]
+	[Event(name="complete", type="flash.events.Event")]
 	
 	/**
-	 * Opens the gallery of a Camera Roll. 
+	 * Event dispatched when an error occurs
 	 * */
-	public class OpenCameraRoll extends ActionEffect {
+	[Event(name="error", type="flash.events.ErrorEvent")]
+	
+	
+	/**
+	 * Saves bitmap data to the Camera Roll image gallery 
+	 * */
+	public class SaveToCameraRoll extends ActionEffect {
 		
 		public static const CAMERA_ROLL_SUPPORTED:String = "cameraRollSupported";
 		
@@ -41,13 +47,15 @@ package com.flexcapacitor.effects.camera {
 		
 		public static const CAMERA_ROLL_CLASS_NAME:String = "flash.media.CameraRoll";
 		
-		public static const CONTENT_LOADER_ERROR:String = "contentLoaderError";
+		public static const COMPLETE:String = "complete";
+		
+		public static const ERROR:String = "error";
 		
 		
 		/**
 		 *  Constructor.
 		 * */
-		public function OpenCameraRoll(target:Object = null) {
+		public function SaveToCameraRoll(target:Object = null) {
 			// Effect requires non-null targets, so if they didn't give us one
 			// we will create a dummy object to serve in its place. If the effect
 			// is being used to listen to events, then they will supply a real
@@ -71,7 +79,7 @@ package com.flexcapacitor.effects.camera {
 			var hasCameraRollDefinition:Boolean = applicationDomain.hasDefinition(CAMERA_ROLL_CLASS_NAME); 
 			
 			if (hasCameraRollDefinition) {
-				instanceClass = OpenCameraRollInstance;
+				instanceClass = SaveToCameraRollInstance;
 			}
 			
 		}
@@ -87,12 +95,20 @@ package com.flexcapacitor.effects.camera {
 		public var cameraRollSupportedEffect:Effect;
 		
 		/**
-		 * Effect to play when content was not loaded.
-		 * Usually due to incorrect file name or path
-		 * NOTE: You may need to request permissions to access the device media
-		 * QNX - access_shared
+		 * Effect when add is complete 
 		 * */
-		public var contentLoaderErrorEffect:Effect;
+		public var completeEffect:Effect;
+		
+		/**
+		 * Effect when an error occurs
+		 * */
+		public var errorEffect:Effect;
+		
+		/**
+		 * Reference to the error event
+		 * */
+		[Bindable]
+		public var errorEvent:ErrorEvent;
 		
 		/**
 		 * Reference to the cameral roll
@@ -101,26 +117,7 @@ package com.flexcapacitor.effects.camera {
 		public var cameraRoll:Object;
 		
 		/**
-		 * If add to container property is true then the image 
-		 * bitmap data is added to the bitmap image defined 
-		 * in this property.
-		 * */
-		[Bindable]
-		public var container:BitmapImage;
-		
-		/**
-		 * When set to true sets the bitmap data of the bitmap image.
-		 * */
-		public var addToContainer:Boolean;
-		
-		/**
-		 * If add to container is true then scales the bitmap data to 
-		 * fit the bitmap image.
-		 * */
-		public var scaleToFitContainer:Boolean;
-		
-		/**
-		 * Bitmap data of the selected image.
+		 * Bitmap data to save to the camera roll
 		 * */
 		[Bindable]
 		public var bitmapData:BitmapData;
@@ -131,11 +128,5 @@ package com.flexcapacitor.effects.camera {
 		 * */
 		[Bindable]
 		public var unsupportedTestingImage:BitmapData;
-		
-		/**
-		 * Reference to the media promise
-		 * */
-		[Bindable]
-		public var mediaPromise:Object;
 	}
 }

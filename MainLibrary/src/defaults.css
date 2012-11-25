@@ -5,3 +5,20 @@
 controls|ImageButton {
 	skinClass:ClassReference("com.flexcapacitor.skins.ImageButtonSkin");
 }
+
+controls|FrameContainer {
+	skinClass: ClassReference("com.flexcapacitor.skins.FrameSkin");
+	backgroundColor: #9a9b9d;
+	backgroundAlpha: 0;
+	borderColor: #9a9b9d;
+	borderWeight: 2;
+	insetColor: #ffffff;
+	insetAlpha: 1;
+	cornerRadius: 10;
+}
+
+controls|InsetLabel {
+	insetColor: #ffffff;
+	insetAlpha: .75;
+	insetDistance: 1;
+}

@@ -53,6 +53,11 @@ package com.flexcapacitor.effects.collections {
 		public var searchAtStart:Boolean;
 		
 		/**
+		 * If true then the search must be exact
+		 * */
+		public var exactMatch:Boolean;
+		
+		/**
 		 * Determines if search text is case sensitive
 		 * */
 		public var caseSensitive:Boolean;
@@ -70,6 +75,12 @@ package com.flexcapacitor.effects.collections {
 		public var sourcePropertyName:String;
 		
 		/**
+		 * Name of sub field to get search value from when source is set. If source is not 
+		 * an object then do not set this property.
+		 * */
+		public var sourceSubPropertyName:String;
+		
+		/**
 		 * The value to search for or object that contains the value to search for. 
 		 * */
 		public var source:Object;
@@ -85,15 +96,17 @@ package com.flexcapacitor.effects.collections {
 		 * ReferenceError: Error #1069: Property @title not found on String and there is no default value.
 		 * */
 		public function defaultFilterFunction(item:Object):Boolean {
-				var filterValue:String;
+				var filterValue:Object;
+				var filterValueAsString:String;
 				var itemValue:String;
 				var valueLength:int;
 				var isSpace:Boolean;
 				var index:int;
 				
 				filterValue = sourcePropertyName ? source[sourcePropertyName] : String(source);
+				filterValueAsString = sourceSubPropertyName && filterValue ? filterValue[sourceSubPropertyName] : String(filterValue);
 				itemValue = fieldName ? item[fieldName] : String(item);
-				valueLength = filterValue ? filterValue.length : 0;
+				valueLength = filterValueAsString ? filterValueAsString.length : 0;
 				
 				// show all items if search is empty
 				if (showAllItemsOnEmpty && valueLength==0) {
@@ -105,13 +118,24 @@ package com.flexcapacitor.effects.collections {
 				
 				// case sensitive
 				if (!caseSensitive) { 
-					filterValue = filterValue ? filterValue.toLowerCase() : filterValue;
+					filterValueAsString = filterValueAsString ? filterValueAsString.toLowerCase() : filterValueAsString;
 					itemValue = itemValue ? itemValue.toLowerCase() : itemValue;
+				}
+				
+				// exact match
+				if (exactMatch) {
+					index = itemValue.indexOf(filterValueAsString);
+					
+					if (itemValue==filterValueAsString) {
+						return true;
+					}
+					
+					return false;
 				}
 				
 				// search at the start of a word - this could use regexp
 				if (searchAtStart) {
-					index = itemValue.indexOf(filterValue);
+					index = itemValue.indexOf(filterValueAsString);
 					
 					if (index!=-1) {
 						isSpace = itemValue.charAt(index-1)==" ";
@@ -127,7 +151,7 @@ package com.flexcapacitor.effects.collections {
 				}
 				
 				// search at start is false so allow search anywhere in search item
-				if (itemValue.indexOf(filterValue)!=-1) {
+				if (itemValue.indexOf(filterValueAsString)!=-1) {
 					return true;
 				}
 				

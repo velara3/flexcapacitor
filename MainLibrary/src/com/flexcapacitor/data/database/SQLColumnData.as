@@ -3,7 +3,7 @@ package com.flexcapacitor.data.database {
 	import flash.data.SQLColumnSchema;
 	
 	/**
-	 * SQL Column used for update and insert
+	 * SQL Column used for select, update and insert
 	 * @copy SQLColumn
 	 * */
 	public class SQLColumnData extends SQLColumn {

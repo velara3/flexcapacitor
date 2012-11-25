@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Label xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 useHandCursor="true"
+		 buttonMode="true"
+		 rollOverEffect="{rollOverAnimation}"
+		 rollOutEffect="{rollOutAnimation}"
+		 alpha=".5"
+		 >
+	
+	<fx:Declarations>
+		<fx:Number id="alphaOver">1</fx:Number>
+		<fx:Number id="alphaOut">.5</fx:Number>
+		<fx:int id="duration">200</fx:int>
+		
+		<s:Animate id="rollOverAnimation" duration="{duration}">
+			<s:SimpleMotionPath valueFrom="{alphaOut}" 
+								valueTo="{alphaOver}" 
+								property="alpha" />
+			
+		</s:Animate>
+		
+		
+		<s:Animate id="rollOutAnimation" duration="{duration}">
+			<s:SimpleMotionPath valueFrom="{alphaOver}"
+								valueTo="{alphaOut}" 
+								property="alpha" 
+								/>
+		</s:Animate>
+		
+	</fx:Declarations>
+	
+</s:Label>

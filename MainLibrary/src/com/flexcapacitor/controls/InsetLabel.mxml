@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Label xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:filters="com.flexcapacitor.filters.*"
+		 >
+	
+	<fx:Metadata>
+		[Style(name="insetDistance", inherit="no", type="Number")]
+		[Style(name="insetColor", inherit="no", type="Number")]
+		[Style(name="insetAlpha", inherit="no", type="Number")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				
+				textShadowFilter.color = uint(getStyle("insetColor"));
+				textShadowFilter.alpha = Number(getStyle("insetAlpha"));
+				textShadowFilter.distance = getStyle("insetDistance");
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:filters>
+		<filters:TextShadowFilter id="textShadowFilter"/>
+	</s:filters>
+	
+</s:Label>

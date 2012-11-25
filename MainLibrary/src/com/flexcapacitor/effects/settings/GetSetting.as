@@ -30,7 +30,24 @@ package com.flexcapacitor.effects.settings {
 	/**
 	 * Gets a setting previously saved on clients disk. 
 	 * This uses Shared Objects to get the setting value. 
-	 * The group option is also the path to the shared object. 
+	 * The group option is also the path to the shared object. <br/><br/>
+	 * 
+	 * Usage:
+<pre>
+	&lt;settings:GetSetting id="initialViewSetting" name="initialView" traceDataToConsole="true">
+		&lt;settings:valueNotSetEffect>
+			&lt;s:Sequence>
+				&lt;debugging:Trace message="Initial view not found"/>
+			&lt;/s:Sequence>
+		&lt;/settings:valueNotSetEffect>
+		&lt;settings:valueSetEffect>
+			&lt;s:Sequence>
+				&lt;debugging:Trace message="Initial view found {initialViewSetting.data}"/>
+				&lt;states:ChangeStates target="{this}" state="{initialViewSetting.data}"/>
+			&lt;/s:Sequence>
+		&lt;/settings:valueSetEffect>
+	&lt;/settings:GetSetting>
+</pre>
 	 * */
 	public class GetSetting extends ActionEffect {
 		
@@ -118,6 +135,7 @@ package com.flexcapacitor.effects.settings {
 		 * If the value is not null then the valueSet effect is played and 
 		 * the valueSet event is dispatched. 
 		 * */
+		[Bindable]
 		public var data:Object;
 		
 		/**

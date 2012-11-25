@@ -114,8 +114,34 @@ package com.flexcapacitor.effects.database {
 	&lt;/db:SelectRecords>
 </pre>
  * 
- 	 * <b>Notes</b>:
-	 * Error #3125: Unable to open the database file.
+ 	 * <b>Notes</b>:<br/>
+	 * Error #3125: Unable to open the database file. <br/>
+	 * The file does not exist or does not include permission to be modified. 
+	 * The database cannot be read from the application directory. It must be copied to the 
+	 * application storage directory. <br/><br/>
+	 * 
+	 * <b>File does not exist</b><br/>
+	 * If not using a backup database then ensure createFile options is set to true.  
+	 * Then check the application storage directory for the backup database. For example, 
+	 * /Users/user/Library/Preferences/MyMobileApplication.debug/Local Store/
+	 * This directory will not be empty if the database was created successfully or copied from backup. <br/><br/>
+	 * 
+	 * <b>Backup file does not exist</b><br/>
+	 * Check the bin-debug directory for the backup database. 
+	 * A bin-debug folder is created even when creating a desktop or mobile application.
+	 * The backup file must be in the application directory to be automatically copied to the bin-debug
+	 * folder. It cannot be in a library project. <br/><br/>
+	 * 
+	 * <b>Checking if database was created</b><br/>
+	 * Turn on the traceErrors and traceFilePaths options. <br/>
+	 * Check the space available field for a value. <br/>
+	 * Check the application storage directory for the database file,<br/> 
+	 * /Users/user/Library/Preferences/MyMobileApplication.debug/Local Store/<br/>
+	 * If this directory is empty the file is not being created or was not copied. <br/><br/>
+	 * 
+	 * Error #3104: A SQLConnection must be open to perform this operation.
+	 * Database must be created before performing operations. Related to previous error. 
+	 * 
 	 * */
 	public class GetDatabase extends ActionEffect {
 		
@@ -172,7 +198,6 @@ package com.flexcapacitor.effects.database {
 		public var connection:SQLConnection;
 		
 		/**
-		 * 
 		 * @copy flash.data.SQLConnection#async
 		 * */
 		public var async:Boolean;
@@ -317,7 +342,13 @@ package com.flexcapacitor.effects.database {
 		 * Reference to the error event
 		 * */
 		[Bindable]
-		public var errorEvent:Error;
+		public var errorEvent:Object;
+		
+		/**
+		 * Reference to the error message
+		 * */
+		[Bindable]
+		public var errorMessage:String;
 		
 		/**
 		 * Path to saved file. You do not set this. 

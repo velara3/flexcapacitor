@@ -46,6 +46,11 @@ package com.flexcapacitor.data.database {
 		 * @copy flash.data.SQLColumnSchema#name
 		 * */
 		public var name:String;
+		/**
+		 * 
+		 * Name of table if necessary
+		 * */
+		public var tableName:String = "";
 		
 		/**
 		 * 

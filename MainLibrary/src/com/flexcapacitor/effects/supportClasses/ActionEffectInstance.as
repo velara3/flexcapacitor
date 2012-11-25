@@ -707,7 +707,7 @@ package com.flexcapacitor.effects.supportClasses {
 				traceFunction.apply(effect, [message]);
 			}
 			else {
-				trace(className + ":" + message);
+				trace(effect.className + ":" + message);
 			}
 			
 		}

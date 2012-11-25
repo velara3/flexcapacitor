@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Label xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 useHandCursor="true"
+		 buttonMode="true"
+		 rollOverEffect="{rollOverAnimation}"
+		 rollOutEffect="{rollOutAnimation}"
+		 alpha="1"
+		 >
+	
+	<fx:Declarations>
+		<fx:Number id="colorOver">0xFF0000</fx:Number>
+		<fx:Number id="colorOut">0x0000FF</fx:Number>
+		<fx:Number id="alphaOver">1</fx:Number>
+		<fx:Number id="alphaOut">1</fx:Number>
+		<s:RGBInterpolator id="rgbInterpolator" />
+		<!--<s:Animate id="rollOverAnimation" duration="250">
+			<s:SimpleMotionPath valueFrom="{alphaOut}" 
+								valueTo="{alphaOver}" 
+								property="alpha" />
+			
+			<s:SimpleMotionPath valueFrom="{colorOut}"
+								valueTo="{colorOver}" 
+								property="color" 
+								/>
+		</s:Animate>-->
+		
+		<s:AnimateColor id="rollOverAnimation" 
+						duration="500" 
+						colorFrom="{colorOut}" 
+						colorTo="{colorOver}"
+						>
+			
+		</s:AnimateColor>
+		
+		<!--<s:Animate id="rollOutAnimation" duration="250">
+			<s:SimpleMotionPath valueFrom="{alphaOver}"
+								valueTo="{alphaOut}" 
+								property="alpha" 
+								/>
+			<s:SimpleMotionPath valueFrom="{colorOver}"
+								valueTo="{colorOut}" 
+								property="color" 
+								/>
+			
+		</s:Animate>-->
+		<s:AnimateColor id="rollOutAnimation" 
+						duration="500" 
+						colorFrom="{colorOver}" 
+						colorTo="{colorOut}"
+						>
+			
+		</s:AnimateColor>
+	</fx:Declarations>
+	
+</s:Label>

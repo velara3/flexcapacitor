@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.database {
 	
 	import com.flexcapacitor.data.database.SQLColumn;
+	import com.flexcapacitor.data.database.SQLColumnData;
 	import com.flexcapacitor.data.database.SQLColumnFilter;
 	import com.flexcapacitor.effects.database.supportClasses.SelectRecordsInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
@@ -29,43 +30,109 @@ package com.flexcapacitor.effects.database {
 	
 	
 	/**
-	 * Selects records from the database.
-	 * AIR Only
+	 * Selects records from the database. AIR Only<br/><br/>
+	 * 
+Passing in a SQL statement
 <pre>
-		
-	&lt;s:ArrayCollection id="notes" source="{select.data}"/>
- 
-	&lt;database:SQLConnection id="connection"/>
- 
-	&lt;db:GetDatabase id="database" fileName="myData.db" connection="{connection}">
-		&lt;db:notCreatedEffect>
-			&lt;db:CreateTable connection="{connection}" tableName="notes" >
-				&lt;db:fields>
-					&lt;database:SQLColumn name="id" 
-										 autoIncrement="true" 
-										 dataType="INTEGER" 
-										 primaryKey="true"/>
-					&lt;database:SQLColumn name="title"  
-										 dataType="TEXT" />
-					&lt;database:SQLColumn name="content"  
-										 dataType="TEXT" />
-					&lt;database:SQLColumn name="creationDate"  
-										dataType="TEXT" />
-					&lt;database:SQLColumn name="modifyDate"  
-										dataType="TEXT" />
-				&lt;/db:fields>
-			&lt;/db:CreateTable>
-		&lt;/db:notCreatedEffect>
-	&lt;/db:GetDatabase>
-
-	
-	&lt;db:SelectRecords id="select" 
-					  tableName="notes" 
-					  connection="{connection}"
-					  itemClass="{Note}"
-					  >
-	&lt;/db:SelectRecords>
+&lt;db:SelectRecords id="select" 
+	  connection="{connection}"
+	  SQL="Select * from items"
+	  >
+&lt;/db:SelectRecords>
 </pre>
+	
+Selecting all records from the notes table: 
+<pre>
+&lt;db:SelectRecords id="select" 
+	  tableName="notes" 
+	  connection="{connection}"
+	  >
+&lt;/db:SelectRecords>
+</pre>
+	
+Selecting all records from the notes table and convert the results to objects of type Note
+<pre>
+&lt;db:SelectRecords id="select" 
+	  tableName="notes" 
+	  connection="{connection}"
+	  itemClass="{Note}"
+	  >
+&lt;/db:SelectRecords>
+</pre>
+	
+Selecting columns name and id where id is greater than 1 and less than 5 
+<pre>
+&lt;db:SelectRecords id="selectCategories" 
+		  tableName="categories" 
+		  connection="{connection}"
+		  traceErrorMessage="true"
+		  traceSQLStatement="true"
+		  >
+	&lt;db:fields>
+		&lt;database:SQLColumnData name="name" />
+		&lt;database:SQLColumnData name="id" />
+	&lt;/db:fields>
+	&lt;db:filterFields>
+		&lt;database:SQLColumnFilter name="id" 
+					  operation=">"
+					  value="1"/>
+		&lt;database:SQLColumnFilter name="id" 
+					  operation="& lt;"
+					  value="5"
+					  join="AND"
+					  />
+	&lt;/db:filterFields>
+&lt;/db:SelectRecords>
+</pre>
+	
+Using a custom SQL query and tracing error messages
+<pre>
+&lt;db:SelectRecords id="selectCategories" 
+	  tableName="categories" 
+	  connection="{connection}"
+	  SQL="select * from categories c where c.id in (select i.categoryID from items i);"
+	  traceErrorMessage="true"
+	  >
+&lt;/db:SelectRecords>
+</pre>
+	
+Creating a connection, collection, database and table and 
+selecting records from it
+<pre>
+&lt;s:ArrayCollection id="notes" source="{select.data}"/>
+ 
+&lt;database:SQLConnection id="connection"/>
+ 
+&lt;db:GetDatabase id="database" fileName="myData.db" connection="{connection}">
+	&lt;db:notCreatedEffect>
+		&lt;db:CreateTable connection="{connection}" tableName="notes" >
+			&lt;db:fields>
+				&lt;database:SQLColumn name="id" 
+									 autoIncrement="true" 
+									 dataType="INTEGER" 
+									 primaryKey="true"/>
+				&lt;database:SQLColumn name="title"  
+									 dataType="TEXT" />
+				&lt;database:SQLColumn name="content"  
+									 dataType="TEXT" />
+				&lt;database:SQLColumn name="creationDate"  
+									dataType="TEXT" />
+				&lt;database:SQLColumn name="modifyDate"  
+									dataType="TEXT" />
+			&lt;/db:fields>
+		&lt;/db:CreateTable>
+	&lt;/db:notCreatedEffect>
+&lt;/db:GetDatabase>
+
+
+&lt;db:SelectRecords id="select" 
+	  tableName="notes" 
+	  connection="{connection}"
+	  itemClass="{Note}"
+	  >
+&lt;/db:SelectRecords>
+</pre>
+	 *
 	 * */
 	public class SelectRecords extends ActionEffect {
 		
@@ -116,9 +183,9 @@ package com.flexcapacitor.effects.database {
 		public var tableName:String;
 		
 		/**
-		 * Array of columns and values to insert into the new row
+		 * Array of columns and values to select
 		 * */
-		public var fields:Vector.<SQLColumn>;
+		public var fields:Vector.<SQLColumnData>;
 		
 		/**
 		 * ID of the last row inserted. 
@@ -148,10 +215,26 @@ package com.flexcapacitor.effects.database {
 		public var result:SQLResult;
 		
 		/**
+		 * @copy flash.data.SQLStatement#text
+		 * */
+		[Bindable]
+		public var SQL:String;
+		
+		/**
 		 * @copy flash.data.SQLResult#data
 		 * */
 		[Bindable]
 		public var data:Array;
+		
+		/**
+		 * Traces the generated SQL 
+		 * */
+		public var traceSQLStatement:Boolean;
+		
+		/**
+		 * Traces the error message 
+		 * */
+		public var traceErrorMessage:Boolean;
 		
 		/**
 		 * Effect played on error
@@ -159,6 +242,7 @@ package com.flexcapacitor.effects.database {
 		public var errorEffect:IEffect;
 		
 		/**
+		public var traceSQLStatement:Boolean;
 		 * Reference to the error event
 		 * */
 		[Bindable]

@@ -137,15 +137,15 @@ package com.flexcapacitor.effects.file.supportClasses {
 				
 				
 				if (action.traceFileURL) {
-					trace(action.className + " File URL: " + file.url);
+					traceMessage(action.className + " File URL: " + file.url);
 				}
 				
 				if (action.traceNativeFilePath) {
-					trace(action.className + " Native File Path: " + file.nativePath);
+					traceMessage(action.className + " Native File Path: " + file.nativePath);
 				}
 				
 				if (action.traceRelativeFilePath) {
-					trace(action.className + " Relative File Path: " + fileLocation);
+					traceMessage(action.className + " Relative File Path: " + fileLocation);
 				}
 				
 				action.filePath = file.url;

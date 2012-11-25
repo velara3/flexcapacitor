@@ -7,11 +7,11 @@ package com.flexcapacitor.effects.file {
 	
 	import flash.display.BitmapData;
 	import flash.display.LoaderInfo;
+	import flash.events.ProgressEvent;
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;
 	
 	import mx.effects.IEffect;
-	import flash.events.ProgressEvent;
 	
 	
 	

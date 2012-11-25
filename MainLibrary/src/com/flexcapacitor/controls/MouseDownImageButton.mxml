@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Image xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:filters="com.flexcapacitor.filters.*"
+		 
+		 mouseDown="label1_mouseDownHandler(event)"
+		 mouseUp="label1_mouseUpHandler(event)"
+		 mouseOut="label1_mouseOutHandler(event)"
+		 mouseOver="label1_mouseOverHandler(event)"
+		 filters="{[borderStrokeFilter]}"
+		 useHandCursor="true"
+		 buttonMode="true"
+		 >
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.filters.BorderStrokeFilter;
+			
+			import spark.effects.animation.MotionPath;
+		
+			public var mouseDownHere:Boolean;
+			protected function label1_mouseDownHandler(event:MouseEvent):void {
+				mouseDownHere = true;
+				rollOverAnimation.play(null, false);
+			}
+			
+			protected function label1_mouseUpHandler(event:MouseEvent):void {
+				rollOverAnimation.play(null, true);
+			}
+			
+			protected function label1_mouseOutHandler(event:MouseEvent):void {
+				rollOverAnimation.play(null, true);
+				rollOverAnimation.end();
+			}
+			
+			protected function label1_mouseOverHandler(event:MouseEvent):void {
+				if (event.buttonDown) {
+					rollOverAnimation.play(null, false);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+
+	
+	<fx:Declarations>
+		<s:Linear id="easer" easeInFraction="0" easeOutFraction="0"/>
+		<fx:int id="duration">150</fx:int>
+		<fx:Number id="borderWeight">3</fx:Number>
+		<fx:Number id="borderColor">0xDCDCDC</fx:Number>
+		
+		<filters:BorderStrokeFilter id="borderStrokeFilter"
+									color="{borderColor}"
+									weight="0"/>
+		
+		<fx:Vector id="rollOverMotionPaths" 
+				   type="spark.effects.animation.MotionPath">
+            <s:SimpleMotionPath property="weight" 
+								valueFrom="0" 
+								valueTo="{borderWeight}"/>
+		</fx:Vector>
+		
+		
+		<s:Animate id="rollOverAnimation" 
+				   easer="{easer}"
+				   duration="{duration}" 
+				   target="{borderStrokeFilter}"
+				   motionPaths="{rollOverMotionPaths}"
+				   >
+			
+		</s:Animate>
+		
+	</fx:Declarations>
+	
+</s:Image>

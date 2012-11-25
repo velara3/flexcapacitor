@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SkinnableContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" width="400" height="300"
+		 skinClass="com.flexcapacitor.skins.FrameSkin">
+	<fx:Metadata>
+		[Style(name="borderColor", inherit="no", type="Number")]
+		[Style(name="borderWeight", inherit="no", type="int")]
+		[Style(name="insetColor", inherit="no", type="Number")]
+		[Style(name="insetAlpha", inherit="no", type="Number")]
+		[Style(name="cornerRadius", inherit="no", type="int")]
+	</fx:Metadata>
+</s:SkinnableContainer>

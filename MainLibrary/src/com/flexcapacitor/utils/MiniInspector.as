@@ -32,52 +32,52 @@ package com.flexcapacitor.utils {
 	import mx.utils.ObjectUtil;
 	
 	import spark.components.Application;
-
+	
 	/**
-	 * Dispatched when pressing the ALT key. Use to get the target under the mouse or the lastComponentItem. 
+	 * Dispatched when pressing the ALT key. Use to get the target under the mouse or the lastComponentItem.
 	 * */
 	[Event(name="click", type="flash.events.MouseEvent")]
 	
 	/**
-	 * At runtime it will display information about the object you click on in the console. 
+	 * At runtime it will display information about the object you click on in the console.
 	 * It also lets you manually fade in and out a bitmap image.<br/><br/>
-	 * 
-	 * Click anywhere on the application while pressing the CTRL / COMMAND key and 
+	 *
+	 * Click anywhere on the application while pressing the CTRL / COMMAND key and
 	 * information about the object under the mouse (that is also in the component tree excluding the skin) will be written to the console.<br/><br/>
-	 * 
-	 * Click anywhere on the application while pressing CTRL / CMD + SHIFT key and 
+	 *
+	 * Click anywhere on the application while pressing CTRL / CMD + SHIFT key and
 	 * information about the object under the mouse (that is in the component tree OR in the skin) will be written to the console.<br/><br/>
-	 * 
-	 * Adding the ALT key to the above keyboard shortcuts will cause you to enter the debugger 
+	 *
+	 * Adding the ALT key to the above keyboard shortcuts will cause you to enter the debugger
 	 * during a click handler event to inspect the properties and values of the item you clicked.<br/><br/>
-	 * 
+	 *
 	 * The information output to the console includes a way to find the object in Eclipse. <br/>
-	 * It will create a search pattern using a regular expression that will locate the document the object is defined in. 
+	 * It will create a search pattern using a regular expression that will locate the document the object is defined in.
 	 * This is used with the Eclipse Search in Files dialog.<br/><br/>
-	 * 
+	 *
 	 * To use find in files:<br/>
-	 * • Open the Search in Files dialog (CTRL + H)<br/>
-	 * • Copy the created pattern from the console and paste it into the search text input<br/>
-	 * • select regular expression checkbox <br/>
-	 * • select current workspace or project<br/>
-	 * • click search.<br/><br/>
-	 * 
+	 * • Open the Search in Files dialog (CTRL + H)<br/>
+	 * • Copy the created pattern from the console and paste it into the search text input<br/>
+	 * • select regular expression checkbox <br/>
+	 * • select current workspace or project<br/>
+	 * • click search.<br/><br/>
+	 *
 	 * Note: If it has an ID it will find it quickly. If it doesn't it will narrow it down and in most cases still find it. <br/><br/>
-	 * 
+	 *
 	 * Mini Inspector Usage<br/>
 	 * Add the class to the declarations tag usually in the root application like so,<br/><br/>
-	 * 
+	 *
 	 * &lt;utils:MiniInspector /><br/><br/>
-	 * 
+	 *
 	 * To use the image fade in fade out:<br/>
-	 * 
-	 * • Add an image to your component for example, <br/>
+	 *
+	 * • Add an image to your component for example, <br/>
 	 * &lt;s:BitmapImage id="image" source="mockup.png" /><br/><br/>
-	 * • Set the background image property to the image like so, <br/>
-	 *  &lt;utils:MiniInspector backgroundImage="{image}"/><br/><br/>
-	 * • Run the application<br/>
-	 * • While holding COMMAND / CTRL scroll the mouse wheel up or down. <br/><br/>
-	 * 
+	 * • Set the background image property to the image like so, <br/>
+	 * &lt;utils:MiniInspector backgroundImage="{image}"/><br/><br/>
+	 * • Run the application<br/>
+	 * • While holding COMMAND / CTRL scroll the mouse wheel up or down. <br/><br/>
+	 *
 	 * More information at http://code.google.com/p/flexcapacitor/
 	 * */
 	public class MiniInspector extends EventDispatcher implements IMXMLObject {
@@ -109,7 +109,7 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Shows styles from the "global" type declaration
-		 * 
+		 *
 		 * @see #showUniversalStyles
 		 * @see #showStyleInheritanceInformation
 		 * */
@@ -117,20 +117,20 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Shows styles from the "*" type declaration
-		 * 
+		 *
 		 * @see #showGlobalStyles
 		 * @see #showStyleInheritanceInformation
 		 * */
 		public var showUniversalStyles:Boolean;
 		
 		/**
-		 * Minimum and maximumn amount of space to show style name in console in style name lookup 
+		 * Minimum and maximumn amount of space to show style name in console in style name lookup
 		 * */
-		public  var minimumStyleNamePadding:int = 35;
+		public var minimumStyleNamePadding:int = 35;
 		
 		/**
 		 * Shows style inheritance information
-		 * 
+		 *
 		 * @see #showUniversalStyles
 		 * @see #showGlobalStyles
 		 * */
@@ -138,13 +138,13 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Show embedded fonts information
-		 * @see includeEmbeddedFontDetails 
+		 * @see includeEmbeddedFontDetails
 		 * */
 		public var showEmbeddedFontInformation:Boolean;
 		
 		/**
 		 * Show all style declarations
-		 * @see showStyleInheritanceInformation 
+		 * @see showStyleInheritanceInformation
 		 * */
 		public var showAllStyleDeclarations:Boolean;
 		
@@ -156,7 +156,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Space before some output text
 		 * */
-		public var prespace:String = "   ";
+		public var prespace:String = " ";
 		
 		/**
 		 * Show document information
@@ -169,7 +169,7 @@ package com.flexcapacitor.utils {
 		public var showParentDocument:Boolean = true;
 		
 		/**
-		 * Show regular expression search pattern in console when checking target. 
+		 * Show regular expression search pattern in console when checking target.
 		 * This is used to find the target in Eclipse.
 		 * Copy the value and paste it into the Find or Search window with RegExp option checked.
 		 * */
@@ -178,13 +178,13 @@ package com.flexcapacitor.utils {
 		/**
 		 * Shows the path of the target clicked excluding components in the skin.
 		 * This shows the path from the component to the root component.
-		 * 
+		 *
 		 * For example, if you click a label in a skin the path will start from
 		 * the component that owns the button not the button itself.
-		 * 
+		 *
 		 * Example:
 		 * Button > Group > Application
-		 * 
+		 *
 		 * @see showHeirarchy
 		 * */
 		public var showHeirarchy:Boolean = true;
@@ -218,30 +218,30 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Amount of alpha to change when scrolling the mouse wheel
-		 * 
+		 *
 		 * @see backgroundImage
 		 * @see backgroundImageAlpha
 		 * */
 		public var mouseWheelDelta:int;
 		
 		/**
-		 * When an visual element is set and this option is enabled 
+		 * When an visual element is set and this option is enabled
 		 * and when the shift key is pressed scrolling up or down on the
-		 * mouse wheel will increase or decrease the transparency of the 
+		 * mouse wheel will increase or decrease the transparency of the
 		 * background image
-		 * 
+		 *
 		 * @see backgroundImage
 		 * @see backgroundImageAlpha
 		 * */
 		public var enableBackgroundCrossFade:Boolean = true;
 		
 		/**
-		 * The amount to add to the mouse wheel delta to fade up or down the 
-		 * transparency of the background image. 
-		 * For example, if the delta is 4 and the multiplier is 10 then the amount 
-		 * to add to the alpha value is .4 since 4/10. 
-		 * Default is 20. 
-		 * 
+		 * The amount to add to the mouse wheel delta to fade up or down the
+		 * transparency of the background image.
+		 * For example, if the delta is 4 and the multiplier is 10 then the amount
+		 * to add to the alpha value is .4 since 4/10.
+		 * Default is 20.
+		 *
 		 * @see backgroundImage
 		 * @see backgroundImageAlpha
 		 * @see mouseWheelDelta
@@ -269,12 +269,12 @@ package com.flexcapacitor.utils {
 		public var regExpSearchFlags:String = "(?s)";
 		
 		/**
-		 * Last item selected in the component 
+		 * Last item selected in the component
 		 **/
 		public var lastComponentItem:ComponentItem;
 		
 		/**
-		 * 
+		 *
 		 **/
 		public function MiniInspector() {
 			var rootDisplay:DisplayObject = SystemManager.getSWFRoot(this);
@@ -290,13 +290,13 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Set this to an image or visual element on the stage. At runtime hold the COMMAND key and 
+		 * Set this to an image or visual element on the stage. At runtime hold the COMMAND key and
 		 * scroll the mouse wheel up or down to fade the element in or out.
 		 * */
 		public function get backgroundImage():IVisualElement {
 			return _backgroundImage;
 		}
-
+		
 		public function set backgroundImage(value:IVisualElement):void {
 			_backgroundImage = value;
 			
@@ -316,7 +316,7 @@ package com.flexcapacitor.utils {
 		public function get enabled():Boolean {
 			return _enabled;
 		}
-
+		
 		public function set enabled(value:Boolean):void {
 			_enabled = value;
 			
@@ -329,7 +329,7 @@ package com.flexcapacitor.utils {
 			}
 			
 		}
-
+		
 		/**
 		 * Click handler added to stage
 		 * We only check the target if the alt key is down
@@ -376,12 +376,22 @@ package com.flexcapacitor.utils {
 		 * */
 		public function checkTarget(event:MouseEvent):void {
 			var rootComponent:ComponentItem = document ? createComponentTreeFromElement(document) : createComponentTreeFromElement(FlexGlobals.topLevelApplication);
+			var rootSystemManagerTree:ComponentItem = createComponentTreeFromElement(FlexGlobals.topLevelApplication.systemManager);
 			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(event.target), rootComponent);
+			componentItem = componentItem ==null ? getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(event.target), rootSystemManagerTree) : componentItem;
 			var target:DisplayObject = event.target as DisplayObject; // original clicked on item as reported by the mouse event
-			var componentTarget:Object = componentItem ? componentItem.target : target; // first component found to own the event.target that is also on the component tree
+			// first component found to own the event.target that is also on the component tree
+			// if the component is in a pop up we are not handling it
+			var componentTarget:Object = componentItem ? componentItem.target : target;
 			var selectedTarget:Object;
 			var message:String = "";
+			var clearStyle:Boolean;
+			// set to string so debugger allows change of values
+			var property:String = "";
+			var style:String = "";
+			var value:String = "";
 			var styles:Array;
+			var currentValue:*;
 			
 			
 			// get target
@@ -392,8 +402,8 @@ package com.flexcapacitor.utils {
 				selectedTarget = componentTarget;
 			}
 			
-			// show target information 
-			if (showDisplayObjectInformation && componentItem) {
+			// show target information
+			if (showDisplayObjectInformation) {
 				if (event.shiftKey) {
 					message = getComponentDetails(componentItem.accessPath, true);
 				}
@@ -441,15 +451,53 @@ package com.flexcapacitor.utils {
 				// the target object contains the item you clicked on
 				enterDebugger();
 			}
+			
+			
+			// TO GET OR SET VALUES SET THE PROPERTY OR STYLE VARIABLE NOW
+			
+			// allows you to get or set a property or style value dynamically 
+			// through the IDE while debugging
+			if (property) {
+				
+				try {
+					currentValue = selectedTarget[property];
+					
+					selectedTarget[property] = value;
+				}
+				catch (error:Error) {
+					trace("Error setting property:" + error.message);
+				}
+				
+			}
+			else if (style) {
+				
+				try {
+					currentValue = selectedTarget.getStyle(style);
+					
+					// need to call clear style or allow setting undefined
+					// to support
+					if (value!="undefined") {
+						selectedTarget.setStyle(style, value);
+					}
+					else if (clearStyle) {
+						selectedTarget.setStyle(style, undefined);
+					}
+					
+					currentValue = selectedTarget.getStyle(style);
+				}
+				catch (error:Error) {
+					trace("Error setting style:" + error.message);
+				}
+			}
 		}
 		
 		/**
-		 * Get's the style inheritance 
-		 * 
+		 * Get's the style inheritance
+		 *
 		 * Getting TextInput / TextArea pseudo conditions is experimental
 		 * TextInput:normalWithPrompt etc
 		 * the ordering of pseudo style declarations is still under development
-		 * Also, doesn't get unqualified / unconditional styles so it will 
+		 * Also, doesn't get unqualified / unconditional styles so it will
 		 * find "TextInput.myStyle" but not ".myStyle".
 		 * */
 		public function getStyleInheritance(styleClient:IStyleClient):Array {
@@ -504,14 +552,14 @@ package com.flexcapacitor.utils {
 			classDeclarations.reverse();
 			
 			
-			// add inline styles 
+			// add inline styles
 			var styleDeclaration:CSSStyleDeclaration = styleClient.styleDeclaration;
 			
 			if (styleDeclaration) {
 				classDeclarations.unshift(styleDeclaration);
 			}
 			
-			// add global styles 
+			// add global styles
 			if (showGlobalStyles) {
 				var globalDeclaration:CSSStyleDeclaration = styleManager.getStyleDeclaration("global");
 				
@@ -595,7 +643,7 @@ package com.flexcapacitor.utils {
 						styleItem.styles = array;
 					}
 					
-					// prevent duplicates where the default factory and 
+					// prevent duplicates where the default factory and
 					// and the factory instances create the same object
 					// this is a result of the way we're looking up pseudo declarations
 					if (factoryInstance && declaration.defaultFactory!=null) {
@@ -677,7 +725,7 @@ package com.flexcapacitor.utils {
 				}
 			}
 			else {
-				selectorType = "inline"; 
+				selectorType = "inline";
 			}
 			
 			return selectorType;
@@ -698,7 +746,7 @@ package com.flexcapacitor.utils {
 			output += showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
 			
 			if (component==null) {
-				output += styleManager==null ? "Warning: Target is not a UIComponent. Using global style manager\n" : "";  
+				output += styleManager==null ? "Warning: Target is not a UIComponent. Using global style manager\n" : "";
 			}
 			
 			var selectors:Array = styleManager.selectors;
@@ -740,7 +788,7 @@ package com.flexcapacitor.utils {
 			output += showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
 			
 			if (systemManager==null && FlexGlobals.topLevelApplication.systemManager) {
-				output += systemManager==null ? "Warning: Target system manager is null. Using FlexGlobals top level application system manager\n" : "";  
+				output += systemManager==null ? "Warning: Target system manager is null. Using FlexGlobals top level application system manager\n" : "";
 				systemManager = FlexGlobals.topLevelApplication.systemManager;
 			}
 			else if (systemManager==null) {
@@ -779,8 +827,8 @@ package com.flexcapacitor.utils {
 			
 			return output;
 		}
-			
-			
+		
+		
 		
 		/**
 		 * Get's style details about the target such as font family, font weight, etc
@@ -842,29 +890,29 @@ package com.flexcapacitor.utils {
 						}
 						
 					}
-					// check for color values
+						// check for color values
 					else if (String(name).toLowerCase().indexOf("color")!=-1) {
 						
 						// single color
 						if (!isNaN(actualValue)) {
 							output += prespace + paddedName + "#" + padLeft(Number(value).toString(16), 6);;
 						}
-						// array of colors
+							// array of colors
 						else if (actualValue && actualValue is Array && actualValue.length>0 && !isNaN(actualValue[0])) {
 							for (var k:int;k<actualValue.length;k++) {
-								if (!isNaN(actualValue[k])) { 
+								if (!isNaN(actualValue[k])) {
 									actualValue[k] = "#" + padLeft(Number(actualValue[k]).toString(16), 6);
 								}
 							}
 							output += prespace + paddedName + "" + actualValue;
 						}
-						// false alarm
+							// false alarm
 						else {
 							output += prespace + paddedName + "" + value;
 						}
 						
 					}
-					// check for skin classes
+						// check for skin classes
 					else if (name && value && actualValue is Class) {
 						var className:String = value ? getQualifiedClassName(actualValue) : "";
 						output += prespace + paddedName + "" + padString(value, minimumStyleNamePadding) + className;
@@ -891,8 +939,8 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Returns an object that contains an array of embedding information for the font with the given name.
-		 * Includes embedded and embeddedCFF information. If null then the font and that style of the font 
-		 * are not embedded.<br/><br/>  
+		 * Includes embedded and embeddedCFF information. If null then the font and that style of the font
+		 * are not embedded.<br/><br/>
 		 * Example, <br/>
 		 * <pre>
 		 * var object:Object = getFontFamilyEmbedded("MyFont", myButton.systemManager);
@@ -968,12 +1016,12 @@ package com.flexcapacitor.utils {
 			
 			return {embedded:embedded, embeddedCFF:embeddedCFF};
 		}
-			
+		
 		
 		
 		/**
-		 * Checks if font is embedded and is also embeddedCFF. 
-		 * Does not run all methods system manager function runs. 
+		 * Checks if font is embedded and is also embeddedCFF.
+		 * Does not run all methods system manager function runs.
 		 */
 		public function isFontFaceEmbeddedCFF(textFormat:TextFormat, systemManager:ISystemManager):Boolean
 		{
@@ -1011,23 +1059,21 @@ package com.flexcapacitor.utils {
 			return false;
 			
 			/*if (!fontName ||
-				!systemManager.embeddedFontList ||
-				!systemManager.embeddedFontList[fontName])
+			!systemManager.embeddedFontList ||
+			!systemManager.embeddedFontList[fontName])
 			{
-				return false;
+			return false;
 			}
-			
 			var info:Object = systemManager.embeddedFontList[fontName];
-			
 			return !((bold && !info.bold) ||
-				(italic && !info.italic) ||
-				(!bold && !italic && !info.regular));*/
+			(italic && !info.italic) ||
+			(!bold && !italic && !info.regular));*/
 			
 		}
-
+		
 		
 		/**
-		 * 
+		 *
 		 **/
 		protected function getArrayFromObject(object:Object):Array {
 			var array:Array = [];
@@ -1059,8 +1105,8 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * The padLeft method creates a new string by concatenating enough leading 
-		 * pad characters to an original string to achieve a specified total length. 
+		 * The padLeft method creates a new string by concatenating enough leading
+		 * pad characters to an original string to achieve a specified total length.
 		 * This method enables you to specify your own padding character.
 		 * */
 		public static function padLeft(value:String="", digits:int = 2, character:String="0", isNumber:Boolean=false):String {
@@ -1094,7 +1140,7 @@ package com.flexcapacitor.utils {
 			}
 			return temp;
 		}
-
+		
 		/**
 		 * Get's details about the target such as id, type, ancestors and search pattern
 		 * */
@@ -1172,11 +1218,11 @@ package com.flexcapacitor.utils {
 			if (showSearchPattern) {
 				searchPattern = getRegExpSearchPattern(DisplayObject(componentItem.target), componentItem.parentDocumentName, false);
 				
-				if (componentItem.id) {
+				if (componentItem.id && searchPattern) {
 					message += "\nSearch in files with regexp " + searchPattern;
 				}
 				else {
-					message += "\nSearch in files with regexp \"" + searchPattern + "\"";
+					//message += "\nSearch in files with regexp \"" + searchPattern + "\"";
 				}
 			}
 			
@@ -1188,13 +1234,10 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Gets the path up the component display list tree 
-		  
+		 * Gets the path up the component display list tree
 		 Usage:
 		 var string:String = getComponentPath(componentItem); // componentItem.instance is Button
-		 
 		 trace(string); // application > group > group > button
-		 
 		 * */
 		public function getComponentPath(componentItem:ComponentItem, ascending:Boolean = false, separator:String = " > "):String {
 			var items:Array = [];
@@ -1237,7 +1280,7 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Creates a component tree starting at the given element.
-		 * Element being visual element like an Application, UIComponent or Rect.  
+		 * Element being visual element like an Application, UIComponent or Rect.
 		 * */
 		public function createComponentTreeFromElement(element:Object, parentItem:ComponentItem = null, depth:int = 0):ComponentItem {
 			var item:ComponentItem;
@@ -1276,13 +1319,13 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Given a component item tree and a target (most likely a UIComponent or display object) 
-		 * we walk down through the component tree (parentItem and parentItem.children) 
-		 * and find a match where the target matches the stored ComponentItem instance property. 
-		 * 
+		 * Given a component item tree and a target (most likely a UIComponent or display object)
+		 * we walk down through the component tree (parentItem and parentItem.children)
+		 * and find a match where the target matches the stored ComponentItem instance property.
+		 *
 		 * Note: the component tree is created by createComponentTreeFromElement();
 		 * parentItem could be the root component tree object such as the Application or child group or container component
-		 * 
+		 *
 		 * Call getComponentItemFromComponentTreeByDisplayObject
 		 * */
 		private function findComponentItemInParentItemByElement(target:Object, parentItem:ComponentItem, depth:int = 0):ComponentItem {
@@ -1320,14 +1363,14 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Find the component that owns the display object 
+		 * Find the component that owns the display object
 		 * AND is also on the component tree
-		 * This method continues to walk up the display list / component tree until 
+		 * This method continues to walk up the display list / component tree until
 		 * it finds a component that owns the original display object then returns that component item
-		 * The findComponentItemInParentItemByElement returns null 
+		 * The findComponentItemInParentItemByElement returns null
 		 * if it does not find the item in the given component tree
 		 * If it does not find the owner of the display object it will keep a reference to it in the
-		 * target property on the access path instance. 
+		 * target property on the access path instance.
 		 * */
 		public function getFirstParentComponentItemFromComponentTreeByDisplayObject(displayObject:DisplayObject, componentTree:ComponentItem):ComponentItem {
 			var componentItem:ComponentItem;
@@ -1382,8 +1425,8 @@ package com.flexcapacitor.utils {
 		 * With the given target it returns a regexp pattern that can be used to find it in the document, project or workspace
 		 * If isScript is true it attempts to returns a pattern to find the exact instance in AS3
 		 * The MXML pattern will find the instance with that ID. If the instance doesn't have an ID it will create a regexp that will narrow it down.
-		 * 
-		 * NOTE: Press CTRL + H to open the Search in Files dialog, paste the value in, check regular expression and press Find. 
+		 *
+		 * NOTE: Press CTRL + H to open the Search in Files dialog, paste the value in, check regular expression and press Find.
 		 * */
 		public function getRegExpSearchPattern(target:DisplayObject, parentDocumentName:String = "", isScript:Boolean = false):String {
 			var id:String = getIdentifier(target);
@@ -1401,7 +1444,7 @@ package com.flexcapacitor.utils {
 					}
 					
 					// this finds the document tag then the tag name so something like Group ... :Button
-					// the (?! is a positive look ahead. it matches a group after the main expression 
+					// the (?! is a positive look ahead. it matches a group after the main expression
 					pattern = regExpSearchFlags + "(?!:" + parentDocumentName + "(.)*:):" + className + " ";
 					
 				}
@@ -1469,7 +1512,7 @@ class ComponentItem {
 			className = getQualifiedClassName(element);
 			name = NameUtil.getUnqualifiedClassName(element);
 			id = "id" in element && element.id!=null ? element.id : null;
-
+			
 			document = "document" in element ? element.document : null;
 			documentClassName = getQualifiedClassName(document);
 			documentName = document ? NameUtil.getUnqualifiedClassName(document) : null;
@@ -1498,7 +1541,7 @@ class ComponentItem {
 	public var className:String;
 	
 	/**
-	 * Instance of component. 
+	 * Instance of component.
 	 * */
 	public var target:Object;
 	
@@ -1553,7 +1596,7 @@ class ComponentItem {
 	public var parentDocumentID:String;
 	
 	/**
-	 * Children. Optional. 
+	 * Children. Optional.
 	 * Used for display in heiarchy view such as Tree.
 	 * */
 	public var children:ArrayList;
@@ -1576,25 +1619,25 @@ class ComponentItem {
  * Describes the display object
  * */
 class CSSStyleDeclarationItem extends CSSStyleDeclaration {
-/**
- * 
- **/
-public function CSSStyleDeclarationItem(element:Object = null):void {}
-/**
- * 
- **/
-public var name:String;
-/**
- * 
- **/
-public var declaration:CSSStyleDeclaration;
-/**
- * 
- **/
-public var styles:Array;
-/**
- * 
- **/
-public var type:String;
-
+	/**
+	 *
+	 **/
+	public function CSSStyleDeclarationItem(element:Object = null):void {}
+	/**
+	 *
+	 **/
+	public var name:String;
+	/**
+	 *
+	 **/
+	public var declaration:CSSStyleDeclaration;
+	/**
+	 *
+	 **/
+	public var styles:Array;
+	/**
+	 *
+	 **/
+	public var type:String;
+	
 }
