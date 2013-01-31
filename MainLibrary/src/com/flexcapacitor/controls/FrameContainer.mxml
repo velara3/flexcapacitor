@@ -4,7 +4,8 @@
 		 skinClass="com.flexcapacitor.skins.FrameSkin">
 	<fx:Metadata>
 		[Style(name="borderColor", inherit="no", type="Number")]
-		[Style(name="borderWeight", inherit="no", type="int")]
+		[Style(name="borderWeight", inherit="no", type="Number")]
+		[Style(name="borderAlpha", inherit="no", type="Number")]
 		[Style(name="insetColor", inherit="no", type="Number")]
 		[Style(name="insetAlpha", inherit="no", type="Number")]
 		[Style(name="cornerRadius", inherit="no", type="int")]

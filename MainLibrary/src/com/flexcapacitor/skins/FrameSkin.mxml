@@ -17,14 +17,17 @@
 			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
 				super.updateDisplayList(unscaledWidth, unscaledHeight);
 				
+				frameRect.radiusX = frameRect.radiusY = getStyle("cornerRadius");
+				backgroundRect.radiusX = backgroundRect.radiusY = getStyle("cornerRadius");
+				
 				backgroundFill.color = uint(getStyle("backgroundColor"));
 				backgroundFill.alpha = Number(getStyle("backgroundAlpha"));
 				borderStroke.color = uint(getStyle("borderColor"));
 				borderStroke.weight = getStyle("borderWeight");
+				borderStroke.alpha = getStyle("borderAlpha");
 				dropShadowFilter.distance = uint(getStyle("borderWeight"));
 				dropShadowFilter.color = uint(getStyle("insetColor"));
 				dropShadowFilter.alpha = Number(getStyle("insetAlpha"));
-				frameRect.radiusX = frameRect.radiusY = getStyle("cornerRadius");
 			}
 			
 		]]>
@@ -36,9 +39,9 @@
         <s:State name="disabled" />
     </s:states>
     
-	<!-- FRAME -->
+	<!-- BACKGROUND -->
     <!--- Defines the appearance of the SkinnableContainer class's background. -->
-	<s:Rect id="frameRect" 
+	<s:Rect id="backgroundRect" 
 			left="0"
 			right="0"
 			bottom="0"
@@ -49,6 +52,18 @@
 		<s:fill>
 			<s:SolidColor id="backgroundFill" color="#ffffff" />
 		</s:fill>
+	</s:Rect>
+	
+	<!-- FRAME -->
+    <!--- Defines the appearance of the SkinnableContainer class's background. -->
+	<s:Rect id="frameRect" 
+			left="0"
+			right="0"
+			bottom="0"
+			top="0"
+			radiusX="10"
+			radiusY="10"
+			>
 		<s:stroke>
 			<s:SolidColorStroke id="borderStroke" 
 								caps="round" 

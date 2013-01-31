@@ -1,0 +1,71 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+			
+		html, body { 
+			height:100%; 
+		}
+		body {
+			margin: 0;
+			padding: 0;
+			text-align: [textAlign];
+			color: [color];
+			background-color: [backgroundColor];
+			font-family: [fontFamily];
+			text-decoration: [textDecoration];
+			overflow: [overFlow];
+		}
+		object:focus {
+			outline:none;
+		}
+		pre {
+			margin: 0;
+			padding: 0;
+		}
+		body{
+			font-size:[bodyFontSizeEm];
+		}
+
+		
+		/* method 1 - use a div and set white space to pre */
+		/* advantages - works */
+		/* disadvantages - only works with fixed-width fonts */
+		/*               - must put span tag around space characters (increasing processing time?)*/
+		
+		.divFixedWidth {
+			position: absolute;
+			margin: 0;
+			padding: 0;
+			border: 0px solid black;
+			white-space:pre;
+		}
+		
+		/* method 2 - set min width on each span tag */
+		/* advantages - support variable font sizes */
+		/* disadvantages - not knowing the correct variable width value */
+		.spanFixedWidth span {
+			display: inline-block;
+			min-width: .5em;
+			text-align: center;
+			white-space: normal;
+			font-size:[elementFontSizeEm];
+		}
+			
+		/* method 3 - use pre */
+		/* advantages - white space characters are evenly spaced without additional tags */
+		/*            - may have lower processing time */
+		/* disadvantages - only works with fixed width fonts */
+		
+		.preFixedWidth {
+			display: inline-block;
+			min-width: .5em;
+			text-align: center;
+			white-space: normal;
+			font-size:[elementFontSizeEm];
+		}
+		
+	</style>
+	</head>
+	<body>[content]</body>
+</html>

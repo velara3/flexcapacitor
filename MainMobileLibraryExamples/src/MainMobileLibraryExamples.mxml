@@ -1,4 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:ViewNavigatorApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
-							xmlns:s="library://ns.adobe.com/flex/spark" firstView="views.GoogleMobileLibraryExamplesHomeView" applicationDPI="160">
+							xmlns:s="library://ns.adobe.com/flex/spark" 
+							firstView="views.MainMobileLibraryExamplesHomeView" 
+							applicationDPI="160">
 </s:ViewNavigatorApplication>

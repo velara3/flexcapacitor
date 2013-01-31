@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="utf-8"?>
+<controls:WebView xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				  xmlns:s="library://ns.adobe.com/flex/spark" 
+				  xmlns:controls="com.flexcapacitor.controls.*"
+				  initialize="webview1_initializeHandler(event)"
+				  >
+	<!--
+	
+	Styles supported are:
+	
+	color
+	backgroundColor
+	margin
+	overflow
+	padding
+	textAlign
+	
+	Styles - color, fontFamily, fontSize and textAlign are throwing compiler errors:
+	
+	Declaration of style 'textAlign' conflicts with previous declaration in 
+	/Applications/Adobe Flash Builder 4.6/sdks/AIR3.5_4.6.0/frameworks/libs/spark.swc(spark.components:Label). 
+	[Generated code (use -keep to save): 
+	Path: com/flexcapacitor/controls/StyleableWebView-generated.as, Line: 0, Column: 0]	
+
+	How to size text using ems
+	http://clagnut.com/blog/348/
+	
+	
+	Usage:
+	
+	<c:StyleableWebView xmlns:fx="http://ns.adobe.com/mxml/2009" 
+						xmlns:s="library://ns.adobe.com/flex/spark" 
+						title="WebComponent"
+						itemCreationPolicy="immediate"
+						 minWidth="200"
+						 width="100%" height="100%" 
+						 includeIn="webView"
+						 runTestScript="false"
+						 measureContent="true"
+						 measuredElementID="el"
+						 applyScalingToFontSize="true"
+						 pageHasScaling="true"
+						 fontFamily="Arial"
+						 overflow="auto"
+						 textAlign="center"
+						 backgroundColor="#f6f6f6"
+						 fontSize="12"
+						 >
+	-->
+	
+
+	<fx:Script>
+		<![CDATA[
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			
+			/**
+			 * Multiplies the current scale of the application with the 
+			 * font size and converts it to an "em" value. This is used to 
+			 * properly scale document elements up or down. The document elements 
+			 * may or may not need to use "em" values to scale correctly. 
+			 * 
+			 * How to size text using ems
+			 * http://clagnut.com/blog/348/
+			 * See http://www.w3schools.com/ 
+			 * */
+			[Bindable]
+			public var applyScalingToFontSize:Boolean = true;
+			
+			/**
+			 * Background color of the body tag. Default value is transparent. 
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var backgroundColor:String = "transparent";
+			
+			/**
+			 * Color of the body tag. 
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var color:String;
+			
+			/**
+			 * Additional CSS. For example, div { padding:0; } pre { color:#AAAAAA }
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			[Bindable]
+			public var css:String = "";
+			
+			/**
+			 * Font family of the body tag. Inherited from the parent container if unspecified. 
+			 * Since this is a web view the fonts must be installed in the device or 
+			 * embedded in the HTML page. Embedding fonts in your application will 
+			 * not display in the native browser. 
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var fontFamily:String;
+			
+			/**
+			 * Font size. Inherited from the parent container if unspecified.
+			 * If apply scaling is enabled then the font size is multiplied 
+			 * by the current scaling.  
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var fontSize:String;
+			
+			/**
+			 * Margin of the body tag. Default value is 0. 
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var margin:String = "0";
+			
+			/**
+			 * Overflow of the body tag. Default value is auto. Set to hidden to remove scroll bars. 
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var overflow:String = "auto";
+			
+			/**
+			 * Padding of the body tag. Default value is 0.
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var padding:String = "0";
+			
+			/**
+			 * The text align on the body tag. Default value is left.
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var textAlign:String = "left";
+			
+			/**
+			 * Text decoration style. Default value is none.
+			 * 
+			 * See http://www.w3schools.com/
+			 * */
+			public var textDecoration:String = "none";
+			
+			/**
+			 * Replaces tokens in the HTML wrapper code. 
+			 * Also sets the scale if apply scaling is enabled.
+			 * */
+			override public function htmlWrapperHook(html:String, value:String = ""):String {
+				var runtimeDPI:int = FlexGlobals.topLevelApplication.runtimeDPI;
+				var applicationDPI:int = FlexGlobals.topLevelApplication.applicationDPI;
+				var scaleFactor:Number = runtimeDPI / applicationDPI;
+				
+				var emForOnePixel:Number = 0.0625;
+				var bodyFontSizePercent:String = scaleFactor * 100 + "%";
+				var bodyFontSizeEm:String;
+				
+				// setting default values
+				var localFontSize:Number = fontSize==null ? getStyle("fontSize") : Number(fontSize);
+				//trace("Font size = " + localFontSize);
+				var localFontFamily:String = fontFamily==null ? getStyle("fontFamily") : fontFamily;
+				var localColorValue:String = color==null ? getHexString(getStyle("color"), "#") : color;
+				var localBackgroundColorValue:String = backgroundColor==null ? getHexString(getStyle("backgroundColor"), "#") : backgroundColor;
+				
+				// convert pixels to ems (default is 16px)
+				var emValue:Number = getEms(localFontSize);
+				
+				// then apply scaling
+				if (applyScalingToFontSize) {
+					bodyFontSizeEm = Number(scaleFactor * emValue).toFixed(3) + "em";
+				}
+				else {
+					bodyFontSizeEm = emValue + "em";
+				}
+				
+				
+				html = html.replace("[css]", css);
+				html = html.replace("[backgroundColor]", backgroundColor);
+				html = html.replace("[color]", localColorValue);
+				html = html.replace("[fontFamily]", localFontFamily);
+				html = html.replace("[fontSize]", bodyFontSizeEm);
+				html = html.replace("[margin]", margin);
+				html = html.replace("[overflow]", overflow);
+				html = html.replace("[padding]", padding);
+				html = html.replace("[textAlign]", textAlign);
+				html = html.replace("[textDecoration]", textDecoration);
+				
+				// replace [content] token
+				html = super.htmlWrapperHook(html, value);
+				
+				
+				return html;
+			}
+		
+			/**
+			 * Wrapper class for HTML
+			 * */
+			/*[Embed(source="html-wrapper.html",mimeType="application/octet-stream")]
+			public static const HTML_WRAPPER:Class;
+			*/
+			/**
+			 * Reference to wrapper class for HTML
+			 * */
+			/*public static var htmlWrapperClass:ByteArrayAsset;*/
+			
+			protected function webview1_initializeHandler(event:FlexEvent):void {
+				
+				/*if (htmlWrapperClass==null) {
+					htmlWrapperClass = ByteArrayAsset(new HTML_WRAPPER());
+					htmlWrapper = htmlWrapperClass.readUTFBytes(htmlWrapperClass.length);
+				}*/
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<!--
+	How to size text using ems
+	http://clagnut.com/blog/348/
+	-->
+	<controls:htmlWrapper>
+<![CDATA[<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+			
+		html, body { 
+			height: 100%; 
+		}
+		body {
+			background-color: [backgroundColor];
+			color: [color];
+			font-family: [fontFamily];
+			font-size: [fontSize];
+			margin: [margin];
+			overflow: [overflow];
+			padding: [padding];
+			text-align: [textAlign];
+			text-decoration: [textDecoration];
+		}
+		object:focus {
+			outline: none;
+		}
+
+		[css]
+		
+	</style>
+	</head>
+	<body>[content]</body>
+</html>
+]]>
+	</controls:htmlWrapper>
+	
+</controls:WebView>

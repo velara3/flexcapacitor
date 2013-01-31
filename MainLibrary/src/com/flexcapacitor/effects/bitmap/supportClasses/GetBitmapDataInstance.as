@@ -4,8 +4,6 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 	import com.flexcapacitor.effects.bitmap.GetBitmapData;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
-	import flash.display.BitmapData;
-	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.HTTPStatusEvent;
 	import flash.events.IOErrorEvent;

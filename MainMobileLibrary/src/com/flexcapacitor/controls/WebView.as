@@ -5,6 +5,8 @@
  * */
 package com.flexcapacitor.controls  {
 	
+	import com.flexcapacitor.events.WebViewEvent;
+	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.events.ErrorEvent;
@@ -17,9 +19,14 @@ package com.flexcapacitor.controls  {
 	import flash.geom.Rectangle;
 	import flash.media.StageWebView;
 	import flash.ui.Keyboard;
+	import flash.utils.Dictionary;
 	
 	import mx.core.FlexGlobals;
 	import mx.core.UIComponent;
+	import mx.logging.ILogger;
+	import mx.logging.Log;
+	import mx.logging.LogEventLevel;
+	import mx.logging.targets.TraceTarget;
 	
 	/**
 	 * @copy flash.media.StageWebView#ErrorEvent.ERROR
@@ -40,6 +47,12 @@ package com.flexcapacitor.controls  {
 	 * @copy flash.media.StageWebView#LocationChangeEvent.LOCATION_CHANGE
 	 * */
 	[Event(name="locationChange", type="flash.events.LocationChangeEvent")]
+	
+	/**
+	 * Event dispatched when receiving an event dispatched from the JavaScript document. 
+	 * @copy com.flexcapacitor.events.WebViewEvent
+	 * */
+	[Event(name="result", type="com.flexcapacitor.events.WebViewEvent")]
 	
 	/**
 	 * This class wraps the standard StageWebView with a UIComponent. 
@@ -72,7 +85,15 @@ package com.flexcapacitor.controls  {
 	 * 
 	 * Note: When setting the webview source or visibility, focus may be inexplicitly set to the webview.<br/><br/> 
 	 *
+	 * Note: To see all of the output you may need to increase the consoles buffer size
+	 * Check out Preferences > Run Debug > Console > Buffer Size<br/><br/>
+	 * 
+	 * Note: To help debug set debug to true. <br/><br/> 
+	 * 
 	 * The StageWebView class documentation follows:<br/>
+	 * 
+	 * 
+	 * Note: Some code from https://github.com/flex-users/flex-iframe used. 
 	 * 
 	 * @copy flash.media.StageWebView
 	 * */
@@ -86,7 +107,16 @@ package com.flexcapacitor.controls  {
 		//
 		//--------------------------------------------------------------------------
 		
+		/**
+		 * Type of content being displayed. In this case a URL.
+		 * */
+		public static const URL_CONTENT:String = "url";
 		
+		/**
+		 * Type of content being displayed. In this case HTML markup. 
+		 * */
+		public static const STRING_CONTENT:String = "string";
+
 		//--------------------------------------------------------------------------
 		//
 		//  Class mixins
@@ -153,23 +183,220 @@ package com.flexcapacitor.controls  {
 			else if (source) {
 				webView.loadURL(source);
 			}
+			
+			contentType = URL_CONTENT;
+		}
+		
+		/**
+		 * Calls the JavaScript code. Specify a callback function if expecting a return value.
+		 * Your JavaScript can only return a string value (or JSON string) and must be passed to the 
+		 * document.location property. <br/><br/>For example, 
+		 * 
+		 * <pre>
+		 * document.location = 'my return value';
+		 * </pre><br/>Or using JSON notation, 
+		 * 
+		 * <pre>
+		 * document.location = '{"width":'+width+',"height":'+height+'}';
+		 * </pre>
+		 * 
+		 * */
+		public function insertJavaScript(value:String):void {
+			
+			webView.loadURL("javascript:"+value+"");
+			webView.loadURL("javascript:document.insertScript()");
+			
+		}
+		
+		/**
+		 * Calls the JavaScript method. Specify a callback function if expecting a return value.
+		 * Your JavaScript can only return a string value (or JSON string) and must be passed to the 
+		 * document.location property. <br/><br/>For example, 
+		 * 
+		 * <pre>
+		 * document.location = 'my return value';
+		 * </pre>
+		 * 
+		 * <br/>Or using JSON notation, 
+		 * 
+		 * <pre>
+		 * document.location = JSON.stringify({event:"myEventName", width:width, height:height});
+		 * </pre>
+		 * 
+		 * <br/>NOTE: According to this site, http://caniuse.com/json, native JSON is supported in all major desktop and mobile browsers. 
+		 * 
+		 * */
+		public function callJavaScript(method:String, callback:Function = null, arguments:String = null):void {
+			
+			if (debug) {
+				logger.info("Calling the JavaScript method: {0} with arguments {1}", method, arguments);
+			}
+			
+			if (callback!=null) {
+				callbackDictionary[method] = callback;
+			}
+			
+			if (arguments!=null) {
+				webView.loadURL("javascript:" + method + "('" + arguments + "')");
+			}
+			else {
+				webView.loadURL("javascript:" + method + "()");
+			}
+			
+		}
+		
+		/**
+		 * Value of em for pixel
+		 * */
+		private var emForOnePixel:Number = 0.0625;
+		
+		/**
+		 * Minimum position to find an HTML or doctype 
+		 * */
+		private var minimumBeginHTMLIndex:int = 52;
+		
+		/**
+		 * Adds HTML document around markup
+		 * */
+		[Inspectable(enumeration="auto,yes,no")]
+		public var addHTMLWrapperPolicy:String = "auto";
+		
+		/**
+		 * Converts pixel size to em size as a number.
+		 * */
+		public function getEms(value:Number):Number {
+			return Number(Number(emForOnePixel * value).toFixed(3));
+		}
+		
+		/**
+		 * Converts pixel size to em size as a string.
+		 * */
+		public function getEmsAsString(value:Number):String {
+			return getEms(value) + "em";
+		}
+		
+		/**
+		 * Extracts red value from uint. 
+		 * */
+		private function extractRed(c:uint):uint {
+			return (( c >> 16 ) & 0xFF);
+		}
+
+		/**
+		 * Extracts green value from uint. 
+		 * */
+		private function extractGreen(c:uint):uint {
+			return ( (c >> 8) & 0xFF );
+		}
+
+		/**
+		 * Extracts blue value from uint. 
+		 * */
+		private function extractBlue(c:uint):uint {
+			return ( c & 0xFF );
+		}
+		
+		/**
+		 * Gets Hex String from uint.
+		 *  
+		 * Source - http://www.flashandmath.com/intermediate/rgbs/
+		 * */
+		public function getHexString(c:uint, prefix:String = ""):String {
+			var r:String = extractRed(c).toString(16).toUpperCase();
+			var g:String = extractGreen(c).toString(16).toUpperCase();
+			var b:String = extractBlue(c).toString(16).toUpperCase();
+			var hs:String = "";
+			var zero:String = "0";
+			
+			if (r.length==1) {
+				r = zero.concat(r);
+			}
+			
+			if (g.length==1) {
+				g = zero.concat(g);
+			}
+			
+			if (b.length==1) {
+				b = zero.concat(b);
+			}
+			
+			hs = r+g+b;
+			
+			return prefix + hs;
+			
 		}
 		
 		/**
 		 * @copy flash.media.StageWebView#loadString()
 		 * */
 		public function loadString(value:String, mimeType:String = "text/html"):void {
-			content = value;
+			var htmlContent:String;
+			var initialValue:String = value && addHTMLWrapperPolicy=="auto" ? value.substr(0, minimumBeginHTMLIndex) : "";
+			//content = value;
+			invalidateProperties();
+			invalidateSize();
+			
+			
 			
 			if (webView) {
-				if (value && value.indexOf("<html")>=0) {
-					webView.loadString(value, mimeType);
+				
+				if (addHTMLWrapperPolicy=="yes" || 
+					(addHTMLWrapperPolicy=="auto" &&  
+					(initialValue.toLowerCase().indexOf("<html")<=minimumBeginHTMLIndex ||
+					initialValue.toLowerCase().indexOf("<!DOCTYPE")<=minimumBeginHTMLIndex))) {
+					
+					htmlContent = htmlWrapperHook(htmlWrapper, value);
+					
+					if (replaceHTMLFunction!=null) {
+						htmlContent = replaceHTMLFunction(htmlContent);
+					}
+					
+					// Note to see all of the output you may need to increase the consoles max buffer size
+					// Check out Preferences > Run Debug > Console > Buffer Size
+					if (debug) {
+						logger.info("Loading the following content with mime type {0}:", mimeType);
+						logger.info("{0}", htmlContent);
+					}
+					
+					wrappedContent = htmlContent;
+					
+					webView.loadString(htmlContent, mimeType);
 				}
 				else {
-					wrappedContent = htmlWrapper.replace("[content]", value || "");
-					webView.loadString(wrappedContent, mimeType);
+					htmlContent = value;
+					
+					if (replaceHTMLFunction!=null) {
+						htmlContent = replaceHTMLFunction(htmlContent);
+					}
+					
+					// Note to see all of the output you may need to increase the consoles max buffer size
+					// Check out Preferences > Run Debug > Console > Buffer Size
+					if (debug) {
+						logger.info("Loading the following wrapped content with mime type {0}:", mimeType);
+						logger.info("{0}", htmlContent);
+					}
+					
+					wrappedContent = htmlContent;
+					
+					webView.loadString(htmlContent, mimeType);
 				}
 			}
+		}
+		
+		/**
+		 * 
+		 * */
+		public var replaceHTMLFunction:Function;
+		
+		/**
+		 * Used to replace the [content] token in the HTMLWrapper markup. 
+		 * @see HTMLWrapper
+		 * */
+		public function htmlWrapperHook(html:String, value:String = ""):String {
+			
+			var htmlContent:String = html.replace("[content]", value);
+			
+			return htmlContent;
 			
 		}
 		
@@ -285,7 +512,10 @@ package com.flexcapacitor.controls  {
 		public function WebView() {
 			addEventListener(Event.ADDED_TO_STAGE, addedToStageHandler);
 			addEventListener(Event.REMOVED_FROM_STAGE, removedFromStageHandler);
+			
 			focusEnabled = false;
+			
+			
 		}
 		
 		
@@ -296,13 +526,52 @@ package com.flexcapacitor.controls  {
 		//--------------------------------------------------------------------------
 		
 		
-		private var wrappedContent:String;
+		/**
+		 * The source of the HTML page. Not fully tested. 
+		 * */
+		[Bindable]
+        public var HTMLSource:String;
+		
+		/**
+		 * Type of content provided to the WebView. Type can be URL or STRING. 
+		 * */
+		[Bindable]
+        public var contentType:Object;
+		
+		/**
+		 * ID of element on the page to use to measure content. 
+		 * If not set then the document body is measured. 
+		 * */
+		[Bindable]
+        public var measuredElementID:String;
+
+		/**
+		 * Keeps a reference of call back functions 
+		 * where the keys are the name of the method. 
+		 * */
+		public var callbackDictionary:Dictionary = new Dictionary(true);
+		
+		/**
+		 * Holds the final HTML value passed into the web view via the content property 
+		 * @see htmlWrapper
+		 * */
+		public var wrappedContent:String;
 		
 		/**
 		 * The default HTML used to wrap the HTML content. 
 		 * The Stage Web View loadString method expects the content you supply to it 
 		 * to be wrapped in HTML tags. This is the default value used if content is 
-		 * not wrapped in HTML tags.
+		 * not wrapped in HTML tags. <br/>The default value is:<br/>
+		 * 
+		 * <pre>
+		 * &lt;!DOCTYPE HTML>&lt;html>&lt;body>[content]&lt;/body>&lt;/html>
+		 * </pre>
+		 * 
+		 * You could change it to:
+		 * 
+		 * <pre>
+		 * &lt;!DOCTYPE HTML>&lt;html>&lt;head>&lt;style>body{font-family:'Courier New';font-size:8pt;text-decoration:underline;}&lt;/style>&lt;/head>&lt;body>[content]&lt;/body>&lt;/html>
+		 * </pre>
 		 * */
 		public var htmlWrapper:String = "<!DOCTYPE HTML><html><body>[content]</body></html>";
 		
@@ -312,14 +581,20 @@ package com.flexcapacitor.controls  {
 		[Bindable]
 		public var autoLoad:Boolean = true;
 		
+		/**
+		 * If the page has scaling applied to it set this to true
+		 * */
+		[Bindable]
+		public var pageHasScaling:Boolean;
+		
 		private var _content:String;
 		
 		/**
 		 * Sets the content of the webview. Default mime type is text/html.
+		 * If the content value is the same or similar you may need to set content to null or "" when updating the value. 
 		 * */
 		[Bindable]
 		public function set content(value:String):void {
-	
 			_content = value;
 			contentChanged = true;
 			invalidateProperties();
@@ -330,6 +605,28 @@ package com.flexcapacitor.controls  {
 		public function get content():String {
 			return _content;
 		}
+		
+		/**
+		 * Content width or NaN if content is not set or has not been measured.
+		 * This value is usually set on complete event.
+		 * */
+		[Bindable]
+		public var contentWidth:Number;
+		
+		/**
+		 * Content height or NaN if content is not set or has not been measured.
+		 * This value is usually set on complete event.
+		 * */
+		[Bindable]
+		public var contentHeight:Number;
+		
+		/**
+		 * Measures the content height and width on complete (or page load). 
+		 * The value is NaN if content is not set or has not been measured.
+		 * This value is usually set on complete event.
+		 * */
+		[Bindable]
+		public var measureContent:Boolean = true;
 		
 		/**
 		 * Flag indicating if a snapshot is being shown
@@ -509,10 +806,28 @@ package com.flexcapacitor.controls  {
 		override protected function measure():void {
 			super.measure();
 			
-			measuredWidth=480;
 			measuredMinWidth=120;
-			measuredHeight=320;
 			measuredMinHeight=160;
+			
+			// width
+			if (!isNaN(contentWidth)) {
+				measuredWidth = contentWidth;
+			}
+			else {
+				measuredWidth=480;
+			}
+			
+			// height
+			if (!isNaN(contentHeight)) {
+				measuredHeight = contentHeight;
+			}
+			else {
+				measuredHeight=320;
+			}
+			
+			if (debug) {
+				logger.info("Measured width: {0} Measured height: {1}", measuredWidth, measuredHeight);
+			}
 		}
 		
 		/**
@@ -541,9 +856,11 @@ package com.flexcapacitor.controls  {
 				
 				// load URL or text if available
 				if (autoLoad && source) {
-					webView.loadURL(source);
+					contentType = URL_CONTENT;
+					load(source);
 				} else if (content) {
-					webView.loadString(content, mimeType);
+					contentType = STRING_CONTENT;
+					loadString(content, mimeType);
 				}
 			}
 			
@@ -564,26 +881,96 @@ package com.flexcapacitor.controls  {
 			
 			// content changed
 			if (contentChanged) {
-				if (_content && _content.indexOf("<html")>=0) {
-					webView.loadString(_content, mimeType);
-				}
-				else {
-					wrappedContent = htmlWrapper.replace("[content]", _content || "");
-					webView.loadString(wrappedContent, mimeType);
-				}
+				contentType = STRING_CONTENT;
+				loadString(_content, mimeType);
 				contentChanged = false;
 			}
 			
 			// source URL changed
 			if (sourceChanged) {
+				contentType = URL_CONTENT;
+				
 				if (autoLoad) {
-					webView.loadURL(source);
+					load(source);
 				}
+				
 				sourceChanged = false;
 			}
 		}
 		
+		/**
+		 * Get's the source of the HTML document
+		 * */
+		public function getSource():void {
+			
+				// next, get the size of the document
+				// add a call back function for when the value is returned
+				insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_GET_SOURCE);
+				callJavaScript(WebViewExternalCalls.FUNCTION_GET_SOURCE, getSource);
+		}
 		
+		/**
+		 * Handles result of source
+		 * */
+		public function getSourceHandler(object:Object):void {
+			
+			if (debug) {
+				logger.info("Getting source:\n{0}", object.value);
+			}
+			
+			HTMLSource = object.value;
+		}
+		
+		/**
+		 * Handles result of measurement
+		 * */
+		protected function measureDocumentHandler(object:Object):void {
+			var runtimeDPI:int = FlexGlobals.topLevelApplication.runtimeDPI;
+			var applicationDPI:int = FlexGlobals.topLevelApplication.applicationDPI;
+			var scaledWidth:int;
+			var scaledHeight:int;
+			var scaleFactor:Number;
+			
+			if (debug) {
+				logger.info("Entering measurement complete callback");
+			}
+			
+			try {
+				scaleFactor = runtimeDPI / applicationDPI;
+				
+				// don't scale here we do it later in updateDisplayList
+				
+				// is scale factor considered by the html page?
+				if (pageHasScaling) {
+					contentWidth = object.width / scaleFactor;
+					contentHeight = object.height / scaleFactor;
+				}
+				else {
+					contentWidth = object.width;
+					contentHeight = object.height;
+				}
+				
+				/*contentWidth = object.width;
+				contentHeight = object.height;*/
+				
+				if (debug) {
+					logger.info("Scale factor: {0}", Number(scaleFactor).toFixed(2));
+					logger.info("Scaled content size is: {0}x{1}", contentWidth, contentHeight);
+				}
+				
+				//trace("contentWidth="+contentWidth);
+				//trace("contentHeight="+contentHeight);
+				
+				invalidateProperties();
+				invalidateDisplayList();
+				invalidateSize();
+				invalidateParentSizeAndDisplayList();
+			}
+			catch(e:Error) {
+				trace("Error:" + e.message);
+			}
+				
+		}
 		
 		/**
 		 * @copy mx.core.UIComponent#updateDisplayList()
@@ -597,17 +984,38 @@ package com.flexcapacitor.controls  {
 			var scaleFactor:Number;
 			var scaledY:int;
 			
+			if (debug) {
+				logger.info("Update display list. Unscaled size is: {0} x {1}", unscaledWidth, unscaledHeight);
+			}
 			
 			// NOTE: IF THE WEBVIEW IS NOT BEING SIZED CORRECTLY 
 			// check if focusEnabled is true. If it is then the soft keyboard may not be dispatching the 
-			// deactivate event because the webview has focus when it is dispatched. set to false
-			// position according to the container rather than the stage
+			// deactivate event because the webview has focus when it is dispatched. set focusEnabled to false
+			// and position according to the container rather than the stage
+			
 			if (webView) {
 				point = localToGlobal(new Point());
 				scaleFactor = runtimeDPI / applicationDPI;
 				
+				/*scaledWidth = unscaledWidth;
+				scaledHeight = unscaledHeight;*/
+				
 				scaledWidth = width * scaleFactor;
 				scaledHeight = height * scaleFactor;
+				
+				/*
+				if (contentWidth !=0 && contentHeight!=0) {
+					scaledWidth = width;
+					scaledHeight = height;
+				}
+				else {
+					scaledWidth = width * scaleFactor;
+					scaledHeight = height * scaleFactor;
+				}*/
+				
+				if (debug) {
+					logger.info("Setting viewport scaled size to: {0} x {1}", scaledWidth, scaledHeight);
+				}
 				
 				webView.viewPort = new Rectangle(point.x, point.y, scaledWidth, scaledHeight);
 				
@@ -624,10 +1032,11 @@ package com.flexcapacitor.controls  {
 		 * When the stage property is available add it to the web view
 		 * */
 		public function addedToStageHandler(event:Event):void {
-			
+			stage.addEventListener(Event.RESIZE, stageResizeHandler);
+						
 			// adds support for keyboard events when not in focus
 			if (navigationSupport && addKeyHandlerToStage) {
-				stage.addEventListener( KeyboardEvent.KEY_DOWN, keyDownHandler);
+				stage.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler);
 			}
 			
 			_visibleChanged = true;
@@ -637,9 +1046,18 @@ package com.flexcapacitor.controls  {
 		}
 		
 		/**
+		 * Handles when the stage resizes via orientation change or otherwise
+		 * */
+		protected function stageResizeHandler(event:Event):void {
+			invalidateSize();
+			invalidateDisplayList();
+		}
+		
+		/**
 		 * When removed from the stage remove the web view
 		 * */
 		protected function removedFromStageHandler(event:Event):void {
+			stage.removeEventListener(Event.RESIZE, stageResizeHandler);
 			destroySnapshot();
 			hideWebView();
 			
@@ -653,8 +1071,9 @@ package com.flexcapacitor.controls  {
 		protected function focusInViewHandler(event:FocusEvent):void {
 			//webView.assignFocus();
 			
-			if (hasEventListener(event.type)) 
+			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
+			}
 			
 		}
 		
@@ -664,8 +1083,9 @@ package com.flexcapacitor.controls  {
 		protected function focusOutViewHandler(event:FocusEvent):void {
 			//webView.assignFocus(FocusDirection.TOP);
 			
-			if (hasEventListener(event.type)) 
+			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
+			}
 		}
 		
 		/**
@@ -692,24 +1112,204 @@ package com.flexcapacitor.controls  {
 		 * Dispatched when the page or web content has been fully loaded
 		 * */
 		protected function completeHandler(event:Event):void {
-			if (hasEventListener(event.type))
+			
+			if (debug) {
+				logger.info("The page load is complete");
+			}
+			
+			// insert script into document
+			if (measureContent) {
+				
+				//////////////////////////////////////////////////
+				// ERRORS 
+				//////////////////////////////////////////////////
+				
+				//////////////////////////////////////////////////
+				// SyntaxError: Parse error
+				// TypeError: Result of expression 'document.insertScript' [undefined] is not a function.
+				//////////////////////////////////////////////////
+				
+				// Cause: 
+				// JavaScript code contained a line with comments in it. The line started with "// some comments" 
+				
+				// Solution:
+				// Removed the line that had comments
+				
+				//////////////////////////////////////////////////
+				// TypeError: Result of expression 'docBody' [null] is not an object.
+				// at  : 1
+				//////////////////////////////////////////////////
+				
+				// Cause: 
+				// Some code was then doing something like object.myproperty (where object is null)
+				// example,
+				// var docBody = document.getElementById("myButton");
+				// var scrollHeight = docBody.scrollHeight;
+				// Since there was no element with ID of "myButton" docBody was null. 
+				// Then when trying to access a property on a null object the error is thrown. 
+				
+				// Solution:
+				// 
+				
+				
+				// JAVASCRIPT ERRORS ////////////////////////////////
+				
+				//////////////////////////////////////////////////
+				// ReferenceError: Can't find variable: test
+				// at  : 1
+				//////////////////////////////////////////////////
+				
+				// Cause:
+				// The JavaScript variable is not defined. It could be misspelled. 
+				// It probably is happening when returning a JSON object and there are not quotes around
+				// the value being passed into the JavaScript object property (before it stringified).
+				
+				// Solution:
+				// Add quotes. For example, 
+				// USE document.location = JSON.stringify({event:'test'});
+				//  OR document.location = JSON.stringify({event:"test"});
+				// NOT document.location = JSON.stringify({event:test});
+				
+				
+				//////////////////////////////////////////////////
+				// Error:Error #1132: Invalid JSON parse input.
+				//////////////////////////////////////////////////
+				
+				// Cause:
+				// Input to the JSON.parse method is invalid. 
+				
+				// Solution:
+				// Check the value being passed to the JSON parser. 
+				
+				//////////////////////////////////////////////////
+				// Infinite Loop with complete event
+				//////////////////////////////////////////////////
+				
+				// Cause:
+				// Trying to resize and remeasure a remote URL
+				
+				// Solution:
+				// Turn off measureContent unless setting content
+				
+				
+				
+				//////////////////////////////////////////////////
+				// about:blank:3 
+				// HTML ERROR: Extra <html> encountered.  Migrating attributes back to the original <html> element and ignoring the tag.
+				//////////////////////////////////////////////////
+				
+				// Cause:
+				// Setting the content property to a value that contains another HTML tag
+				
+				// Solution:
+				// Set the htmlWrapper text to an empty string or remove the second HTML
+				// tag or check for whitespace before the html tag. There should be no white space before the html tag. 
+				
+				// 
+				
+				if (debug && runTestScript) {
+					// test inserting a function and then calling it
+					// we should get a response in the location change event
+					insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_TEST);
+					callJavaScript(WebViewExternalCalls.FUNCTION_INSERT_TEST_SCRIPT, insertTestScriptComplete);
+				}
+				
+				// next, get the size of the document
+				// add a call back function for when the value is returned
+				insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_MEASURE_DOCUMENT);
+				callJavaScript(WebViewExternalCalls.FUNCTION_MEASURE_DOCUMENT, measureDocumentHandler, measuredElementID);
+				
+				// next, add the resize handler
+				// add a call back function for when the value is returned
+				insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_SETUP_RESIZE_EVENT_LISTENER("WebView"));
+				
+			}
+			
+			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
+			}
 		}
 		
 		/**
-		 * Dispatched when the location is about to change
+		 * Handles result of measurement
 		 * */
-		protected function locationChangingHandler(event:Event):void {
-			if (hasEventListener(event.type))
+		protected function insertTestScriptComplete(value:Object):void {
+			trace("insertTestScriptComplete value:"+value);
+			
+			if (value=="success") {
+				trace("Communications available");
+			}
+			else {
+				trace("Communications NOT available");
+			}
+				
+		}
+		
+		/**
+		 * Dispatched when the JavaScript document.location has been changed. 
+		 * This event is dispatched before the locationChange event is dispatched. 
+		 * Calling event.preventDefault() prevents the location from changing.  
+		 * 
+		 * We also use this to get results from a JavaScript function. The function
+		 * sets the document.location property to a String value and it triggers this event.
+		 * The String value does not have to be a URL. It can be any value. 
+		 * We use JSON String to pass data from the web view document to the component instance.
+		 * We then parse it into an object. 
+		 * 
+		 * If you create a function, return the results as a String and include the method name and
+		 * event if you would like to redispatch the results to an event. 
+		 * 
+		 * Add a listener to the WebViewResult.Result event.  
+		 * */
+		protected function locationChangingHandler(event:LocationChangeEvent):void {
+			var locationValue:String = event.location;
+			
+			if (debug) {
+				logger.info("The location is changing to: {0}", locationValue);
+			}
+			
+			
+			try {
+				// check if it's an event dispatched from JS
+				var object:Object = JSON.parse(locationValue);
+				var eventName:String = object.event;
+				var methodName:String = object.method;
+				
+				// prevent from dispatching a location change
+				event.preventDefault();
+				
+				if (object && eventName) {
+					if (debug) {
+						logger.info("JSON event. Event: {0}", eventName);
+					}
+					dispatchEvent(new WebViewEvent(WebViewEvent.RESULT, false, false, eventName, methodName, locationValue, object));
+					return;
+				}
+				else if (methodName && callbackDictionary[methodName]!=null) {
+					if (debug) {
+						logger.info("JSON callback. Method: {0}", methodName);
+					}
+					callbackDictionary[methodName](object);
+					return;
+				}
+			}
+			catch (error:Error) {
+				// not JSON or not valid JSON - should i dispatch an event here?
+			}
+			
+			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
+			}
 		}
 		
 		/**
 		 * Dispatched when the location has changed
 		 * */
-		protected function locationChangeHandler(event:Event):void {
-			if (hasEventListener(event.type))
+		protected function locationChangeHandler(event:LocationChangeEvent):void {
+			
+			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
+			}
 		}
 		
 		/**
@@ -717,9 +1317,75 @@ package com.flexcapacitor.controls  {
 		 * */
 		protected function errorHandler(event:ErrorEvent):void {
 			
-			if (hasEventListener(event.type))
+			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
+			}
 		}
 		
+
+        // =========================================================================================
+        // Debug mode
+        // =========================================================================================
+
+		/**
+		 * The state of the debug mode.
+		 * */
+        protected var _debug:Boolean=false;
+
+		/**
+		 * The target for the logger.
+		 * */
+        protected var logTarget:TraceTarget;
+
+		/**
+		 * The class logger.
+		 * */
+        protected var logger:ILogger = Log.getLogger("WebView");
+		
+		/**
+		 * Displays a JavaScript alert and issues an WebViewEvent.Result event with 
+		 * the response from a JavaScript call. 
+		 * */
+        public var runTestScript:Boolean;
+		
+		/**
+		 * Get the state of the debug mode.
+		 * */
+        public function get debug():Boolean
+        {
+            return _debug;
+        }
+
+		/**
+		 * Set the state of the debug mode.
+		 * */
+        public function set debug(value:Boolean):void
+        {
+            if (value == debug) {
+                return;
+			}
+
+            if (value)
+            {
+                if (!logTarget)
+                {
+                    logTarget = new TraceTarget();
+                    logTarget.includeLevel = true;
+                    logTarget.includeTime = true;
+                    logTarget.level = LogEventLevel.ALL;
+                    logTarget.filters = ["WebView"];
+                }
+				
+                logTarget.addLogger(logger);
+            }
+            else
+            {
+                if (logTarget) {
+                    logTarget.removeLogger(logger);
+				}
+            }
+
+            _debug=value;
+        }
 	}
 }

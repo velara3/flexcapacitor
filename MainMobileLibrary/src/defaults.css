@@ -10,15 +10,14 @@ controls|ImageButton {
 view|PromptDialog {
 }
 
-view|PromptDialog {
-	horizontalAlign: center;
-	verticalAlign: middle;
-	paddingLeft: 10;
-	paddingRight: 10;
-	color: #ff0000;
-	chromeColor: #ECECEC;
-	fontFamily: _sans;
-	fontSize: 18;
-	fontWeight: normal;
+view|PromptDialog s|Button {
+	horizontalAlign: 	center;
+	verticalAlign: 		middle;
+	paddingLeft: 		10;
+	paddingRight: 		10;
+	color: 				#ff0000;
+	chromeColor: 		#ECECEC;
+	fontFamily: 		_sans;
+	fontSize: 			18;
+	fontWeight: 		normal;
 }
-

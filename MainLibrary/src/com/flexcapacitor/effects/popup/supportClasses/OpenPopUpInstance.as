@@ -175,6 +175,15 @@ import mx.managers.SystemManager;
 				IFlexDisplayObject(popUp).addEventListener(MouseEvent.MOUSE_UP, mouseUpInsideHandler, false, 0, true);
 			}
 			
+			if (action.autoCenter) {
+				if (parent.stage) {
+					parent.stage.addEventListener(Event.RESIZE, resizeHandler, false, 0, true);
+				}
+				else {
+					parent.addEventListener(Event.RESIZE, resizeHandler, false, 0, true);
+				}
+			}
+			
 			
 			PopUpManager.addPopUp(popUp as IFlexDisplayObject, parent, true);
 			PopUpManager.centerPopUp(popUp as IFlexDisplayObject);
@@ -195,7 +204,7 @@ import mx.managers.SystemManager;
 			}
 			
 			
-			if (action.keepReference) {
+			if (action.autoCenter || action.keepReference) {
 				action.popUp = popUp as IFlexDisplayObject;
 			}
 			
@@ -231,6 +240,14 @@ import mx.managers.SystemManager;
 			IFlexDisplayObject(event.currentTarget).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
 			IFlexDisplayObject(event.currentTarget).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
 			
+			if (action.autoCenter) {
+				if (action.parent.stage) {
+					action.parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
+				}
+				else {
+					action.parent.removeEventListener(Event.RESIZE, resizeHandler);
+				}
+			}
 			
 			if (action.closeOnMouseDownOutside) {
 				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
@@ -259,6 +276,15 @@ import mx.managers.SystemManager;
 			IFlexDisplayObject(event.currentTarget).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
 			IFlexDisplayObject(event.currentTarget).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
 			
+			if (action.autoCenter) {
+				if (action.parent.stage) {
+					action.parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
+				}
+				else {
+					action.parent.removeEventListener(Event.RESIZE, resizeHandler);
+				}
+			}
+			
 			if (action.closeOnMouseDownOutside) {
 				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
 			}
@@ -276,6 +302,13 @@ import mx.managers.SystemManager;
 			// End the effect
 			///////////////////////////////////////////////////////////
 			finish();
+		}
+		
+		private function resizeHandler(event:Event):void
+		{
+			var action:OpenPopUp = OpenPopUp(effect);
+			
+			PopUpManager.centerPopUp(action.popUp as IFlexDisplayObject);
 		}
 		
 	}

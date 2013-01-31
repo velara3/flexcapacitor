@@ -65,16 +65,44 @@ package com.flexcapacitor.controls
 		public function get replaceLinebreaksWithBreaks():Boolean {
 			return _replaceLinebreaksWithBreaks;
 		}
-
+		/**
+		 * Replaces double break tags with a single break tag. Fixes multiple spaces between lines. 
+		 * */
 		public function set replaceLinebreaksWithBreaks(value:Boolean):void {
 			_replaceLinebreaksWithBreaks = value;
-			HTMLFormatterTLF.staticInstance.replaceLinebreaks = value;
+		}
+		
+		private var _replaceMultipleBreaksWithNormalBreaks:Boolean;
+
+		public function get replaceMultipleBreaksWithNormalBreaks():Boolean {
+			return _replaceMultipleBreaksWithNormalBreaks;
+		}
+		/**
+		 * Replaces double break tags with a single break tag. Fixes multiple spaces between lines. 
+		 * */
+		public function set replaceMultipleBreaksWithNormalBreaks(value:Boolean):void {
+			_replaceMultipleBreaksWithNormalBreaks = value;
+		}
+		
+		private var _replaceEmptyBlockQuotes:Boolean;
+
+		public function get replaceEmptyBlockQuotes():Boolean {
+			return _replaceEmptyBlockQuotes;
+		}
+		/**
+		 * Replaces double blockqoute tags with a single break tag. Fixes multiple spaces between lines. 
+		 * */
+		public function set replaceEmptyBlockQuotes(value:Boolean):void {
+			_replaceEmptyBlockQuotes = value;
 		}
 
 		
 		override protected function commitProperties():void {
 			
 			if (htmlTextChanged) {
+				HTMLFormatterTLF.staticInstance.replaceLinebreaks = _replaceLinebreaksWithBreaks;
+				HTMLFormatterTLF.staticInstance.replaceMultipleBreaks = _replaceMultipleBreaksWithNormalBreaks;
+				HTMLFormatterTLF.staticInstance.replaceEmptyBlockQoutes = _replaceEmptyBlockQuotes;
 				translatedHTMLText = HTMLFormatterTLF.staticInstance.format(htmlText);
 				textFlow = TextConverter.importToFlow(translatedHTMLText, TextConverter.TEXT_FIELD_HTML_FORMAT);
 			}

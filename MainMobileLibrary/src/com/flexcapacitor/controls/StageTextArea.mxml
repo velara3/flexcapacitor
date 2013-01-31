@@ -1,0 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TextArea xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			xmlns:s="library://ns.adobe.com/flex/spark"
+			softKeyboardActivate="softKeyboardActivateHandler(event)"
+			softKeyboardDeactivate="softKeyboardDeactivateHandler(event)"
+			added="addedHandler(event)" 
+			removed="removedHandler(event)">
+	
+	<!-- USAGE 
+		<controls:StageTextArea id="myTextArea" parentScroller="{myScroller}"/>
+	-->
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.PropertyChangeEvent;
+			
+			import spark.components.Scroller;
+			
+			private var _parentScroller:Scroller;
+
+			public function get parentScroller():Scroller {
+				return _parentScroller;
+			}
+
+			/**
+			 * Adds a listener to an ancestor scroller. 
+			 * */
+			[Bindable]
+			public function set parentScroller(value:Scroller):void {
+				
+				if (value && value.viewport) {
+					value.viewport.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handle, false, 0, true);
+				}
+				if (value==null && _parentScroller) {
+					value.viewport.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handle);
+				}
+				_parentScroller = value;
+			}
+
+			
+			/**
+			 * Add listener to parent component when added to the display list
+			 * */
+			protected function addedHandler(event:Event):void {
+				if (event.target==event.currentTarget) { 
+					// we could "discover" the scroller here if we wanted
+					// or we could just use parentScroller property
+					owner.addEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handle, false, 0, true);
+				}
+			}
+			
+			/**
+			 * Remove listener to parent component when removed to the display list
+			 * */
+			protected function removedHandler(event:Event):void {
+				if (event.target==event.currentTarget) {
+					owner.removeEventListener(PropertyChangeEvent.PROPERTY_CHANGE, handle);
+				}
+			}
+			
+            /**
+             * Handle parent or ancestor scroll position changes
+             */
+            private function handle(e:PropertyChangeEvent):void {
+                if (e.source == e.target && e.property == "verticalScrollPosition") {
+                    //trace(e.property, "changed to", e.newValue);
+					updateTextFieldPosition();
+				}
+                if (e.source == e.target && e.property == "horizontalScrollPosition") {
+                    //trace(e.property, "changed to", e.newValue);
+					updateTextFieldPosition();
+				}
+            }
+
+			/**
+			 * Handles when keyboard activates
+			 * */
+			protected function softKeyboardActivateHandler(event:SoftKeyboardEvent):void {
+				updateTextFieldPosition();
+			}
+			
+			/**
+			 * Handles when keyboard deactivates
+			 * */
+			protected function softKeyboardDeactivateHandler(event:SoftKeyboardEvent):void {
+				updateTextFieldPosition();
+			}
+			
+			/**
+			 * Updates the native text fields position
+			 * */
+			public function updateTextFieldPosition():void {
+				skin.styleChanged("anything"); // force skin class to revalidate
+			}
+			
+		]]>
+	</fx:Script>
+	
+</s:TextArea>

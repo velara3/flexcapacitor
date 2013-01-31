@@ -210,6 +210,7 @@ package com.flexcapacitor.effects.file {
 		 * This is the value of the loaderInfo.bytes property.
 		 * @copy flash.display.LoaderInfo.bytes
 		 * */
+		[Bindable]
 		public var byteArray:Object;
 		
 		/**
@@ -227,6 +228,7 @@ package com.flexcapacitor.effects.file {
 		 * This is the value of the Bitmap(loaderInfo.contents).bitmapData property.
 		 * @copy flash.display.Bitmap.bitmapData
 		 * */
+		[Bindable]
 		public var bitmapData:BitmapData;
 		
 		/**

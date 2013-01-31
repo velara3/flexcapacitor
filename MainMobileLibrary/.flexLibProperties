@@ -3,6 +3,7 @@
   <includeClasses>
     <classEntry path="MainLibraryTheme"/>
     <classEntry path="com.flexcapacitor.controls.WebView"/>
+    <classEntry path="com.flexcapacitor.controls.WebViewExternalCalls"/>
     <classEntry path="com.flexcapacitor.effects.application.ExitApplication"/>
     <classEntry path="com.flexcapacitor.effects.application.GoIntoFullscreen"/>
     <classEntry path="com.flexcapacitor.effects.application.supportClasses.ExitApplicationInstance"/>
@@ -15,6 +16,7 @@
     <classEntry path="com.flexcapacitor.effects.view.supportClasses.OpenViewInstance"/>
     <classEntry path="com.flexcapacitor.effects.view.supportClasses.RemoveViewInstance"/>
     <classEntry path="com.flexcapacitor.effects.view.supportClasses.SelectTabViewInstance"/>
+    <classEntry path="com.flexcapacitor.events.WebViewEvent"/>
     <classEntry path="com.flexcapacitor.prompt.PromptManager"/>
     <classEntry path="com.flexcapacitor.prompt.supportClasses.IPrompt"/>
     <classEntry path="com.flexcapacitor.prompt.supportClasses.PromptEvent"/>

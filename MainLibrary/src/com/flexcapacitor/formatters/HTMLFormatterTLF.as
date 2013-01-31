@@ -21,6 +21,8 @@ package com.flexcapacitor.formatters {
 		
 		// add more here
 		public var findLineBreaksPattern:RegExp = /\r?\n+?/g;
+		public var findBreaksPattern:RegExp = /<br\/>\s+?<br\/>/g;
+		public var findEmptyBlockQuotesPattern:RegExp = /<blockquote>\s?<blockquote>/g;
 		public var strongStartPattern:RegExp = /<strong>/gi;
 		public var strongEndPattern:RegExp = /<\/strong>/gi;
 		public var emphasizedStartPattern:RegExp = /<em>/gi;
@@ -87,6 +89,12 @@ package com.flexcapacitor.formatters {
 		
 		[Inspectable(category="General", defaultValue="true")]
 		public var replaceLinebreaks:Boolean = true;
+		
+		[Inspectable(category="General", defaultValue="true")]
+		public var replaceMultipleBreaks:Boolean = true;
+		
+		[Inspectable(category="General", defaultValue="true")]
+		public var replaceEmptyBlockQoutes:Boolean = true;
 		
 		[Inspectable(category="General", defaultValue="true")]
 		public var replaceStyleAlignTags:Boolean = true;
@@ -164,6 +172,16 @@ package com.flexcapacitor.formatters {
 				
 				// UPDATE: We may not have to do this
 				//string = "<p>" + string + "</p>";
+			}
+			
+			// replace multiple breaks with <br> tags
+			if (replaceMultipleBreaks) {
+				string = string.replace(findBreaksPattern,"<br/>");
+			}
+			
+			// replace multiple breaks with <br> tags
+			if (replaceEmptyBlockQoutes) {
+				string = string.replace(findEmptyBlockQuotesPattern,"<br/>");
 			}
 			
 			// replace linebreaks with <br> tags

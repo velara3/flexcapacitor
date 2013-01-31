@@ -70,6 +70,7 @@ package com.flexcapacitor.effects.clipboard {
 		/**
 		 * Data to be copied to the clipboard
 		 * */
+		[Bindable]
 		public var data:Object;
 		
 		/**

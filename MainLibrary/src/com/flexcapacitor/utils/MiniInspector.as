@@ -1,6 +1,7 @@
 package com.flexcapacitor.utils {
 	
 	import flash.debugger.enterDebugger;
+	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.events.EventDispatcher;
@@ -18,6 +19,10 @@ package com.flexcapacitor.utils {
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.core.mx_internal;
+	import mx.logging.ILogger;
+	import mx.logging.Log;
+	import mx.logging.LogEventLevel;
+	import mx.logging.targets.TraceTarget;
 	import mx.managers.ISystemManager;
 	import mx.managers.SystemManager;
 	import mx.styles.CSSCondition;
@@ -143,15 +148,29 @@ package com.flexcapacitor.utils {
 		public var showEmbeddedFontInformation:Boolean;
 		
 		/**
+		 * Show device fonts information
+		 * @see includeEmbeddedFontDetails
+		 * @see showEmbeddedFontInformation
+		 * */
+		public var showDeviceFontInformation:Boolean;
+		
+		/**
+		 * Checks if a font family is embedded when showing style information
+		 * @see showEmbeddedFontInformation
+		 * @see showEmbeddedFontInformation
+		 * */
+		public var includeEmbeddedFontDetails:Boolean = true;
+		
+		/**
 		 * Show all style declarations
 		 * @see showStyleInheritanceInformation
 		 * */
 		public var showAllStyleDeclarations:Boolean;
 		
 		/**
-		 * Show embedded fonts information for the font famiily when showing style information
+		 * Shows color under the mouse
 		 * */
-		public var includeEmbeddedFontDetails:Boolean = true;
+		public var showColorUnderMouse:Boolean = true;
 		
 		/**
 		 * Space before some output text
@@ -274,6 +293,11 @@ package com.flexcapacitor.utils {
 		public var lastComponentItem:ComponentItem;
 		
 		/**
+		 * Set this to false to test on touch screen device. 
+		 * */
+		public var requireCTRLKey:Boolean = true;
+		
+		/**
 		 *
 		 **/
 		public function MiniInspector() {
@@ -332,7 +356,7 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Click handler added to stage
-		 * We only check the target if the alt key is down
+		 * We only check the target if the ctrl key is down
 		 * If the shift key is down also then we enter the debugger
 		 * Press step into to bring the debugger to the check target method
 		 * In that method you can check details in the target property
@@ -340,10 +364,14 @@ package com.flexcapacitor.utils {
 		protected function handleClick(event:MouseEvent):void {
 			
 			if (enabled) {
-				if (event.ctrlKey) {
+				if (!requireCTRLKey || event.ctrlKey) {
 					// we are intercepting this event so we can inspect the target
 					// stop the event propagation
-					event.stopImmediatePropagation();
+					
+					// we don't stop the propagation on touch devices so you can navigate the application
+					if (requireCTRLKey) {
+						event.stopImmediatePropagation();
+					}
 					checkTarget(event);
 				}
 			}
@@ -426,13 +454,19 @@ package com.flexcapacitor.utils {
 			// show embedded fonts
 			if (showEmbeddedFontInformation) {
 				if (message!="") message += "\n";
-				message += getEmbeddedFontInformationDetails(selectedTarget);
+				message += getFontInformationDetails(selectedTarget);
 			}
 			
 			// show all styles
 			if (showAllStyleDeclarations) {
 				if (message!="") message += "\n";
 				message += getAllStyleDeclarationsDetails(selectedTarget);
+			}
+			
+			// show color under pixel
+			if (showColorUnderMouse) {
+				if (message!="") message += "\n";
+				message += getColorUnderMouse(event);
 			}
 			
 			trace(message);
@@ -734,6 +768,88 @@ package com.flexcapacitor.utils {
 		/**
 		 * Gets all styles information
 		 * */
+		public function getColorUnderMouse(event:MouseEvent):String {
+			var output:String = "";
+			var temporaryBitmap:BitmapData;
+			var scale:Number;
+			var stageX:Number;
+			var stageY:Number;
+			var onApplication:Boolean = true;
+			
+			if (onApplication) {
+				temporaryBitmap = new BitmapData(FlexGlobals.topLevelApplication.stage.width, FlexGlobals.topLevelApplication.stage.height, false);
+				temporaryBitmap.draw(DisplayObject(FlexGlobals.topLevelApplication.stage));
+		
+				scale = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
+				stageX = event.stageX * scale;
+				stageY = event.stageY * scale;
+			}
+			else {// not verified
+				temporaryBitmap = new BitmapData(event.target.width, event.target.height, false);
+				temporaryBitmap.draw(DisplayObject(event.target));
+		
+				scale = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
+				stageX = event.localX * scale;
+				stageY = event.localY * scale;
+			}
+			
+			var eyeDropperColorValue:uint = temporaryBitmap.getPixel(stageX, stageY);
+			var value:String = displayInHex(eyeDropperColorValue);
+			
+			output = showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
+			output += "Color at location";
+			output += showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
+			
+			output += " #" + value + "\n";
+			
+			output += showConsoleDividerMarks && showFooterConsoleDividerMarks ? "\n" + dividerMarks + "\n" : "";
+			
+			return output;
+		}
+	
+		public function extractRed(c:uint):uint {
+			return (( c >> 16 ) & 0xFF);
+		}
+		
+		public function extractGreen(c:uint):uint {
+			return ( (c >> 8) & 0xFF );
+		}
+		
+		public function extractBlue(c:uint):uint {
+			return ( c & 0xFF );
+		}
+		
+		public function combineRGB(r:uint,g:uint,b:uint):uint {
+			return ( ( r << 16 ) | ( g << 8 ) | b );
+		}
+		
+		public function displayInHex(c:uint):String {
+			var r:String = extractRed(c).toString(16).toUpperCase();
+			var g:String = extractGreen(c).toString(16).toUpperCase();
+			var b:String = extractBlue(c).toString(16).toUpperCase();
+			var hs:String = "";
+			var zero:String = "0";
+			
+			if (r.length==1) {
+				r = zero.concat(r);
+			}
+			
+			if (g.length==1) {
+				g = zero.concat(g);
+			}
+			
+			if (b.length==1) {
+				b = zero.concat(b);
+			}
+			
+			hs = r+g+b;
+			
+			return hs;
+		}
+		
+		/**
+		 * Gets all styles information
+		 * */
 		public function getAllStyleDeclarationsDetails(target:Object):String {
 			var component:UIComponent = target as UIComponent;
 			var styleManager:IStyleManager2 = StyleManager.getStyleManager(component ? component.moduleFactory: null);
@@ -769,12 +885,12 @@ package com.flexcapacitor.utils {
 		/**
 		 * Gets details about the embedded fonts
 		 * */
-		public function getEmbeddedFontInformationDetails(target:Object):String {
+		public function getFontInformationDetails(target:Object):String {
 			var styleItem:CSSStyleDeclarationItem;
 			var component:UIComponent = target as UIComponent;
 			var systemManager:ISystemManager = component ? component.systemManager : null;
 			var dictionary:Dictionary = new Dictionary(true);
-			var fontList:Array = Font.enumerateFonts();
+			var fontList:Array = Font.enumerateFonts(showDeviceFontInformation);
 			var length:int = fontList.length;
 			var output:String = "";
 			var fontObject:Object;
@@ -784,7 +900,7 @@ package com.flexcapacitor.utils {
 			
 			
 			output = showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
-			output += "Embedded Fonts";
+			output += "Fonts";
 			output += showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
 			
 			if (systemManager==null && FlexGlobals.topLevelApplication.systemManager) {
@@ -1487,6 +1603,73 @@ package com.flexcapacitor.utils {
 			
 			return name;
 		}
+		
+		
+
+        // =========================================================================================
+        // Debug mode
+        // =========================================================================================
+
+		/**
+		 * The state of the debug mode.
+		 * */
+        protected var _debug:Boolean=false;
+
+		/**
+		 * The target for the logger.
+		 * */
+        protected var logTarget:TraceTarget;
+
+		/**
+		 * The class logger.
+		 * */
+        protected var logger:ILogger = Log.getLogger("WebView");
+		
+		/**
+		 * Displays a JavaScript alert and issues an WebViewEvent.Result event with 
+		 * the response from a JavaScript call. 
+		 * */
+        public var runTestScript:Boolean;
+		
+		/**
+		 * Get the state of the debug mode.
+		 * */
+        public function get debug():Boolean
+        {
+            return _debug;
+        }
+
+		/**
+		 * Set the state of the debug mode.
+		 * */
+        public function set debug(value:Boolean):void
+        {
+            if (value == debug) {
+                return;
+			}
+
+            if (value)
+            {
+                if (!logTarget)
+                {
+                    logTarget = new TraceTarget();
+                    logTarget.includeLevel = true;
+                    logTarget.includeTime = true;
+                    logTarget.level = LogEventLevel.ALL;
+                    logTarget.filters = ["WebView"];
+                }
+				
+                logTarget.addLogger(logger);
+            }
+            else
+            {
+                if (logTarget) {
+                    logTarget.removeLogger(logger);
+				}
+            }
+
+            _debug=value;
+        }
 	}
 }
 

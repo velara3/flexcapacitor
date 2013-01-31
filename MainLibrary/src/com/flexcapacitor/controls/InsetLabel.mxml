@@ -8,6 +8,8 @@
 		[Style(name="insetDistance", inherit="no", type="Number")]
 		[Style(name="insetColor", inherit="no", type="Number")]
 		[Style(name="insetAlpha", inherit="no", type="Number")]
+		[Style(name="inner", inherit="no", type="Boolean")]
+		[Style(name="insetType", enumeration="shadow,highlight,none", inherit="no", type="String")]
 	</fx:Metadata>
 	
 	<fx:Script>
@@ -16,9 +18,25 @@
 			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
 				super.updateDisplayList(unscaledWidth, unscaledHeight);
 				
-				textShadowFilter.color = uint(getStyle("insetColor"));
-				textShadowFilter.alpha = Number(getStyle("insetAlpha"));
-				textShadowFilter.distance = getStyle("insetDistance");
+				if (getStyle("insetType")=="shadow") {
+					textShadowFilter.color = 0x000000;
+					textShadowFilter.alpha = Number(getStyle("insetAlpha"));
+					textShadowFilter.inner = getStyle("inner");
+					textShadowFilter.distance = getStyle("inner") ? getStyle("insetDistance") : -getStyle("insetDistance");
+				}
+				else if (getStyle("insetType")=="highlight") {
+					textShadowFilter.color = 0xffffff;
+					textShadowFilter.alpha = Number(getStyle("insetAlpha"));
+					textShadowFilter.distance = getStyle("inner") ? -getStyle("insetDistance") : getStyle("insetDistance");
+					textShadowFilter.inner = getStyle("inner");
+				}
+				else {
+					textShadowFilter.color = uint(getStyle("insetColor"));
+					textShadowFilter.alpha = Number(getStyle("insetAlpha"));
+					textShadowFilter.distance = getStyle("insetDistance");
+					textShadowFilter.inner = getStyle("inner");
+				}
+				
 			}
 			
 		]]>

@@ -7,13 +7,35 @@ package com.flexcapacitor.effects.collections {
 	
 	/**
 	 * Filters a list collection by the value specified
-	 * 
+	 * <br/><br/>
+	 * Usage:<br/>
+	 * Filtering a collection of objects by lastName by the value of the text property in a TextInput:<br/>
 	 * <pre>
 &lt;collections:FilterCollection target="{myArrayCollection}" 
 		source="{myTextInput}" 
 		sourcePropertyName="text"
 		showAllItemsOnEmpty="true"
 		fieldName="lastName"
+		searchAtStart="true"
+		/>
+</pre><br/>
+	 * Filtering a collection of objects by title or description by the value of the ID property of the selectedItem in a List:<br/>
+	 * <pre>
+&lt;collections:FilterCollection target="{myArrayCollection}" 
+		source="{categoriesList}" 
+		sourcePropertyName="selectedItem"
+		sourceSubPropertyName="id"
+		showAllItemsOnEmpty="true"
+		fieldName="title,description"
+		caseSensitive="true"
+		/>
+</pre><br/>
+	 * Filtering a collection of strings by the value of the searchString variable:<br/>
+	 * <pre>
+&lt;collections:FilterCollection target="{myArrayCollection}" 
+		source="{searchString}" 
+		showAllItemsOnEmpty="false"
+		exactMatch="true"
 		/>
 </pre>
 	 * */
@@ -53,7 +75,7 @@ package com.flexcapacitor.effects.collections {
 		public var searchAtStart:Boolean;
 		
 		/**
-		 * If true then the search must be exact
+		 * If true then the search must be exact. It cannot match a part of a word.
 		 * */
 		public var exactMatch:Boolean;
 		
@@ -65,6 +87,7 @@ package com.flexcapacitor.effects.collections {
 		/**
 		 * Name of field to search for on object in collection. If collection contains
 		 * simple types then do not set this property.
+		 * This can also accept multiple field names. Separate by comma. 
 		 * */
 		public var fieldName:String;
 		
@@ -102,57 +125,81 @@ package com.flexcapacitor.effects.collections {
 				var valueLength:int;
 				var isSpace:Boolean;
 				var index:int;
+				var fieldNames:Array;
+				var fieldNamesLength:int;
+				var match:Boolean;
 				
 				filterValue = sourcePropertyName ? source[sourcePropertyName] : String(source);
 				filterValueAsString = sourceSubPropertyName && filterValue ? filterValue[sourceSubPropertyName] : String(filterValue);
-				itemValue = fieldName ? item[fieldName] : String(item);
-				valueLength = filterValueAsString ? filterValueAsString.length : 0;
 				
-				// show all items if search is empty
-				if (showAllItemsOnEmpty && valueLength==0) {
-					return true;
+				if (fieldName.indexOf(",")!=-1) {
+					fieldNames = fieldName.split(",");
 				}
-				else if (!showAllItemsOnEmpty && valueLength==0) {
-					return false;
+				else {
+					fieldNames = [fieldName];
 				}
 				
-				// case sensitive
-				if (!caseSensitive) { 
-					filterValueAsString = filterValueAsString ? filterValueAsString.toLowerCase() : filterValueAsString;
-					itemValue = itemValue ? itemValue.toLowerCase() : itemValue;
-				}
+				fieldNamesLength = fieldNames.length;
 				
-				// exact match
-				if (exactMatch) {
-					index = itemValue.indexOf(filterValueAsString);
+				
+				for (var i:int;i<fieldNamesLength;i++) {
+					match = false;
+					itemValue = fieldName ? item[fieldNames[i]] : String(item);
+					valueLength = filterValueAsString ? filterValueAsString.length : 0;
 					
-					if (itemValue==filterValueAsString) {
+					// show all items if search is empty
+					if (showAllItemsOnEmpty && valueLength==0) {
 						return true;
 					}
+					else if (!showAllItemsOnEmpty && valueLength==0) {
+						//return false;
+						continue;
+					}
 					
-					return false;
-				}
-				
-				// search at the start of a word - this could use regexp
-				if (searchAtStart) {
-					index = itemValue.indexOf(filterValueAsString);
+					// case sensitive
+					if (!caseSensitive) { 
+						filterValueAsString = filterValueAsString ? filterValueAsString.toLowerCase() : filterValueAsString;
+						itemValue = itemValue ? itemValue.toLowerCase() : itemValue;
+					}
 					
-					if (index!=-1) {
-						isSpace = itemValue.charAt(index-1)==" ";
+					// exact match
+					if (exactMatch) {
+						index = itemValue.indexOf(filterValueAsString);
 						
-						if (index==0 || isSpace) {
+						if (itemValue==filterValueAsString) {
 							return true;
 						}
 						
-						return false;
+						//return false;
+						continue;
 					}
 					
-					return false;
-				}
-				
-				// search at start is false so allow search anywhere in search item
-				if (itemValue.indexOf(filterValueAsString)!=-1) {
-					return true;
+					// search at the start of a word - this could use regexp
+					if (searchAtStart) {
+						index = itemValue.indexOf(filterValueAsString);
+						
+						if (index!=-1) {
+							isSpace = itemValue.charAt(index-1)==" ";
+							
+							if (index==0 || isSpace) {
+								return true;
+							}
+							
+							//return false;
+							continue;
+						}
+						
+						//return false;
+						continue;
+					}
+					
+					// search at start is false so allow search anywhere in search item
+					if (itemValue.indexOf(filterValueAsString)!=-1) {
+						return true;
+					}
+					
+					//return false;
+					continue;
 				}
 				
 				return false;

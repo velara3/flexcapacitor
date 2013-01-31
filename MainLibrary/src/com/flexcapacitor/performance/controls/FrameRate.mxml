@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Label xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 addedToStage="setFPSUpdate()" 
+		 removedFromStage="clearFPSUpdate()">
+
+	<fx:Metadata>
+		
+	</fx:Metadata>
+	<fx:Script>
+		<![CDATA[
+			
+			/**
+			 * Displays the current frame rate calculated every second.
+			 * TODO: Provide an average for a given amount of time
+			 * 
+			 * Code adapted from,
+			 * http://www.untoldentertainment.com/blog/2009/04/09/tutorial-building-a-fps-frames-per-second-counter/
+			 * */
+			
+			private var currentTime:Number;
+			
+			private var lastUpdate:Number; // the results of getTimer() from the last update
+
+			private var frameCount:Number; //stores the count of frames passed this second
+
+			/**
+			 * The interval in milliseconds at which the frame rate will be updated
+			 * */
+			public var updateInterval:Number = 1000;
+
+			/**
+			 * Displays the frame rate of the stage
+			 * */
+			public var showRequestedFrameRate:Boolean;
+
+			//called when the instance is added to a Display Object
+			private function setFPSUpdate():void {
+				addEventListener(Event.ENTER_FRAME, updateFPS);
+				frameCount = 0;
+				updateText(frameCount);
+				lastUpdate = getTimer();
+			}
+
+			//called when the instance is removed from a Display Object
+			private function clearFPSUpdate():void {
+				removeEventListener(Event.ENTER_FRAME, updateFPS);
+			}
+
+			//update the frame counter
+			private function updateFPS(event:Event):void {
+				//get the current time and increment the frame counter
+				currentTime = getTimer();
+				frameCount++;
+
+				//post the frame count if more then a second has passed
+				if (currentTime >= lastUpdate + updateInterval) {
+					lastUpdate = currentTime;
+					updateText(frameCount);
+					frameCount = 0;
+				}
+			}
+
+			//update the display text
+			private function updateText(frameRate:Number):void {
+				text = int(frameRate) + (showRequestedFrameRate && stage ? " / " + stage.frameRate : "") + " FPS";
+			}
+		]]>
+	</fx:Script>
+
+</s:Label>

@@ -52,6 +52,10 @@ package com.flexcapacitor.effects.popup {
 	 * <pre>
 	 * 	&lt;popup:ClosePopUp popUp="{this}" />
 	 * </pre>
+	 * 
+	 * Note: If the pop up is not centered the pop up width may too low. 
+	 * You may try removing the width on the pop up (so it will be sized to it's contents). 
+	 * Or the pop up parent may need to be set. 
 	 * */
 	public class OpenPopUp extends ActionEffect {
 		
@@ -164,6 +168,7 @@ package com.flexcapacitor.effects.popup {
 		/**
 		 * @copy mx.managers.PopUpManager#addPopUp
 		 * */
+		[Bindable]
 		public var parent:Sprite = Sprite(FlexGlobals.topLevelApplication);
 		
 		/**
@@ -195,6 +200,11 @@ package com.flexcapacitor.effects.popup {
 		 * Keeps a reference of the pop up 
 		 * */
 		public var keepReference:Boolean = false;
+		
+		/**
+		 * Centers the pop up when stage resize
+		 * */
+		public var autoCenter:Boolean = true;
 		
 		/**
 		 * Keeps a reference of the pop up 

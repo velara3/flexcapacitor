@@ -124,7 +124,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		public function buttonHandler(event:MouseEvent):void {
 			var action:PromptSaveAs = PromptSaveAs(effect);
 			var data:Object = action.data;
-			var fileName:String = action.fileName;
+			var fileName:String = action.fileName==null ? "" : action.fileName;
 			fileName = fileName.indexOf(".")==-1 && action.fileExtension ? fileName + "." + action.fileExtension : fileName;
 			
 			///////////////////////////////////////////////////////////

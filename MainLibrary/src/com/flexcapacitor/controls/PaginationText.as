@@ -507,8 +507,8 @@ package com.flexcapacitor.controls
 				textFlow = TextConverter.importToFlow(updatedHTMLText, TextConverter.TEXT_FIELD_HTML_FORMAT, config);
 				
 				ca = new TextLayoutFormat(textFlow.format);
-				ca.fontFamily = "Georgia, Times";
-				ca.fontSize = 16;
+				ca.fontFamily = getStyle("fontFamily");
+				ca.fontSize = getStyle("fontSize");
 				ca.textIndent = 15;
 				ca.paragraphSpaceAfter = 0;
 				ca.textAlign = TextAlign.JUSTIFY;

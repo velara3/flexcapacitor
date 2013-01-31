@@ -10,10 +10,11 @@ controls|FrameContainer {
 	skinClass: ClassReference("com.flexcapacitor.skins.FrameSkin");
 	backgroundColor: #9a9b9d;
 	backgroundAlpha: 0;
-	borderColor: #9a9b9d;
+	borderColor: #000000;
+	borderAlpha: .75;
 	borderWeight: 2;
 	insetColor: #ffffff;
-	insetAlpha: 1;
+	insetAlpha: .75;
 	cornerRadius: 10;
 }
 
@@ -21,4 +22,5 @@ controls|InsetLabel {
 	insetColor: #ffffff;
 	insetAlpha: .75;
 	insetDistance: 1;
+	inner: true;
 }

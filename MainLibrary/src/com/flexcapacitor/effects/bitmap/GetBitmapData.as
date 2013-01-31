@@ -12,7 +12,6 @@ package com.flexcapacitor.effects.bitmap {
 	
 	import mx.effects.IEffect;
 	
-	import spark.components.supportClasses.Range;
 	import spark.core.IContentLoader;
 	import spark.primitives.BitmapImage;
 	
