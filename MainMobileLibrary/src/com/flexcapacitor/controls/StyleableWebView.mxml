@@ -46,6 +46,23 @@
 						 backgroundColor="#f6f6f6"
 						 fontSize="12"
 						 >
+	
+	And later in ActionScript:
+	
+		var innerWrappedContent:String = divTag;
+		innerWrappedContent = innerWrappedContent.replace("[content]", generatedText);
+		
+		myWebView.fontSize = fontSize.toString();
+		myWebView.textDecoration = showUnderline ? "underline" : "none";
+		
+		myWebView.contentWidth = NaN;
+		myWebView.contentHeight = NaN;
+		myWebView.measuredElementID = "myDivElement";
+		myWebView.measureContent = true;
+		
+		myWebView.loadString(innerWrappedContent);
+	
+	Note: This is still in development. Feedback is welcome. 
 	-->
 	
 

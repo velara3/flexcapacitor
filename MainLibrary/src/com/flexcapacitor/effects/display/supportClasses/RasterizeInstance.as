@@ -138,6 +138,11 @@ package com.flexcapacitor.effects.display.supportClasses {
 		}
 		
 		/**
+		 * There are numerous methods here to take a snapshot. I don't know which one is best. 
+		 * More tests need to be done to figure out what works. 
+		 * */
+		
+		/**
 		 * Takes a target DisplayObject, rasterizes it into a Bitmap, and returns the bitmap data
 		 * transformed to be identical to the target.
 		 * modified

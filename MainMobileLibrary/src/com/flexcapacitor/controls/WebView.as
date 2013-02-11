@@ -97,7 +97,7 @@ package com.flexcapacitor.controls  {
 	 * 
 	 * @copy flash.media.StageWebView
 	 * */
-	public class WebView extends UIComponent {
+	public class WebView extends UIComponent implements IWebView {
 		
 		//include "../core/Version.as";
 		
@@ -606,19 +606,43 @@ package com.flexcapacitor.controls  {
 			return _content;
 		}
 		
+		private var _contentWidth:Number;
+
+		[Bindable]
 		/**
 		 * Content width or NaN if content is not set or has not been measured.
 		 * This value is usually set on complete event.
 		 * */
-		[Bindable]
-		public var contentWidth:Number;
+		public function get contentWidth():Number {
+			return _contentWidth;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set contentWidth(value:Number):void {
+			_contentWidth = value;
+		}
+
 		
+		private var _contentHeight:Number;
+
+		[Bindable]
 		/**
 		 * Content height or NaN if content is not set or has not been measured.
 		 * This value is usually set on complete event.
 		 * */
-		[Bindable]
-		public var contentHeight:Number;
+		public function get contentHeight():Number {
+			return _contentHeight;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set contentHeight(value:Number):void {
+			_contentHeight = value;
+		}
+
 		
 		/**
 		 * Measures the content height and width on complete (or page load). 

@@ -1,29 +1,45 @@
 package com.flexcapacitor.utils {
 	
 	import flash.debugger.enterDebugger;
+	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.BlendMode;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.display.JointStyle;
+	import flash.display.PixelSnapping;
+	import flash.display.Sprite;
 	import flash.events.EventDispatcher;
 	import flash.events.MouseEvent;
+	import flash.geom.Matrix;
+	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.text.Font;
 	import flash.text.TextFormat;
 	import flash.utils.Dictionary;
+	import flash.utils.clearTimeout;
 	import flash.utils.getQualifiedClassName;
+	import flash.utils.setTimeout;
 	
 	import mx.collections.ArrayList;
 	import mx.core.EventPriority;
 	import mx.core.FlexGlobals;
+	import mx.core.FlexSprite;
+	import mx.core.IFlexDisplayObject;
 	import mx.core.IMXMLObject;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.core.mx_internal;
+	import mx.graphics.BitmapFill;
+	import mx.graphics.BitmapFillMode;
+	import mx.graphics.SolidColorStroke;
 	import mx.logging.ILogger;
 	import mx.logging.Log;
 	import mx.logging.LogEventLevel;
 	import mx.logging.targets.TraceTarget;
 	import mx.managers.ISystemManager;
+	import mx.managers.PopUpManager;
 	import mx.managers.SystemManager;
 	import mx.styles.CSSCondition;
 	import mx.styles.CSSConditionKind;
@@ -37,6 +53,10 @@ package com.flexcapacitor.utils {
 	import mx.utils.ObjectUtil;
 	
 	import spark.components.Application;
+	import spark.components.Group;
+	import spark.components.Image;
+	import spark.components.Label;
+	import spark.primitives.Rect;
 	
 	/**
 	 * Dispatched when pressing the ALT key. Use to get the target under the mouse or the lastComponentItem.
@@ -91,6 +111,8 @@ package com.flexcapacitor.utils {
 		public static const DEFAULT_FACTORY:String = "Theme Type Declaration";
 		public static const FACTORY_FUNCTION:String = "Type Declaration";
 		public static const OVERRIDE:String = "Inline";
+		
+		public static const MOUSE_DOWN_OUTSIDE:String = "mouseDownOutside";
 		
 		private var _alpha:Number;
 		private var _enabled:Boolean = true;
@@ -170,7 +192,12 @@ package com.flexcapacitor.utils {
 		/**
 		 * Shows color under the mouse
 		 * */
-		public var showColorUnderMouse:Boolean = true;
+		public var showColorUnderMouse:Boolean;
+		
+		/**
+		 * Shows the boundries of elements in the component tree
+		 * */
+		public var showDisplayObjectOutlines:Boolean = true;
 		
 		/**
 		 * Space before some output text
@@ -213,6 +240,29 @@ package com.flexcapacitor.utils {
 		 * in an ascending order. Default is true.
 		 * */
 		public var showHeirarchyAscending:Boolean = true;
+		
+		/**
+		 * Includes ID in the component path. For example,
+		 * Button.myButton > Group > Group.container > Application.MyApplication
+		 * 
+		 * @see pathFormat
+		 * */
+		public var includeIDinPath:Boolean = true;
+		
+		/**
+		 * The format when formatting the ID in the component path. For example,
+		 * format1 - Button#myButton
+		 * format2 - Button.myButton 
+		 * format3 - myButton::Button
+		 * */
+		[Inspectable(enumeration="format1,format2,format3")]
+		public var pathFormat:String = "format1";
+		
+		/**
+		 * The separator in the component path. Default is " > ". For example,  
+		 * Button.myButton > Group > Group.container > Application.MyApplication
+		 * */
+		public var componentPathSeparator:String = " > ";
 		
 		/**
 		 * Shows divider markers in the console when checking the target
@@ -293,10 +343,23 @@ package com.flexcapacitor.utils {
 		public var lastComponentItem:ComponentItem;
 		
 		/**
+		 * Current clicked on target
+		 **/
+		[Bindable]
+		public var target:Object
+		
+		/**
+		 * Current display object in the pop up display outline
+		 **/
+		[Bindable]
+		public var currentPopUpTarget:Object
+		
+		
+		/**
 		 * Set this to false to test on touch screen device. 
 		 * */
 		public var requireCTRLKey:Boolean = true;
-		
+
 		/**
 		 *
 		 **/
@@ -305,9 +368,14 @@ package com.flexcapacitor.utils {
 			
 			isOnServer = rootDisplay.loaderInfo.url.indexOf("http")==0 ? true : false;
 			
-			SystemManager.getSWFRoot(this).addEventListener(MouseEvent.CLICK, handleClick, true, EventPriority.CURSOR_MANAGEMENT, true);
+			debug = true;
+			
+			addClickHandler();
 		}
 		
+		/**
+		 * 
+		 **/
 		public function initialized(document:Object, id:String):void {
 			this.document = document;
 			this.documentID = id;
@@ -344,14 +412,16 @@ package com.flexcapacitor.utils {
 		public function set enabled(value:Boolean):void {
 			_enabled = value;
 			
-			// enabled
+			addClickHandler(value);
+		}
+		
+		protected function addClickHandler(value:Boolean = true):void {
 			if (value) {
 				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.CLICK, handleClick, true, EventPriority.CURSOR_MANAGEMENT, true);
 			}
 			else {
 				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.CLICK, handleClick, true);
 			}
-			
 		}
 		
 		/**
@@ -372,7 +442,7 @@ package com.flexcapacitor.utils {
 					if (requireCTRLKey) {
 						event.stopImmediatePropagation();
 					}
-					checkTarget(event);
+					checkTarget(event.target, event);
 				}
 			}
 		}
@@ -402,15 +472,14 @@ package com.flexcapacitor.utils {
 		/**
 		 * Gets the current target and traces it to the console
 		 * */
-		public function checkTarget(event:MouseEvent):void {
+		public function checkTarget(mouseTarget:Object, event:MouseEvent):void {
 			var rootComponent:ComponentItem = document ? createComponentTreeFromElement(document) : createComponentTreeFromElement(FlexGlobals.topLevelApplication);
 			var rootSystemManagerTree:ComponentItem = createComponentTreeFromElement(FlexGlobals.topLevelApplication.systemManager);
-			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(event.target), rootComponent);
-			componentItem = componentItem ==null ? getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(event.target), rootSystemManagerTree) : componentItem;
-			var target:DisplayObject = event.target as DisplayObject; // original clicked on item as reported by the mouse event
+			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(mouseTarget), rootComponent);
+			var displayTarget:DisplayObject = mouseTarget as DisplayObject; // original clicked on item as reported by the mouse event
 			// first component found to own the event.target that is also on the component tree
 			// if the component is in a pop up we are not handling it
-			var componentTarget:Object = componentItem ? componentItem.target : target;
+			var componentTarget:Object;
 			var selectedTarget:Object;
 			var message:String = "";
 			var clearStyle:Boolean;
@@ -420,15 +489,26 @@ package com.flexcapacitor.utils {
 			var value:String = "";
 			var styles:Array;
 			var currentValue:*;
+			var findElementByID:String = "";
+			var findElementByName:String = "";
 			
+			
+			// if not on the component tree target may be a pop up
+			if (componentItem ==null) {
+				componentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(mouseTarget), rootSystemManagerTree)
+			}
+			
+			componentTarget = componentItem ? componentItem.target : displayTarget;
 			
 			// get target
 			if (event.shiftKey) {
-				selectedTarget = target;
+				selectedTarget = displayTarget;
 			}
 			else {
 				selectedTarget = componentTarget;
 			}
+			
+			target = selectedTarget;
 			
 			// show target information
 			if (showDisplayObjectInformation) {
@@ -469,7 +549,15 @@ package com.flexcapacitor.utils {
 				message += getColorUnderMouse(event);
 			}
 			
-			trace(message);
+			// show element boundries
+			if (showDisplayObjectOutlines && !popUpIsDisplaying) {
+				//if (message!="") message += "\n";
+				//message += postDisplayObject(selectedTarget as DisplayObject);
+				postDisplayObject(selectedTarget as DisplayObject);
+				addClickHandler(false);
+			}
+			
+			logger.log(LogEventLevel.INFO, message);
 			lastComponentItem = componentItem;
 			
 			// add an event listener to this class and then get the lastComponentItem
@@ -480,7 +568,7 @@ package com.flexcapacitor.utils {
 			if (event.altKey) {
 				
 				// the debugger doesn't take you here until you press step into or step over
-				trace("\n// Click your heels three times and step in...");
+				logger.log(LogEventLevel.INFO, "\n// Click your heels three times and step in...");
 				
 				// the target object contains the item you clicked on
 				enterDebugger();
@@ -497,9 +585,11 @@ package com.flexcapacitor.utils {
 					currentValue = selectedTarget[property];
 					
 					selectedTarget[property] = value;
+					
+					currentValue = selectedTarget[property];
 				}
 				catch (error:Error) {
-					trace("Error setting property:" + error.message);
+					logger.log(LogEventLevel.ERROR, "Error setting property:" + error.message);
 				}
 				
 			}
@@ -520,7 +610,19 @@ package com.flexcapacitor.utils {
 					currentValue = selectedTarget.getStyle(style);
 				}
 				catch (error:Error) {
-					trace("Error setting style:" + error.message);
+					logger.log(LogEventLevel.ERROR, "Error setting style:" + error.message);
+				}
+			}
+			else if (findElementByID) {
+				var componentItemByID:ComponentItem = findComponentItemInParentItemByID(findElementByID, rootComponent);
+				if (componentItemByID==null) {
+					componentItemByID = findComponentItemInParentItemByID(findElementByID, rootSystemManagerTree);
+				}
+			}
+			else if (findElementByName) {
+				var componentItemByName:ComponentItem = findComponentItemInParentItemByName(findElementByName, rootComponent);
+				if (componentItemByName==null) {
+					componentItemByName = findComponentItemInParentItemByName(findElementByID, rootSystemManagerTree);
 				}
 			}
 		}
@@ -574,7 +676,7 @@ package com.flexcapacitor.utils {
 						
 						// the hard part is how to order them in???
 						if (classDeclarations.indexOf(item)==-1) {
-							trace("Found advanced selector:" + item.mx_internal::selectorString);
+							logger.log(LogEventLevel.WARN, "Found advanced selector:" + item.mx_internal::selectorString);
 							//item.setStyle("PSEUDO", ii);
 							//classDeclarations.unshift(item);
 							//classDeclarations.splice(ii, 0, item);
@@ -628,7 +730,7 @@ package com.flexcapacitor.utils {
 					
 					// the hard part is how to order them in???
 					if (indexOf<0) {
-						trace("Found rogue selector:" + selector);
+						logger.log(LogEventLevel.WARN, "Found rogue selector:" + selector);
 						//classDeclarations.unshift(declaration);
 					}
 				}
@@ -766,6 +868,13 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Wrapped to allow error handling
+		 **/
+		public function drawBitmapData(bitmapData:BitmapData, displayObject:DisplayObject, matrix:Matrix = null):void {
+			bitmapData.draw(displayObject, matrix);
+		}
+		
+		/**
 		 * Gets all styles information
 		 * */
 		public function getColorUnderMouse(event:MouseEvent):String {
@@ -777,8 +886,17 @@ package com.flexcapacitor.utils {
 			var onApplication:Boolean = true;
 			
 			if (onApplication) {
-				temporaryBitmap = new BitmapData(FlexGlobals.topLevelApplication.stage.width, FlexGlobals.topLevelApplication.stage.height, false);
-				temporaryBitmap.draw(DisplayObject(FlexGlobals.topLevelApplication.stage));
+				//temporaryBitmap = new BitmapData(FlexGlobals.topLevelApplication.stage.width, FlexGlobals.topLevelApplication.stage.height, false);
+				temporaryBitmap = new BitmapData(FlexGlobals.topLevelApplication.width, FlexGlobals.topLevelApplication.height, false);
+				
+				try {
+					drawBitmapData(temporaryBitmap, DisplayObject(FlexGlobals.topLevelApplication));
+				}
+				catch (e:Error) {
+					// could not draw so it is black box
+					//temporaryBitmap.draw(DisplayObject(FlexGlobals.topLevelApplication.stage));
+					logger.log(LogEventLevel.ERROR, "Can't get color under mouse. " + e.message);
+				}
 		
 				scale = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 				stageX = event.stageX * scale;
@@ -786,8 +904,16 @@ package com.flexcapacitor.utils {
 			}
 			else {// not verified
 				temporaryBitmap = new BitmapData(event.target.width, event.target.height, false);
-				temporaryBitmap.draw(DisplayObject(event.target));
-		
+				
+				try {
+					drawBitmapData(temporaryBitmap, DisplayObject(event.target));
+				}
+				catch (e:Error) {
+					// could not draw so it is black box
+					//temporaryBitmap.draw(DisplayObject(FlexGlobals.topLevelApplication.stage));
+					logger.log(LogEventLevel.ERROR, "Can't get color under mouse. " + e.message);
+				}
+				
 				scale = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 				stageX = event.localX * scale;
 				stageY = event.localY * scale;
@@ -823,10 +949,13 @@ package com.flexcapacitor.utils {
 			return ( ( r << 16 ) | ( g << 8 ) | b );
 		}
 		
-		public function displayInHex(c:uint):String {
-			var r:String = extractRed(c).toString(16).toUpperCase();
-			var g:String = extractGreen(c).toString(16).toUpperCase();
-			var b:String = extractBlue(c).toString(16).toUpperCase();
+		/**
+		 * Get full length hex value from uint
+		 **/
+		public function displayInHex(color:uint):String {
+			var r:String = extractRed(color).toString(16).toUpperCase();
+			var g:String = extractGreen(color).toString(16).toUpperCase();
+			var b:String = extractBlue(color).toString(16).toUpperCase();
 			var hs:String = "";
 			var zero:String = "0";
 			
@@ -845,6 +974,248 @@ package com.flexcapacitor.utils {
 			hs = r+g+b;
 			
 			return hs;
+		}
+		
+		public var pupUpDisplayTime:int = 3000;
+		public var popUpTimeout:int;
+		public var popUpDisplayGroup:Group;
+		public var popUpDisplayImage:Image;
+		public var popUpBackground:Rect;
+		public var popUpBorder:Rect;
+		public var popUpLabel:Label;
+		public var popUpIsDisplaying:Boolean;
+		public var popUpBackgroundTransparentGrid:Boolean = true;
+		
+		/**
+		 * Displays an outline of the display object recursively up the component display list. 
+		 **/
+		public function postDisplayObject(displayTarget:DisplayObject, displayed:Boolean = false):void {
+			var container:Sprite;
+			var lastTarget:DisplayObject;
+			var isApplication:Boolean;
+			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
+			popUpIsDisplaying = true;
+			
+			if (displayed) {
+				//closePopUp(target);
+				lastTarget = displayTarget;
+				if ("owner" in displayTarget && Object(displayTarget).owner)  {
+					displayTarget = Object(displayTarget).owner;
+				}
+				else {
+					displayTarget = displayTarget.parent;
+				}
+				
+				//popUpDisplayImage.setChildIndex(popUpLabel, popUpDisplayImage.numChildren-1);
+			}
+			else {
+				// pulling in spark component dependencies (this is a debug time tool not a release build tool)
+				popUpDisplayGroup = new Group();
+				popUpDisplayImage = new Image();
+				popUpBorder = new Rect();
+				popUpBorder.percentWidth = 100;
+				popUpBorder.percentHeight = 100;
+				popUpBorder.stroke = new SolidColorStroke(0xFF0000, 1, 1, false, "normal", JointStyle.MITER);
+				
+				if (popUpBackgroundTransparentGrid) {
+					popUpBackground = new Rect();
+					popUpBackground.percentWidth = 100;
+					popUpBackground.percentHeight = 100;
+					popUpBackground.fill = new BitmapFill();
+					var fillSprite:Sprite = new Sprite();
+					fillSprite.graphics.beginFill(0xCCCCCC,1);
+					fillSprite.graphics.drawRect(0,0,10,10);
+					fillSprite.graphics.beginFill(0xFFFFFF,1);
+					fillSprite.graphics.drawRect(10,0,10,10);
+					fillSprite.graphics.beginFill(0xFFFFFF,1);
+					fillSprite.graphics.drawRect(0,10,10,10);
+					fillSprite.graphics.beginFill(0xCCCCCC,1);
+					fillSprite.graphics.drawRect(10,10,10,10);
+					BitmapFill(popUpBackground.fill).source = fillSprite;
+					BitmapFill(popUpBackground.fill).fillMode = BitmapFillMode.REPEAT;
+				}
+				
+				popUpLabel = new Label();
+				popUpLabel.setStyle("backgroundColor", 0xFF0000);
+				popUpLabel.setStyle("color", 0xFFFFFF);
+				popUpLabel.setStyle("fontWeight", "bold");
+				popUpLabel.setStyle("fontSize", 12);
+				popUpLabel.setStyle("paddingTop", 3);
+				popUpLabel.setStyle("paddingBottom", 1);
+				popUpLabel.setStyle("paddingLeft", 4);
+				popUpLabel.setStyle("paddingRight", 4);
+				
+				popUpDisplayGroup.addElement(popUpBackground);
+				popUpDisplayGroup.addElement(popUpDisplayImage);
+				popUpDisplayGroup.addElement(popUpBorder);
+				popUpDisplayGroup.addElement(popUpLabel);
+			}
+			
+			
+			if (displayTarget is Application) {
+				isApplication = true;
+				closePopUp(displayTarget);
+				return;
+			}
+			
+			currentPopUpTarget = displayTarget;
+			
+			container = rasterize(displayTarget);
+			var name:String = displayTarget.toString();
+			name = name.split(".").length ? name.split(".")[name.split(".").length-1] : name;
+			
+			//container.graphics.endFill();
+			popUpLabel.text = name + " - " + container.width + "x" + container.height + " ";
+			
+			if (displayTarget is UIComponent) {
+				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
+			}
+			
+			popUpDisplayImage.source = container;
+			popUpDisplayImage.width = container.width;
+			popUpDisplayImage.height = container.height;
+			popUpDisplayGroup.width = container.width;
+			popUpDisplayGroup.height = container.height;
+			//popUpDisplayImage.blendMode = BlendMode.ERASE;
+			
+			if (isApplication) {
+				popUpDisplayGroup.x = 0;
+				popUpDisplayGroup.y = 0;
+			}
+			else {
+				popUpDisplayGroup.x = displayTarget.localToGlobal(new Point()).x;
+				popUpDisplayGroup.y = displayTarget.localToGlobal(new Point()).y;
+			}
+			
+			if (popUpLabel.height==0) { 
+				popUpLabel.y = popUpDisplayGroup.y>=15 ? -15 : 0;
+			}
+			else { 
+				popUpLabel.y = popUpDisplayGroup.y>=15 ? -popUpLabel.height : 0;
+			}
+			
+			
+			//container.x = inspector.target.localToGlobal(new Point()).x;
+			//container.y = inspector.target.localToGlobal(new Point()).y;
+			
+			//trace(inspector.target.localToGlobal(new Point()).x);
+			//trace(inspector.target.localToGlobal(new Point()).y);
+			
+			// add mouse up and mouse up outside handlers for 
+			DisplayObject(popUpDisplayGroup).addEventListener(MOUSE_DOWN_OUTSIDE, mouseDownOutsidePopUpHandler, false, 0, true);
+			DisplayObject(systemManagerObject).addEventListener(MOUSE_DOWN_OUTSIDE, mouseDownOutsidePopUpHandler, false, 0, true);
+			DisplayObject(popUpDisplayGroup).addEventListener(MouseEvent.MOUSE_UP, mouseUpPopUpHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+			
+			// more options could be set provided for these
+			popUpDisplayGroup.setStyle("modalTransparency", .75);
+			popUpDisplayGroup.setStyle("modalTransparencyBlur", 0);
+			popUpDisplayGroup.setStyle("modalTransparencyColor", 0);
+			popUpDisplayGroup.setStyle("modalTransparencyDuration", 0);
+			
+			var modalBlendMode:String = BlendMode.NORMAL;
+			
+			if (!displayed) {
+				PopUpManager.addPopUp(popUpDisplayGroup, DisplayObject(systemManagerObject), true);
+				
+				
+				var modalWindow:FlexSprite;
+				var index:int = systemManagerObject.rawChildren.getChildIndex(popUpDisplayGroup);
+				
+				if (index>=0) {
+					modalWindow = systemManagerObject.rawChildren.getChildAt(index-1) as FlexSprite;
+					
+					if (modalWindow) {
+						modalWindow.blendMode = modalBlendMode; //
+					}
+				}
+			}
+			
+			clearTimeout(popUpTimeout);
+			popUpTimeout = setTimeout(getNextOrClosePopUp, pupUpDisplayTime, displayTarget, true);
+		}
+		
+		/**
+		 * 
+		 **/
+		public function getNextOrClosePopUp(target:DisplayObject, displayed:Boolean = false):void {
+			if (target.parent && !(target is SystemManager)) {
+				postDisplayObject(DisplayObject(target), displayed);
+			}
+			else {
+				closePopUp(DisplayObject(popUpDisplayGroup));
+				clearTimeout(popUpTimeout);
+			}
+		}
+		
+		/**
+		 * Dismisses boundries pop up outline
+		 **/
+		public function mouseDownOutsidePopUpHandler(event:MouseEvent):void {
+			closePopUp(DisplayObject(popUpDisplayGroup));
+		}
+		
+		/**
+		 * Dismisses boundries pop up outline
+		 **/
+		public function mouseUpPopUpHandler(event:MouseEvent):void {
+			
+			if (event.ctrlKey) {
+				// we are intercepting this event so we can inspect the target
+				// stop the event propagation
+				clearTimeout(popUpTimeout);
+				checkTarget(currentPopUpTarget, event);
+			}
+			else {
+				closePopUp(DisplayObject(popUpDisplayGroup));
+			}
+			event.stopImmediatePropagation();
+		}
+		
+		/**
+		 * Creates a snapshot of the display object passed to it
+		 **/
+		public function rasterize(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
+			//var bounds:Rectangle = target.getBounds(target);
+			var bounds:Rectangle = target.getRect(target);
+			var targetWidth:Number = target.width==0 ? 1 : target.width;
+			var targetHeight:Number = target.height==0 ? 1 : target.height;
+			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
+			var matrix:Matrix = new Matrix();
+			var container:Sprite = new Sprite();
+			var bitmap:Bitmap;
+			
+			matrix.translate(-bounds.left, -bounds.top);
+			matrix.scale(scaleX, scaleY);
+			
+			try {
+				drawBitmapData(bitmapData, target, matrix);
+			}
+			catch (e:Error) {
+				logger.log(LogEventLevel.ERROR, "Can't get display object outline. " + e.message);
+			}
+			
+			bitmap = new Bitmap(bitmapData, PixelSnapping.ALWAYS, true);
+			bitmap.x = bounds.left;
+			bitmap.y = bounds.top;
+			
+			container.cacheAsBitmap = true;
+			container.transform.matrix = target.transform.matrix;
+			container.addChild(bitmap);
+			
+			return container;
+		}
+		
+		/**
+		 * Dismisses boundries pop up outline
+		 **/
+		public function closePopUp(target:DisplayObject):void {
+			addClickHandler();
+			popUpIsDisplaying = false;
+			clearTimeout(popUpTimeout);
+			PopUpManager.removePopUp(popUpDisplayGroup as IFlexDisplayObject);
+			DisplayObject(popUpDisplayGroup).removeEventListener(MOUSE_DOWN_OUTSIDE, mouseDownOutsidePopUpHandler);
+			DisplayObject(FlexGlobals.topLevelApplication.systemManager).removeEventListener(MOUSE_DOWN_OUTSIDE, mouseDownOutsidePopUpHandler);
+			DisplayObject(popUpDisplayGroup).removeEventListener(MouseEvent.MOUSE_UP, mouseDownOutsidePopUpHandler);
 		}
 		
 		/**
@@ -1276,10 +1647,10 @@ package com.flexcapacitor.utils {
 			
 			// describe component
 			if (componentItem.id!=null) {
-				message += "\n" + componentItem.id + " is a " + componentItem.name;
+				message += "\n" + componentItem.id + " is a " + componentItem.unqualifiedClassName;
 			}
-			if (componentItem.name!=null) {
-				message += "\nThe target is an instance of " + componentItem.name;
+			if (componentItem.unqualifiedClassName!=null) {
+				message += "\nThe target is an instance of " + componentItem.unqualifiedClassName;
 			}
 			else {
 				//message += "\nThe target is an instance of " + componentItem.name;
@@ -1324,7 +1695,7 @@ package com.flexcapacitor.utils {
 			
 			// show heirachy
 			if (showHeirarchy) {
-				out = getComponentPath(componentItem, showHeirarchyAscending);
+				out = getComponentPath(componentItem, showHeirarchyAscending, includeIDinPath);
 				
 				message += "\nIt's path is "+ out;
 			}
@@ -1353,18 +1724,39 @@ package com.flexcapacitor.utils {
 		 * Gets the path up the component display list tree
 		 Usage:
 		 var string:String = getComponentPath(componentItem); // componentItem.instance is Button
-		 trace(string); // application > group > group > button
+		 trace(string); // MyApplication > Group > Group > Button
+		 var string:String = getComponentPath(componentItem, true);
+		 trace(string); // Button > Group > Group > MyApplication 
 		 * */
-		public function getComponentPath(componentItem:ComponentItem, ascending:Boolean = false, separator:String = " > "):String {
+		public function getComponentPath(componentItem:ComponentItem, ascending:Boolean = false, includeID:Boolean = true):String {
 			var items:Array = [];
 			var out:String = "";
+			var temp:String = "";
 			
 			while (componentItem) {
-				items.push(componentItem.name);
+				
+				// we don't want to add id to application because it just becomes MyApp.MyApp
+				if (includeID && componentItem.id && !(componentItem.target is Application)) {
+					//items.push(componentItem.id + ":" + componentItem.name);
+					
+					if (pathFormat=="format1") {
+						items.push(componentItem.unqualifiedClassName + "#" + componentItem.id); 
+					}
+					else if (pathFormat=="format2") {
+						items.push(componentItem.unqualifiedClassName + "." + componentItem.id); 
+					}
+					else if (pathFormat=="format3") {
+						items.push(componentItem.id + "::" + componentItem.unqualifiedClassName); 
+					}
+				}
+				else {
+					items.push(componentItem.unqualifiedClassName);
+				}
+				
 				componentItem = componentItem.parent;
 			}
 			
-			out = ascending ? items.join(separator) : items.reverse().join(separator);
+			out = ascending ? items.join(componentPathSeparator) : items.reverse().join(componentPathSeparator);
 			
 			return out;
 		}
@@ -1463,6 +1855,92 @@ package com.flexcapacitor.utils {
 				
 				if (item.children) {
 					possibleItem = findComponentItemInParentItemByElement(target, item, depth + 1);
+					
+					if (possibleItem) {
+						itemFound = true;
+						item = possibleItem;
+						break;
+					}
+				}
+				
+			}
+			
+			if (itemFound) return item;
+			
+			return null;
+		}
+		
+		/**
+		 * Given a component item tree and an element name
+		 * we walk down through the component tree (parentItem and parentItem.children)
+		 * and find a match where the target matches the stored ComponentItem name property.
+		 *
+		 * Note: the component tree is created by createComponentTreeFromElement();
+		 * parentItem could be the root component tree object such as the Application or child group or container component
+		 *
+		 * */
+		private function findComponentItemInParentItemByName(name:String, parentItem:ComponentItem, depth:int = 0):ComponentItem {
+			var length:int = parentItem.children ? parentItem.children.length : 0;
+			var possibleItem:ComponentItem;
+			var itemFound:Boolean;
+			
+			if (name==parentItem.target.name) {
+				return parentItem;
+			}
+			
+			for (var i:int; i < length; i++) {
+				var item:ComponentItem = parentItem.children.getItemAt(i) as ComponentItem;
+				
+				if (item && "name" in item.target && item.target.name==name) {
+					itemFound = true;
+					break;
+				}
+				
+				if (item.children) {
+					possibleItem = findComponentItemInParentItemByName(name, item, depth + 1);
+					
+					if (possibleItem) {
+						itemFound = true;
+						item = possibleItem;
+						break;
+					}
+				}
+				
+			}
+			
+			if (itemFound) return item;
+			
+			return null;
+		}
+		
+		/**
+		 * Given a component item tree and an element name
+		 * we walk down through the component tree (parentItem and parentItem.children)
+		 * and find a match where the target matches the stored ComponentItem id property.
+		 *
+		 * Note: the component tree is created by createComponentTreeFromElement();
+		 * parentItem could be the root component tree object such as the Application or child group or container component
+		 *
+		 * */
+		private function findComponentItemInParentItemByID(id:String, parentItem:ComponentItem, depth:int = 0):ComponentItem {
+			var length:int = parentItem.children ? parentItem.children.length : 0;
+			var possibleItem:ComponentItem;
+			var itemFound:Boolean;
+			
+			if (id==parentItem.target.id) {
+				return parentItem;
+			}
+			
+			for (var i:int; i < length; i++) {
+				var item:ComponentItem = parentItem.children.getItemAt(i) as ComponentItem;
+				
+				if (item && "id" in item.target && item.target.id==id) {
+					itemFound = true;
+					break;
+				}
+				
+				if (item.children) {
+					possibleItem = findComponentItemInParentItemByID(id, item, depth + 1);
 					
 					if (possibleItem) {
 						itemFound = true;
@@ -1613,7 +2091,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * The state of the debug mode.
 		 * */
-        protected var _debug:Boolean=false;
+        protected var _debug:Boolean;
 
 		/**
 		 * The target for the logger.
@@ -1693,8 +2171,9 @@ class ComponentItem {
 			target = element;
 			subTarget = element;
 			className = getQualifiedClassName(element);
-			name = NameUtil.getUnqualifiedClassName(element);
+			unqualifiedClassName = NameUtil.getUnqualifiedClassName(element);
 			id = "id" in element && element.id!=null ? element.id : null;
+			name = "name" in element && element.name!=null ? element.name : null;
 			
 			document = "document" in element ? element.document : null;
 			documentClassName = getQualifiedClassName(document);
@@ -1714,9 +2193,14 @@ class ComponentItem {
 	public var id:String;
 	
 	/**
-	 * Unqualified class name
+	 * Name
 	 * */
 	public var name:String;
+	
+	/**
+	 * Unqualified class name
+	 * */
+	public var unqualifiedClassName:String;
 	
 	/**
 	 * Qualified class name

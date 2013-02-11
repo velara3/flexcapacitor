@@ -26,6 +26,7 @@
     <classEntry path="com.flexcapacitor.transitions.ViewTransitionDirection"/>
     <classEntry path="com.flexcapacitor.transitions.ZoomViewTransition"/>
     <classEntry path="com.flexcapacitor.transitions.ZoomViewTransitionMode"/>
+    <classEntry path="com.flexcapacitor.controls.IWebView"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>
