@@ -871,7 +871,7 @@ package com.flexcapacitor.utils {
 		 * Wrapped to allow error handling
 		 **/
 		public function drawBitmapData(bitmapData:BitmapData, displayObject:DisplayObject, matrix:Matrix = null):void {
-			bitmapData.draw(displayObject, matrix);
+			bitmapData.draw(displayObject, matrix, null, null, null, true);
 		}
 		
 		/**
@@ -990,10 +990,14 @@ package com.flexcapacitor.utils {
 		 * Displays an outline of the display object recursively up the component display list. 
 		 **/
 		public function postDisplayObject(displayTarget:DisplayObject, displayed:Boolean = false):void {
-			var container:Sprite;
+			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
+			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 			var lastTarget:DisplayObject;
 			var isApplication:Boolean;
-			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
+			var container:Sprite;
+			var targetX:int;
+			var targetY:int;
+			
 			popUpIsDisplaying = true;
 			
 			if (displayed) {
@@ -1068,14 +1072,14 @@ package com.flexcapacitor.utils {
 			popUpLabel.text = name + " - " + container.width + "x" + container.height + " ";
 			
 			if (displayTarget is UIComponent) {
-				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
+				popUpLabel.text += " (measured " + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
 			}
 			
-			popUpDisplayImage.source = container;
-			popUpDisplayImage.width = container.width;
-			popUpDisplayImage.height = container.height;
 			popUpDisplayGroup.width = container.width;
 			popUpDisplayGroup.height = container.height;
+			popUpDisplayImage.width = container.width;
+			popUpDisplayImage.height = container.height;
+			popUpDisplayImage.source = container;
 			//popUpDisplayImage.blendMode = BlendMode.ERASE;
 			
 			if (isApplication) {
@@ -1083,8 +1087,10 @@ package com.flexcapacitor.utils {
 				popUpDisplayGroup.y = 0;
 			}
 			else {
-				popUpDisplayGroup.x = displayTarget.localToGlobal(new Point()).x;
-				popUpDisplayGroup.y = displayTarget.localToGlobal(new Point()).y;
+				targetX = displayTarget.localToGlobal(new Point()).x*scale;
+				targetY = displayTarget.localToGlobal(new Point()).y*scale;
+				popUpDisplayGroup.x = targetX;
+				popUpDisplayGroup.y = targetY;
 			}
 			
 			if (popUpLabel.height==0) { 
@@ -1194,7 +1200,7 @@ package com.flexcapacitor.utils {
 				logger.log(LogEventLevel.ERROR, "Can't get display object outline. " + e.message);
 			}
 			
-			bitmap = new Bitmap(bitmapData, PixelSnapping.ALWAYS, true);
+			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
 			bitmap.x = bounds.left;
 			bitmap.y = bounds.top;
 			

@@ -66,6 +66,19 @@
 			private function updateText(frameRate:Number):void {
 				text = int(frameRate) + (showRequestedFrameRate && stage ? " / " + stage.frameRate : "") + " FPS";
 			}
+			
+
+			override public function set enabled(value:Boolean):void {
+				super.enabled = value;
+				
+				if (value) {
+					setFPSUpdate();
+				}
+				else {
+					clearFPSUpdate();
+				}
+			}
+
 		]]>
 	</fx:Script>
 

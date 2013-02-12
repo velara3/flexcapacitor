@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Line xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark"
+		alpha=".45">
+	
+	<!-- Vertical indented line -->
+	
+	<s:stroke>
+		<s:SolidColorStroke caps="round" 
+							color="#9a9b9d" 
+							joints="miter" 
+							miterLimit="4"
+							weight="1"/>
+	</s:stroke>
+	<s:filters>
+		<s:DropShadowFilter alpha="1" 
+							angle="0" 
+							blurX="0" blurY="0" 
+							color="#FFFFFF"
+							distance="1" 
+							hideObject="false" 
+							inner="false" 
+							knockout="false"
+							quality="2" 
+							strength="1"/>
+	</s:filters>
+</s:Line>
