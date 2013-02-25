@@ -2,27 +2,27 @@
 
 package com.flexcapacitor.effects.database {
 	
-	import com.flexcapacitor.data.database.SQLColumnData;
-	import com.flexcapacitor.effects.database.supportClasses.InsertRecordInstance;
+	import com.flexcapacitor.data.database.SQLColumnFilter;
+	import com.flexcapacitor.effects.database.supportClasses.DeleteRecordInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.data.SQLConnection;
-	import flash.errors.SQLError;
+	import flash.data.SQLResult;
 	
 	import mx.effects.IEffect;
 	
 	/**
-	 * Event dispatched when file is successfully open
+	 * Event dispatched when a row is successfully deleted.
 	 * */
 	[Event(name="success", type="flash.events.Event")]
 	
 	/**
-	 * Event dispatched when file opening is unsuccessful
+	 * Event dispatched when a row could not be deleted.
 	 * */
 	[Event(name="fault", type="flash.events.Event")]
 	
 	/**
-	 * Inserts a record into the database. AIR Only. 
+	 * Deletes a record into the database. AIR Only. 
 	 * Set the traceSQLError property to true to check for errors (see below).   
 	 * 
 <pre>
@@ -51,21 +51,18 @@ package com.flexcapacitor.effects.database {
 	&lt;/db:GetDatabase>
 
 	
-	&lt;db:InsertRecord tableName="notes" connection="{connection}" 
-						fault="trace(sqlError.message)" traceErrorMessage="true">
-		&lt;db:fields>
-			&lt;database:SQLColumnData name="title" value="USA" />
-			&lt;database:SQLColumnData name="content" value="Minneapolis" />
-		&lt;/db:fields>
-	&lt;/db:InsertRecord>
+	&lt;db:DeleteRecord tableName="notes" connection="{connection}" 
+						fault="trace(sqlError.message)" traceSQLError="true">
+		&lt;database:SQLColumnFilter name="id" 
+					  operation="="
+					  value="1"/>
+		&lt;database:SQLColumnFilter name="id" 
+					  operation="& lt;"
+					  value="5"
+					  join="AND"
+					  />
+	&lt;/db:DeleteRecord>
 	
-	
-	&lt;db:SelectRecords id="select" 
-					  tableName="notes" 
-					  connection="{connection}"
-					  itemClass="{Note}"
-					  >
-	&lt;/db:SelectRecords>
 </pre>
 	 * 
  	 * <b>Notes</b>:<br/>
@@ -81,15 +78,16 @@ package com.flexcapacitor.effects.database {
 	 * out of the application directory then you need to check the database 
 	 * in the application storage directory not the application directory.<br/><br/>
 	 * */
-	public class InsertRecord extends ActionEffect {
+	public class DeleteRecord extends ActionEffect {
 		
 		public static const SUCCESS:String = "success";
 		public static const FAULT:String = "fault";
+		public static const ERROR:String = "error";
 		
 		/**
 		 *  Constructor.
 		 * */
-		public function InsertRecord(target:Object = null) {
+		public function DeleteRecord(target:Object = null) {
 			// Effect requires non-null targets, so if they didn't give us one
 			// we will create a dummy object to serve in its place. If the effect
 			// is being used to listen to events, then they will supply a real
@@ -101,10 +99,9 @@ package com.flexcapacitor.effects.database {
 			
 			super(target);
 			
-			instanceClass = InsertRecordInstance;
+			instanceClass = DeleteRecordInstance;
 			
 		}
-		
 		
 		/**
 		 * The SQL Connection
@@ -114,12 +111,12 @@ package com.flexcapacitor.effects.database {
 		public var connection:SQLConnection;
 		
 		/**
-		 * Effect played if file open is successful.  
+		 * Effect played if delete is successful.  
 		 * */
 		public var successEffect:IEffect;
 		
 		/**
-		 * Effect played if file open is unsuccessful.  
+		 * Effect played if delete is unsuccessful.  
 		 * */
 		public var faultEffect:IEffect;
 		
@@ -129,31 +126,77 @@ package com.flexcapacitor.effects.database {
 		public var tableName:String;
 		
 		/**
-		 * Array of columns and values to insert into the new row
-		 * */
-		public var fields:Vector.<SQLColumnData>;
-		
-		/**
 		 * ID of the last row inserted. 
 		 * */
-		[Bindable]
 		public var lastInsertRowID:uint;
 		
 		/**
-		 * Total changes. 
+		 * Fields used to filter the delete clause
+		 * */
+		public var filterFields:Vector.<SQLColumnFilter>;
+		
+		/**
+		 * This value indicates how many rows are returned at one time by the statement. 
+		 * The default value is -1, indicating that all the result rows are returned at one time.
+		 * */
+		public var prefetch:int = -1;
+		
+		/**
+		 * @copy flash.data.SQLStatement#itemClass
+		 * */
+		public var itemClass:Class;
+		
+		/**
+		 * @copy flash.data.SQLResult
 		 * */
 		[Bindable]
-		public var totalChanges:uint;
+		public var result:SQLResult;
 		
 		/**
-		 * Reference to the error that is generated when an SQL error occurs
+		 * @copy flash.data.SQLStatement#text
 		 * */
-		public var sqlError:SQLError;
+		[Bindable]
+		public var SQL:String;
 		
 		/**
-		 * Indicates if SQL errors should be shown in the console
+		 * @copy flash.data.SQLResult#data
+		 * */
+		[Bindable]
+		public var data:Array;
+		
+		/**
+		 * @copy flash.data.SQLResult#rowsAffected
+		 * */
+		[Bindable]
+		public var rowsAffected:int;
+		
+		/**
+		 * @copy flash.data.SQLResult#complete
+		 * */
+		[Bindable]
+		public var complete:Boolean;
+		
+		/**
+		 * Traces the generated SQL 
+		 * */
+		public var traceSQLStatement:Boolean;
+		
+		/**
+		 * Traces the error message 
 		 * */
 		public var traceErrorMessage:Boolean;
+		
+		/**
+		 * Effect played on error
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
+		public var traceSQLStatement:Boolean;
+		 * Reference to the error event
+		 * */
+		[Bindable]
+		public var errorEvent:Error;
 		
 	}
 }

@@ -141,7 +141,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 		    var bitmapData:BitmapData = new BitmapData(source.width * ratio, source.height * ratio);
 		    var matrix:Matrix = new Matrix();   
 		    matrix.scale(ratio, ratio);
-		    bitmapData.drawWithQuality(source, matrix);
+		    bitmapData['drawWithQuality'](source, matrix);
 		    return bitmapData;
 		}
 		
@@ -175,7 +175,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 	                bitmapData.height * finalScale, true, 0);
 	
 				if (quality) {
-					finalData.drawWithQuality(bitmapData, new Matrix(finalScale, 0, 0,
+					finalData['drawWithQuality'](bitmapData, new Matrix(finalScale, 0, 0,
 		                finalScale), null, null, null, true, quality);
 				}
 				else {
@@ -197,7 +197,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 	        var bd:BitmapData = new BitmapData(w, h, bitmapData.transparent, 0);
 	
 			if (quality) {
-				bd.drawWithQuality(finalData, new Matrix(initialScale, 0, 0, initialScale),
+				bd['drawWithQuality'](finalData, new Matrix(initialScale, 0, 0, initialScale),
             		null, null, null, true, quality);
 			}
 			else {
@@ -217,7 +217,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 	
 				
 				if (quality) {
-	            	bd.drawWithQuality(finalData, new Matrix(drop, 0, 0, drop), null, null, null, true, quality);
+	            	bd['drawWithQuality'](finalData, new Matrix(drop, 0, 0, drop), null, null, null, true, quality);
 				}
 				else {
 	            	bd.draw(finalData, new Matrix(drop, 0, 0, drop), null, null, null, true);

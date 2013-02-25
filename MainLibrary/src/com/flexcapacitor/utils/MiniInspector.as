@@ -102,6 +102,12 @@ package com.flexcapacitor.utils {
 	 * &lt;utils:MiniInspector backgroundImage="{image}"/><br/><br/>
 	 * • Run the application<br/>
 	 * • While holding COMMAND / CTRL scroll the mouse wheel up or down. <br/><br/>
+	 * 
+	 * <b>NOTES</b><br/>
+	 * 
+	 * If two outlines show up check that there are not two instances 
+	 * of this class in use. You can check the document property of this
+	 * class to see where an instance is declared.
 	 *
 	 * More information at http://code.google.com/p/flexcapacitor/
 	 * */
@@ -195,7 +201,11 @@ package com.flexcapacitor.utils {
 		public var showColorUnderMouse:Boolean;
 		
 		/**
-		 * Shows the boundries of elements in the component tree
+		 * Shows the boundries of elements in the component tree.
+		 * 
+		 * If two outlines show up check that there are not two instances 
+		 * of this class in use. You can check the document property of this
+		 * class to see where an instance is declared.
 		 * */
 		public var showDisplayObjectOutlines:Boolean = true;
 		
@@ -1168,12 +1178,13 @@ package com.flexcapacitor.utils {
 			if (event.ctrlKey) {
 				// we are intercepting this event so we can inspect the target
 				// stop the event propagation
-				clearTimeout(popUpTimeout);
 				checkTarget(currentPopUpTarget, event);
+				clearTimeout(popUpTimeout);
 			}
 			else {
 				closePopUp(DisplayObject(popUpDisplayGroup));
 			}
+			
 			event.stopImmediatePropagation();
 		}
 		
@@ -1308,8 +1319,12 @@ package com.flexcapacitor.utils {
 				if (fontObject.embedded.length>0) {
 					if (fontObject.embeddedCFF.length>0) {
 						output+= "; ";
+						output+= "Embedded    : ";
 					}
-					output += "Embedded: " + fontObject.embedded.join(", ");
+					else {
+						output+= "Embedded: ";
+					}
+					output += fontObject.embedded.join(", ");
 				}
 				
 				output += "\n";

@@ -2,7 +2,6 @@
 
 package com.flexcapacitor.effects.database {
 	
-	import com.flexcapacitor.data.database.SQLColumn;
 	import com.flexcapacitor.data.database.SQLColumnData;
 	import com.flexcapacitor.data.database.SQLColumnFilter;
 	import com.flexcapacitor.effects.database.supportClasses.SelectRecordsInstance;
@@ -14,12 +13,12 @@ package com.flexcapacitor.effects.database {
 	import mx.effects.IEffect;
 	
 	/**
-	 * Event dispatched when file is successfully open
+	 * Event dispatched when select is successful
 	 * */
 	[Event(name="success", type="flash.events.Event")]
 	
 	/**
-	 * Event dispatched when file opening is unsuccessful
+	 * Event dispatched when select is unsuccessful
 	 * */
 	[Event(name="fault", type="flash.events.Event")]
 	
@@ -133,6 +132,12 @@ selecting records from it
 &lt;/db:SelectRecords>
 </pre>
 	 *
+ 	 * <b>Notes</b>:<br/>
+	 * Error #3115: SQL Error. <br/>
+	 * No such column: 'items.categoryID'. <br/><br/>
+	 * 
+	 * <b>No changes appear to be made</b><br/>
+	 * You may need to refresh any collections bound to the SQL results data. 
 	 * */
 	public class SelectRecords extends ActionEffect {
 		
@@ -225,6 +230,11 @@ selecting records from it
 		 * */
 		[Bindable]
 		public var data:Array;
+		
+		/**
+		 * Traces the SQL results
+		 * */
+		public var traceResults:Boolean;
 		
 		/**
 		 * Traces the generated SQL 

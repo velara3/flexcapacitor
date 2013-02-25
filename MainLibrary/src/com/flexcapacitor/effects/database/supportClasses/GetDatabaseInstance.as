@@ -150,6 +150,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				traceMessage(" Target File URL: " + file.url);
 				traceMessage(" Target Native File Path: " + file.nativePath);
 				traceMessage(" Target Space Available: " + file.spaceAvailable);
+				traceMessage(" Target File Mode: " + fileMode);
 			}
 			
 			// copy backup database if it doesn't exist
@@ -234,7 +235,8 @@ package com.flexcapacitor.effects.database.supportClasses {
 					connection.openAsync(file, action.fileMode, action.responder, action.autoCompact, action.pageSize, action.encryptionKey);
 				}
 				//trace("connection opened");
-			} catch(error:Error) {
+			}
+			catch(error:Error) {
 				//trace(error.message);
 				action.errorEvent = error;
 				action.errorMessage = error.message;

@@ -60,6 +60,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 			super.play(); // dispatch startEffect
 			
 			var action:SelectFirstItem = SelectFirstItem(effect);
+			var allowNullDataProvider:Boolean = action.allowNullDataProvider;
 			// we were checking for ListBase but DataGrid doesn't use ListBase so list is an object
 			var list:Object = target;
 			
@@ -77,7 +78,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 					dispatchErrorEvent("The list must have a dataProvider property");
 				}
 				
-				if (list.dataProvider==null) {
+				if (list.dataProvider==null && !action.allowNullDataProvider) {
 					dispatchErrorEvent("The list data provider is not set");
 				}
 			}
@@ -88,7 +89,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			// no items in the data provider
-			if (!list.dataProvider.length==0) { 
+			if (list.dataProvider==null || list.dataProvider.length==0) {
 				
 				if (action.hasEventListener(SelectFirstItem.NO_ITEMS)) {
 					action.dispatchEvent(new Event(SelectFirstItem.NO_ITEMS));
@@ -103,6 +104,14 @@ package com.flexcapacitor.effects.list.supportClasses {
 				list.selectedIndex = 0;
 				action.data = list.selectedItem;
 				action.dataIndex = list.selectedIndex;
+				
+				if (action.hasEventListener(SelectFirstItem.ITEM_SELECTED)) {
+					action.dispatchEvent(new Event(SelectFirstItem.ITEM_SELECTED));
+				}
+				
+				if (action.itemSelectedEffect) { 
+					playEffect(action.itemSelectedEffect);
+				}
 			}
 			
 			///////////////////////////////////////////////////////////

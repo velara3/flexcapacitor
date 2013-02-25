@@ -27,18 +27,31 @@ package com.flexcapacitor.effects.file {
 	
 	/**
 	 * Opens a browse for file dialog to select files. 
-	 * This does NOT load the file only selects it. 
+	 * This does NOT load the file it only selects it. 
 	 * You must use the LoadFile to load the file.
 	 * 
 	 * The selection effect or multiple selection effect is run 
 	 * when files are selected. The file or files are set 
 	 * in the fileReference or fileReferenceList property. 
 	 * 
-	 * NOTE: This effect MUST be called within the 
-	 * bubbling of a click event. If another effect is run before this one it may 
+	 * NOTE: In the browser this effect MUST be called within the 
+	 * bubbling of a click event. If another effect is run before this one
 	 * this effect may not be run in time. 
+	 * 
+	 * <pre>
+	 &lt;file:BrowseForFile id="browseForFile"
+							targetAncestor="{this}"
+							allowMultipleSelection="false">
+			&lt;file:selectionEffect>
+				&lt;file:LoadFile id="loadFile"  
+							   loadIntoLoader="true"
+							   fileReference="{browseForFile.fileReference}"/>
+			&lt;/file:selectionEffect>
+		 &lt;/file:BrowseForFile>
+	 * </pre>
+	 * 
 	 * If it is part of an event handler it must be called within the call stack of a click event.
-	 * Set the triggerButtonParent property to a parent of the button that triggers this event.
+	 * Set the targetAncestor property to a parent of the button that triggers this event.
 	 * Must not have any effects before it that have any duration. 
 	 * */
 	public class BrowseForFile extends ActionEffect {
@@ -113,6 +126,24 @@ package com.flexcapacitor.effects.file {
 		 * */
 		[Bindable]
 		public var fileReference:FileReference;
+		
+		/**
+		 * Reference to the selected directory.
+		 * */
+		[Bindable]
+		public var fileObject:*;
+		
+		/**
+		 * Browse for folder rather than file. 
+		 * */
+		[Bindable]
+		public var browseForFolder:Boolean;
+		
+		/**
+		 * Title when using browse for folder . 
+		 * */
+		[Bindable]
+		public var browseForFolderTitle:String = "Select Directory";
 		
 		/**
 		 * An ancestor of the display object generating the click event. You can most likely 

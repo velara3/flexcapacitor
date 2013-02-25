@@ -104,6 +104,14 @@ package com.flexcapacitor.effects.list.supportClasses {
 			else {
 				action.data = list.selectedItem;
 				action.dataIndex = list.selectedIndex;
+				
+				if (action.hasEventListener(GetSelectedItem.SELECTED_ITEM)) {
+					action.dispatchEvent(new Event(GetSelectedItem.SELECTED_ITEM));
+				}
+				
+				if (action.selectedItemEffect) { 
+					playEffect(action.selectedItemEffect);
+				}
 			}
 			
 			

@@ -3,7 +3,7 @@
 package com.flexcapacitor.effects.database.supportClasses {
 	import com.flexcapacitor.data.database.SQLColumnData;
 	import com.flexcapacitor.data.database.SQLColumnFilter;
-	import com.flexcapacitor.effects.database.SelectRecords;
+	import com.flexcapacitor.effects.database.DeleteRecord;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
 	import flash.data.SQLConnection;
@@ -15,9 +15,9 @@ package com.flexcapacitor.effects.database.supportClasses {
 	
 	
 	/**
-	 * @copy SelectRecords
+	 * @copy DeleteRecord
 	 * */  
-	public class SelectRecordsInstance extends ActionEffectInstance {
+	public class DeleteRecordInstance extends ActionEffectInstance {
 		
 		//--------------------------------------------------------------------------
 		//
@@ -28,7 +28,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 		/**
 		 *  Constructor.
 		 * */
-		public function SelectRecordsInstance(target:Object) {
+		public function DeleteRecordInstance(target:Object) {
 			super(target);
 		}
 		
@@ -58,10 +58,10 @@ package com.flexcapacitor.effects.database.supportClasses {
 			// Dispatch an effectStart event
 			super.play();
 			
-			var action:SelectRecords = SelectRecords(effect);
+			var action:DeleteRecord = DeleteRecord(effect);
 			var connection:SQLConnection = action.connection;
-			var tableName:String = action.tableName;
-			var fields:Vector.<SQLColumnData> = action.fields;
+			var tableName:String = action.tableName;/*
+			var fields:Vector.<SQLColumnData> = action.fields;*/
 			var filterFields:Vector.<SQLColumnFilter> = action.filterFields;
 			var itemClass:Class = action.itemClass;
 			var prefetch:int = action.prefetch;
@@ -105,23 +105,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			}
 			else {
 				// build request statement
-				request = "SELECT ";
-				
-				fieldsLength = fields ? fields.length : 0;
-				
-				if (fieldsLength) {
-					// get column names
-					for (var i:int;i<fieldsLength;i++) {
-						if (i>0) request += ",";
-						field = fields[i];
-						request += field.name;
-					}
-				}
-				else {
-					request += " *";
-				}
-				
-				request += " FROM " + tableName;
+				request = "DELETE FROM " + tableName;
 				
 				fieldsLength = filterFields ? filterFields.length : 0;
 				
@@ -130,7 +114,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 					request += " WHERE ";
 					
 					// get column name and value
-					for (i=0;i<fieldsLength;i++) {
+					for (var i:int=0;i<fieldsLength;i++) {
 						filterField = filterFields[i];
 						
 						if (i != 0) {
@@ -168,8 +152,8 @@ package com.flexcapacitor.effects.database.supportClasses {
 					}
 				}
 				
-				if (action.hasEventListener(SelectRecords.ERROR)) {
-					dispatchEvent(new Event(SelectRecords.ERROR));
+				if (action.hasEventListener(DeleteRecord.ERROR)) {
+					dispatchEvent(new Event(DeleteRecord.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -183,25 +167,22 @@ package com.flexcapacitor.effects.database.supportClasses {
 			// records data
 			if (result) {
 				action.data = result.data;
+				action.rowsAffected = result.rowsAffected;
+				action.complete = result.complete;
 			}
 			else {
 				action.data = [];
 			}
-			
+			/*
 			if (action.traceResults) {
-				if (action.data.length==0) {
-					traceMessage("No records");
-				}
-				else {
-					traceMessage("Results: " + ObjectUtil.toString(action.data));
-				}
-			}
+				traceMessage(ObjectUtil.toString(action.data));
+			}*/
 			
 			// success
 			if (successful) {
 				
-				if (action.hasEventListener(SelectRecords.SUCCESS)) {
-					dispatchEvent(new Event(SelectRecords.SUCCESS));
+				if (action.hasEventListener(DeleteRecord.SUCCESS)) {
+					dispatchEvent(new Event(DeleteRecord.SUCCESS));
 				}
 				
 				if (action.successEffect) {
@@ -211,8 +192,8 @@ package com.flexcapacitor.effects.database.supportClasses {
 			else {
 				
 				// fault
-				if (action.hasEventListener(SelectRecords.FAULT)) {
-					dispatchEvent(new Event(SelectRecords.FAULT));
+				if (action.hasEventListener(DeleteRecord.FAULT)) {
+					dispatchEvent(new Event(DeleteRecord.FAULT));
 				}
 				
 				if (action.faultEffect) {

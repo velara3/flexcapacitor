@@ -10,16 +10,19 @@ package com.flexcapacitor.effects.list {
 	
 	/**
 	 * Event dispatched when there is no selected item.
-	 * 
-	 * The default action is to cancel out of the sequence if the 
-	 * property is not set. 
 	 * */
 	[Event(name="noSelectedItem", type="flash.events.Event")]
 	
 	/**
+	 * Event dispatched when there is a selected item.
+	 * */
+	[Event(name="selectedItem", type="flash.events.Event")]
+	
+	/**
 	 * Gets the selected item in the List. 
 	 * The selected item is set to the data property.
-	 * If there is no selected item then the noSelectedItemEffect is played.
+	 * If there is no selected item then the noSelectedItemEffect is played. 
+	 * If there is a selected item then the selectedItemEffect is played.
 	 * */
 	public class GetSelectedItem extends ActionEffect {
 		
@@ -27,6 +30,11 @@ package com.flexcapacitor.effects.list {
 		 * Event name constant when there is no selected item.
 		 * */
 		public static const NO_SELECTED_ITEM:String = "noSelectedItem";
+		
+		/**
+		 * Event name constant when there is a selected item.
+		 * */
+		public static const SELECTED_ITEM:String = "selectedItem";
 		
 		
 		/**
@@ -52,6 +60,11 @@ package com.flexcapacitor.effects.list {
 		 * Effect that is played if there is no selected item.
 		 * */
 		public var noSelectedItemEffect:Effect;
+		
+		/**
+		 * Effect that is played if there is a selected item.
+		 * */
+		public var selectedItemEffect:Effect;
 		
 		/**
 		 * The reference to the selected item. 

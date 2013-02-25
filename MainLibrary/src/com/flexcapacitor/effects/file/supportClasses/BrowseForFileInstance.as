@@ -5,18 +5,16 @@ package com.flexcapacitor.effects.file.supportClasses {
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
 	import flash.display.DisplayObjectContainer;
-	import flash.display.Loader;
-	import flash.events.DataEvent;
 	import flash.events.Event;
-	import flash.events.HTTPStatusEvent;
-	import flash.events.IEventDispatcher;
 	import flash.events.IOErrorEvent;
 	import flash.events.MouseEvent;
-	import flash.events.ProgressEvent;
 	import flash.events.SecurityErrorEvent;
 	import flash.net.FileFilter;
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;
+	import flash.system.ApplicationDomain;
+	
+	import mx.managers.SystemManager;
 	
 	
 	
@@ -152,30 +150,70 @@ package com.flexcapacitor.effects.file.supportClasses {
 			//action.uploadURLRequest = new URLRequest();
 			//action.uploadURLRequest.url = "http://www.[yourDomain].com/yourUploadHandlerScript.cfm";
 			
+			 // browse for folder has been somewhat tacked on -
+			if (action.browseForFolder) {
+				var applicationDomain:ApplicationDomain;
+				var supportsBrowseForDirectory:Boolean;
+				var definition:Object;
+				var classFound:Boolean;
+				var classDefinition:String = "flash.filesystem.File";
+				
+				applicationDomain = SystemManager.getSWFRoot(this).loaderInfo.applicationDomain;
+				classFound = applicationDomain.hasDefinition(classDefinition); 
+				
+				
+				// check if the class is found
+				if (classFound) {
+					
+					definition = applicationDomain.getDefinition(classDefinition);
+					
+					try {
+						fileReferenceObject = action.fileObject = new definition();
+						addFileListeners(fileReferenceObject);
+						fileReferenceObject.browseForDirectory(action.browseForFolderTitle);
+					}
+					catch (error:Error)
+					{
+					   // trace("Failed:", error.message);
+					    trace("Failed:", error.message);
+					}
+					
+					if (definition.hasOwnProperty("browseForDirectory")) {
+						supportsBrowseForDirectory = true;
+					}
+					
+				}
+				
 			
-			// FOR SELECTING A FILE WE MAY NOT NEED ALL THE LISTENERS WE ARE ADDING
-			// add listeners
-			if (action.allowMultipleSelection) {
-				fileReferenceObject = action.fileReferenceList = new FileReferenceList();
-				addFileListeners(fileReferenceObject);
 			}
 			else {
-				fileReferenceObject = action.fileReference = new FileReference();
-				addFileListeners(fileReferenceObject);
-			}
-			
-			// check for manually entered file filters and add to existing filters array
-			if (acceptedFileTypes) {
-				filtersString = acceptedFileTypes.join(";*.");
 				
-				fileFilter = new FileFilter(fileFilterDescription, filtersString);
-				fileFilters.push(fileFilter);
+				// FOR SELECTING A FILE WE MAY NOT NEED ALL THE LISTENERS WE ARE ADDING
+				// add listeners
+				if (action.allowMultipleSelection) {
+					fileReferenceObject = action.fileReferenceList = new FileReferenceList();
+					addFileListeners(fileReferenceObject);
+				}
+				else {
+					fileReferenceObject = action.fileReference = new FileReference();
+					addFileListeners(fileReferenceObject);
+				}
+				
+				// check for manually entered file filters and add to existing filters array
+				if (acceptedFileTypes) {
+					filtersString = acceptedFileTypes.join(";*.");
+					
+					fileFilter = new FileFilter(fileFilterDescription, filtersString);
+					fileFilters.push(fileFilter);
+				}
+				
+				
+				// if you get an error here enter a file filter description such as "Images" or "Files"
+				// SEE action.fileFilterDescription
+				// add filters and open
+				fileReferenceObject.browse(fileFilters);
 			}
-			
-			// if you get an error here enter a file filter description such as "Images" or "Files"
-			// SEE action.fileFilterDescription
-			// add filters and open
-			fileReferenceObject.browse(fileFilters);
+
 			
 			
 			///////////////////////////////////////////////////////////
@@ -201,20 +239,25 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
-			
-			// get selected file or first file if multiple selections
-			if (multipleSelection) {
-				removeFileListeners(files);
-				fileList = files.fileList;
-				file = fileList[0];
-				
-				if (fileList.length>1) {
-					action.hasMultipleSelections = true;
-				}
+			if (action.browseForFolder) {
+				file = action.fileObject;
+				removeFileListeners(file);
 			}
 			else {
-				file = action.fileReference;
-				removeFileListeners(file);
+				// get selected file or first file if multiple selections
+				if (multipleSelection) {
+					removeFileListeners(files);
+					fileList = files.fileList;
+					file = fileList[0];
+					
+					if (fileList.length>1) {
+						action.hasMultipleSelections = true;
+					}
+				}
+				else {
+					file = action.fileReference;
+					removeFileListeners(file);
+				}
 			}
 			
 			// set some file properties
@@ -342,7 +385,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		/**
 		 * Adds file listeners
 		 * */
-		private function addFileListeners(dispatcher:IEventDispatcher):void {
+		private function addFileListeners(dispatcher:Object):void {
 			dispatcher.addEventListener(Event.CANCEL, 						cancelHandler);
 			dispatcher.addEventListener(IOErrorEvent.IO_ERROR, 				ioErrorHandler);
 			dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler);
@@ -353,7 +396,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		/**
 		 * Removes file listeners
 		 * */
-		private function removeFileListeners(dispatcher:IEventDispatcher):void {
+		private function removeFileListeners(dispatcher:Object):void {
 			dispatcher.removeEventListener(Event.CANCEL, 						cancelHandler);
 			dispatcher.removeEventListener(IOErrorEvent.IO_ERROR, 				ioErrorHandler);
 			dispatcher.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler);

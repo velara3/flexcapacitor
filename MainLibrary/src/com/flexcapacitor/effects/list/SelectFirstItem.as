@@ -4,7 +4,6 @@ package com.flexcapacitor.effects.list {
 	
 	import com.flexcapacitor.effects.list.supportClasses.SelectFirstItemInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
-	import com.flexcapacitor.events.EffectEvent;
 	
 	import mx.effects.Effect;
 	
@@ -15,9 +14,15 @@ package com.flexcapacitor.effects.list {
 	[Event(name="noItems", type="flash.events.Event")]
 	
 	/**
+	 * Event dispatched when there is an item selected.
+	 * */
+	[Event(name="itemSelected", type="flash.events.Event")]
+	
+	/**
 	 * Selects the first item in the list. 
 	 * The selected item is set to the data property.
 	 * If there is no selected item then the noItemsEffect is played if set.
+	 * If there is a selected item then the itemSelectedEffect is played if set.
 	 * */
 	public class SelectFirstItem extends ActionEffect {
 		
@@ -25,6 +30,10 @@ package com.flexcapacitor.effects.list {
 		 * Event name constant when there is no items in the list.
 		 * */
 		public static const NO_ITEMS:String = "noItems";
+		/**
+		 * Event name constant when an item is selected in the list.
+		 * */
+		public static const ITEM_SELECTED:String = "itemSelected";
 		
 		
 		/**
@@ -54,6 +63,11 @@ package com.flexcapacitor.effects.list {
 		}
 		
 		/**
+		 * Effect that is played if there is a selected item.
+		 * */
+		public var itemSelectedEffect:Effect;
+		
+		/**
 		 * Effect that is played if there is no selected item.
 		 * */
 		public var noItemsEffect:Effect;
@@ -61,12 +75,19 @@ package com.flexcapacitor.effects.list {
 		/**
 		 * The reference to the selected item. 
 		 * */
+		[Bindable]
 		public var data:Object;
 		
 		/**
 		 * The index of the selected item 
 		 * */
+		[Bindable]
 		public var dataIndex:int;
+		
+		/**
+		 * When true does not throw an error if the data provider of the list is null.
+		 * */
+		public var allowNullDataProvider:Boolean = true;
 		
 	}
 }
