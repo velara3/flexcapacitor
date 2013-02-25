@@ -22,6 +22,7 @@ package com.flexcapacitor.utils {
 	import flash.utils.setTimeout;
 	
 	import mx.collections.ArrayList;
+	import mx.controls.ToolTip;
 	import mx.core.EventPriority;
 	import mx.core.FlexGlobals;
 	import mx.core.FlexSprite;
@@ -41,6 +42,7 @@ package com.flexcapacitor.utils {
 	import mx.managers.ISystemManager;
 	import mx.managers.PopUpManager;
 	import mx.managers.SystemManager;
+	import mx.managers.ToolTipManager;
 	import mx.styles.CSSCondition;
 	import mx.styles.CSSConditionKind;
 	import mx.styles.CSSStyleDeclaration;
@@ -102,13 +104,13 @@ package com.flexcapacitor.utils {
 	 * &lt;utils:MiniInspector backgroundImage="{image}"/><br/><br/>
 	 * • Run the application<br/>
 	 * • While holding COMMAND / CTRL scroll the mouse wheel up or down. <br/><br/>
-	 * 
+	 *
 	 * <b>NOTES</b><br/>
 	 * 
 	 * If two outlines show up check that there are not two instances 
 	 * of this class in use. You can check the document property of this
-	 * class to see where an instance is declared.
-	 *
+	 * class to see where an instance is declared.<br/><br/>
+	 * 
 	 * More information at http://code.google.com/p/flexcapacitor/
 	 * */
 	public class MiniInspector extends EventDispatcher implements IMXMLObject {
@@ -167,10 +169,13 @@ package com.flexcapacitor.utils {
 		 * @see #showUniversalStyles
 		 * @see #showGlobalStyles
 		 * */
-		public var showStyleInheritanceInformation:Boolean = true;
+		public var showStyleInheritanceInformation:Boolean;
 		
 		/**
-		 * Show embedded fonts information
+		 * Show embedded fonts information. 
+		 * 
+		 * Note: When on mobile remember that StageTextArea and StageTextInput
+		 * skins do not allow embedded fonts. Use Spark mobile TextSkins instead.
 		 * @see includeEmbeddedFontDetails
 		 * */
 		public var showEmbeddedFontInformation:Boolean;
@@ -201,18 +206,34 @@ package com.flexcapacitor.utils {
 		public var showColorUnderMouse:Boolean;
 		
 		/**
-		 * Shows the boundries of elements in the component tree.
-		 * 
-		 * If two outlines show up check that there are not two instances 
-		 * of this class in use. You can check the document property of this
-		 * class to see where an instance is declared.
+		 * Shows a ruler when dragging
 		 * */
-		public var showDisplayObjectOutlines:Boolean = true;
+		public var showRuler:Boolean;
+		
+		/**
+		 * Shows the boundries of elements in the component tree
+		 * */
+		public var showDisplayObjectOutlines:Boolean;
+		
+		/**
+		 * Point of origin when using ruler
+		 **/
+		public var rulerStartingPoint:Point;
+		
+		/**
+		 * Pop up when using ruler
+		 **/
+		public var rulerPopUp:UIComponent;
+		
+		/**
+		 * Tooltip when using popup
+		 **/
+		public var toolTipPopUp:ToolTip;
 		
 		/**
 		 * Space before some output text
 		 * */
-		public var prespace:String = " ";
+		public var prespace:String = "  ";
 		
 		/**
 		 * Show document information
@@ -380,7 +401,7 @@ package com.flexcapacitor.utils {
 			
 			debug = true;
 			
-			addClickHandler();
+			addMouseHandler();
 		}
 		
 		/**
@@ -422,17 +443,179 @@ package com.flexcapacitor.utils {
 		public function set enabled(value:Boolean):void {
 			_enabled = value;
 			
-			addClickHandler(value);
+			addMouseHandler(value);
 		}
 		
-		protected function addClickHandler(value:Boolean = true):void {
+		protected function addMouseHandler(value:Boolean = true):void {
 			if (value) {
 				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.CLICK, handleClick, true, EventPriority.CURSOR_MANAGEMENT, true);
+				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true, EventPriority.CURSOR_MANAGEMENT, true);
 			}
 			else {
 				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.CLICK, handleClick, true);
+				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true);
 			}
 		}
+		
+		/**
+		 * Adds handlers for ruler tool
+		 **/
+		protected function addRulerHandlers(value:Boolean = true, event:MouseEvent = null):void {
+			
+			if (value) {
+				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+				
+				rulerStartingPoint = new Point(event.stageX, event.stageY);
+				
+				if (rulerPopUp==null) {
+					rulerPopUp = new UIComponent();
+				}
+				else {
+					PopUpManager.removePopUp(rulerPopUp);
+					
+					if (toolTipPopUp && toolTipPopUp.stage) {
+						ToolTipManager.destroyToolTip(toolTipPopUp);
+					}
+				}
+			}
+			else {
+				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true);
+				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true);
+				
+				PopUpManager.removePopUp(rulerPopUp);
+				
+				if (toolTipPopUp && toolTipPopUp.stage) {
+					ToolTipManager.destroyToolTip(toolTipPopUp);
+				}
+			}
+		}
+		
+		protected function mouseRulerMoveHandler(event:MouseEvent):void
+		{
+			if (!rulerPopUp.stage) {
+				PopUpManager.addPopUp(rulerPopUp, SystemManager.getSWFRoot(this));
+				toolTipPopUp = ToolTipManager.createToolTip("HELLO", event.stageX, event.stageY) as ToolTip;
+				ToolTipManager.currentToolTip = toolTipPopUp;
+			}
+			
+			rulerPopUp.graphics.clear();
+			rulerPopUp.graphics.lineStyle(1);
+			
+			var distance:Number;
+			var targetX:int = event.stageX;
+			var targetY:int = event.stageY;
+			var startX:int = rulerStartingPoint.x;
+			var startY:int = rulerStartingPoint.y;
+			var deltaX:Number = Number(Number(targetX - startX).toFixed(1));
+			var deltaY:Number = Number(Number(targetY - startY).toFixed(1));
+			
+			//var angleInDegrees:int = Math.abs(Math.atan2(deltaY, deltaX) * 180 / Math.PI);
+			var angleInDegrees:int = -(Math.atan2(deltaY, deltaX) * 180 / Math.PI);
+			var sign:int = angleInDegrees<0 ? -1 : 1;
+			
+			distance = Math.max(Math.abs(startX-targetX), Math.abs(startY-targetY));
+			distance = Number(distance.toFixed(1));
+			
+			if (event.shiftKey) {
+				//angleInDegrees = Math.abs(angleInDegrees);
+				var includeAngles:Boolean = false;
+				
+				if (includeAngles) {
+					if (angleInDegrees>=0 && angleInDegrees<=26) {
+						targetY = rulerStartingPoint.y;
+						angleInDegrees = 0;
+					}
+					else if (angleInDegrees>=26 && angleInDegrees<=63) {
+						targetX = startX + distance;
+						targetY = startY + -distance;
+						angleInDegrees = 45;
+					}
+					else if (angleInDegrees>=63 && angleInDegrees<=116) {
+						targetX = startX;
+						angleInDegrees = 90;
+					}
+					else if (angleInDegrees>=116 && angleInDegrees<=154) {
+						targetX = startX + -distance;
+						targetY = startY + -distance;
+						angleInDegrees = 135;
+					}
+					else if (angleInDegrees>=154 && angleInDegrees<=180) {
+						targetY = startY;
+						angleInDegrees = 180;
+					}
+					else if (angleInDegrees<=0 && angleInDegrees>=-26) {
+						targetY = startY;
+						angleInDegrees = 0;
+					}
+					else if (angleInDegrees<=-26 && angleInDegrees>=-63) {
+						targetX = startX + distance;
+						targetY = startY + distance;
+						angleInDegrees = -45;
+					}
+					else if (angleInDegrees<=-63 && angleInDegrees>=-116) {
+						targetX = startX;
+						angleInDegrees = -90;
+					}
+					else if (angleInDegrees<=-116 && angleInDegrees>=-154) {
+						targetX = startX + -distance;
+						targetY = startY + distance;
+						angleInDegrees = -135;
+					}
+					else if (angleInDegrees<=-154 && angleInDegrees>=-180) {
+						targetY = startY;
+						angleInDegrees = -180;
+					}
+				}
+				else {
+					
+					if (angleInDegrees>=0 && angleInDegrees<=45) {
+						targetY = startY;
+						angleInDegrees = 0;
+					}
+					else if (angleInDegrees>=45 && angleInDegrees<=135) {
+						targetX = startX;
+						angleInDegrees = 90;
+					}
+					else if (angleInDegrees>=135 && angleInDegrees<=180) {
+						targetY = startY;
+						angleInDegrees = 180;
+					}
+					else if (angleInDegrees<=0 && angleInDegrees>=-45) {
+						targetY = startY;
+						angleInDegrees = 0;
+					}
+					else if (angleInDegrees<=-45 && angleInDegrees>=-135) {
+						targetX = startX;
+						angleInDegrees = -90;
+					}
+					else if (angleInDegrees<=-135 && angleInDegrees>=-180) {
+						targetY = startY;
+						angleInDegrees = -180;
+					}
+				}
+			}
+			
+			rulerPopUp.graphics.moveTo(startX, startY);
+			rulerPopUp.graphics.lineTo(targetX, targetY);
+			
+			if (ToolTipManager.currentToolTip) {
+				ToolTipManager.currentToolTip.x = targetX+5;
+				ToolTipManager.currentToolTip.y = targetY;
+				//toolTipPopUp.text = "" + distance + "px";
+				toolTipPopUp.text = "x:" + deltaX + " y:" + deltaY;
+				//toolTipPopUp.text += "\nx:" + targetX + ",y:" + targetY;
+				toolTipPopUp.text += "\n" +angleInDegrees + "°";
+			}
+			
+		}
+		
+		protected function mouseRulerUpHandler(event:MouseEvent):void
+		{
+			addRulerHandlers(false, event);
+			
+		}
+		
 		
 		/**
 		 * Click handler added to stage
@@ -453,6 +636,26 @@ package com.flexcapacitor.utils {
 						event.stopImmediatePropagation();
 					}
 					checkTarget(event.target, event);
+				}
+			}
+		}
+		
+		/**
+		 * Check if dragging for ruler
+		 * */
+		protected function handleMouseDown(event:MouseEvent):void {
+			
+			if (enabled && showRuler) {
+				if (!requireCTRLKey || event.ctrlKey) {
+					// we are intercepting this event so we can inspect the target
+					// stop the event propagation
+					
+					// we don't stop the propagation on touch devices so you can navigate the application
+					if (requireCTRLKey) {
+						event.stopImmediatePropagation();
+					}
+					
+					addRulerHandlers(true, event);
 				}
 			}
 		}
@@ -563,8 +766,8 @@ package com.flexcapacitor.utils {
 			if (showDisplayObjectOutlines && !popUpIsDisplaying) {
 				//if (message!="") message += "\n";
 				//message += postDisplayObject(selectedTarget as DisplayObject);
+				addMouseHandler(false);
 				postDisplayObject(selectedTarget as DisplayObject);
-				addClickHandler(false);
 			}
 			
 			logger.log(LogEventLevel.INFO, message);
@@ -1000,14 +1203,13 @@ package com.flexcapacitor.utils {
 		 * Displays an outline of the display object recursively up the component display list. 
 		 **/
 		public function postDisplayObject(displayTarget:DisplayObject, displayed:Boolean = false):void {
-			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
+			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 			var lastTarget:DisplayObject;
 			var isApplication:Boolean;
+			var targetX:Number;
+			var targetY:Number;
 			var container:Sprite;
-			var targetX:int;
-			var targetY:int;
-			
 			popUpIsDisplaying = true;
 			
 			if (displayed) {
@@ -1082,13 +1284,13 @@ package com.flexcapacitor.utils {
 			popUpLabel.text = name + " - " + container.width + "x" + container.height + " ";
 			
 			if (displayTarget is UIComponent) {
-				popUpLabel.text += " (measured " + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
+				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
 			}
 			
-			popUpDisplayGroup.width = container.width;
-			popUpDisplayGroup.height = container.height;
 			popUpDisplayImage.width = container.width;
 			popUpDisplayImage.height = container.height;
+			popUpDisplayGroup.width = container.width;
+			popUpDisplayGroup.height = container.height;
 			popUpDisplayImage.source = container;
 			//popUpDisplayImage.blendMode = BlendMode.ERASE;
 			
@@ -1097,8 +1299,8 @@ package com.flexcapacitor.utils {
 				popUpDisplayGroup.y = 0;
 			}
 			else {
-				targetX = displayTarget.localToGlobal(new Point()).x*scale;
-				targetY = displayTarget.localToGlobal(new Point()).y*scale;
+				targetX = displayTarget.localToGlobal(new Point()).x * scale;
+				targetY = displayTarget.localToGlobal(new Point()).y * scale;
 				popUpDisplayGroup.x = targetX;
 				popUpDisplayGroup.y = targetY;
 			}
@@ -1178,8 +1380,8 @@ package com.flexcapacitor.utils {
 			if (event.ctrlKey) {
 				// we are intercepting this event so we can inspect the target
 				// stop the event propagation
-				checkTarget(currentPopUpTarget, event);
 				clearTimeout(popUpTimeout);
+				checkTarget(currentPopUpTarget, event);
 			}
 			else {
 				closePopUp(DisplayObject(popUpDisplayGroup));
@@ -1226,7 +1428,7 @@ package com.flexcapacitor.utils {
 		 * Dismisses boundries pop up outline
 		 **/
 		public function closePopUp(target:DisplayObject):void {
-			addClickHandler();
+			addMouseHandler();
 			popUpIsDisplaying = false;
 			clearTimeout(popUpTimeout);
 			PopUpManager.removePopUp(popUpDisplayGroup as IFlexDisplayObject);
@@ -1261,7 +1463,7 @@ package com.flexcapacitor.utils {
 			{
 				name = selectors[i];
 				
-				output += " " + name + "\n";
+				output += prespace + name + "\n";
 			}
 			
 			output += showConsoleDividerMarks && showFooterConsoleDividerMarks ? "\n" + dividerMarks + "\n" : "";
@@ -1348,6 +1550,17 @@ package com.flexcapacitor.utils {
 			var output:String = "";
 			var styles:Array;
 			var stylesLength:int;
+			var name:String;
+			var value:String;
+			var paddedName:String;
+			var actualValue:*;
+			var fontObject:Object;
+			var fontWeight:String;
+			var fontStyle:String;
+			var fontLookup:String;
+			var renderingMode:String;
+			var items:Array;
+			var itemsLength:int;
 			
 			
 			output = showConsoleDividerMarks ? "\n" + dividerMarks + "\n":"";
@@ -1366,12 +1579,8 @@ package com.flexcapacitor.utils {
 			for (var i:int;i<stylesLength;i++) {
 				styleItem = styles[i];
 				output += styleItem.name + "\n";
-				var items:Array = styleItem.styles;
-				var itemsLength:int = items.length;
-				var name:String;
-				var value:String;
-				var paddedName:String;
-				var actualValue:*;
+				items = styleItem.styles;
+				itemsLength = items.length;
 				
 				for (var j:int=0;j<itemsLength;j++) {
 					name = items[j].name;
@@ -1382,16 +1591,21 @@ package com.flexcapacitor.utils {
 					
 					// check for embedded font
 					if (indicateEmbeddedFonts && name=="fontFamily" && actualValue!==undefined) {
-						var fontObject:Object = getFontFamilyEmbedded(value, systemManager);
+						fontObject = getFontFamilyEmbedded(value, systemManager);
+						
+						fontWeight = target.getStyle("fontWeight");
+						fontStyle = target.getStyle("fontStyle");
+						fontLookup = target.getStyle("fontLookup");
+						renderingMode = target.getStyle("renderingMode");
 						
 						output += prespace + paddedName + "" + padString(value, Math.max(minimumStyleNamePadding, value.length+1));
 						
-						if (fontObject.embeddedCFF.stylesLength>0) {
+						if (fontObject.embeddedCFF.length>0) {
 							output += "EmbeddedCFF: " + fontObject.embeddedCFF.join(", ");
 						}
 						
-						if (fontObject.embedded.stylesLength>0) {
-							if (fontObject.embeddedCFF.stylesLength>0) {
+						if (fontObject.embedded.length>0) {
+							if (fontObject.embeddedCFF.length>0) {
 								output+= "; ";
 							}
 							output += "Embedded: " + fontObject.embedded.join(", ");
