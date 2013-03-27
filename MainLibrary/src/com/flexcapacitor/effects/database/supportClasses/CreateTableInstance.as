@@ -113,7 +113,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			if (successful) {
 				
 				if (action.hasEventListener(CreateTable.SUCCESS)) {
-					dispatchEvent(new Event(CreateTable.SUCCESS));
+					dispatchActionEvent(new Event(CreateTable.SUCCESS));
 				}
 				
 				if (action.successEffect) {
@@ -124,7 +124,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				
 				// fault
 				if (action.hasEventListener(CreateTable.FAULT)) {
-					dispatchEvent(new Event(CreateTable.FAULT));
+					dispatchActionEvent(new Event(CreateTable.FAULT));
 				}
 				
 				if (action.faultEffect) {

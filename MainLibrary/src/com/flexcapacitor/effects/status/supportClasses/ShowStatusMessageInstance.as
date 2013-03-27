@@ -64,7 +64,7 @@ package com.flexcapacitor.effects.status.supportClasses {
 			var statusMessageClass:Class = action.statusMessageClass;
 			var statusMessageProperties:Object = action.statusMessageProperties;
 			var keepReference:Boolean = action.keepReference;
-			var nonBlocking:Boolean = action.nonBlocking;
+			var moveToNextEffectImmediately:Boolean = action.moveToNextEffectImmediately;
 			var location:String = action.location;
 			var parent:Sprite = action.parentView;
 			var statusMessage:IStatusMessage;
@@ -104,6 +104,7 @@ package com.flexcapacitor.effects.status.supportClasses {
 			if (statusMessage) {
 				statusMessage.message = action.message;
 				statusMessage.duration = action.doNotClose ? -1 : action.duration;
+				statusMessage.fadeInDuration = action.fadeInDuration;
 				statusMessage.showBusyIndicator = action.showBusyIcon;
 				statusMessage.title = action.title;
 			}
@@ -148,11 +149,14 @@ package com.flexcapacitor.effects.status.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			//waitForHandlers();
 			
 			// we let the effect duration run until it is done
-			if (nonBlocking) {
+			if (moveToNextEffectImmediately) {
 				finish();
+			}
+			else {
+				// do we need this because it should last the duration anyway?
+				//waitForHandlers(); 
 			}
 		}
 		
@@ -161,30 +165,49 @@ package com.flexcapacitor.effects.status.supportClasses {
 		//  Event handlers
 		//
 		//--------------------------------------------------------------------------
+		
+		/**
+		 * This is called at the end of the animation
+		 * */
 		override public function onTweenEnd(value:Object):void  {
 			super.onTweenEnd(value);
+			var action:ShowStatusMessage = ShowStatusMessage(effect);
+			var moveToNextEffectImmediately:Boolean = action.moveToNextEffectImmediately;
 			
 			removeListeners();
 			close();
+			restorePreviousDuration();
 			
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			finish();
+
+			// we did not move to the next effect earlier so we finish now
+			if (!moveToNextEffectImmediately) {
+				finish();
+			}
 		}
 		
 		/**
 		 * Removes the view from the display
 		 * */
 		public function closeHandler(event:Event):void {
+			var action:ShowStatusMessage = ShowStatusMessage(effect);
+			var moveToNextEffectImmediately:Boolean = action.moveToNextEffectImmediately;
+			
 			removeListeners();
 			close();
+			restorePreviousDuration();
 			
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
 			end(); // end the tween effect if running
-			finish();
+
+			// we did not move to the next effect earlier so we finish now
+			if (!moveToNextEffectImmediately) {
+				finish();
+			}
 		}
 		
 		/**

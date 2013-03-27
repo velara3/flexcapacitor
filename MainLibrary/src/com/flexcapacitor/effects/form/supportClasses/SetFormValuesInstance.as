@@ -102,7 +102,7 @@ package com.flexcapacitor.effects.form.supportClasses {
 				
 				componentPropertyName = item.targetComponentProperty;
 				
-				if (useDefaultValues && (value==null || value=="")) {
+				if (useDefaultValues && value==undefined) {
 					
 					// list based
 					if (componentPropertyName=="selectedIndex") {

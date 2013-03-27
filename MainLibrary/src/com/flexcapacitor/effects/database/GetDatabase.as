@@ -64,10 +64,10 @@ package com.flexcapacitor.effects.database {
 	/**
 	 * Get a database file. AIR ONLY. Since you can't access the database in the application
 	 * directory you need to copy the database out to the application 
-	 * storage directory. Set the backup path to the local path to the database. 
+	 * storage directory. Set the backup path to the local path to the database. <br/><br/>
 	 * 
 	 * 
-
+The following creates a database, inserts a few records and then selects them: <br/>
 <pre>
  
 	&lt;database:SQLConnection id="connection"/>
@@ -116,12 +116,47 @@ package com.flexcapacitor.effects.database {
 	&lt;/db:SelectRecords>
 </pre>
  * 
+The following uses opens an existing database and selects items from it. It also 
+copies a backup database to the application storage directory if it does not exist
+or if the backup is newer than the current database. It checks the modification date: <br/>
+<pre>
+		&lt;!-- CREATE DATABASE AND SELECT ROWS -->
+		&lt;handlers:EventHandler eventName="creationComplete" >
+			
+			&lt;!--- get database and create tables if needed -->
+			&lt;db:GetDatabase id="database" 
+							fileMode="create"
+							baseFilePath="applicationStorage"
+							directory="assets/data/" 
+							fileName="database" 
+							backupPath="assets/data/database"
+							useBackupIfNewer="true"
+							connection="{connection}"
+							traceErrors="true"
+							traceFilePaths="true"
+							>
+				&lt;db:notCreatedEffect>
+					&lt;debugging:Trace message="DATABASE NOT CREATED"/>
+				&lt;/db:notCreatedEffect>
+			&lt;/db:GetDatabase>
+			
+			&lt;s:Sequence id="selectItemsSequence" >
+				
+				&lt;db:SelectRecords id="selectItems" tableName="items" 
+								  SQL="select * from items"
+								  connection="{connection}"
+								  traceErrorMessage="true"
+								  traceSQLStatement="true"
+								  traceResults="true"
+								  >
+				&lt;/db:SelectRecords>
+				
+				&lt;collections:RefreshCollection collection="{itemsCollection}"/>
+			&lt;/s:Sequence>
+		&lt;/handlers:EventHandler>
+</pre>
+ * 
  	 * <b>Notes</b>:<br/>
-	 * <b>Error #3125: Unable to open the database file.</b><br/>
-	 * The file does not exist or does not include permission to be modified. 
-	 * The database cannot be read from the application directory. It must be copied to the 
-	 * application storage directory. <br/><br/>
-	 * 
 	 * <b>File does not exist</b><br/>
 	 * If not using a backup database then ensure createFile options is set to true.  
 	 * Then check the application storage directory for the backup database. For example, 
@@ -141,26 +176,31 @@ package com.flexcapacitor.effects.database {
 	 * /Users/user/Library/Preferences/MyMobileApplication.debug/Local Store/<br/>
 	 * If this directory is empty the file is not being created or was not copied. <br/><br/>
 	 * 
-	 * <b>Records are not inserted and no errors are created.</b><br/>
+	 * <b>Record is not inserted and no error.</b><br/>
 	 * You may be checking the incorrect database. Since the database is copied
 	 * out of the application directory then you need to check the database 
-	 * in the application storage directory not the application directory.<br/><br/>
+	 * in the application storage directory not the application directory.
+	 * Also, check the launch setting for Clear application data on each launch.<br/><br/>
+	 * 
+	 * <b>Error #3012: Cannot delete file or directory.</b><br/>
 	 * 
 	 * <b>Error #3104: A SQLConnection must be open to perform this operation.</b><br/>
 	 * Database must be created before performing operations. Check for errors when creating the database. <br/><br/>
+	 * 
+	 * <b>Error #3114: An invalid open mode was specified.</b><br/>
+	 * Set the fileMode to create or write. <br/><br/>
 	 * 
 	 * <b>Error #3122: Attempt to write a readonly database.</b><br/>
 	 * Set the fileMode to create. You may need to copy the database out to a different location. 
 	 * Setting the backup database will automatically move the database out there if 
 	 * it doesn't exist. See notes above. <br/><br/>
 	 * 
-	 * <b>Error #3114: An invalid open mode was specified.</b><br/>
-	 * Set the fileMode to create or write. <br/><br/>
+	 * <b>Error #3125: Unable to open the database file.</b><br/>
+	 * The file does not exist or does not include permission to be modified. 
+	 * The database cannot be read from the application directory. It must be copied to 
+	 * a writable directory like the application storage directory. <br/><br/>
 	 * 
-	 * <b>Record is not inserted and no error.</b><br/>
-	 * You may be checking the incorrect database. Since the database is copied
-	 * out of the application directory then you need to check the database 
-	 * in the application storage directory not the application directory.<br/><br/>
+	 *  <br/><br/>
 	 * */
 	public class GetDatabase extends ActionEffect {
 		
@@ -236,11 +276,13 @@ package com.flexcapacitor.effects.database {
 		public var createFile:Boolean;
 		
 		/**
-		 * Copies a database file from the backup location
+		 * Copies and overwrites the current database file 
+		 * if the backup database is newer 
+		 * than the current database. 
 		 * 
 		 * @see backupPath
 		 * */
-		public var createFromBackup:Boolean;
+		public var useBackupIfNewer:Boolean;
 		
 		/**
 		 * Location of backup file if database does not exist in target location.

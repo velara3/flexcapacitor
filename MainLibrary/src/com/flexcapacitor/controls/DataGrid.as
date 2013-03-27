@@ -28,6 +28,8 @@ package com.flexcapacitor.controls
 	 * Adds a gridItemEditorSessionSaving event. 
 	 * It is up to the grid item editor to dispatch this event
 	 * 
+	 * 
+	 * Use com.flexcapacitor.skins.DataGridSkin for showHeader option.
 	 * @inherit
 	 * 
 	 * */

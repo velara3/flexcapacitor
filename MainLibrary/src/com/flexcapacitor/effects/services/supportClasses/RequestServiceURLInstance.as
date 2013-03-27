@@ -4,8 +4,6 @@ package com.flexcapacitor.effects.services.supportClasses {
 	import com.flexcapacitor.effects.services.RequestServiceURL;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
-	import flash.net.URLRequest;
-	
 	import mx.rpc.events.FaultEvent;
 	import mx.rpc.events.ResultEvent;
 	import mx.rpc.http.HTTPService;
@@ -90,11 +88,11 @@ package com.flexcapacitor.effects.services.supportClasses {
 			action.service = service; // keep it alive
 			
 			if (action.inspectData) {
-				trace(ObjectUtil.toString(action.data));
+				traceMessage(ObjectUtil.toString(action.data));
 			}
 			
 			if (action.inspectRequest) {
-				trace(ObjectUtil.toString(action.request));
+				traceMessage(ObjectUtil.toString(action.request));
 			}
 			
 			///////////////////////////////////////////////////////////
@@ -129,7 +127,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			}
 			
 			if (action.hasEventListener(FaultEvent.FAULT)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			
@@ -137,7 +135,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			// Finish the effect
 			///////////////////////////////////////////////////////////
 			
-			cancel("Fault Error "+ event.fault);
+			finish();
 		}
 		
 		protected function resultHandler(event:ResultEvent):void {
@@ -153,7 +151,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			action.resultEvent = event;
 			
 			if (action.inspectResult) {
-				trace(ObjectUtil.toString(event.result));
+				traceMessage(ObjectUtil.toString(event.result));
 			}
 			
 			if (action.resultEffect) {
@@ -161,7 +159,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			}
 			
 			if (action.hasEventListener(ResultEvent.RESULT)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			

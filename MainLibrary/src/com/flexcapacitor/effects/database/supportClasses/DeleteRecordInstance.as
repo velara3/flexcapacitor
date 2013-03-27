@@ -11,8 +11,6 @@ package com.flexcapacitor.effects.database.supportClasses {
 	import flash.data.SQLStatement;
 	import flash.events.Event;
 	
-	import mx.utils.ObjectUtil;
-	
 	
 	/**
 	 * @copy DeleteRecord
@@ -139,7 +137,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				result = statement.getResult();
 				successful = true;
 			}
-			catch(error:Error) {
+			catch (error:Error) {
 				successful = false;
 				action.errorEvent = error;
 
@@ -153,7 +151,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				}
 				
 				if (action.hasEventListener(DeleteRecord.ERROR)) {
-					dispatchEvent(new Event(DeleteRecord.ERROR));
+					dispatchActionEvent(new Event(DeleteRecord.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -182,7 +180,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			if (successful) {
 				
 				if (action.hasEventListener(DeleteRecord.SUCCESS)) {
-					dispatchEvent(new Event(DeleteRecord.SUCCESS));
+					dispatchActionEvent(new Event(DeleteRecord.SUCCESS));
 				}
 				
 				if (action.successEffect) {
@@ -193,7 +191,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				
 				// fault
 				if (action.hasEventListener(DeleteRecord.FAULT)) {
-					dispatchEvent(new Event(DeleteRecord.FAULT));
+					dispatchActionEvent(new Event(DeleteRecord.FAULT));
 				}
 				
 				if (action.faultEffect) {

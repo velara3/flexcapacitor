@@ -1071,7 +1071,7 @@ MyOtherComponent.mxml,<br/>
 		/**
 		 * Sets the eventTarget and currentTarget properties to the current event.
 		 * This enables data binding to those properties.
-		 * Default is false
+		 * Default is false.
 		 * 
 		 * @see setTriggerEvent
 		 * @see keepEvent
@@ -1079,7 +1079,7 @@ MyOtherComponent.mxml,<br/>
 		public var keepEventTargets:Boolean;
 		
 		/**
-		 * Sets the event to the triggerEvent property of the root effect
+		 * Sets the event to the triggerEvent property of the root effect.
 		 * 
 		 * @see mx.effects.Effect.triggerEvent
 		 * @see keepEvent

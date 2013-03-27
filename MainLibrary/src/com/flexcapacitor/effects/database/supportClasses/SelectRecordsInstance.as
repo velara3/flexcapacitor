@@ -169,7 +169,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				}
 				
 				if (action.hasEventListener(SelectRecords.ERROR)) {
-					dispatchEvent(new Event(SelectRecords.ERROR));
+					dispatchActionEvent(new Event(SelectRecords.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -182,14 +182,20 @@ package com.flexcapacitor.effects.database.supportClasses {
 
 			// records data
 			if (result) {
-				action.data = result.data;
+				
+				if (result.data) {
+					action.data = result.data;
+				}
+				else {
+					action.data = [];
+				}
 			}
 			else {
 				action.data = [];
 			}
 			
 			if (action.traceResults) {
-				if (action.data.length==0) {
+				if (action.data==null || action.data.length==0) {
 					traceMessage("No records");
 				}
 				else {
@@ -201,7 +207,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			if (successful) {
 				
 				if (action.hasEventListener(SelectRecords.SUCCESS)) {
-					dispatchEvent(new Event(SelectRecords.SUCCESS));
+					dispatchActionEvent(new Event(SelectRecords.SUCCESS));
 				}
 				
 				if (action.successEffect) {
@@ -212,7 +218,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				
 				// fault
 				if (action.hasEventListener(SelectRecords.FAULT)) {
-					dispatchEvent(new Event(SelectRecords.FAULT));
+					dispatchActionEvent(new Event(SelectRecords.FAULT));
 				}
 				
 				if (action.faultEffect) {

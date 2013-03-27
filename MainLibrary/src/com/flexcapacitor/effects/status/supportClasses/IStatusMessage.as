@@ -10,6 +10,8 @@ package com.flexcapacitor.effects.status.supportClasses {
 		function get title():String;
 		function set duration(value:int):void;
 		function get duration():int;
+		function set fadeInDuration(value:int):void;
+		function get fadeInDuration():int;
 		function set showBusyIndicator(value:Boolean):void;
 		function get showBusyIndicator():Boolean;
 	}

@@ -87,5 +87,15 @@ package com.flexcapacitor.effects.database {
 		 * */
 		public var filterFields:Vector.<SQLColumnFilter>;
 		
+		/**
+		 * Traces the error message 
+		 * */
+		public var traceErrorMessage:Boolean;
+		
+		/**
+		 * Effect played on error
+		 * */
+		public var errorEffect:IEffect;
+		
 	}
 }

@@ -5,8 +5,8 @@ package com.flexcapacitor.effects.display {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	/**
-	 * Hide an element. Sets the visible to false. 
-	 * Option to set the include in layout to false
+	 * Hide an element. Sets the elements visibility to false. 
+	 * Optionally you can change the includeInLayout.
 	 * */
 	public class HideElement extends ActionEffect {
 		
@@ -29,8 +29,9 @@ package com.flexcapacitor.effects.display {
 		}
 		
 		/**
-		 * Prevents the element from being included in the layout
-		 * Default is false. 
+		 * When set to true the element is included in the layout though it may not 
+		 * be visible. 
+		 * By default the includeInLayout property of the element is unchanged. 
 		 * @copy mx.core.IUIComponent#includeInLayout
 		 * */
 		[Inspectable(enumeration="true,false")]

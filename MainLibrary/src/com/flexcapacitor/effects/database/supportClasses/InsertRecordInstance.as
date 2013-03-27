@@ -132,7 +132,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				action.totalChanges = connection.totalChanges;
 				
 				if (action.hasEventListener(InsertRecord.SUCCESS)) {
-					dispatchEvent(new Event(InsertRecord.SUCCESS));
+					dispatchActionEvent(new Event(InsertRecord.SUCCESS));
 				}
 				
 				if (action.successEffect) {
@@ -144,7 +144,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				
 				// fault
 				if (action.hasEventListener(InsertRecord.FAULT)) {
-					dispatchEvent(new Event(InsertRecord.FAULT));
+					dispatchActionEvent(new Event(InsertRecord.FAULT));
 				}
 				
 				if (action.faultEffect) {
@@ -152,7 +152,15 @@ package com.flexcapacitor.effects.database.supportClasses {
 				}
 				
 				if (action.traceErrorMessage) {
-					traceMessage(executeError.message);
+					var errorMessage:String;
+					if ("details" in executeError) {
+						errorMessage = executeError.message + " \n" + executeError.details;
+					}
+					else {
+						errorMessage = executeError.message;
+					}
+					
+					traceMessage(errorMessage);
 				}
 			}
 			

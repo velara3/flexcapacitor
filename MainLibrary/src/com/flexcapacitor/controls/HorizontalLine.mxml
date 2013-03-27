@@ -2,12 +2,12 @@
 <s:Line xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark"
 		alpha=".45"
-		height="100%">
+		width="100%">
 	
-	<!-- Vertical indented line
+	<!-- Horizontal indented line
 	
 	Usage: 
-	<s:VerticalLine height = "100%"/>
+	<s:Horizontal width="100%"/>
 	-->
 	<fx:Declarations>
 		<fx:Number id="strokeColor">#9a9a9a</fx:Number>
@@ -16,7 +16,7 @@
 	
 	<s:stroke>
 		<s:SolidColorStroke caps="round" 
-							color="#9a9b9d" 
+							color="{strokeColor}" 
 							joints="miter" 
 							miterLimit="4"
 							weight="1"/>
@@ -25,7 +25,7 @@
 		<s:DropShadowFilter alpha="1" 
 							angle="0" 
 							blurX="0" blurY="0" 
-							color="#FFFFFF"
+							color="{shadowColor}"
 							distance="1" 
 							hideObject="false" 
 							inner="false" 

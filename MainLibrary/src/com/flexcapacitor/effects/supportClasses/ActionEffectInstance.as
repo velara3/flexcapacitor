@@ -611,6 +611,13 @@ package com.flexcapacitor.effects.supportClasses {
 			
 		}
 		
+		/**
+		 * Utility method to dispatch an event on the effect not on the instance. 
+		 * */
+		public function dispatchActionEvent(event:Event):void {
+			effect.dispatchEvent(event);
+		}
+		
 		
 		/**
 		 * Attempts to play the effect and sets the parent composite effect so cancel ancestors effect works
@@ -674,6 +681,8 @@ package com.flexcapacitor.effects.supportClasses {
 		
 		/**
 		 * Dispatches an Error event. 
+		 * 
+		 * If this effect is part of a sequence it prints out a list of effects leading up this one. 
 		 * */
 		protected function dispatchErrorEvent(message:String):void {
 			var previousEffect:IEffect;

@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.database.supportClasses {
 	import com.flexcapacitor.data.database.SQLColumnData;
 	import com.flexcapacitor.data.database.SQLColumnFilter;
+	import com.flexcapacitor.effects.database.DeleteRecord;
 	import com.flexcapacitor.effects.database.UpdateRecord;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
@@ -127,16 +128,31 @@ package com.flexcapacitor.effects.database.supportClasses {
 			try {
 				statement.execute();
 				successful = true;
-			} catch(error:Error) {
-				trace(error.message);
+			} catch (error:Error) {
 				successful = false;
+				
+				if (action.traceErrorMessage) {
+					traceMessage(error.message);
+					
+					if ("details" in error) {
+						traceMessage(error['details']);
+					}
+				}
+				
+				if (action.hasEventListener(DeleteRecord.ERROR)) {
+					dispatchActionEvent(new Event(DeleteRecord.ERROR));
+				}
+				
+				if (action.errorEffect) {
+					playEffect(action.errorEffect);
+				}
 			}
 			
 			// success
 			if (successful) {
 				
 				if (hasEventListener(UpdateRecord.SUCCESS)) {
-					dispatchEvent(new Event(UpdateRecord.SUCCESS));
+					dispatchActionEvent(new Event(UpdateRecord.SUCCESS));
 				}
 				
 				if (action.successEffect) {
@@ -147,7 +163,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				
 				// fault
 				if (hasEventListener(UpdateRecord.FAULT)) {
-					dispatchEvent(new Event(UpdateRecord.FAULT));
+					dispatchActionEvent(new Event(UpdateRecord.FAULT));
 				}
 				
 				if (action.faultEffect) {

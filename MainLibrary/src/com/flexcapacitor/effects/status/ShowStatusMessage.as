@@ -2,7 +2,6 @@
 
 package com.flexcapacitor.effects.status {
 	
-	import com.flexcapacitor.effects.status.supportClasses.IStatusMessage;
 	import com.flexcapacitor.effects.status.supportClasses.ShowStatusMessageInstance;
 	import com.flexcapacitor.effects.status.supportClasses.StatusMessage;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
@@ -11,7 +10,24 @@ package com.flexcapacitor.effects.status {
 	
 	/**
 	 * Displays a message and then fades out the message. 
-	 * The duration must be more than 1 second.
+	 * The duration must be more than 1 second.  <br/><br/>
+	 * 
+	 * Usage: 
+	 * 
+	 * <pre>
+&lt;status:ShowStatusMessage message="Your email has been sent" />
+	 * </pre>
+	 * 
+	 * Usage: 
+	 * 
+	 * <pre>
+&lt;status:ShowStatusMessage id="showRenderingStatus" message="Rendering" keepReference="true"/>
+&lt;core:CallMethod method="renderImage" startDelay="250"/>
+&lt;status:HideStatusMessage statusMessagePopUp="{showRenderingStatus.statusMessagePopUp}"/>
+	 * </pre>
+	 * 
+	 * 
+	 * @see HideStatusMessage
 	 * */
 	public class ShowStatusMessage extends ActionEffect {
 		
@@ -68,6 +84,7 @@ package com.flexcapacitor.effects.status {
 		/**
 		 * The parent display object that this will be centered above. 
 		 * */
+		[Bindable]
 		public var parentView:Sprite;
 		
 		/**
@@ -114,10 +131,11 @@ package com.flexcapacitor.effects.status {
 		public var closeHandler:Function;
 		
 		/**
-		 * If true and part of a sequence moves right to the next effect.
-		 * Otherwise the next effect starts at the end of this effects duration. 
+		 * If set to true and if part of a sequence then moves the next effect 
+		 * right away. If set to false then the next effect is played 
+		 * after the status message is faded out. 
 		 * */
-		public var nonBlocking:Boolean = true;
+		public var moveToNextEffectImmediately:Boolean = true;
 		
 		/**
 		 * Keeps a reference of the status message object
@@ -131,5 +149,10 @@ package com.flexcapacitor.effects.status {
 		 * */
 		[Bindable]
 		public var statusMessagePopUp:Object;
+		
+		/**
+		 * Fade in duration
+		 * */
+		 public var fadeInDuration:int = 250;
 	}
 }
