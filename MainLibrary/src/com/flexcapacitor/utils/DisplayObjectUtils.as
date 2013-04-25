@@ -7,24 +7,26 @@ package com.flexcapacitor.utils {
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.display.IBitmapDrawable;
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
 	import flash.events.MouseEvent;
+	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
+	import flash.geom.Matrix3D;
 	import flash.geom.Rectangle;
 	import flash.utils.Dictionary;
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.BitmapAsset;
-	import mx.core.IUIComponent;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
-	import mx.utils.NameUtil;
 	
 	import spark.components.supportClasses.GroupBase;
 	import spark.components.supportClasses.Skin;
 	import spark.components.supportClasses.SkinnableComponent;
 	import spark.core.SpriteVisualElement;
+	import spark.skins.IHighlightBitmapCaptureClient;
 	
 	/**
 	 * Utils used to manipulate the component tree and display list tree
@@ -76,6 +78,10 @@ package com.flexcapacitor.utils {
 		 * transformed to be identical to the target.
 		 * @author Nick Bilyk (nbflexlib)
 		 * @modified possibly
+		 * 
+		 * 
+		 * PROBLEMS
+		 * The images and edges are clipped on some objects. 
 		 */
 		public static function getBitmapDataSnapshot(target:DisplayObject, useAlpha:Boolean = true, scaleX:Number = 1, scaleY:Number = 1):BitmapData {
 			var bounds:Rectangle = target.getBounds(target);
@@ -104,6 +110,164 @@ package com.flexcapacitor.utils {
 		}
 		
 		
+		/**
+		 * Creates a snapshot of the display object passed to it
+		 * April 2013
+		 **/
+		public static function getBitmapAssetSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):BitmapAsset {
+			//var bounds:Rectangle = target.getBounds(target);
+			var bounds:Rectangle = target.getBounds(target);
+			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
+			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
+			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
+			var matrix:Matrix = new Matrix();
+			var container:Sprite = new Sprite();
+			var bitmap:Bitmap;
+			
+			matrix.translate(-bounds.left, -bounds.top);
+			matrix.scale(scaleX, scaleY);
+			
+			try {
+				drawBitmapData(bitmapData, target, matrix);
+			}
+			catch (e:Error) {
+				trace( "Can't get display object preview. " + e.message);
+				// show something here
+			}
+			
+			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
+			bitmap.x = bounds.left;
+			bitmap.y = bounds.top;
+			
+			container.cacheAsBitmap = true;
+			container.transform.matrix = target.transform.matrix;
+			container.addChild(bitmap);
+			
+			targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);
+			
+			var bitmapAsset:BitmapAsset = new BitmapAsset(bitmapData2, PixelSnapping.ALWAYS);
+			
+			return bitmapAsset;
+		}
+		
+		/**
+		 * Copied this from HighlightBitmapCapture used by the focus skin to create
+		 * a bitmap of the component. 
+		 * 
+		 * Accepts "bitmap", "bitmapData" as type parameter. Returns that type. 
+		 * */
+		public static function getHighlightBitmapCapture(target:Object, type:String="bitmap", borderWeight:int=0):Object {
+        	var capturingBitmap:Boolean = false;
+        	var colorTransform:ColorTransform = new ColorTransform(1.01, 1.01, 1.01, 2);
+        	var rect:Rectangle = new Rectangle();
+		
+			// if we weren't handed a targetObject then exit early
+            if (!target)
+                return null;
+            
+            var bitmapData:BitmapData = new BitmapData(
+                target.width + (borderWeight * 2), 
+                target.height + (borderWeight * 2), true, 0);
+            var m:Matrix = new Matrix();
+            
+            //capturingBitmap = true;
+            
+            // Ensure no 3D transforms apply, as this skews our snapshot bitmap.
+            var transform3D:Matrix3D = null;
+            if (target.$transform.matrix3D)
+            {
+                transform3D = target.$transform.matrix3D;  
+                target.$transform.matrix3D = null;
+            }
+            
+            // If the target object already has a focus skin, make sure it is hidden.
+            if (target.focusObj)
+                target.focusObj.visible = false;
+            
+            var needUpdate:Boolean;
+            var bitmapCaptureClient:IHighlightBitmapCaptureClient = target.skin as IHighlightBitmapCaptureClient;
+            if (bitmapCaptureClient)
+            {
+                needUpdate = bitmapCaptureClient.beginHighlightBitmapCapture();
+                if (needUpdate)
+					bitmapCaptureClient.validateNow();
+            }
+            
+            m.tx = borderWeight;
+            m.ty = borderWeight;
+            
+            try
+            {
+                bitmapData.draw(target as IBitmapDrawable, m);
+            }
+            catch (e:SecurityError)
+            {
+                // If capture fails, substitute with a Rect
+                var fillRect:Rectangle
+				var skin:DisplayObject = target.skin;
+				
+                if (skin)
+                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
+                else
+                    fillRect = new Rectangle(target.x, target.y, target.width, target.height);
+                
+                bitmapData.fillRect(fillRect, 0);
+            }
+            
+            if (bitmapCaptureClient)
+            {
+                needUpdate = bitmapCaptureClient.endHighlightBitmapCapture();
+                if (needUpdate)
+					bitmapCaptureClient.validateNow();
+            }
+            
+            
+            // Show the focus skin, if needed.
+            if (target.focusObj)
+                target.focusObj.visible = true;
+            
+            // Transform the color to remove the transparency. The GlowFilter has the "knockout" property
+            // set to true, which removes this image from the final display, leaving only the outer glow.
+            rect.x = rect.y = borderWeight;
+            rect.width = target.width;
+            rect.height = target.height;
+            bitmapData.colorTransform(rect, colorTransform);
+			
+            var bitmap:Bitmap;
+            if (!bitmap)
+            {
+                bitmap = new Bitmap();
+                //addChild(bitmap);
+            }
+            
+            bitmap.x = bitmap.y = -borderWeight;
+            bitmap.bitmapData = bitmapData;
+            
+            //processBitmap();
+            
+            // Restore original 3D matrix if applicable.
+            if (transform3D)
+                target.$transform.matrix3D = transform3D;
+            
+            capturingBitmap = false;
+			
+			return bitmap;
+		}
+		
+		/**
+		 * Wrapped to allow error handling
+		 **/
+		public static function drawBitmapData(bitmapData:BitmapData, displayObject:DisplayObject, matrix:Matrix = null):void {
+			bitmapData.draw(displayObject, matrix, null, null, null, true);
+		}
 		
 		/**
 		 * Takes a target DisplayObject, rasterizes it into a Bitmap, and returns the bitmap asset

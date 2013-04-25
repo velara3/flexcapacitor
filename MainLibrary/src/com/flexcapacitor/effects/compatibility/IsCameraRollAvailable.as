@@ -31,7 +31,8 @@ package com.flexcapacitor.effects.compatibility {
 	[Event(name="addBitmapDataNotSupported", type="flash.events.Event")]
 	
 	/**
-	 * Checks if the device supports browse for image or adding bitmap data
+	 * Checks if the device supports the CameraRoll features of opening an image 
+	 * from the image gallery and saving an image back to the image gallery.
 	 * */
 	public class IsCameraRollAvailable extends ActionEffect {
 		
@@ -96,22 +97,26 @@ package com.flexcapacitor.effects.compatibility {
 		public var classReference:Class;
 		
 		/**
-		 * Effect that is played if device supports adding bitmap data
+		 * Effect that is played if device supports saving bitmap data to 
+		 * the image gallery. 
 		 * */
 		public var supportsAddBitmapDataEffect:Effect;
 		
 		/**
-		 * Effect that is played if device supports browsing for image
+		 * Effect that is played if device supports opening an image
+		 * from the image gallery.
 		 * */
 		public var supportsBrowseForImageEffect:Effect;
 		
 		/**
-		 * Effect that is played if device does NOT support browsing for image
+		 * Effect that is played if device does NOT support the CameraRoll 
+		 * or opening an image from the camera roll / image gallery.
 		 * */
 		public var browseForImageNotSupportedEffect:Effect;
 		
 		/**
-		 * Effect that is played if device does NOT support adding bitmap data
+		 * Effect that is played if device does NOT support the CameraRoll 
+		 * or saving an image to the camera roll / image gallery. 
 		 * */
 		public var addBitmapDataNotSupportedEffect:Effect;
 	}

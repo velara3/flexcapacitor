@@ -2,7 +2,6 @@
 
 package com.flexcapacitor.effects.camera {
 	
-	import com.flexcapacitor.effects.camera.supportClasses.OpenCameraRollInstance;
 	import com.flexcapacitor.effects.camera.supportClasses.SaveToCameraRollInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
@@ -12,8 +11,6 @@ package com.flexcapacitor.effects.camera {
 	
 	import mx.effects.Effect;
 	import mx.managers.SystemManager;
-	
-	import spark.primitives.BitmapImage;
 	
 	/**
 	 * Event dispatched when the camera roll is NOT supported.
@@ -37,7 +34,13 @@ package com.flexcapacitor.effects.camera {
 	
 	
 	/**
-	 * Saves bitmap data to the Camera Roll image gallery 
+	 * Saves bitmap data to the Camera Roll image gallery. <br/><br/>
+	 * 
+	 * Usage:<br/>
+	 * 
+	 * <pre>
+&lt;camera:SaveToCameraRoll id="saveToCameraRoll" bitmapData="{myImage.bitmapData}"/>
+	 * </pre>
 	 * */
 	public class SaveToCameraRoll extends ActionEffect {
 		

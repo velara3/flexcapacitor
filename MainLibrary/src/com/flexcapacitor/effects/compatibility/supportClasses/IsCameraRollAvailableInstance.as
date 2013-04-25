@@ -89,9 +89,9 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 			
 			// check if the class is found
 			if (classFound) {
-				
 				definition = applicationDomain.getDefinition(action.classDefinition);
 				
+				// check if CameraRoll has properties and they are true
 				if (definition.hasOwnProperty("supportsBrowseForImage") && definition["supportsBrowseForImage"]) {
 					supportsBrowseForImage = true;
 				}

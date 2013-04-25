@@ -4,15 +4,9 @@ package com.flexcapacitor.effects.camera.supportClasses {
 	import com.flexcapacitor.effects.camera.SaveToCameraRoll;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
-	import flash.display.Bitmap;
-	import flash.display.BitmapData;
-	import flash.display.Loader;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
-	import flash.events.IOErrorEvent;
-	import flash.events.MediaEvent;
 	import flash.media.CameraRoll;
-	import flash.media.MediaPromise;
 	
 	
 	/**
@@ -98,10 +92,10 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			cameraRoll = new CameraRoll();
 			
 			// Handle when image is added
-			cameraRoll.addEventListener(Event.COMPLETE, onComplete);
+			cameraRoll.addEventListener(Event.COMPLETE, onComplete, false, 0, true);
 			
 			// Handles if there is an error
-			cameraRoll.addEventListener(ErrorEvent.ERROR, onError);
+			cameraRoll.addEventListener(ErrorEvent.ERROR, onError, false, 0, true);
 			
 			// Call the addBitmapData function to bring the Gallery application to the foreground.
 			cameraRoll.addBitmapData(action.bitmapData);
