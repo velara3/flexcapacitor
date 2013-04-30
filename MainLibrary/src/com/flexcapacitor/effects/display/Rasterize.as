@@ -8,6 +8,7 @@ package com.flexcapacitor.effects.display {
 	import flash.display.BitmapData;
 	import flash.display.DisplayObject;
 	import flash.display.Sprite;
+	import flash.events.ErrorEvent;
 	import flash.geom.Matrix;
 	
 	import mx.effects.IEffect;
@@ -16,6 +17,16 @@ package com.flexcapacitor.effects.display {
 	 * Event dispatched when target is invalid
 	 * */
 	[Event(name="invalidTarget", type="flash.events.Event")]
+	
+	/**
+	 * Event dispatched when capture is successful.
+	 * */
+	[Event(name="success", type="flash.events.Event")]
+	
+	/**
+	 * Event dispatched on error.
+	 * */
+	[Event(name="error", type="flash.events.Event")]
 	
 	/**
 	 * Takes a snapshot of the source display object and copies the results
@@ -28,6 +39,8 @@ package com.flexcapacitor.effects.display {
 	public class Rasterize extends ActionEffect {
 		
 		public static const INVALID_TARGET:String = "invalidTarget";
+		public static const SUCCESS:String = "success";
+		public static const ERROR:String = "error";
 		
 		/**
 		 *  Constructor.
@@ -76,6 +89,22 @@ package com.flexcapacitor.effects.display {
 		 * Effect played when target is invalid
 		 * */
 		public var invalidTargetEffect:IEffect;
+		
+		/**
+		 * Effect played on success
+		 * */
+		public var successEffect:IEffect;
+		
+		/**
+		 * Effect played on error
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
+		 * Event on error
+		 * */
+		[Bindable]
+		public var errorEvent:ErrorEvent;
 		
 		/**
 		 * When true forces the content top and left values to be set to 0. 

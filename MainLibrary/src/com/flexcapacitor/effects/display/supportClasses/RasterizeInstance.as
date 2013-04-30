@@ -10,6 +10,7 @@ package com.flexcapacitor.effects.display.supportClasses {
 	import flash.display.Graphics;
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
+	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
@@ -82,7 +83,7 @@ package com.flexcapacitor.effects.display.supportClasses {
 			if (validate) {
 				
 				if (!source) {
-					dispatchErrorEvent("Target must be a DisplayObject");
+					dispatchErrorEvent("Target must be a DisplayObject. Check the source property.");
 				}
 				
 				if (source.width==0 || source.height==0) {
@@ -106,16 +107,36 @@ package com.flexcapacitor.effects.display.supportClasses {
 					playEffect(action.invalidTargetEffect);
 				}
 				if (action.hasEventListener(Rasterize.INVALID_TARGET)) {
-					dispatchEvent(new Event(Rasterize.INVALID_TARGET));
+					dispatchActionEvent(new Event(Rasterize.INVALID_TARGET));
 				}
 			}
 			else {
 				
-				if (absoluteBounds) {
-					action.bitmapData = getAbsoluteSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
+				try {
+					if (absoluteBounds) {
+						action.bitmapData = getAbsoluteSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
+					}
+					else {
+						action.bitmapData = getSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
+					}
+					
+					if (action.successEffect) {
+						playEffect(action.successEffect);
+					}
+					if (action.hasEventListener(Rasterize.SUCCESS)) {
+						dispatchActionEvent(new Event(Rasterize.SUCCESS));
+					}
 				}
-				else {
-					action.bitmapData = getSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
+				catch (error:ErrorEvent) {
+					
+					action.errorEvent = error;
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+					if (action.hasEventListener(Rasterize.ERROR)) {
+						dispatchActionEvent(new Event(Rasterize.ERROR));
+					}
 				}
 			}
 			

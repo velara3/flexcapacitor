@@ -1335,8 +1335,9 @@ package com.flexcapacitor.utils {
 			if (!displayed) {
 				PopUpManager.addPopUp(popUpDisplayGroup, DisplayObject(systemManagerObject), true);
 				
-				
 				var modalWindow:FlexSprite;
+				// ArgumentError: Error #2025: The supplied DisplayObject must be a child of the caller.
+				// if popUpDisplayGroup.owner != systemManagerObject
 				var index:int = systemManagerObject.rawChildren.getChildIndex(popUpDisplayGroup);
 				
 				if (index>=0) {

@@ -7,24 +7,53 @@ package com.flexcapacitor.effects.clipboard {
 	
 	import flash.desktop.ClipboardFormats;
 	import flash.display.DisplayObjectContainer;
+	import flash.events.ErrorEvent;
 	
+	import mx.effects.IEffect;
+	
+	
+	/**
+	 * Event dispatched when data was copied to the clipboard
+	 * */
+	[Event(name="success", type="flash.events.Event")]
+	
+	/**
+	 * Event dispatched when error occurs
+	 * */
+	[Event(name="error", type="flash.events.Event")]
+	
+	/**
+	 * Event dispatched when no data is provided
+	 * */
+	[Event(name="noData", type="flash.events.Event")]
 
 	/**
 	 * Copies data to the clipboard. <br/><br/>
 	 * 
 	 * For this to work correctly in the browser it must be run in the bubble phase of a 
-	 * click event. You cannot automatically copy to the clipboard without user interaction. 
+	 * click event. You cannot automatically copy to the clipboard without user interaction. <br/><br/> 
 	 * 
-	 * For AIR you do not need to set the target or targetAncestor property.
+	 * For AIR you do not need to set the target or targetAncestor property.<br/><br/>
 	 * 
 	 * Add a "copy to clipboard" type of button for the user to click, set the targetAncestor property of this effect 
 	 * to a parent container of the button (usually you can set it to the "this" keyword)
-	 * and run the effect in the button click handler.<br/><br/><br/>
+	 * and run the effect in the button click handler. You may also need to set the triggerEvent 
+	 * of the effect.<br/><br/><br/>
 	 * <pre><code>
-		&lt;handlers:EventHandler eventName="click" target="{list}" >
-			
-				&lt;clipboard:CopyToClipboard data="{dataForTheClipboard}" targetAncestor="{anyParentContainer}" />
-			
+		&lt;handlers:EventHandler eventName="click" target="{list}" setTriggerEvent="true" >
+
+			&lt;clipboard:CopyToClipboard id="copyToClipboard" data="{dataForTheClipboard}" targetAncestor="{anyParentContainer}" allowNullData="true">
+				&lt;clipboard:successEffect>
+					&lt;status:ShowStatusMessage message="Data copied to the clipboard"/>
+				&lt;/clipboard:successEffect>
+				&lt;clipboard:noDataEffect>
+					&lt;status:ShowStatusMessage message="Nothing to copy to the clipboard"/>
+				&lt;/clipboard:noDataEffect>
+				&lt;clipboard:errorEffect>
+					&lt;status:ShowStatusMessage message="An error occurred while attempting to copy to the clipboard. {copyToClipboard.errorEvent.message}"/>
+				&lt;/clipboard:errorEffect>
+			&lt;/clipboard:CopyToClipboard>
+			 * 
 		&lt;/handlers:EventHandler></code></pre>
 	 * 
 	 * NOTE: If nothing is happening make sure that you set the targetAncestor property to a display object
@@ -40,6 +69,9 @@ package com.flexcapacitor.effects.clipboard {
 	 * */
 	public class CopyToClipboard extends ActionEffect {
 		
+		public static const NO_DATA:String = "noData";
+		public static const ERROR:String = "error";
+		public static const SUCCESS:String = "success";
 		
 		/**
 		 *  Constructor.
@@ -118,5 +150,26 @@ package com.flexcapacitor.effects.clipboard {
 		 * is thrown. If set to true and the data is null no error is thrown
 		 * */
 		public var allowNullData:Boolean;
+		
+		/**
+		 * Error event
+		 * */
+		[Bindable]
+		public var errorEvent:ErrorEvent;
+		
+		/**
+		 * Effect played when data is invalid or null
+		 * */
+		public var noDataEffect:IEffect;
+		
+		/**
+		 * Effect played when error occurs
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
+		 * Effect played on success
+		 * */
+		public var successEffect:IEffect;
 	}
 }

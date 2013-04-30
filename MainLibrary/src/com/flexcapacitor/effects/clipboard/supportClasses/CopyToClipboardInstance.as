@@ -8,6 +8,8 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 	
 	import flash.desktop.Clipboard;
 	import flash.desktop.ClipboardFormats;
+	import flash.events.ErrorEvent;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.system.Capabilities;
 	
@@ -82,8 +84,15 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 					dispatchErrorEvent("Data is required for the clipboard");
 				}
 				
+				// if using EventHandler class you must set the setTriggerEvent property to true
 				if (!AIRPlayerType && !(triggerEvent is MouseEvent)) {
-					errorMessage = "The clipboard code may never get called if the event is not a mouse event (doesn't bubble up)";
+					
+					if (triggerEvent) {
+						errorMessage = "The clipboard code may never get called if the event is not a mouse event (doesn't bubble up)";
+					}
+					else {
+						errorMessage = "The trigger event is not set. Set setTriggerEvent to true or set triggerEvent to the click MouseEvent.";
+					}
 					dispatchErrorEvent(errorMessage);
 				}
 			}
@@ -93,6 +102,20 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
+			// check for null data
+			if (data==null && allowNullData) {
+				
+				if (action.noDataEffect) {
+					playEffect(action.noDataEffect);
+				}
+				
+				if (action.hasEventListener(CopyToClipboard.NO_DATA)) {
+					dispatchActionEvent(new Event(CopyToClipboard.NO_DATA));
+				}
+				
+				finish();
+				return;
+			}
 			
 			// if we are in AIR we run the code right away
 			if (AIRPlayerType) {
@@ -136,18 +159,20 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 		//--------------------------------------------------------------------------
 		
 		/**
-		 * Handles the event tied to opening a file dialog. 
+		 * Handles the event tied to copying to the clipboard. 
 		 * */
 		public function buttonHandler(event:MouseEvent):void {
 			var action:CopyToClipboard = CopyToClipboard(effect);
 			
-			// prevent this from opening two dialogs next time
+			// remove event listener
 			action.targetAncestor.removeEventListener(MouseEvent.CLICK, buttonHandler);
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			copyToClipboard();
+			
+			// finish is called in copyToClipboard()
 			
 		}
 		
@@ -162,6 +187,7 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 			var clipboard:Clipboard = Clipboard.generalClipboard;
 			var format:String = action.format;
 			var serializable:Boolean = action.serializable;
+			
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
@@ -178,10 +204,55 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 				|| format==ClipboardFormats.RICH_TEXT_FORMAT
 				|| format==ClipboardFormats.URL_FORMAT) {
 				
-				clipboard.setData(format, String(action.data), serializable);
+				try {
+					clipboard.setData(format, String(action.data), serializable);
+					
+					if (action.successEffect) {
+						playEffect(action.successEffect);
+					}
+					
+					if (action.hasEventListener(CopyToClipboard.SUCCESS)) {
+						dispatchActionEvent(new Event(CopyToClipboard.SUCCESS));
+					}
+				}
+				catch (error:ErrorEvent) {
+					
+					action.errorEvent = error;
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+					
+					if (action.hasEventListener(CopyToClipboard.ERROR)) {
+						dispatchActionEvent(new Event(CopyToClipboard.ERROR));
+					}
+				}
 			}
 			else {
-				clipboard.setData(format, action.data, serializable);
+				
+				try {
+					clipboard.setData(format, action.data, serializable);
+					
+					if (action.successEffect) {
+						playEffect(action.successEffect);
+					}
+					
+					if (action.hasEventListener(CopyToClipboard.SUCCESS)) {
+						dispatchActionEvent(new Event(CopyToClipboard.SUCCESS));
+					}
+				}
+				catch (error:ErrorEvent) {
+					
+					action.errorEvent = error;
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+					
+					if (action.hasEventListener(CopyToClipboard.ERROR)) {
+						dispatchActionEvent(new Event(CopyToClipboard.ERROR));
+					}
+				}
 			}
 			
 			

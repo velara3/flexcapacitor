@@ -613,6 +613,9 @@ package com.flexcapacitor.effects.supportClasses {
 		
 		/**
 		 * Utility method to dispatch an event on the effect not on the instance. 
+		 * 
+		 * Usage: <br/>
+		 * dispatchActionEvent(new Event(Action.EVENT_NAME));
 		 * */
 		public function dispatchActionEvent(event:Event):void {
 			effect.dispatchEvent(event);
