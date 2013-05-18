@@ -1,8 +1,14 @@
 package com.flexcapacitor.utils.supportClasses {
+	import flash.system.ApplicationDomain;
 	import flash.utils.getQualifiedClassName;
 	
 	import mx.collections.ArrayCollection;
+	import mx.core.ClassFactory;
+	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
+	
+	import spark.components.Application;
+	import spark.components.Group;
 	
 	/**
 	 * Contains information about components that are
@@ -73,7 +79,7 @@ package com.flexcapacitor.utils.supportClasses {
 		
 		/**
 		 * Parent
-		 * */
+		 * */ 
 		public var parent:ComponentDescription;
 		
 		/**
@@ -96,8 +102,55 @@ package com.flexcapacitor.utils.supportClasses {
 		public var parentVisible:Boolean = true;
 		
 		/**
-		 * 
+		 * Indicates if the component is locked from interaction. 
 		 * */
 		public var locked:Boolean = false;
+		
+		/**
+		 * Inspector class name.
+		 * */
+		public var inspectorClassName:String;
+		
+		/**
+		 * Inspector class.
+		 * */
+		public var inspectorClass:Class;
+		
+		/**
+		 * Instance of inspector class. 
+		 * */
+		public var inspectorInstance:UIComponent;
+		
+		/**
+		 * Gets an instance of the inspector class or null if the definition is not found.
+		 * */
+		public function getInspectorInstance():UIComponent {
+			var classFactory:ClassFactory;
+			var hasDefinition:Boolean;
+			var component:Object;
+			var classType:Object;
+			
+			if (!inspectorInstance) {
+				hasDefinition = ApplicationDomain.currentDomain.hasDefinition(inspectorClassName);
+				
+				if (hasDefinition) {
+					classType = ApplicationDomain.currentDomain.getDefinition(inspectorClassName);
+					
+					// Create component to drag
+					classFactory = new ClassFactory(classType as Class);
+					//classFactory.properties = defaultProperties;
+					inspectorInstance = classFactory.newInstance();
+				
+					
+				}
+				else {
+					return null;
+				}
+			
+			}
+
+			return inspectorInstance;
+			
+		}
 	}
 }

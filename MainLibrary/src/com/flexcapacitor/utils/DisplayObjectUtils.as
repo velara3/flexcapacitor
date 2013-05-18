@@ -158,6 +158,12 @@ package com.flexcapacitor.utils {
 			return bitmapAsset;
 		}
 		
+		
+		/**
+		 *  ALSO Graphic element has a getSnapshot method. 
+		 * 
+		 * */
+		
 		/**
 		 * Copied this from HighlightBitmapCapture used by the focus skin to create
 		 * a bitmap of the component. 
@@ -410,9 +416,10 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Method to walk down into visual element tree and run a function on each element
+		 * Method to walk down into visual element tree and run a function on each element.<br/><br/>
 		 * 
-		 Usage:
+		 Usage:<br/>
+		 <pre>
 		 DisplayObjectUtils.walkDownTree(application as IVisualElement, traceTree);
 		 
 		 public function traceTree(element:Object):void {
@@ -424,6 +431,7 @@ package com.flexcapacitor.utils {
 		 element=Group
 		 element=Button1
 		 element=Button2
+		 </pre>
 		 * 
 		 * */
 		public static function walkDownTree(element:IVisualElement, proc:Function, includeSkinnable:Boolean = false):void {
@@ -532,7 +540,7 @@ package com.flexcapacitor.utils {
 			
 			// find the owner of a visual element that is also on the component tree
 			while (displayObject) {
-				componentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(displayObject, componentTree);
+				componentDescription = getTargetInComponentDisplayList(displayObject, componentTree);
 				
 				if (componentDescription) {
 					return componentDescription;
@@ -560,7 +568,7 @@ package com.flexcapacitor.utils {
 			
 			// find the owner of a visual element that is also on the component tree
 			while (element) {
-				componentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(element, componentTree);
+				componentDescription = getTargetInComponentDisplayList(element, componentTree);
 				
 				if (componentDescription) {
 					return componentDescription;
@@ -586,7 +594,7 @@ package com.flexcapacitor.utils {
 			
 			// find the owner of a visual element that is also on the component tree
 			while (element) {
-				componentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(element, componentTree);
+				componentDescription = getTargetInComponentDisplayList(element, componentTree);
 				
 				if (componentDescription && element is GroupBase) {
 					return componentDescription;
@@ -612,7 +620,7 @@ package com.flexcapacitor.utils {
 			
 			// find the owner of a visual element that is also on the component tree
 			while (element) {
-				componentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(element, componentTree);
+				componentDescription = getTargetInComponentDisplayList(element, componentTree);
 				
 				if (componentDescription && element is IVisualElementContainer) {
 					return componentDescription;
@@ -642,7 +650,7 @@ package com.flexcapacitor.utils {
 			
 			// find the owner of a visual element that is also on the component tree
 			while (element) {
-				componentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(element, componentTree);
+				componentDescription = getTargetInComponentDisplayList(element, componentTree);
 				
 				// get name
 				if (componentDescription && element is IVisualElementContainer) {
@@ -675,7 +683,7 @@ package com.flexcapacitor.utils {
 			
 			// find the owner of a visual element that is also on the component tree
 			while (element) {
-				componentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(element, componentTree);
+				componentDescription = getTargetInComponentDisplayList(element, componentTree);
 				
 				// get name
 				if (componentDescription) {

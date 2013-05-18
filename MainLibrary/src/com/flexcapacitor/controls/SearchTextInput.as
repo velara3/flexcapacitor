@@ -45,7 +45,8 @@ package com.flexcapacitor.controls
 	[Style(name="showSearchIcon", type="Boolean")]
 	
 	/**
-	 * Adds an clear icon to the right side of the text display
+	 * Adds a search icon and a clear button to the right side of the text display.
+	 * Also adds rounded design look. 
 	 * Adds borderColor style
 	 * */
 	public class SearchTextInput extends TextInput {
