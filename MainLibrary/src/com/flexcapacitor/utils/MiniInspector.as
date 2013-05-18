@@ -23,6 +23,7 @@ package com.flexcapacitor.utils {
 	
 	import mx.collections.ArrayList;
 	import mx.controls.ToolTip;
+	import mx.core.BitmapAsset;
 	import mx.core.EventPriority;
 	import mx.core.FlexGlobals;
 	import mx.core.FlexSprite;
@@ -42,6 +43,7 @@ package com.flexcapacitor.utils {
 	import mx.managers.ISystemManager;
 	import mx.managers.PopUpManager;
 	import mx.managers.SystemManager;
+	import mx.managers.SystemRawChildrenList;
 	import mx.managers.ToolTipManager;
 	import mx.styles.CSSCondition;
 	import mx.styles.CSSConditionKind;
@@ -1335,10 +1337,29 @@ package com.flexcapacitor.utils {
 			if (!displayed) {
 				PopUpManager.addPopUp(popUpDisplayGroup, DisplayObject(systemManagerObject), true);
 				
-				var modalWindow:FlexSprite;
 				// ArgumentError: Error #2025: The supplied DisplayObject must be a child of the caller.
-				// if popUpDisplayGroup.owner != systemManagerObject
-				var index:int = systemManagerObject.rawChildren.getChildIndex(popUpDisplayGroup);
+				// if popUpDisplayGroup.systemManager != systemManagerObject
+				if (popUpDisplayGroup.systemManager!=systemManagerObject) {
+					systemManagerObject = popUpDisplayGroup.systemManager;
+				}
+				
+				var modalWindow:FlexSprite;
+				var display:DisplayObject;
+				var index:int = -1;
+				var rawChildrenList:SystemRawChildrenList = systemManagerObject.rawChildren;
+				
+				for (var i:int=0;i<rawChildrenList.numChildren;i++) {
+					display = rawChildrenList.getChildAt(i);
+					
+					if (display==popUpDisplayGroup) {
+						index = i;
+						break;
+					}
+				}
+				
+				//trace("raw children popup index:" + i);
+				index = systemManagerObject.rawChildren.getChildIndex(popUpDisplayGroup);
+				//trace("2 raw children popup index:" + index);
 				
 				if (index>=0) {
 					modalWindow = systemManagerObject.rawChildren.getChildAt(index-1) as FlexSprite;
@@ -1398,7 +1419,10 @@ package com.flexcapacitor.utils {
 			//var bounds:Rectangle = target.getBounds(target);
 			var bounds:Rectangle = target.getRect(target);
 			var targetWidth:Number = target.width==0 ? 1 : target.width;
-			var targetHeight:Number = target.height==0 ? 1 : target.height;
+			var targetHeight:Number = target.height==0 ? 1 : target.height;/*
+			var bounds:Rectangle = target.getBounds(target);
+			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
+			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;*/
 			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
 			var matrix:Matrix = new Matrix();
 			var container:Sprite = new Sprite();
@@ -1421,6 +1445,17 @@ package com.flexcapacitor.utils {
 			container.cacheAsBitmap = true;
 			container.transform.matrix = target.transform.matrix;
 			container.addChild(bitmap);
+			
+			// added to fix some clipping issues
+			targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);
 			
 			return container;
 		}
