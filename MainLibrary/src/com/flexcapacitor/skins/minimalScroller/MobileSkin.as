@@ -12,8 +12,6 @@
 package com.flexcapacitor.skins.minimalScroller
 {
 import flash.display.DisplayObject;
-import flash.display.GradientType;
-import flash.display.Graphics;
 import flash.geom.ColorTransform;
 import flash.geom.Matrix;
 
@@ -22,7 +20,6 @@ import mx.core.IFlexDisplayObject;
 import mx.core.ILayoutElement;
 import mx.core.UIComponent;
 import mx.core.mx_internal;
-import mx.utils.ColorUtil;
 
 import spark.components.supportClasses.SkinnableComponent;
 import spark.core.DisplayObjectSharingMode;
@@ -810,7 +807,7 @@ public class MobileSkin extends UIComponent implements IHighlightBitmapCaptureCl
         var exclusions:Array = focusSkinExclusions;
         if (!exclusions)
         {
-            if (this["hostComponent"] is SkinnableComponent)
+            if (("hostComponent" in this) && this["hostComponent"] is SkinnableComponent)
                 exclusions = SkinnableComponent(this["hostComponent"]).suggestedFocusSkinExclusions;
         }
         var exclusionCount:Number = (exclusions == null) ? 0 : exclusions.length;
@@ -862,3 +859,5 @@ public class MobileSkin extends UIComponent implements IHighlightBitmapCaptureCl
     }
 }
 }
+
+

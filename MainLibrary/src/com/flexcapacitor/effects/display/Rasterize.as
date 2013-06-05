@@ -30,11 +30,7 @@ package com.flexcapacitor.effects.display {
 	
 	/**
 	 * Takes a snapshot of the source display object and copies the results
-	 * into the bitmapData property. 
-	 * 
-	 * Optionally draws the content to the target display object.
-	 * 
-	 * In progress... needs review. 
+	 * into the bitmapData property or to the drawTarget display object.
 	 * */
 	public class Rasterize extends ActionEffect {
 		
@@ -152,13 +148,10 @@ package com.flexcapacitor.effects.display {
 		public var fillColor:Number = 0x00000000;
 		
 		/**
-		 * Target to draw rasterizd results too. 
-		 * @private
-		 * overridden here to add comments
+		 * Target to draw rasterized results too. 
 		 * */
-		override public function set target(value:Object):void {
-			super.target = value;
-		}
+		[Bindable]
+		public var drawTarget:Object;
 		
 	}
 }

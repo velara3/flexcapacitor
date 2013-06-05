@@ -19,8 +19,10 @@ controls|FrameContainer {
 }
 
 controls|InsetLabel {
+	insetType: highlight;
 	insetColor: #ffffff;
 	insetAlpha: .75;
 	insetDistance: 1;
+	insetStrength: 1;
 	inner: true;
 }

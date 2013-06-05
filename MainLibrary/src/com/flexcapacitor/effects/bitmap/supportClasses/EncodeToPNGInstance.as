@@ -75,7 +75,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 					if (action.invalidBitmapDataEffect 
 						|| action.hasEventListener(EncodeToPNG.INVALID_BITMAP_DATA)
 						|| allowNullData) {
-						// let the developer handle it
+						// let the developer handle it further on down
 					}
 					else {
 						// add a event handler or effect to avoid this error
@@ -101,11 +101,11 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 				}
 				
 				if (action.hasEventListener(EncodeToPNG.INVALID_BITMAP_DATA)) {
-					action.dispatchEvent(new Event(EncodeToPNG.INVALID_BITMAP_DATA));
+					dispatchActionEvent(new Event(EncodeToPNG.INVALID_BITMAP_DATA));
 				}
 				
 				if (allowNullData) {
-					cancel("Invalid bitmap data");
+					finish();
 					return;
 				}
 			}
@@ -115,6 +115,15 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 				byteArray = png.encode(data);
 			
 				action.byteArray = byteArray;
+				
+				
+				if (action.successEffect) {
+					playEffect(action.successEffect);
+				}
+				
+				if (action.hasEventListener(EncodeToPNG.SUCCESS)) {
+					dispatchActionEvent(new Event(EncodeToPNG.SUCCESS));
+				}
 			}
 			
 			///////////////////////////////////////////////////////////

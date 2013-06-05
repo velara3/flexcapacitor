@@ -1,14 +1,12 @@
 package com.flexcapacitor.utils.supportClasses {
 	import flash.system.ApplicationDomain;
+	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.ClassFactory;
 	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
-	
-	import spark.components.Application;
-	import spark.components.Group;
 	
 	/**
 	 * Contains information about components that are
@@ -120,6 +118,11 @@ package com.flexcapacitor.utils.supportClasses {
 		 * Instance of inspector class. 
 		 * */
 		public var inspectorInstance:UIComponent;
+		
+		/**
+		 * Cursors
+		 * */
+		public var cursors:Dictionary;
 		
 		/**
 		 * Gets an instance of the inspector class or null if the definition is not found.

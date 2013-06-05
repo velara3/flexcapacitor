@@ -19,8 +19,11 @@ package com.flexcapacitor.utils {
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.BitmapAsset;
+	import mx.core.FlexGlobals;
+	import mx.core.IUIComponent;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
+	import mx.managers.ISystemManager;
 	
 	import spark.components.supportClasses.GroupBase;
 	import spark.components.supportClasses.Skin;
@@ -85,6 +88,8 @@ package com.flexcapacitor.utils {
 		 */
 		public static function getBitmapDataSnapshot(target:DisplayObject, useAlpha:Boolean = true, scaleX:Number = 1, scaleY:Number = 1):BitmapData {
 			var bounds:Rectangle = target.getBounds(target);
+			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
+			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
 			var bitmapData:BitmapData = new BitmapData(target.width * scaleX, target.height * scaleY, useAlpha, 0x00000000);
 			var matrix:Matrix = new Matrix();
 			
@@ -106,6 +111,17 @@ package com.flexcapacitor.utils {
 			
 			bitmapData.draw(container);
 			
+			// added april 2013
+			/*targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, useAlpha, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);*/
+			
 			return bitmapData;
 		}
 		
@@ -119,12 +135,12 @@ package com.flexcapacitor.utils {
 			var bounds:Rectangle = target.getBounds(target);
 			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
 			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
-			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
+			var bitmapData:BitmapData = new BitmapData((targetWidth + horizontalPadding) * scaleX, (targetHeight + verticalPadding) * scaleY, transparentFill, fillColor);
 			var matrix:Matrix = new Matrix();
 			var container:Sprite = new Sprite();
 			var bitmap:Bitmap;
 			
-			matrix.translate(-bounds.left, -bounds.top);
+			matrix.translate(-bounds.left+horizontalPadding/2, -bounds.top+verticalPadding/2);
 			matrix.scale(scaleX, scaleY);
 			
 			try {
@@ -158,11 +174,255 @@ package com.flexcapacitor.utils {
 			return bitmapAsset;
 		}
 		
+		/**
+		 * Gets top level coordinate space. 
+		 * */
+		public static function getTopTargetCoordinateSpace():DisplayObject {
+			
+			// if selection is offset then check if using system manager sandbox root or top level root
+			var systemManager:ISystemManager = ISystemManager(FlexGlobals.topLevelApplication.systemManager);
+			
+			// no types so no dependencies
+			var marshallPlanSystemManager:Object = systemManager.getImplementation("mx.managers.IMarshallPlanSystemManager");
+			var targetCoordinateSpace:DisplayObject;
+			
+			if (marshallPlanSystemManager && marshallPlanSystemManager.useSWFBridge()) {
+				targetCoordinateSpace = Sprite(systemManager.getSandboxRoot());
+			}
+			else {
+				targetCoordinateSpace = Sprite(FlexGlobals.topLevelApplication);
+			}
+			
+			return targetCoordinateSpace;
+		}
+		
+		/**
+		 * Get bitmap data of the display object passed to it
+		 * padding doesn't seem to work
+		 * April 2013
+		 **/
+		public static function getBitmapDataSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000, smoothing:Boolean = false):BitmapData {
+			var targetX:Number = target.x;
+			var targetY:Number = target.y;
+			var reportedWidth:Number = target.width;
+			var reportedHeight:Number = target.height;
+			
+			var rect1:Rectangle = target.getRect(getTopTargetCoordinateSpace());
+			var rect:Rectangle = target.getRect(target);
+			var bounds:Rectangle = target.getBounds(target);
+			var bounds2:Rectangle = target.getBounds(target.parent);
+			
+			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
+			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
+			var topLevel:Sprite = Sprite(IUIComponent(target.parent).systemManager.getSandboxRoot());
+			var bounds3:Rectangle = target.getBounds(topLevel);
+			var bitmapData:BitmapData = new BitmapData((targetWidth + horizontalPadding) * scaleX, (targetHeight + verticalPadding) * scaleY, transparentFill, fillColor);
+			var matrix:Matrix = new Matrix();
+			var container:Sprite = new Sprite();
+			var bitmap:Bitmap;
+			var translateX:Number = -bounds.left+horizontalPadding/2;
+			var translateY:Number = -bounds.top+verticalPadding/2;
+			
+			matrix.translate(translateX, translateY);
+			//matrix.translate(0, 0);
+			matrix.scale(scaleX, scaleY);
+			
+			try {
+				drawBitmapData(bitmapData, target, matrix);
+			}
+			catch (e:Error) {
+				//trace( "Can't get display object preview. " + e.message);
+				// show something here
+			}
+			
+			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, smoothing);
+			bitmap.x = bounds.left;
+			bitmap.y = bounds.top;
+			
+			container.cacheAsBitmap = true;
+			container.transform.matrix = target.transform.matrix;
+			container.addChild(bitmap);
+			return bitmapData;
+			
+			targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);
+			
+			return bitmapData2;
+		}
+		
 		
 		/**
 		 *  ALSO Graphic element has a getSnapshot method. 
 		 * 
 		 * */
+			
+	
+	    /**
+	     *  Returns a bitmap snapshot of the GraphicElement.
+	     *  The bitmap contains all transformations and is reduced
+	     *  to fit the visual bounds of the object.
+	     *  
+	     *  @param transparent Whether or not the bitmap image supports per-pixel transparency. 
+	     *  The default value is true (transparent). To create a fully transparent bitmap, set the value of the 
+	     *  transparent parameter to true and the value of the fillColor parameter to 0x00000000 (or to 0). 
+	     *  Setting the transparent property to false can result in minor improvements in rendering performance. 
+	     *  
+	     *  @param fillColor A 32-bit ARGB color value that you use to fill the bitmap image area. 
+	     *  The default value is 0xFFFFFFFF (solid white).
+	     *  
+	     *  @param useLocalSpace Whether or not the bitmap shows the GraphicElement in the local or global 
+	     *  coordinate space. If true, then the snapshot is in the local space. The default value is true. 
+	     * 
+	     *  @param clipRect A Rectangle object that defines the area of the source object to draw. 
+	     *  If you do not supply this value, no clipping occurs and the entire source object is drawn.
+	     *  The clipRect should be defined in the coordinate space specified by useLocalSpace
+	     * 
+	     *  @return A bitmap snapshot of the GraphicElement or null if the input element has no visible bounds.
+	     *  
+	     *  
+	     *  @langversion 3.0
+	     *  @playerversion Flash 10
+	     *  @playerversion AIR 1.5
+	     *  @productversion Flex 4
+	     */
+	    public function captureBitmapData(transparent:Boolean = true, fillColor:uint = 0xFFFFFFFF, useLocalSpace:Boolean = true, clipRect:Rectangle = null):BitmapData
+	    {
+			throw new Error("not adapted to work independently yet. copied from GraphicElement.");
+			/*
+	        if (!layoutFeatures || !layoutFeatures.is3D)
+	        {               
+	            var restoreDisplayObject:Boolean = false;
+	            var oldDisplayObject:DisplayObject;
+	            
+	            if (!displayObject || displayObjectSharingMode != DisplayObjectSharingMode.OWNS_UNSHARED_OBJECT)
+	            {
+	                restoreDisplayObject = true;
+	                oldDisplayObject = displayObject;
+	                setDisplayObject(new InvalidatingSprite());
+	                if (parent is UIComponent)
+	                    UIComponent(parent).$addChild(displayObject);
+	                else
+	                    parent.addChild(displayObject);
+	                invalidateDisplayList();
+	                validateDisplayList();
+	            }
+	            
+	            var topLevel:Sprite = Sprite(IUIComponent(parent).systemManager.getSandboxRoot());
+	            var rectBounds:Rectangle = useLocalSpace ? 
+	                        new Rectangle(getLayoutBoundsX(), getLayoutBoundsY(), getLayoutBoundsWidth(), getLayoutBoundsHeight()) :
+	                        displayObject.getBounds(topLevel); 
+	            
+	            if (rectBounds.width == 0 || rectBounds.height == 0)
+	                return null;
+	            
+	            var bitmapData:BitmapData = new BitmapData(Math.ceil(rectBounds.width), Math.ceil(rectBounds.height), transparent, fillColor);
+	                
+	            // Can't use target's concatenatedMatrix, as it is sometimes wrong
+	            var m:Matrix = useLocalSpace ? 
+	                displayObject.transform.matrix : 
+	                MatrixUtil.getConcatenatedMatrix(displayObject, null);
+	            
+	            if (m)
+	                m.translate(-rectBounds.x, -rectBounds.y);
+	            
+	            bitmapData.draw(displayObject, m, null, null, clipRect);
+	           
+	            if (restoreDisplayObject)
+	            {
+	                if (parent is UIComponent)
+	                    UIComponent(parent).$removeChild(displayObject);
+	                else
+	                    parent.removeChild(displayObject);
+	                setDisplayObject(oldDisplayObject);
+	            }
+	            return bitmapData;
+	        
+	        }
+	        else
+	        {
+	            return get3DSnapshot(transparent, fillColor, useLocalSpace);
+	        }*/
+	    }
+	
+	   /**
+	     *  @private 
+	     *  Returns a bitmap snapshot of a 3D transformed displayObject. Since BitmapData.draw ignores
+	     *  the transform matrix of its target when it draws, we need to parent the target in a temporary
+	     *  sprite and call BitmapData.draw on that temp sprite. We can't take a bitmap snapshot of the 
+	     *  real parent because it might have other children. 
+	     */
+	    private function get3DSnapshot(transparent:Boolean = true, fillColor:uint = 0xFFFFFFFF, useLocalSpace:Boolean = true):BitmapData
+	    {
+			/*
+	        var topLevel:Sprite = Sprite(IUIComponent(parent).systemManager); 
+	        var dispObjParent:DisplayObjectContainer = displayObject.parent;
+	        var drawSprite:Sprite = new Sprite();
+	                
+	        // Get the visual bounds of the target in both local and global coordinates
+	        var topLevelRect:Rectangle = displayObject.getBounds(topLevel);
+	        var displayObjectRect:Rectangle = displayObject.getBounds(dispObjParent);  
+	        
+	        // Keep a reference to the original 3D matrix. We will restore this later.
+	        var oldMat3D:Matrix3D = displayObject.transform.matrix3D.clone();
+	        
+	        // Get the concatenated 3D matrix which we will use to position the target when we reparent it
+	        var globalMat3D:Matrix3D = displayObject.transform.getRelativeMatrix3D(topLevel);
+	        var newMat3D:Matrix3D = oldMat3D.clone();      
+	        
+	        
+	        // Remove the target from its current parent, making sure to store the child index
+	        var displayObjectIndex:int = parent.getChildIndex(displayObject);
+	        if (parent is UIComponent)
+	            UIComponent(parent).$removeChild(displayObject);
+	        else
+	            parent.removeChild(displayObject);
+	        
+	        // Parent the target to the drawSprite and then attach the drawSprite to the stage
+	        topLevel.addChild(drawSprite);
+	        drawSprite.addChild(displayObject);
+	
+	        // Assign the globally translated matrix to the target
+	        if (useLocalSpace)
+	        {
+	            newMat3D.position = globalMat3D.position;
+	            displayObject.transform.matrix3D = newMat3D;
+	        }
+	        else
+	        {
+	            displayObject.transform.matrix3D = globalMat3D;
+	        }
+	        // Translate the bitmap so that the left-top bounds ends up at (0,0)
+	        var m:Matrix = new Matrix();
+	        m.translate(-topLevelRect.left, - topLevelRect.top);
+	               
+	        // Draw to the bitmapData
+	        var snapshot:BitmapData = new BitmapData( topLevelRect.width, topLevelRect.height, transparent, fillColor);
+	        snapshot.draw(drawSprite, m, null, null, null, true);
+	
+	        // Remove target from temporary sprite and remove temp sprite from stage
+	        drawSprite.removeChild(displayObject);
+	        topLevel.removeChild(drawSprite);
+	        
+	        // Reattach the target to its original parent at its original child position
+	        if (parent is UIComponent)
+	            UIComponent(parent).$addChildAt(displayObject, displayObjectIndex);
+	        else
+	            parent.addChildAt(displayObject, displayObjectIndex);
+	            
+	        // Restore the original 3D matrix
+	        displayObject.transform.matrix3D = oldMat3D;
+	
+	        return snapshot; */
+			var snapshot:BitmapData;
+			return snapshot;
+	    }
 		
 		/**
 		 * Copied this from HighlightBitmapCapture used by the focus skin to create
@@ -673,7 +933,7 @@ package com.flexcapacitor.utils {
 		 * Find the greatest visibility state of a visual element that is on the component tree
 		 * 
 		 * Usage:
-		 * var rootApplicationDescription:ComponentDescription = Tree(owner).dataProvider.getItemAt(0) as ComponentDescription;
+		 * var rootApplicationDescription:ComponentDescription = DisplayObjectUtils.getDisplayList(application);//Tree(owner).dataProvider.getItemAt(0) as ComponentDescription;
 		 * var visibility:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(item.instance), rootApplicationDescription); 
 		 * */
 		public static function getGreatestVisibility(element:IVisualElement, componentTree:ComponentDescription):Boolean {
@@ -704,7 +964,7 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Walk down the component tree and set the parentVisible flag
+		 * Walk down into the component tree target and set the parentVisible flag.<br/>
 		 * 
 		 * Usage:
 		 *  DisplayObjectUtils.setVisibilityFlag(component, false);
@@ -1015,6 +1275,11 @@ package com.flexcapacitor.utils {
 			return true;
 		}
 		
+		/**
+		 * Add mouse listener and set mouse enabled where transparent to true to so that we
+		 * can listen to mouse events for drag over and drag and drop events. 
+		 * Group ignores mouse events by default since it has no background or border. 
+		 * */
 		public static function addGroupMouseSupport(group:GroupBase, groupsDictionary:Dictionary = null):void {
 			if (!groupsDictionary) groupsDictionary = applicationGroups;
 			groupsDictionary[group] = new GroupOptions(group.mouseEnabledWhereTransparent);
@@ -1022,6 +1287,9 @@ package com.flexcapacitor.utils {
 			group.mouseEnabledWhereTransparent = true;
 		}
 		
+		/**
+		 * Remove the mouse listener and restore mouseEnabledWhereTransparent value to group. 
+		 * */
 		public static function removeGroupMouseSupport(group:GroupBase, groupsDictionary:Dictionary = null):void {
 			if (!groupsDictionary) groupsDictionary = applicationGroups;
 			//TypeError: Error #1010: A term is undefined and has no properties. (applicationGroups)
@@ -1033,10 +1301,110 @@ package com.flexcapacitor.utils {
 			}
 		}
 		
-		
+		/**
+		 * Handler for mouse events on groups. Group needs mouse event listener to track mouse
+		 * events over it. This is the handler we add to the group. It does nothing. 
+		 * */
 		public static function enableGroupMouseHandler(event:MouseEvent):void
 		{
 			// this is used to enable mouse events where transparent 
 		}
+		
+		
+		/**
+		 * Get red value from uint
+		 * */
+		public static function extractRed(color:uint):uint {
+			return (( color >> 16 ) & 0xFF);
+		}
+		
+		/**
+		 * Get green value from uint
+		 * */
+		public static function extractGreen(color:uint):uint {
+			return ((color >> 8) & 0xFF);
+		}
+		
+		/**
+		 * Get blue value from uint
+		 * */
+		public static function extractBlue(color:uint):uint {
+			return (color & 0xFF);
+		}
+		
+		/**
+		 * Get combined RGB value
+		 * */
+		public static function combineRGB(red:uint, green:uint, blue:uint):uint {
+			return (( red << 16) | (green << 8) | blue);
+		}
+		
+		/**
+		 * Get color value in hex value format
+		 **/
+		public static function getColorInHex(color:uint, addHash:Boolean = false):String {
+			var red:String = extractRed(color).toString(16).toUpperCase();
+			var green:String = extractGreen(color).toString(16).toUpperCase();
+			var blue:String = extractBlue(color).toString(16).toUpperCase();
+			var value:String = "";
+			var zero:String = "0";
+			
+			if (red.length==1) {
+				red = zero.concat(red);
+			}
+			
+			if (green.length==1) {
+				green = zero.concat(green);
+			}
+			
+			if (blue.length==1) {
+				blue = zero.concat(blue);
+			}
+			
+			value = addHash ? "#" + red + green + blue : red + green + blue;
+			
+			return value;
+		}
+		
+		
+		/**
+		 * Gets the color under the mouse pointer. 
+		 * Returns null if taking bitmap screen shot results in a security violation.
+		 * IE location is an image showing content from another domain. 
+		 * 
+		 * @param type. If type is raw then returns the color as a uint. If type
+		 * is hex then returns the color as a number 0xFFFFFF. If prefix is set
+		 * then returns the color as a string with a pound sign before it, "#ffffff".
+		 * */
+		public static function getColorUnderMouse(event:MouseEvent):Object {
+			var eyeDropperColorValue:uint;
+			var screenshot:BitmapData;
+			var output:String = "";
+			var stageX:Number;
+			var stageY:Number;
+			var value:String;
+			var scale:Number;
+			
+			screenshot = new BitmapData(FlexGlobals.topLevelApplication.width, FlexGlobals.topLevelApplication.height, false);
+			
+			try {
+				drawBitmapData(screenshot, DisplayObject(FlexGlobals.topLevelApplication));
+			}
+			catch (e:Error) {
+				// could not draw it possibly because of security sandbox 
+				// so we return null
+				return null;
+			}
+	
+			scale = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
+			stageX = event.stageX * scale;
+			stageY = event.stageY * scale;
+		
+			eyeDropperColorValue = screenshot.getPixel(stageX, stageY);
+			
+			return eyeDropperColorValue;
+			
+		}
+	
 	}
 }

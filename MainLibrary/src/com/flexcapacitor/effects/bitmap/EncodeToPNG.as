@@ -26,6 +26,11 @@ package com.flexcapacitor.effects.bitmap {
 	 * */
 	[Event(name="invalidBitmapData", type="flash.events.Event")]
 	
+	/**
+	 *  Dispatched when the encoding was successfult
+	 * */
+	[Event(name="success", type="flash.events.Event")]
+	
 	
 	/**
 	 * Encodes bitmapData into PNG byte array. 
@@ -40,6 +45,7 @@ package com.flexcapacitor.effects.bitmap {
 	public class EncodeToPNG extends ActionEffect {
 		
 		public static const INVALID_BITMAP_DATA:String = "invalidBitmapData";
+		public static const SUCCESS:String = "success";
 		
 		/**
 		 *  Constructor.
@@ -92,6 +98,11 @@ package com.flexcapacitor.effects.bitmap {
 		 * Effect played when the bitmap data is invalid
 		 * */
 		public var invalidBitmapDataEffect:IEffect;
+		
+		/**
+		 * Effect played when the bitmap data is successfully encoded
+		 * */
+		public var successEffect:IEffect;
 		
 		/**
 		 * Does not throw an error if bitmap data is null

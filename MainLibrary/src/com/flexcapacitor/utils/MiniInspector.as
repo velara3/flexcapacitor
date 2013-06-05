@@ -23,7 +23,6 @@ package com.flexcapacitor.utils {
 	
 	import mx.collections.ArrayList;
 	import mx.controls.ToolTip;
-	import mx.core.BitmapAsset;
 	import mx.core.EventPriority;
 	import mx.core.FlexGlobals;
 	import mx.core.FlexSprite;
@@ -1090,7 +1089,7 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Gets all styles information
+		 * Gets the color under the mouse pointer
 		 * */
 		public function getColorUnderMouse(event:MouseEvent):String {
 			var output:String = "";
@@ -1289,6 +1288,7 @@ package com.flexcapacitor.utils {
 				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
 			}
 			
+			popUpLabel.text = name + " at " + container.x + "x" + container.y + " ";
 			popUpDisplayImage.width = container.width;
 			popUpDisplayImage.height = container.height;
 			popUpDisplayGroup.width = container.width;
@@ -2423,7 +2423,6 @@ package com.flexcapacitor.utils {
 }
 
 
-import flash.display.DisplayObject;
 import flash.utils.getQualifiedClassName;
 
 import mx.collections.ArrayList;

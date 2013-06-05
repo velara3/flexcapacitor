@@ -45,6 +45,7 @@ viewport property to link them together.
         
     <fx:Script>
     <![CDATA[    
+		import mx.core.IUIComponent;
         /**
          *  @private
          */

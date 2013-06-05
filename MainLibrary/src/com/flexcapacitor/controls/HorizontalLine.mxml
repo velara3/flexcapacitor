@@ -7,11 +7,12 @@
 	<!-- Horizontal indented line
 	
 	Usage: 
-	<s:Horizontal width="100%"/>
+	<s:HorizontalLine width="100%" alpha="1" angle="90"/>
 	-->
 	<fx:Declarations>
 		<fx:Number id="strokeColor">#9a9a9a</fx:Number>
 		<fx:Number id="shadowColor">#FFFFFF</fx:Number>
+		<fx:int id="angle">0</fx:int>
 	</fx:Declarations>
 	
 	<s:stroke>
@@ -23,7 +24,7 @@
 	</s:stroke>
 	<s:filters>
 		<s:DropShadowFilter alpha="1" 
-							angle="0" 
+							angle="{angle}" 
 							blurX="0" blurY="0" 
 							color="{shadowColor}"
 							distance="1" 

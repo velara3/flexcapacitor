@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.display.supportClasses {
 	import com.flexcapacitor.effects.display.Rasterize;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
+	import com.flexcapacitor.utils.DisplayObjectUtils;
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
@@ -66,7 +67,7 @@ package com.flexcapacitor.effects.display.supportClasses {
 			
 			var action:Rasterize = Rasterize(effect);
 			var source:DisplayObject = action.source as DisplayObject;
-			var targetDisplayObject:Sprite = target as Sprite;
+			var targetDisplayObject:Sprite = action.drawTarget as Sprite;
 			var transparentFill:Boolean = action.transparentFill;
 			var horizontalPadding:int = action.horizontalPadding;
 			var verticalPadding:int = action.verticalPadding;
@@ -114,7 +115,8 @@ package com.flexcapacitor.effects.display.supportClasses {
 				
 				try {
 					if (absoluteBounds) {
-						action.bitmapData = getAbsoluteSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
+						//action.bitmapData = getAbsoluteSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
+						action.bitmapData = DisplayObjectUtils.getBitmapDataSnapshot2(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
 					}
 					else {
 						action.bitmapData = getSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);
@@ -209,6 +211,31 @@ package com.flexcapacitor.effects.display.supportClasses {
 			bitmapData.draw(container);
 			
 			return bitmapData;
+			
+			// added 
+			bounds = target.getBounds(target);
+			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
+			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
+			targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);
+			
+			//var bitmapAsset:BitmapAsset = new BitmapAsset(bitmapData2, PixelSnapping.ALWAYS);
+			
+			return bitmapData2;
+		}
+		
+		/**
+		 * Wrapped to allow error handling
+		 **/
+		public static function drawBitmapData(bitmapData:BitmapData, displayObject:DisplayObject, matrix:Matrix = null):void {
+			bitmapData.draw(displayObject, matrix, null, null, null, true);
 		}
 		
 		/**
@@ -255,7 +282,7 @@ package com.flexcapacitor.effects.display.supportClasses {
 		}
 		
 		/**
-		 * From BitmapImage
+		 * From spark BitmapImage
 		 * @private
 		 * Utility function used for higher quality image scaling. Essentially we
 		 * simply step down our bitmap size by half resulting in a much higher result
@@ -335,7 +362,7 @@ package com.flexcapacitor.effects.display.supportClasses {
 		}
 		
 		/**
-		 * Rasterize from BitmapImage
+		 * Rasterize from spark BitmapImage
 		 * */
 		public function rasterizeDisplayObject(value:DisplayObject):BitmapData {
 			var bitmapData:BitmapData;

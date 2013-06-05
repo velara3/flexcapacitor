@@ -56,6 +56,19 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Repeats the character the specified number of time.
+		 * */
+		public static function repeatCharacter(character:String = "", count:int = 0):String {
+			var value:String = "";
+			
+			for (var i:int;i<count;i++) {
+				value += character;
+			}
+			
+			return value;
+		}
+		
+		/**
 		 * Replace tokens enclosed in brackets with values in object.
 		 * 
 		 * Example, 
