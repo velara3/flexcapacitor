@@ -12,6 +12,7 @@ import com.flexcapacitor.effects.popup.OpenPopUp;
 import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 
 import flash.display.BlendMode;
+import flash.display.DisplayObject;
 import flash.display.Sprite;
 import flash.events.Event;
 import flash.events.MouseEvent;
@@ -289,6 +290,9 @@ import mx.managers.SystemManager;
 		private function removedHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			
+			// prevent bubbled up removed events from content inside the pop up
+			if (event.target != action.popUp) { return; }
+			
 			removeEventListeners();
 			
 			if (action.hasEventListener(OpenPopUp.CLOSE)) {
@@ -311,18 +315,22 @@ import mx.managers.SystemManager;
 		private function removeEventListeners():void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			var popUp:IFlexDisplayObject = action.popUp;
+			var parent:DisplayObject = action.parent || popUp.parent;
 			
 			IFlexDisplayObject(popUp).removeEventListener(Event.REMOVED, removedHandler);
 			IFlexDisplayObject(popUp).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
 			IFlexDisplayObject(popUp).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
-			IFlexDisplayObject(action.parent).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+			
+			if (parent) {
+				IFlexDisplayObject(parent).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+			}
 			
 			if (action.autoCenter) {
-				if (action.parent.stage) {
-					action.parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
+				if (parent && parent.stage) {
+					parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
 				}
-				else {
-					action.parent.removeEventListener(Event.RESIZE, resizeHandler);
+				else if (parent) {
+					parent.removeEventListener(Event.RESIZE, resizeHandler);
 				}
 			}
 		}
