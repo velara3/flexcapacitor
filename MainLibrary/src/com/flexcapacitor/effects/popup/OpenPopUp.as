@@ -12,9 +12,13 @@ package com.flexcapacitor.effects.popup {
 	import flash.display.Sprite;
 	import flash.filters.DropShadowFilter;
 	
-	import mx.core.FlexGlobals;
 	import mx.core.IFlexDisplayObject;
 	import mx.effects.IEffect;
+	
+	/**
+	 * Pop up close event
+	 * */
+	[Event(name="close", type="flash.events.Event")]
 	
 	/**
 	 * Mouse down outside event
@@ -32,15 +36,19 @@ package com.flexcapacitor.effects.popup {
 	 * 
 	 * To Use:<br/>
 	 * <pre>
-&lt;popup:OpenPopUp id="openExportToImageEffect" 
-		 popUpType="{ExportToImage}" 
+&lt;popup:OpenPopUp id="openExportEffect" 
+		 popUpType="{ExportPopUp}" 
 		 modalDuration="250"
 		 showDropShadow="true"
 		 modalBlurAmount="1"
 		 keepReference="true"
-		 options="{{source:myImage.source, data:dataGrid.selectedItem}}">
+		 options="{{source:myImage.source, gridItem:dataGrid.selectedItem}}">
 &lt;/popup:OpenPopUp>
+</pre>
 
+ * ExportPopUp.mxml: 
+<pre>
+&lt;s:Group width="100%">&lt;s:Button label="Hello world"/>&lt;/s:Group>
 	 * </pre>
 	 * 
 	 * Typically you will want to close the pop up. You can do so with ClosePopUp:<br/>
@@ -58,6 +66,11 @@ package com.flexcapacitor.effects.popup {
 	 * Or the pop up parent may need to be set. 
 	 * */
 	public class OpenPopUp extends ActionEffect {
+		
+		/**
+		 * Event name constant when pop up is closed
+		 * */
+		public static const CLOSE:String = "close";
 		
 		/**
 		 * Event name constant when mouse down outside
@@ -95,7 +108,7 @@ package com.flexcapacitor.effects.popup {
 		public var popUpType:Class;
 		
 		/**
-		 * Popup options. Object of name value pairs.
+		 * Popup options. Object of name value pairs used by the ClassFactory properties object.
 		 * */
 		public var options:Object;
 		
@@ -169,7 +182,7 @@ package com.flexcapacitor.effects.popup {
 		 * @copy mx.managers.PopUpManager#addPopUp
 		 * */
 		[Bindable]
-		public var parent:Sprite = Sprite(FlexGlobals.topLevelApplication);
+		public var parent:Sprite;
 		
 		/**
 		 * Effect that is played when mouse down outside
@@ -184,6 +197,12 @@ package com.flexcapacitor.effects.popup {
 		 * @see #closeOnMouseDownInside
 		 * */
 		public var mouseDownInsideEffect:IEffect;
+		
+		/**
+		 * Effect that is played when the pop up is closed
+		 * 
+		 * */
+		public var closeEffect:IEffect;
 		
 		/**
 		 * If true and part of a sequence moves right to the next effect.

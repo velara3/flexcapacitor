@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:controls="com.flexcapacitor.controls.*"
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:states="com.flexcapacitor.effects.states.*" 
+		 
+		 >
+	
+	<fx:Metadata>
+		[Event(name="change", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			[Inspectable(enumeration="horizontal,vertical")]
+			public var helpLabelPosition:String = "horizontal";
+			
+			[Bindable]
+			public var simpleFormLayout:SimpleFormLayout;
+			
+			protected function textDisplay_updateCompleteHandler(event:FlexEvent):void {
+				
+				if (simpleFormLayout) {
+					simpleFormLayout.updateAllFormItems(this);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		
+		<!-- CHECKBOX CHANGE -->
+		<handlers:EventHandler eventName="change" 
+							   target="{toggleSwitch}"
+							   redispatchToTarget="{this}"
+							   >
+		</handlers:EventHandler>
+		
+		<fx:Boolean id="selected">@{toggleSwitch.selected}</fx:Boolean>
+		<fx:Object id="ownerComponent"/>
+		<fx:String id="label"></fx:String>
+		<fx:String id="helpLabel"></fx:String>
+		<fx:int id="labelWidth">100</fx:int>
+	</fx:Declarations>
+	
+	<s:layout>
+		<s:VerticalLayout verticalAlign="middle"/>
+	</s:layout>
+	
+	<s:HGroup width="100%" verticalAlign="middle">
+		
+		<s:Label id="textDisplay" 
+				 text="{label}" 
+				 minWidth="{labelWidth}" 
+				 fontWeight="bold"
+				 fontSize="{getStyle('fontSize')}"
+				 updateComplete="textDisplay_updateCompleteHandler(event)"
+				 />
+		
+		<s:Spacer width="10" height="10"/>
+		
+		<s:ToggleButton id="toggleSwitch" selected="false" />
+		
+		<s:Spacer width="10" height="10"/>
+	
+		<s:Label id="helpDisplay" 
+				 text="{helpLabel}" 
+				 fontSize="{getStyle('fontSize')-6}"
+				 width="100%" 
+				 visible="{helpLabel &amp;&amp; helpLabelPosition=='horizontal'}" 
+				 includeInLayout="{helpLabel &amp;&amp; helpLabelPosition=='horizontal'}" />
+	</s:HGroup>
+
+	<s:Label id="helpDisplay2" 
+			 text="{helpLabel}" 
+			 fontSize="{getStyle('fontSize')-6}"
+			 width="100%" 
+			 visible="{helpLabel &amp;&amp; helpLabelPosition=='vertical'}" 
+			 includeInLayout="{helpLabel &amp;&amp; helpLabelPosition=='vertical'}" />
+</s:Group>

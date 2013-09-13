@@ -28,7 +28,11 @@ package com.flexcapacitor.effects.settings {
 
 	/**
 	 * Saves a setting to the client disk. This uses Shared Objects to save the setting
-	 * value. The group option is also the path to the shared object. 
+	 * value. The group option is also the path to the shared object. <br/><br/>
+	 * 
+	 * <pre>
+	 * &lt:SaveSettings data="{object}" saveImmediately="true" />
+	 * </pre>
 	 * */
 	public class SaveSettings extends ActionEffect {
 		
@@ -94,11 +98,11 @@ package com.flexcapacitor.effects.settings {
 		public var secure:Boolean;
 		
 		/**
-		 * Saves the setting. Locally persistent shared object equals setting. <br/>
+		 * Saves the settings immediately. Locally persistent shared object equals setting. <br/>
 		 * 
 		 * @copy flash.net.SharedObject.flush()
 		 * */
-		public var save:Boolean = true;
+		public var saveImmediately:Boolean = true;
 		
 		/**
 		 * Effect to play when the save is pending. 

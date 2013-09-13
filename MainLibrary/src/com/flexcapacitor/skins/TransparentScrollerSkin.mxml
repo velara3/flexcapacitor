@@ -2,6 +2,46 @@
 
 <!--
 
+To use:
+
+In CSS:
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		
+		s|List s|HScrollBar {
+			skinClass: ClassReference("com.flexcapacitor.skins.transparentScroller.TransparentHorizontalScrollerSkin");
+			fixedThumbSize:true;
+		}
+		
+		s|List s|VScrollBar {
+			skinClass: ClassReference("com.flexcapacitor.skins.transparentScroller.TransparentHorizontalScrollerSkin");
+			fixedThumbSize:true;
+		}
+	</fx:Style>
+
+OR: 
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		
+		s|ScrollBar {
+			skinClass: ClassReference("com.flexcapacitor.skins.TransparentScrollerSkin");
+			fixedThumbSize:true;
+		}
+
+	</fx:Style>
+
+
+Inline in a List: 
+This doesnt seem to work
+<s:List>
+	<s:scroller>
+		<s:Scroller skinClass="com.flexcapacitor.skins.TransparentScrollerSkin" visible="false"/>
+	</s:scroller>
+</s:List>
+-->
+
+<!--
+
     ADOBE SYSTEMS INCORPORATED
     Copyright 2008 Adobe Systems Incorporated
     All Rights Reserved.

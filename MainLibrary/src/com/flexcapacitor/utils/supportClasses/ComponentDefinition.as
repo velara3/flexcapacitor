@@ -13,9 +13,9 @@ package com.flexcapacitor.utils.supportClasses {
 	 * added or removed from the display list
 	 * */
 	[Bindable]
-	public class ComponentDescription {
+	public class ComponentDefinition {
 		
-		public function ComponentDescription(element:Object = null):void {
+		public function ComponentDefinition(element:Object = null):void {
 			if (element) {
 				name = NameUtil.getUnqualifiedClassName(element);
 				className = getQualifiedClassName(element);
@@ -78,7 +78,7 @@ package com.flexcapacitor.utils.supportClasses {
 		/**
 		 * Parent
 		 * */ 
-		public var parent:ComponentDescription;
+		public var parent:ComponentDefinition;
 		
 		/**
 		 * Skin class. If it doesn't exist the component 
@@ -159,8 +159,8 @@ package com.flexcapacitor.utils.supportClasses {
 		/**
 		 * Get a clone of this object
 		 * */
-		public function clone():ComponentDescription {
-			var item:ComponentDescription = new ComponentDescription();
+		public function clone():ComponentDefinition {
+			var item:ComponentDefinition = new ComponentDefinition();
 			item.className = className;
 			item.classType = classType;
 			item.cursors = cursors;
@@ -177,7 +177,7 @@ package com.flexcapacitor.utils.supportClasses {
 			item.styles = styles;
 			item.skin = skin;
 			item.properties = properties;
-			
+				
 			return item;
 		}
 	}

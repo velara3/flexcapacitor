@@ -83,7 +83,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			length = properties.length;
 			data = action.data;
 			group = action.group;
-			save = action.save;
+			save = action.saveImmediately;
 			
 			// check for required properties
 			if (validate) {

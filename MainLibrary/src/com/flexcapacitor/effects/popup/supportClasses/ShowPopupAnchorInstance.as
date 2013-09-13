@@ -60,6 +60,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			
 			var action:ShowPopupAnchor = ShowPopupAnchor(effect);
 			var popup:PopUpAnchor = PopUpAnchor(action.target);
+			var hideIfOpen:Boolean = action.hideIfOpen;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -76,6 +77,14 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
+			
+			// if hiding through a mouse out somewhere event this may be updated before we get here
+			if (hideIfOpen && popup.popUp.parent!=null) {
+				popup.displayPopUp = false;
+				finish();
+				return;
+			}
+			
 			
 			if (action.popUpHeightMatchesAnchorHeight) 	popup.popUpHeightMatchesAnchorHeight = action.popUpHeightMatchesAnchorHeight;
 			if (action.popUpWidthMatchesAnchorWidth) 	popup.popUpWidthMatchesAnchorWidth = action.popUpWidthMatchesAnchorWidth;

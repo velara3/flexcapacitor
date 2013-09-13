@@ -1285,10 +1285,10 @@ package com.flexcapacitor.utils {
 			popUpLabel.text = name + " - " + container.width + "x" + container.height + " ";
 			
 			if (displayTarget is UIComponent) {
-				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ") ";
+				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ")";
 			}
 			
-			popUpLabel.text = name + " at " + container.x + "x" + container.y + " ";
+			popUpLabel.text += " at " + container.x + "x" + container.y + " ";
 			popUpDisplayImage.width = container.width;
 			popUpDisplayImage.height = container.height;
 			popUpDisplayGroup.width = container.width;

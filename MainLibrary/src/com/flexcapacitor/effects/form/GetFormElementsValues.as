@@ -8,23 +8,23 @@ package com.flexcapacitor.effects.form {
 	
 	
 	/**
-	 * Gets the values from the form components and stores it in the data property. 
+	 * Gets the values from the form components and stores it in the data property. <br/><br/>
 	 * 
-	 * TO GET THE FORM COMPONENT VALUES
+	 * TO GET THE FORM COMPONENT VALUES<br/><br/>
 	 * 
-	 * Add form adapter in declarations
-	 * Add form elements to form adapter default tag
-	 * Add form components
+	 * Add form adapter in declarations<br/>
+	 * Add form elements to form adapter default tag<br/>
+	 * Add form components<br/><br/>
 	 * 
-	 * In the form elements set
-	 * - target component - id of UI Component, such as myTextInput
-	 * - target component property - property on target component that contains the property value, such as "text" or selected
-	 * - data - ?is the variable that will contain the value from the component (set in form adapter)
-	 * - data property - name of property on the data object that will contain the target component value
-	 * - default value, default index, default selected - default value if target data is null and use default values is true
+	 * In the form elements set<br/>
+	 * - target component - id of UI Component, such as myTextInput<br/>
+	 * - target component property - property on target component that contains the property value, such as "text" or selected<br/>
+	 * - data - ?is the variable that will contain the value from the component (set in form adapter)<br/>
+	 * - data property - name of property on the data object that will contain the target component value<br/>
+	 * - default value, default index, default selected - default value if target data is null and use default values is true<br/><br/>
 	 * 
-	 * Call "get form elements values" effect
-	 * Set data type in effect
+	 * Call "get form elements values" effect<br/>
+	 * Set data type in effect<br/>
 	 * 
 	 * */
 	public class GetFormElementsValues extends ActionEffect {

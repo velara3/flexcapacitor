@@ -16,8 +16,6 @@
         <![CDATA[
 			import mx.core.FlexVersion;
 			
-			import spark.events.TextOperationEvent;
-			
 			private var paddingChanged:Boolean;
 			
 			/* Define the skin elements that should not be colorized. */

@@ -120,12 +120,15 @@ package com.flexcapacitor.effects.bitmap {
 	 * Gets the bitmap data from an object. The object can be: <br/><br/>
 	 * A DisplayObject. <br/>
 	 * A Bitmap or BitmapData instance.<br/>
-	 * An instance of a DisplayObject.<br/>
 	 * An Embedded Image.<br/>
 	 * A Multi-DPI Image.<br/>
 	 * The path to an image.<br/><br/>
 	 * 
-	 * Basically this class passes the value in the source property into the source property of a BitmapImage class instance.<br/><br/>
+	 * This class passes the value you set which can be a display object, 
+	 * component, class, or path to an image loads in the image if its not a display object and 
+	 * and then gets the bitmap data from that. 
+	 * 
+	 * This class creates an instance of BitmapImage and gets the value of the bitmapData on that instance.<br/><br/>
 	 * 
 	 * The generated bitmap data is copied into the bitmapData property of this class.<br/><br/>
 	 * 
@@ -139,6 +142,7 @@ package com.flexcapacitor.effects.bitmap {
 	 * If the image is not in the path the image is not loaded and an ioError is dispatched
 	 * and the effects are canceled. 
 	 * At some point this may branch to play an image not found effect.
+	 * The Rasterize effect may be a better option in some cases. 
 	 * <br/><br/>
 	 * 
 	 * Sometimes an image is not copied to the target location by Flash Builder.

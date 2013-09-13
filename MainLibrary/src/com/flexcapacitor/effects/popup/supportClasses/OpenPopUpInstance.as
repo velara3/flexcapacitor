@@ -93,7 +93,7 @@ import mx.managers.SystemManager;
 			var modalBlurAmount:Number = action.modalBlurAmount;
 			var modalDuration:int = action.modalDuration;
 			var addMouseEvents:Boolean = action.addMouseEvents;
-			var parent:Sprite = action.parent;
+			var parent:Sprite = action.parent ? action.parent : Sprite(FlexGlobals.topLevelApplication);
 			var setBackgroundBlendMode:Boolean;
 			var height:int = action.height;
 			var width:int = action.width;
@@ -167,6 +167,7 @@ import mx.managers.SystemManager;
 			}
 			
 			if (addMouseEvents || closeOnMouseDownOutside) {
+				IFlexDisplayObject(popUp).addEventListener(Event.REMOVED, removedHandler, false, 0, true);
 				IFlexDisplayObject(popUp).addEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler, false, 0, true);
 				IFlexDisplayObject(parent).addEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler, false, 0, true);
 			}
@@ -188,7 +189,8 @@ import mx.managers.SystemManager;
 			PopUpManager.addPopUp(popUp as IFlexDisplayObject, parent, true);
 			PopUpManager.centerPopUp(popUp as IFlexDisplayObject);
 			
-			
+			// we have to set this after adding the pop up
+			// so we can access the display object the pop up is apart of
 			if (setBackgroundBlendMode) {
 				var modalWindow:FlexSprite;
 				var systemManager:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
@@ -198,14 +200,15 @@ import mx.managers.SystemManager;
 					modalWindow = systemManager.rawChildren.getChildAt(index-1) as FlexSprite;
 					
 					if (modalWindow) {
-						modalWindow.blendMode = BlendMode.NORMAL; //
+						modalWindow.blendMode = BlendMode.NORMAL;
 					}
 				}
 			}
 			
 			
-			if (action.autoCenter || action.keepReference) {
-				action.popUp = popUp as IFlexDisplayObject;
+			//if (action.autoCenter || action.keepReference) { // we need to keep it for remove handler?
+			if (true) {
+				action.popUp = IFlexDisplayObject(popUp);
 			}
 			
 			///////////////////////////////////////////////////////////
@@ -232,22 +235,12 @@ import mx.managers.SystemManager;
 		//
 		//--------------------------------------------------------------------------
 		
-		
-		private function mouseUpOutsideHandler(event:MouseEvent):void
-		{
+		/**
+		 * Mouse up outside of parent or pop up
+		 * */
+		private function mouseUpOutsideHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			
-			IFlexDisplayObject(event.currentTarget).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
-			IFlexDisplayObject(event.currentTarget).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
-			
-			if (action.autoCenter) {
-				if (action.parent.stage) {
-					action.parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
-				}
-				else {
-					action.parent.removeEventListener(Event.RESIZE, resizeHandler);
-				}
-			}
 			
 			if (action.closeOnMouseDownOutside) {
 				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
@@ -269,23 +262,14 @@ import mx.managers.SystemManager;
 			finish();
 		}
 		
-		private function mouseUpInsideHandler(event:MouseEvent):void
-		{
+		/**
+		 * Mouse up inside pop up
+		 * */
+		private function mouseUpInsideHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			
-			IFlexDisplayObject(event.currentTarget).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
-			IFlexDisplayObject(event.currentTarget).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
 			
-			if (action.autoCenter) {
-				if (action.parent.stage) {
-					action.parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
-				}
-				else {
-					action.parent.removeEventListener(Event.RESIZE, resizeHandler);
-				}
-			}
-			
-			if (action.closeOnMouseDownOutside) {
+			if (action.closeOnMouseDownInside) {
 				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
 			}
 		
@@ -297,6 +281,23 @@ import mx.managers.SystemManager;
 				playEffect(action.mouseDownInsideEffect);
 				return;
 			}
+		}
+		
+		/**
+		 * Pop up was removed from the stage
+		 * */
+		private function removedHandler(event:Event):void {
+			var action:OpenPopUp = OpenPopUp(effect);
+			
+			removeEventListeners();
+			
+			if (action.hasEventListener(OpenPopUp.CLOSE)) {
+				action.dispatchEvent(new Event(OpenPopUp.CLOSE));
+			}
+			
+			if (action.closeEffect) { 
+				playEffect(action.closeEffect);
+			}
 			
 			///////////////////////////////////////////////////////////
 			// End the effect
@@ -304,8 +305,29 @@ import mx.managers.SystemManager;
 			finish();
 		}
 		
-		private function resizeHandler(event:Event):void
-		{
+		/**
+		 * Remove event listeners
+		 * */
+		private function removeEventListeners():void {
+			var action:OpenPopUp = OpenPopUp(effect);
+			var popUp:IFlexDisplayObject = action.popUp;
+			
+			IFlexDisplayObject(popUp).removeEventListener(Event.REMOVED, removedHandler);
+			IFlexDisplayObject(popUp).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
+			IFlexDisplayObject(popUp).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+			IFlexDisplayObject(action.parent).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+			
+			if (action.autoCenter) {
+				if (action.parent.stage) {
+					action.parent.stage.removeEventListener(Event.RESIZE, resizeHandler);
+				}
+				else {
+					action.parent.removeEventListener(Event.RESIZE, resizeHandler);
+				}
+			}
+		}
+		
+		private function resizeHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			
 			PopUpManager.centerPopUp(action.popUp as IFlexDisplayObject);

@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx"
+		minWidth="19" minHeight="23">
+		
+		<fx:Metadata>
+			<![CDATA[
+			/**
+			* @copy spark.skins.spark.ApplicationSkin#hostComponent
+			*/
+			[HostComponent("spark.components.Button")]
+			]]>
+		</fx:Metadata>
+		
+		<!-- states -->
+		<s:states>
+			<s:State name="up"/>
+			<s:State name="over"/>
+			<s:State name="down"/>
+			<s:State name="disabled"/>
+		</s:states>               
+			<fx:Script>
+				<![CDATA[
+					import spark.components.Button;
+				]]>
+			</fx:Script>
+		
+		<!-- layer 1: fill hit area -->
+		<!--- @private -->
+		<s:Rect id="fill" left="1" right="1" top="1" bottom="1">
+			<s:fill>
+				<s:SolidColor alpha="0" color="#FFFFFF"/>
+			</s:fill>
+		</s:Rect>
+		
+		
+		<!-- layer 2: search icon -->
+		<!--- The search graphic displayed in the text input. -->
+		<s:Group id="arrow"
+				 top="4" left="4" right="4" bottom="4"
+				 width="100%" height="100%" >
+			<s:Path data="M6.01514 4.76758 4.72754 3.48047C4.8667 3.17285 4.94482 2.83203 4.94482 2.47266 4.94482 1.10742 3.83545 0 2.47119 0 1.1084 0 0 1.10742 0 2.47266 0 3.83398 1.1084 4.94434 2.47119 4.94434 2.83105 4.94434 3.17285 4.86523 3.48193 4.72656L4.76758 6.01367 C4.93994 6.18652 5.16553 6.27246 5.39111 6.27246 5.6167 6.27246 5.8418 6.18652 6.01514 6.01562 6.18701 5.84277 6.27246 5.61523 6.27246 5.39062 6.27246 5.16602 6.18701 4.94043 6.01514 4.76758ZM2.47119 4.08008C1.58545 4.08008 0.86377 3.35742 0.86377 2.47266 0.86377 1.58496 1.58545 0.863281 2.47119 0.863281 3.35889 0.863281 4.08203 1.58496 4.08203 2.47266 4.08203 3.35742 3.35889 4.08008 2.47119 4.08008Z"
+					width="100%" height="100%">
+				<s:fill>
+					<s:SolidColor color="#989898" />
+				</s:fill>
+			</s:Path>
+		</s:Group>
+</s:SparkSkin>

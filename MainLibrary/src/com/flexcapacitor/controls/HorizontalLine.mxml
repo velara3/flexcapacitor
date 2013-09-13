@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Line xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark"
-		alpha=".45"
+		alpha=".45" 
 		width="100%">
 	
 	<!-- Horizontal indented line
 	
 	Usage: 
-	<s:HorizontalLine width="100%" alpha="1" angle="90"/>
+	<s:HorizontalLine width="100%" strokeColor="#9a9a9a" shadowColor="#FFFFFF" alpha="1" angle="90"/>
 	-->
 	<fx:Declarations>
 		<fx:Number id="strokeColor">#9a9a9a</fx:Number>

@@ -206,6 +206,12 @@ package com.flexcapacitor.utils {
 				};
 				return int(value);
 			}
+			else if (type == "uint") {
+				if (value == null || value == "") {
+					return undefined
+				};
+				return uint(value);
+			}
 			else if (type == "String") {
 				return String(value);
 			}

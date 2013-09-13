@@ -309,6 +309,8 @@
     <classEntry path="com.flexcapacitor.utils.supportClasses.VisualElement"/>
     <classEntry path="com.flexcapacitor.effects.popup.supportClasses.OpenPopUpInstance"/>
     <classEntry path="com.flexcapacitor.controls.FrameContainer"/>
+    <classEntry path="com.flexcapacitor.data.chart.DataItem"/>
+    <classEntry path="com.flexcapacitor.skins.ClearButton"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

@@ -63,5 +63,10 @@ package com.flexcapacitor.effects.popup {
 		 * */
 		public var popUp:IFlexDisplayObject;
 		
+		/**
+		 * Hide if already open
+		 * */
+		public var hideIfOpen:Boolean;
+		
 	}
 }

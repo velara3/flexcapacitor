@@ -20,7 +20,6 @@ package com.flexcapacitor.utils {
 	import mx.collections.ArrayCollection;
 	import mx.core.BitmapAsset;
 	import mx.core.FlexGlobals;
-	import mx.core.IUIComponent;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
 	import mx.managers.ISystemManager;
@@ -35,6 +34,13 @@ package com.flexcapacitor.utils {
 	 * Utils used to manipulate the component tree and display list tree
 	 * */
 	public class DisplayObjectUtils {
+		
+		public static const HEXIDECIMAL_HASH_COLOR_TYPE:String = "hexidecimalHash";
+		public static const HEXIDECIMAL_COLOR_TYPE:String = "hexidecimal";
+		public static const STRING_UINT_COLOR_TYPE:String = "stringUint";
+		public static const NUMBER_COLOR_TYPE:String = "number";
+		public static const UINT_COLOR_TYPE:String = "uint";
+		public static const INT_COLOR_TYPE:String = "int";
 		
 		public function DisplayObjectUtils() {
 			
@@ -214,7 +220,8 @@ package com.flexcapacitor.utils {
 			
 			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
 			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
-			var topLevel:Sprite = Sprite(IUIComponent(target.parent).systemManager.getSandboxRoot());
+			var topLevel:Sprite = Sprite(FlexGlobals.topLevelApplication.systemManager.getSandboxRoot());
+			//var topLevel:Sprite = Sprite(Object(target.parent).systemManager.getSandboxRoot());
 			var bounds3:Rectangle = target.getBounds(topLevel);
 			var bitmapData:BitmapData = new BitmapData((targetWidth + horizontalPadding) * scaleX, (targetHeight + verticalPadding) * scaleY, transparentFill, fillColor);
 			var matrix:Matrix = new Matrix();
@@ -598,15 +605,21 @@ package com.flexcapacitor.utils {
 		 trace(ObjectUtil.toString(rootComponent));
 		 
 		 * */
-		public static function getComponentDisplayList(element:Object, parentItem:ComponentDescription = null, depth:int = 0):ComponentDescription {
+		public static function getComponentDisplayList2(element:Object, parentItem:ComponentDescription = null, depth:int = 0, dictionary:Dictionary = null):ComponentDescription {
 			var item:ComponentDescription;
 			var childElement:IVisualElement;
 			
 			
 			if (!parentItem) {
-				parentItem = new ComponentDescription(element);
-				parentItem.children = new ArrayCollection();
-				return getComponentDisplayList(element, parentItem);
+				if (dictionary && dictionary[element]) {
+					parentItem = dictionary[element];
+				}
+				else {
+					parentItem = new ComponentDescription(element);
+					parentItem.children = new ArrayCollection();
+				}
+				
+				return getComponentDisplayList2(element, parentItem);
 			}
 			
 			
@@ -616,15 +629,21 @@ package com.flexcapacitor.utils {
 				
 				for (var i:int;i<length;i++) {
 					childElement = visualContainer.getElementAt(i);
-					item = new ComponentDescription(childElement);
-					item.parent = parentItem;
+						
+					if (dictionary && dictionary[childElement]) {
+						item = dictionary[childElement];
+					}
+					else {
+						item = new ComponentDescription(childElement);
+						item.parent = parentItem;
+					}
 					
 					parentItem.children.addItem(item);
 					
 					// check for IVisualElement
 					if (childElement is IVisualElementContainer && IVisualElementContainer(childElement).numElements>0) {
-						item.children = new ArrayCollection();
-						getComponentDisplayList(childElement, item, depth + 1);
+						!item.children ? item.children = new ArrayCollection() : void;
+						getComponentDisplayList2(childElement, item, depth + 1);
 					}
 					
 					
@@ -947,6 +966,37 @@ package com.flexcapacitor.utils {
 				
 				// get name
 				if (componentDescription) {
+					visible = element.visible;
+					path.push(visible);
+				}
+				
+				// get next ancestor
+				if ("owner" in element) {
+					element = element.owner as IVisualElement;
+				}
+				else {
+					element = null;
+				}
+			}
+			
+			return path.indexOf(false)!=-1 ? false : true;
+		}
+		
+		/**
+		 * Find the greatest visibility state of a visual element
+		 * 
+		 * Usage:
+		 * var visibility:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(item.instance)); 
+		 * */
+		public static function getGreatestVisibilityDisplayList(element:IVisualElement):Boolean {
+			var componentDescription:ComponentDescription;
+			var path:Array = [];
+			var visible:Boolean;
+			
+			// find the owner of a visual element that is also on the component tree
+			while (element) {
+				
+				if (element) {
 					visible = element.visible;
 					path.push(visible);
 				}
@@ -1364,6 +1414,33 @@ package com.flexcapacitor.utils {
 			value = addHash ? "#" + red + green + blue : red + green + blue;
 			
 			return value;
+		}
+		
+		/**
+		 * Gets the color as type from uint. 
+		 * */
+		public static function getColorAsType(color:uint, type:String):Object {
+			
+				if (type==HEXIDECIMAL_HASH_COLOR_TYPE) {
+					return getColorInHex(color, true);
+				}
+				else if (type==HEXIDECIMAL_COLOR_TYPE) {
+					return getColorInHex(color, false);
+				}
+				else if (type==STRING_UINT_COLOR_TYPE) {
+					return String(color);
+				}
+				else if (type==NUMBER_COLOR_TYPE) {
+					return Number(color);
+				}
+				else if (type==UINT_COLOR_TYPE) {
+					return uint(color);
+				}
+				else if (type==INT_COLOR_TYPE) {
+					return int(color);
+				}
+				
+				return color;
 		}
 		
 		

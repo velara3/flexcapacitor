@@ -26,3 +26,7 @@ controls|InsetLabel {
 	insetStrength: 1;
 	inner: true;
 }
+
+controls|DataGrid {
+	skinClass: ClassReference("com.flexcapacitor.skins.DataGridSkin");
+}

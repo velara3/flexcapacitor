@@ -86,7 +86,10 @@ package com.flexcapacitor.effects.collections {
 		
 		/**
 		 * Name of field to search for on object in collection. If collection contains
-		 * simple types then do not set this property.
+		 * simple types then do not set this property. If the collection contains
+		 * XML items and you want to filter on an attribute add the "@" sign.
+		 * For example, "@name". <br/><br/>
+		 * 
 		 * This can also accept multiple field names. Separate by comma. 
 		 * */
 		public var fieldName:String;

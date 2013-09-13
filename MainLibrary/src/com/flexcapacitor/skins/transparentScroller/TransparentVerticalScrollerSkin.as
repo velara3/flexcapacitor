@@ -3,7 +3,6 @@
 
 
 package com.flexcapacitor.skins.transparentScroller {
-	import spark.components.VScrollBar;
 	import spark.skins.spark.VScrollBarSkin;
 	
 	/**

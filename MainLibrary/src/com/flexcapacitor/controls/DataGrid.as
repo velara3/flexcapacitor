@@ -22,6 +22,55 @@ package com.flexcapacitor.controls
 	 */
 	[Event(name="gridItemEditorSessionSaving", type="spark.events.GridItemEditorEvent")]
 	
+	/**
+	 * Shows or hides the header
+	 * */
+	[Style(name="showHeader", inherit="no", type="Boolean")]
+	
+	/**
+	 * Sets the color of the header row separator
+	 * */
+	[Style(name="headerRowSeparatorColor", inherit="no", type="uint", format="Color")]
+	
+	/**
+	 * Vertical column separator color
+	 * */
+	[Style(name="columnSeparatorColor", inherit="no", type="uint", format="Color")]
+	
+	/**
+	 * Sets the alpha on the column separator
+	 * */
+	[Style(name="columnSeparatorAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
+	
+	/**
+	 * Sets the alpha on the column separator
+	 * */
+	[Style(name="columnSeparatorWeight", inherit="no", type="int")]
+	
+	/**
+	 * Row separator color
+	 * */
+	[Style(name="rowSeparatorColor", inherit="no", type="uint", format="Color")]
+	
+	/**
+	 * Sets the alpha on the row separator
+	 * */
+	[Style(name="rowSeparatorAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
+	
+	/**
+	 * Sets the weight on the row separator line
+	 * */
+	[Style(name="rowSeparatorWeight", inherit="no", type="int")]
+	
+	/**
+	 * Header column separator color
+	 * */
+	[Style(name="headerColumnSeparatorColor", inherit="no", type="uint", format="Color")]
+	
+	/**
+	 * Header background color
+	 * */
+	[Style(name="headerBackgroundColor", inherit="yes", type="uint", format="Color")]
 	
 	/**
 	 * 
@@ -29,7 +78,7 @@ package com.flexcapacitor.controls
 	 * It is up to the grid item editor to dispatch this event
 	 * 
 	 * 
-	 * Use com.flexcapacitor.skins.DataGridSkin for showHeader option.
+	 * Make sure this is using com.flexcapacitor.skins.DataGridSkin
 	 * @inherit
 	 * 
 	 * */

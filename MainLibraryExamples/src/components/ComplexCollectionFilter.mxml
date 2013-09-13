@@ -190,6 +190,7 @@
 		<handlers:EventHandler eventName="creationComplete" >
 			<data:SortCollection target="{arrayCollection}" 
 								 fields="{['name']}" />
+			<!-- For filtering XML attributes add @ to the field name. For example, "@name" -->
 		</handlers:EventHandler>
 		
 		
@@ -203,6 +204,7 @@
 								   caseSensitive="{caseSensitive.selected}"
 								   searchAtStart="{searchAtStart.selected}"
 								   />
+			<!-- For filtering XML attributes add @ to the field name. For example, "@name" -->
 		</handlers:EventHandler>
 	</fx:Declarations>
 	

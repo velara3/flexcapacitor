@@ -8,7 +8,7 @@ package com.flexcapacitor.controls
 	import spark.components.RichEditableText;
 	
 	/**
-	 * Extends Rich Editable Text with:<br/><br/>
+	 * Extends Rich Editable Text and:<br/><br/>
 	 * 
 	 * Turns off editing<br/>
 	 * Disables tab focus. <br/>
