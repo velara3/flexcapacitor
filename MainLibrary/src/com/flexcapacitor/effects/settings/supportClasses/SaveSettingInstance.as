@@ -81,14 +81,14 @@ package com.flexcapacitor.effects.settings.supportClasses {
 					errorMessage = "Name is required";
 					dispatchErrorEvent(errorMessage);
 				}
-				if (!action.data && !action.valueCanBeNull) {
-					errorMessage = "Value is required";
+				if (action.data==null && !action.valueCanBeNull) {
+					errorMessage = "Data value cannot be null";
 					dispatchErrorEvent(errorMessage);
-				}
-				if (!action.group) {
+				}/*
+				if (!action.name) {
 					errorMessage = "Group name is required";
 					dispatchErrorEvent(errorMessage);
-				}
+				}*/
 				
 			}
 			
@@ -97,10 +97,9 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
-			// gets the shared object with the name specified in the group
-			// if a group doesnt exist with this name it's created
-			result = SharedObjectUtils.getSharedObject(action.group, action.localPath, action.secure);
-			
+			// gets the shared object with the name specified
+			// if a path doesn't exist with this name it's created
+			result = SharedObjectUtils.getSharedObject(action.name, action.localPath, action.secure);
 			
 			// check if we could create the shared object
 			if (result is Event) {
@@ -108,12 +107,12 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.errorEvent = result;
 				
 				if (traceToConsole) {
-					traceMessage("Shared object could not be created.");
+					traceMessage("Shared object could not be created. " + ObjectUtil.toString(result));
 					traceMessage(ObjectUtil.toString(result));
 				}
 				
 				if (action.hasEventListener(SaveSetting.ERROR)) {
-					action.dispatchEvent(new Event(SaveSetting.ERROR));
+					dispatchActionEvent(new Event(SaveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -132,12 +131,12 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.errorEvent = result;
 				
 				if (traceToConsole) {
-					traceMessage("Shared object could not be created.");
+					traceMessage("Shared object could not be created. " + ObjectUtil.toString(result));
 					traceMessage(ObjectUtil.toString(result));
 				}
 				
 				if (action.hasEventListener(SaveSetting.ERROR)) {
-					action.dispatchEvent(new Event(SaveSetting.ERROR));
+					dispatchActionEvent(new Event(SaveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -152,16 +151,16 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				return;
 			}
 			else if (result==null) {
-				
+				// see errors in main class asdocs
 				action.errorEvent = result;
 				
 				if (traceToConsole) {
-					traceMessage("Shared object could not be created. It's value is null");
+					traceMessage("Shared object could not be created. It's value is null.");
 					traceMessage(ObjectUtil.toString(result));
 				}
 				
 				if (action.hasEventListener(SaveSetting.ERROR)) {
-					action.dispatchEvent(new Event(SaveSetting.ERROR));
+					dispatchActionEvent(new Event(SaveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -183,13 +182,38 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			sharedObject.objectEncoding = action.objectEncoding;
 			
-			// set property - by default null data deletes the property 
+			// set property - by default null data deletes the property --is this true?? maybe earlier fp?
 			// - sometimes fields are empty, "" but we still want the property 
-			if (action.data==null) {
-				sharedObject.setProperty(action.name, "");
+			// use RemoveSetting to remove the property
+			
+			// is property set
+			if (action.property!=null) {
+				
+				// if data is null
+				if (action.data==null) {
+					if (action.removeSettingWhenDataIsNull) {
+						delete sharedObject.data[action.property];
+					}
+					else {
+						sharedObject.setProperty(action.property, "");
+					}
+				}
+				else {
+					sharedObject.setProperty(action.property, action.data);
+				}
 			}
 			else {
-				sharedObject.setProperty(action.name, action.data);
+				if (action.data==null) {
+					if (action.removeSettingWhenDataIsNull) {
+						delete sharedObject.data[action.name];
+					}
+					else {
+						sharedObject.setProperty(action.name, "");
+					}
+				}
+				else {
+					sharedObject.setProperty(action.name, action.data);
+				}
 			}
 
 			// Immediately writes a locally persistent shared object to a 
@@ -219,7 +243,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 					action.errorEvent = error;
 					
 					if (action.hasEventListener(SaveSetting.ERROR)) {
-						action.dispatchEvent(new Event(SaveSetting.ERROR));
+						dispatchActionEvent(new Event(SaveSetting.ERROR));
 					}
 					
 					if (action.errorEffect) {
@@ -230,7 +254,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				if (status == SharedObjectFlushStatus.PENDING) {
 					
 					if (action.hasEventListener(SharedObjectFlushStatus.PENDING)) {
-						action.dispatchEvent(new Event(SharedObjectFlushStatus.PENDING));
+						dispatchActionEvent(new Event(SharedObjectFlushStatus.PENDING));
 					}
 					
 					if (action.pendingEffect) {
@@ -240,7 +264,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				else if (status==SharedObjectFlushStatus.FLUSHED) {
 					
 					if (action.hasEventListener(SaveSetting.SAVED)) {
-						action.dispatchEvent(new Event(SaveSetting.SAVED));
+						dispatchActionEvent(new Event(SaveSetting.SAVED));
 					}
 					
 					if (action.savedEffect) {
@@ -306,7 +330,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.errorEvent = event;
 				
 				if (action.hasEventListener(SaveSetting.ERROR)) {
-					action.dispatchEvent(new Event(SaveSetting.ERROR));
+					dispatchActionEvent(new Event(SaveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -318,7 +342,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.netStatusEvent = event;
 				
 				if (action.hasEventListener(SaveSetting.SAVED)) {
-					action.dispatchEvent(new Event(SaveSetting.SAVED));
+					dispatchActionEvent(new Event(SaveSetting.SAVED));
 				}
 				
 				if (action.savedEffect) {
@@ -355,7 +379,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			
 			if (action.hasEventListener(SaveSetting.ERROR)) {
-				action.dispatchEvent(new Event(SaveSetting.ERROR));
+				dispatchActionEvent(new Event(SaveSetting.ERROR));
 			}
 			
 			if (action.errorEffect) {

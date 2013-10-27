@@ -37,12 +37,8 @@
 // additional code added
 
 
-package com.flexcapacitor.utils
-{
-	import flash.display.DisplayObject;
-	import flash.display.StageAspectRatio;
-	import flash.geom.Matrix;
-	import flash.geom.Point;
+package com.flexcapacitor.utils {
+	
 
 	public class MeasurementUtils {
 		

@@ -70,7 +70,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			var properties:Array;
 			var length:int;
 			var data:Object;
-			var group:String;
+			var name:String;
 			var property:String;
 			var save:Boolean;
 			
@@ -82,7 +82,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			status = action.propertiesStatus;
 			length = properties.length;
 			data = action.data;
-			group = action.group;
+			name = action.name;
 			save = action.saveImmediately;
 			
 			// check for required properties
@@ -91,8 +91,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 					errorMessage = "Data is required";
 					dispatchErrorEvent(errorMessage);
 				}
-				if (!group) {
-					errorMessage = "Group name is required";
+				if (!name) {
+					errorMessage = "Name is required";
 					dispatchErrorEvent(errorMessage);
 				}
 				
@@ -113,7 +113,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			// gets the shared object with the name specified in the group
 			// if a group doesnt exist with this name it's created
-			result = SharedObjectUtils.getSharedObject(action.group, action.localPath, action.secure);
+			result = SharedObjectUtils.getSharedObject(action.name, action.localPath, action.secure);
 			
 			// check if we could create the shared object
 			if (result is Event) {
@@ -124,7 +124,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				
 				// step through 
 				if (action.hasEventListener(SaveSettings.ERROR)) {
-					action.dispatchEvent(new Event(SaveSettings.ERROR));
+					dispatchActionEvent(new Event(SaveSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -138,12 +138,14 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				finish();
 				return;
 			}
-			else if (!result) {
+			// ArgumentError 2005 
+			else if (!result || result is Error) {
 				
 				// shared object could not be created and is null
+				action.errorEvent = result as Event;
 				
 				if (action.hasEventListener(SaveSettings.ERROR)) {
-					action.dispatchEvent(new Event(SaveSettings.ERROR));
+					dispatchActionEvent(new Event(SaveSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -200,7 +202,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				if (status == SharedObjectFlushStatus.PENDING) {
 					
 					if (action.hasEventListener(SaveSettings.PENDING)) {
-						action.dispatchEvent(new Event(SaveSettings.PENDING));
+						dispatchActionEvent(new Event(SaveSettings.PENDING));
 					}
 					
 					if (action.pendingEffect) {
@@ -210,7 +212,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				else if (status==SharedObjectFlushStatus.FLUSHED) {
 					
 					if (action.hasEventListener(SaveSettings.SAVED)) {
-						action.dispatchEvent(new Event(SaveSettings.SAVED));
+						dispatchActionEvent(new Event(SaveSettings.SAVED));
 					}
 					
 					if (action.savedEffect) {
@@ -248,7 +250,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			if (event.info=="error") {
 				
 				if (action.hasEventListener(SaveSettings.ERROR)) {
-					action.dispatchEvent(new Event(SaveSettings.ERROR));
+					dispatchActionEvent(new Event(SaveSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -258,7 +260,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			else if (event.info==SharedObjectFlushStatus.FLUSHED) {
 				
 				if (action.hasEventListener(SaveSettings.SAVED)) {
-					action.dispatchEvent(new Event(SaveSettings.SAVED));
+					dispatchActionEvent(new Event(SaveSettings.SAVED));
 				}
 				
 				if (action.savedEffect) {
@@ -271,7 +273,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			var action:SaveSettings = SaveSettings(effect);
 			
 			if (action.hasEventListener(SaveSettings.ERROR)) {
-				action.dispatchEvent(new Event(SaveSettings.ERROR));
+				dispatchActionEvent(new Event(SaveSettings.ERROR));
 			}
 			
 			if (action.errorEffect) {

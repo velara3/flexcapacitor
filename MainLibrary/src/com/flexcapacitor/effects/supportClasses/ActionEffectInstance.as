@@ -94,6 +94,9 @@ package com.flexcapacitor.effects.supportClasses {
 		//--------------------------------------------------------------------------
 		
 		/** 
+		 * Update: This eventName and eventSource are or should be 
+		 * deprecated. It's not used. 
+		 * 
 		 * Name of event that the effect is waiting on before ending. 
 		 * This parameter must be used in conjunction with the
 		 * <code>target</code> property, which must be of type
@@ -223,7 +226,7 @@ package com.flexcapacitor.effects.supportClasses {
 				// TODO
 				// I'd like to remove this but it would require effect authors
 				// to call finish at the end of the play method if duration is 0
-				// Update: Calling finish is required
+				// Update: Calling finish is required so we could effectively remove this???
 				
 				// DO THIS!
 				// wait for classes that override play to run

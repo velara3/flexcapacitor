@@ -9,21 +9,28 @@ package com.flexcapacitor.effects.status {
 	import flash.display.Sprite;
 	
 	/**
-	 * Displays a message and then fades out the message. 
-	 * The duration must be more than 1 second.  <br/><br/>
+	 * Displays a message and then fades out the message. The duration must be more than 1 second.  
+	 * If you have data that you want to display set the data property.
+	 * It will be converted to a string. <br/><br/>
 	 * 
-	 * Usage: 
-	 * 
+	 * <b>Usage</b>:<br/> 
+	 * To show a message at the bottom of the screen,
 	 * <pre>
-&lt;status:ShowStatusMessage message="Your email has been sent" />
+&lt;status:ShowStatusMessage location="bottom" message="Your email has been sent" />
 	 * </pre>
 	 * 
-	 * Usage: 
-	 * 
+	 * <b>Usage</b>:<br/> 
+	 * How to hide a status message early,
 	 * <pre>
 &lt;status:ShowStatusMessage id="showRenderingStatus" message="Rendering" keepReference="true"/>
 &lt;core:CallMethod method="renderImage" startDelay="250"/>
 &lt;status:HideStatusMessage statusMessagePopUp="{showRenderingStatus.statusMessagePopUp}"/>
+	 * </pre>
+	 * 
+	 * <b>Usage</b>:<br/> 
+	 * How to show data object which is converted to a readable string,
+	 * <pre>
+&lt;status:ShowStatusMessage message="Your email has been sent" data="{errorMessage}" textAlignment="left" duration="3000"/>
 	 * </pre>
 	 * 
 	 * 
@@ -93,6 +100,17 @@ package com.flexcapacitor.effects.status {
 		public var message:String;
 		
 		/**
+		 * Data to show
+		 * */
+		[Bindable]
+		public var data:Object;
+		
+		/**
+		 * If data is null show that it is null. 
+		 * */
+		public var showNullData:Boolean;
+		
+		/**
 		 * If the modal is true then 
 		 * no interaction is possible until the status message is closed.
 		 * */
@@ -107,6 +125,11 @@ package com.flexcapacitor.effects.status {
 		 * Show busy icon
 		 * */
 		public var showBusyIcon:Boolean;
+		
+		/**
+		 * Text alignment
+		 * */
+		public var textAlignment:String = "center";
 		
 		/**
 		 * The location the message will appear at. 

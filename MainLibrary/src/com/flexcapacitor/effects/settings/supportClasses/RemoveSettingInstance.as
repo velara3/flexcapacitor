@@ -78,11 +78,11 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				if (!action.name) {
 					errorMessage = "Name is required";
 					dispatchErrorEvent(errorMessage);
-				}
-				if (!action.group) {
+				}/*
+				if (!action.property) {
 					errorMessage = "Group name is required";
 					dispatchErrorEvent(errorMessage);
-				}
+				}*/
 				
 			}
 			
@@ -91,17 +91,16 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
-			// gets the shared object with the name specified in the group
-			// if a group doesnt exist with this name it's created
-			result = SharedObjectUtils.getSharedObject(action.group, action.localPath, action.secure);
+			// gets the shared object with the name specified
+			result = SharedObjectUtils.getSharedObject(action.name, action.localPath, action.secure);
 			
 			// check if we could create the shared object
-			if (result is Event) {
+			if (result is Event || result is Error) {
 				
 				action.errorEvent = result;
 				
 				if (action.hasEventListener(RemoveSetting.ERROR)) {
-					action.dispatchEvent(new Event(RemoveSetting.ERROR));
+					dispatchActionEvent(new Event(RemoveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -120,7 +119,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.errorEvent = result;
 				
 				if (action.hasEventListener(RemoveSetting.ERROR)) {
-					action.dispatchEvent(new Event(RemoveSetting.ERROR));
+					dispatchActionEvent(new Event(RemoveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -142,7 +141,13 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			action.sharedObject = sharedObject;
 			
 			if (sharedObject.data) {
-				delete sharedObject.data[action.name];
+				
+				if (action.property) {
+					delete sharedObject.data[action.property];
+				}
+				else {
+					sharedObject.clear();
+				}
 			}
 			
 			// Immediately writes a locally persistent shared object to a 
@@ -164,7 +169,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				if (status == SharedObjectFlushStatus.PENDING) {
 					
 					if (action.hasEventListener(SharedObjectFlushStatus.PENDING)) {
-						action.dispatchEvent(new Event(SharedObjectFlushStatus.PENDING));
+						dispatchActionEvent(new Event(SharedObjectFlushStatus.PENDING));
 					}
 					
 					if (action.pendingEffect) {
@@ -174,7 +179,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				else if (status==SharedObjectFlushStatus.FLUSHED) {
 					
 					if (action.hasEventListener(RemoveSetting.REMOVED)) {
-						action.dispatchEvent(new Event(RemoveSetting.REMOVED));
+						dispatchActionEvent(new Event(RemoveSetting.REMOVED));
 					}
 					
 					if (action.removedEffect) {
@@ -221,7 +226,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.errorEvent = event;
 				
 				if (action.hasEventListener(RemoveSetting.ERROR)) {
-					action.dispatchEvent(new Event(RemoveSetting.ERROR));
+					dispatchActionEvent(new Event(RemoveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -233,7 +238,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				action.netStatusEvent = event;
 				
 				if (action.hasEventListener(RemoveSetting.REMOVED)) {
-					action.dispatchEvent(new Event(RemoveSetting.REMOVED));
+					dispatchActionEvent(new Event(RemoveSetting.REMOVED));
 				}
 				
 				if (action.removedEffect) {
@@ -266,7 +271,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			
 			if (action.hasEventListener(RemoveSetting.ERROR)) {
-				action.dispatchEvent(new Event(RemoveSetting.ERROR));
+				dispatchActionEvent(new Event(RemoveSetting.ERROR));
 			}
 			
 			if (action.errorEffect) {

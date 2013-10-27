@@ -25,8 +25,6 @@
 	
 	<fx:Script>
 		<![CDATA[
-			import mx.events.FlexEvent;
-			
 			import spark.events.IndexChangeEvent;
 			
 			protected function list1_changeHandler(event:IndexChangeEvent):void {
@@ -75,20 +73,20 @@
 	</s:Rect>
 	
 	<s:Group left="250" top="40" width="100%" height="100%" right="20">
-		<c:Introduction width="100%" height="100%" includeIn="Introduction" />
-		<c:SaveSettings width="100%" height="100%" includeIn="Save_Settings" />
-		<c:LoadFile width="100%" height="100%" includeIn="Load_File" />
-		<c:CopyPreviousToNext width="100%" height="100%" includeIn="Copy_Previous_to_Next" />
-		<c:SimpleCollectionSort width="100%" height="100%" includeIn="Simple_Collection_Sort" />
-		<c:ComplexCollectionSort width="100%" height="100%" includeIn="Complex_Collection_Sort" />
-		<c:ComplexCollectionSort2 width="100%" height="100%" includeIn="Complex_Collection_Sort_2" />
-		<c:XMLCollectionSort width="100%" height="100%" includeIn="XML_Collection_Sort" />
-		<c:SimpleCollectionFilter width="100%" height="100%" includeIn="Simple_Collection_Filtering" />
-		<c:ComplexCollectionFilter width="100%" height="100%" includeIn="Complex_Collection_Filtering" />
-		<c:CollectionAddItem width="100%" height="100%" includeIn="Collection_Add_Item" />
-		<c:BrowseForFile width="100%" height="100%" includeIn="Browse_For_File" />
-		<c:BranchingByRuntimeVersion width="100%" height="100%" includeIn="Branching_By_Runtime_Version" />
-		<c:ChangeStates width="100%" height="100%" includeIn="Change_States" />
+		<c:Introduction 			width="100%" height="100%" includeIn="Introduction" />
+		<c:SaveSettings1 			width="100%" height="100%" includeIn="Save_Settings" />
+		<c:LoadFile1 				width="100%" height="100%" includeIn="Load_File" />
+		<c:CopyPreviousToNext2 		width="100%" height="100%" includeIn="Copy_Previous_to_Next" />
+		<c:SimpleCollectionSort 	width="100%" height="100%" includeIn="Simple_Collection_Sort" />
+		<c:ComplexCollectionSort 	width="100%" height="100%" includeIn="Complex_Collection_Sort" />
+		<c:ComplexCollectionSort2 	width="100%" height="100%" includeIn="Complex_Collection_Sort_2" />
+		<c:XMLCollectionSort 		width="100%" height="100%" includeIn="XML_Collection_Sort" />
+		<c:SimpleCollectionFilter 	width="100%" height="100%" includeIn="Simple_Collection_Filtering" />
+		<c:ComplexCollectionFilter 	width="100%" height="100%" includeIn="Complex_Collection_Filtering" />
+		<c:CollectionAddItem1 		width="100%" height="100%" includeIn="Collection_Add_Item" />
+		<c:BrowseForFile1 			width="100%" height="100%" includeIn="Browse_For_File" />
+		<c:BranchingByRuntimeVersion1 width="100%" height="100%" includeIn="Branching_By_Runtime_Version" />
+		<c:ChangeStates1 			width="100%" height="100%" includeIn="Change_States" />
 	</s:Group>
 	
 	<s:Label id="title" 

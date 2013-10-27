@@ -78,11 +78,11 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				if (!action.name) {
 					errorMessage = "Name is required";
 					dispatchErrorEvent(errorMessage);
-				}
-				if (!action.group) {
-					errorMessage = "Group name is required";
+				}/*
+				if (!action.property) {
+					errorMessage = "Propery name is required";
 					dispatchErrorEvent(errorMessage);
-				}
+				}*/
 				
 			}
 			
@@ -93,7 +93,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			// gets the shared object with the name specified in the group
 			// if a group doesnt exist with this name it's created
-			result = SharedObjectUtils.getSharedObject(action.group, action.localPath, action.secure);
+			result = SharedObjectUtils.getSharedObject(action.name, action.localPath, action.secure);
 			
 			// check if we could create the shared object
 			if (result is Event) {
@@ -106,7 +106,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				}
 				
 				if (action.hasEventListener(GetSetting.ERROR)) {
-					action.dispatchEvent(new Event(GetSetting.ERROR));
+					dispatchActionEvent(new Event(GetSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -130,7 +130,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				}
 				
 				if (action.hasEventListener(GetSetting.ERROR)) {
-					action.dispatchEvent(new Event(GetSetting.ERROR));
+					dispatchActionEvent(new Event(GetSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -154,7 +154,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				}
 				
 				if (action.hasEventListener(GetSetting.ERROR)) {
-					action.dispatchEvent(new Event(GetSetting.ERROR));
+					dispatchActionEvent(new Event(GetSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -173,14 +173,14 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			sharedObject = SharedObject(result);
 			
-			data = sharedObject.data[action.name];
+			data = action.property ? sharedObject.data[action.property] : sharedObject.data;
 			
 			action.data = data;
 			
 			if (data == null) {
 				
 				if (action.hasEventListener(GetSetting.VALUE_NOT_SET)) {
-					action.dispatchEvent(new Event(GetSetting.VALUE_NOT_SET));
+					dispatchActionEvent(new Event(GetSetting.VALUE_NOT_SET));
 				}
 				
 				if (action.valueNotSetEffect) {
@@ -190,7 +190,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			}
 			else {
 				if (action.hasEventListener(GetSetting.VALUE_SET)) {
-					action.dispatchEvent(new Event(GetSetting.VALUE_SET));
+					dispatchActionEvent(new Event(GetSetting.VALUE_SET));
 				}
 				
 				if (action.valueSetEffect) {

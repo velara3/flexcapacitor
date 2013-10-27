@@ -28,26 +28,31 @@ package com.flexcapacitor.effects.settings {
 	[Event(name="error", type="flash.events.Event")]
 
 	/**
-	 * Gets a setting previously saved on clients disk. 
-	 * This uses Shared Objects to get the setting value. 
-	 * The group option is also the path to the shared object. <br/><br/>
+	 * Gets a setting previously saved on clients disk. This uses Shared Objects 
+	 * to get the value of a property of an object saved by name.<br/><br/> 
+	 * 
+	 * The localPath is the path to the shared object. <br/><br/>
 	 * 
 	 * Usage:
 <pre>
-	&lt;settings:GetSetting id="initialViewSetting" name="initialView" traceDataToConsole="true">
-		&lt;settings:valueNotSetEffect>
-			&lt;s:Sequence>
-				&lt;debugging:Trace message="Initial view not found"/>
-			&lt;/s:Sequence>
-		&lt;/settings:valueNotSetEffect>
-		&lt;settings:valueSetEffect>
-			&lt;s:Sequence>
-				&lt;debugging:Trace message="Initial view found {initialViewSetting.data}"/>
-				&lt;states:ChangeStates target="{this}" state="{initialViewSetting.data}"/>
-			&lt;/s:Sequence>
-		&lt;/settings:valueSetEffect>
-	&lt;/settings:GetSetting>
+&lt;settings:GetSetting id="getSetting" name="views" property="currentView" traceDataToConsole="true">
+	&lt;settings:valueNotSetEffect>
+		&lt;debugging:Trace message="No settings available"/>
+	&lt;/settings:valueNotSetEffect>
+	&lt;settings:valueSetEffect>
+		&lt;debugging:Trace message="Settings found." data="{getSetting.data}"/>
+	&lt;/settings:valueSetEffect>
+	&lt;settings:errorEffect>
+		&lt;status:ShowStatusMessage message="An error occured when attempting to get settings" data="{getSetting.errorEvent}"/>
+	&lt;/settings:errorEffect>
+&lt;/settings:GetSetting>
 </pre>
+	 * For errors see http://www.actionscripterrors.com/?p=806
+	 * 
+ 	 * @see SaveSetting
+ 	 * @see SaveSettings
+ 	 * @see GetSettings
+	 * @see RemoveSetting
 	 * */
 	public class GetSetting extends ActionEffect {
 		
@@ -99,17 +104,25 @@ package com.flexcapacitor.effects.settings {
 		public var sharedObject:SharedObject;
 		
 		/**
-		 * Name of group for the setting. Default is general. 
-		 * Required. The name can include forward slashes (/); for example, 
+		 * Name of setting.
+		 * */
+		public var name:String;
+		
+		/**
+		 * Property on the saved data object. Optional. 
+		 * */		
+		public var property:String;
+		
+		/**
+		 * Local path of setting. Default is general. 
+		 * Optional. The name can include forward slashes (/); for example, 
 		 * work/addresses is a legal name. 
 		 * Spaces are not allowed in the name, nor are the following characters: 
 		 * ˜ % & \ ; : ' , < > ? #
 		 *  
-		 * The group name equals the name passed in to getLocal()<br/>
-		 * 
 		 * @copy flash.net.SharedObject.getLocal()
 		 * */
-		public var group:String = "general";
+		public var localPath:String;
 		
 		/**
 		 * If this parameter is set to true, creates a new secure settings file 
@@ -124,11 +137,6 @@ package com.flexcapacitor.effects.settings {
 		public var secure:Boolean;
 		
 		/**
-		 * Name of setting. Required.
-		 * */
-		public var name:String;
-		
-		/**
 		 * Value of setting. You do not set this. 
 		 * If the setting is null then this value is null and the 
 		 * valueNotSet effect is played and the valueNotSet event is dispatched.
@@ -137,6 +145,34 @@ package com.flexcapacitor.effects.settings {
 		 * */
 		[Bindable]
 		public var data:Object;
+		
+		/**
+		 * Reference to AsyncErrorEvent when an AsyncError event occurs.
+		 * */
+		[Bindable]
+		public var asyncErrorEvent:AsyncErrorEvent;
+		
+		/**
+		 * Reference to NetStatusEvent when an NetStatus event occurs.
+		 * */
+		[Bindable]
+		public var netStatusEvent:NetStatusEvent;
+		
+		/**
+		 * Reference to error event when a shared object error event occurs.
+		 * */
+		[Bindable]
+		public var errorEvent:Object;
+		
+		/**
+		 * Object encoding. Default is ObjectEncoding.AMF3
+		 * */
+		public var objectEncoding:uint = ObjectEncoding.AMF3;
+		
+		/**
+		 * Trace the shared object data to the console
+		 * */
+		public var traceDataToConsole:Boolean;
 		
 		/**
 		 * Effect to play when an error occurs when attempting to get a setting. 
@@ -158,37 +194,5 @@ package com.flexcapacitor.effects.settings {
 		 * @copy flash.net.SharedObject
 		 * */
 		public var valueSetEffect:Effect;
-		
-		/**
-		 * Optional.
-		 * @copy flash.net.SharedObject.getLocal()
-		 * */
-		public var localPath:String;
-		
-		/**
-		 * Reference to AsyncErrorEvent when an AsyncError event occurs.
-		 * */
-		public var asyncErrorEvent:AsyncErrorEvent;
-		
-		/**
-		 * Reference to NetStatusEvent when an NetStatus event occurs.
-		 * */
-		public var netStatusEvent:NetStatusEvent;
-		
-		/**
-		 * Reference to error event when a shared object error event occurs.
-		 * */
-		public var errorEvent:Object;
-		
-		/**
-		 * Object encoding. Default is ObjectEncoding.AMF3
-		 * */
-		public var objectEncoding:uint = ObjectEncoding.AMF3;
-		
-		/**
-		 * Trace the shared object data to the console
-		 * */
-		public var traceDataToConsole:Boolean;
-		
 	}
 }

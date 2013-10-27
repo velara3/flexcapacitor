@@ -9,6 +9,8 @@ package com.flexcapacitor.utils {
 	
 	/**
 	 * Helper class to save settings to a shared object
+	 * 
+	 * For errors see http://www.actionscripterrors.com/?p=806
 	 * */
 	public class SharedObjectUtils extends EventDispatcher {
 		
@@ -88,10 +90,11 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Takes a target and a list of properties. Then saves the value of those properties in 
-		 * the shared object using the same names as the keys
-		 * For example, we have PersonVO, and it has properties name, address and phone
-		 * Pass in the instance and the name of the properties and it will save the properties
-		 * name, address and phone as keys and the values as values
+		 * the shared object using the same names as the keys.
+		 * 
+		 * For example, say we have an instance of a Person class and it has properties name, 
+		 * address and phone. We can pass in the instance of the class and the name of the 
+		 * properties we want to store and it will save just those properties and their values.
 		 * */
 		public function setValuesOfKeysFromTarget(target:Object, propertyNames:Array):void {
 			
@@ -143,11 +146,16 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Gets the shared object by name or returns an error 
+		 * 
+		 * For errors see http://www.actionscripterrors.com/?p=806
 		 * */
 		public static function getSharedObject(name:String, localPath:String = null, secure:Boolean = false):Object {
+			if (localPath=="") localPath = null;
+			var so:SharedObject;
 			
 			try {
-				return SharedObject.getLocal(name, localPath, secure);
+				so = SharedObject.getLocal(name, localPath, secure);
+				return so;
 			}
 			catch (event:*) { // was event:Error but sometimes null would be returned below?
 				return event;

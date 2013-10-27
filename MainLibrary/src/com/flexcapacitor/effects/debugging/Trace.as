@@ -32,7 +32,20 @@ package com.flexcapacitor.effects.debugging {
 		/**
 		 * Contents to trace
 		 * */
+		[Bindable]
 		public var message:String;
+		
+		/**
+		 * Data to trace if set. If data is null and you want to 
+		 * show that then set showNullData to true. 
+		 * */
+		[Bindable]
+		public var data:Object;
+		
+		/**
+		 * If data is null show that it is null. 
+		 * */
+		public var showNullData:Boolean;
 		
 		/**
 		 * Used to trace out the value of the property on the target with the 

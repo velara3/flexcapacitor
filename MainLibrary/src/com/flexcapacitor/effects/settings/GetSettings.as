@@ -26,14 +26,70 @@ package com.flexcapacitor.effects.settings {
 	[Event(name="error", type="flash.events.Event")]
 
 	/**
-	 * Gets all settings by group name. 
-	 * If the group exists the data property will be set to the group and the
-	 * properties property will be set name of the settings in the group.
-	 * If the group is set the valueSetEffect is run. If the group is not 
-	 * set the valueNotSetEffect is run. 
+	 * Gets all settings by name. This uses Shared Objects to save data. <br/><br/>
 	 * 
-	 * This uses Shared Objects to get the settings data. 
-	 * The group option is the path to the shared object. 
+	 * If a shared objects exists by the name given the valueSetEffect is run 
+	 * and the data from the shared object is placed in the data property. 
+	 * If a shared object does not exist or the data in it is null 
+	 * the valueNotSetEffect is run. <br/><br/>
+	 * 
+	 * All of the properties on the shared object are placed in the properties array. <br/><br/>
+	 * 
+	 * The localPath is the path to the shared object. This can be null, "/" or another value.<br/><br/> 
+	 * 
+	 * <b>Usage<b><br/>
+
+	 * The following example saves an object to the shared object named, "user" with the 
+	 * properties, "name" and "age". 
+	 * 
+ * <pre>
+ * &ltObject id="person" name="John" age="30" weight="160" />
+ * 
+ * &ltSaveSettings name="user" data="{person}" propertiesStatus="inclusive" saveImmediately="true">
+ * 	&ltproperties>
+ * 		&ltArray>
+ * 			&ltString>name&lt/String>
+ * 			&ltString>age&lt/String>
+ * 		&lt/Array>
+ * 	&lt/properties>
+ * &lt/SaveSettings>
+ * </pre>
+	 * 
+	 * Using the example above, you can later retrieve the shared object 
+	 * with the name, "user" and it will return an object with the properties, 
+	 * "name" and "age" and values "John" and "30" respectively.
+	 * 
+	 * To get the settings:
+<pre>
+	&lt;settings:GetSettings id="getSettings" name="user" traceDataToConsole="true">
+		&lt;settings:valueNotSetEffect>
+			&lt;s:Sequence>
+				&lt;debugging:Trace message="Shared object not found with that name"/>
+			&lt;/s:Sequence>
+		&lt;/settings:valueNotSetEffect>
+		&lt;settings:valueSetEffect>
+			&lt;s:Sequence>
+				&lt;debugging:Trace message="Shared object found" data="{getSettings.data}"/>
+			&lt;/s:Sequence>
+		&lt;/settings:valueSetEffect>
+		&lt;settings:errorEffect>
+			&lt;s:Sequence >
+				&lt;status:ShowStatusMessage message="Error getting settings"
+										  location="bottom"
+										  data="{getSettings.errorEvent}"
+										  textAlignment="left"/>
+			&lt;/s:Sequence>
+		&lt;/settings:errorEffect>
+	&lt;/settings:GetSettings>
+</pre>
+	 * 
+	 * For errors see http://www.actionscripterrors.com/?p=806
+	 * 
+	 * <br/><br/>
+ 	 * @see GetSetting
+ 	 * @see SaveSetting
+ 	 * @see SaveSettings
+	 * @see RemoveSetting
 	 * */
 	public class GetSettings extends ActionEffect {
 		
@@ -80,22 +136,26 @@ package com.flexcapacitor.effects.settings {
 		
 		
 		/**
-		 * Reference to the shared object
+		 * Reference to the shared object<br/>
+		 * @copy flash.net.SharedObject
 		 * */
 		public var sharedObject:SharedObject;
 		
 		/**
-		 * Name of group for the settings. Default is general. 
+		 * Name of the settings. Required. Cannot contain spaces. 
+		 * */
+		public var name:String;
+		
+		/**
+		 * Optional. Default is null. 
 		 * Required. The name can include forward slashes (/); for example, 
 		 * work/addresses is a legal name. 
 		 * Spaces are not allowed in the name, nor are the following characters: 
 		 * ˜ % & \ ; : ' , < > ? #
 		 *  
-		 * The group name equals the name passed in to getLocal()<br/><br/>
-		 * 
 		 * @copy flash.net.SharedObject.getLocal()
 		 * */
-		public var name:String = "general";
+		public var localPath:String;
 		
 		/**
 		 * If this parameter is set to true, creates a new secure settings file 
@@ -120,6 +180,28 @@ package com.flexcapacitor.effects.settings {
 		public var data:Object;
 		
 		/**
+		 * If true then no error is thrown when the name is not set. 
+		 * */
+		public var allowNullName:Boolean;
+		
+		/**
+		 * List of properties in the group
+		 * */
+		[Bindable]
+		public var properties:Array;
+		
+		/**
+		 * Trace the settings properties to the console
+		 * */
+		public var traceDataToConsole:Boolean;
+		
+		/**
+		 * Reference to error event when a shared object error event occurs.
+		 * */
+		[Bindable]
+		public var errorEvent:Object;
+		
+		/**
 		 * Effect to play when an error occurs when attempting to get the settings. 
 		 * 
 		 * @copy flash.net.SharedObject
@@ -139,22 +221,6 @@ package com.flexcapacitor.effects.settings {
 		 * @copy flash.net.SharedObject
 		 * */
 		public var valueSetEffect:Effect;
-		
-		/**
-		 * Optional.
-		 * @copy flash.net.SharedObject.getLocal()
-		 * */
-		public var localPath:String;
-		
-		/**
-		 * List of properties in the group
-		 * */
-		public var properties:Array;
-		
-		/**
-		 * Trace the settings properties to the console
-		 * */
-		public var traceDataToConsole:Boolean;
 		
 	}
 }

@@ -8,8 +8,6 @@
 package com.flexcapacitor.effects.popup {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
-	import mx.effects.Effect;
-	
 	
 	/**
 	 * Closes a pop up.<br/><br/>
@@ -87,7 +85,6 @@ import com.flexcapacitor.effects.popup.ClosePopUp;
 import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 
 import mx.core.IFlexDisplayObject;
-import mx.effects.EffectInstance;
 import mx.managers.PopUpManager;
 
 

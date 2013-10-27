@@ -144,6 +144,10 @@ package com.flexcapacitor.effects.core.supportClasses {
 				value = valueType(value);
 			}
 			
+			if (action.convertObjectToString) {
+				value = ObjectUtil.toString(value);
+			}
+			
 			// SET VALUE
 			// if target property index is set we get the index
 			if (action.targetPropertyIndex!=-1) {

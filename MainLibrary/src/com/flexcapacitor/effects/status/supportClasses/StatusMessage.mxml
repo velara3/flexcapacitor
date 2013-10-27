@@ -44,8 +44,7 @@
 		<s:Label id="label" 
 				 maxDisplayedLines="6" 
 				 width="100%" 
-				 textAlign.withoutBusyIndicator="center"
-				 textAlign.withBusyIndicator="left"
+				 textAlign="{textAlignment}"
 				 fontSize="24" 
 				 fontWeight="normal" 
 				 text="{message}"/>
@@ -116,6 +115,18 @@
 				maxWidth = parent.width;
 				width = parent.width;
 			}
+			
+			private var _textAlignment:String = "left";
+
+			[Bindable]
+			public function get textAlignment():String {
+				return _textAlignment;
+			}
+
+			public function set textAlignment(value:String):void {
+				_textAlignment = value;
+			}
+
 			
 			private var _showBusyIndicator:Boolean;
 			

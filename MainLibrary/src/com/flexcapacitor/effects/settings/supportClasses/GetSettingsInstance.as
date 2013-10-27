@@ -1,13 +1,14 @@
 
 
 package com.flexcapacitor.effects.settings.supportClasses {
-	import com.flexcapacitor.effects.settings.GetSetting;
 	import com.flexcapacitor.effects.settings.GetSettings;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	import com.flexcapacitor.utils.SharedObjectUtils;
 	
 	import flash.events.Event;
 	import flash.net.SharedObject;
+	
+	import mx.utils.ObjectUtil;
 	
 	
 	/**
@@ -74,8 +75,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			// check for required properties
 			if (validate) {
-				if (!action.name) {
-					errorMessage = "Group name is required";
+				if (!action.name && !action.allowNullName) {
+					errorMessage = "Name is required";
 					dispatchErrorEvent(errorMessage);
 				}
 				
@@ -93,13 +94,15 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			// check if we could create the shared object
 			if (result is Event) {
 				
+				action.errorEvent = result;
+				
 				if (action.traceDataToConsole) {
-					traceMessage("Shared object could not be created");
+					traceMessage("Shared object could not be created. " + ObjectUtil.toString(result));
 				}
 				
 				// step through 
 				if (action.hasEventListener(GetSettings.ERROR)) {
-					action.dispatchEvent(new Event(GetSettings.ERROR));
+					dispatchActionEvent(new Event(GetSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -114,13 +117,14 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				return;
 			}
 			else if (result is Error) {
+				action.errorEvent = result;
 				
 				if (traceToConsole) {
-					traceMessage("Shared object could not be created.");
+					traceMessage("Shared object could not be created. " + ObjectUtil.toString(result));
 				}
 				
 				if (action.hasEventListener(GetSettings.ERROR)) {
-					action.dispatchEvent(new Event(GetSettings.ERROR));
+					dispatchActionEvent(new Event(GetSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -135,13 +139,14 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				return;
 			}
 			else if (result==null) { // this condition might not be needed anymore - see SharedObjectUtils.getSharedObject
+				action.errorEvent = result;
 				
 				if (traceToConsole) {
 					traceMessage("Shared object could not be created. It's value is null");
 				}
 				
 				if (action.hasEventListener(GetSettings.ERROR)) {
-					action.dispatchEvent(new Event(GetSettings.ERROR));
+					dispatchActionEvent(new Event(GetSettings.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -179,7 +184,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			if (data == null || properties.length==0) {
 				
 				if (action.hasEventListener(GetSettings.VALUE_NOT_SET)) {
-					action.dispatchEvent(new Event(GetSettings.VALUE_NOT_SET));
+					dispatchActionEvent(new Event(GetSettings.VALUE_NOT_SET));
 				}
 				
 				if (action.valueNotSetEffect) {
@@ -189,7 +194,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			}
 			else {
 				if (action.hasEventListener(GetSettings.VALUE_SET)) {
-					action.dispatchEvent(new Event(GetSettings.VALUE_SET));
+					dispatchActionEvent(new Event(GetSettings.VALUE_SET));
 				}
 				
 				if (action.valueSetEffect) {

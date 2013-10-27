@@ -14,6 +14,7 @@ package com.flexcapacitor.effects.status.supportClasses {
 	import mx.core.IFlexDisplayObject;
 	import mx.managers.ISystemManager;
 	import mx.managers.PopUpManager;
+	import mx.utils.ObjectUtil;
 	
 	/**
 	 * @copy ShowStatusMessage
@@ -65,8 +66,10 @@ package com.flexcapacitor.effects.status.supportClasses {
 			var statusMessageProperties:Object = action.statusMessageProperties;
 			var keepReference:Boolean = action.keepReference;
 			var moveToNextEffectImmediately:Boolean = action.moveToNextEffectImmediately;
+			var textAlignment:String = action.textAlignment;
 			var location:String = action.location;
 			var parent:Sprite = action.parentView;
+			var message:String = action.message;
 			var statusMessage:IStatusMessage;
 			var factory:ClassFactory;
 			var position:Number;
@@ -101,8 +104,23 @@ package com.flexcapacitor.effects.status.supportClasses {
 			messageBox = factory.newInstance();
 			statusMessage = messageBox as IStatusMessage;
 			
+			
+			if (action.data) {
+				if (action.data is String) {
+					message += "\n" + action.data;
+				}
+				else {
+					message += "\n" + ObjectUtil.toString(action.data);
+				}
+			}
+			
+			if (action.data==null && action.showNullData) {
+				message += ". Data is null.";
+			}
+			
 			if (statusMessage) {
-				statusMessage.message = action.message;
+				statusMessage.message = message;
+				statusMessage.textAlignment = textAlignment;
 				statusMessage.duration = action.doNotClose ? -1 : action.duration;
 				statusMessage.fadeInDuration = action.fadeInDuration;
 				statusMessage.showBusyIndicator = action.showBusyIcon;

@@ -17,6 +17,9 @@ package com.flexcapacitor.effects.core {
 	/**
 	 * The same as spark.effects.SetAction except it extends the ActionEffect class<br/><br/>
 	 * 
+	 * SetAction is more framework aware. Use it for setting properties on UIComponents and
+	 * visual elements. <br/><br/>
+	 * 
 	 * Notes: There are things in this class that should be in CopyDataToTarget
 	 * and things in CopyDataToTarget that should be in this class. At some point these
 	 * both need to be aligned with spark.effects and com.flexcapacitor.effects. <br/>

@@ -10,6 +10,14 @@ package com.flexcapacitor.effects.core {
 	 * Copies the value in the data property or the value in the property on the source property 
 	 * to the target object<br/><br/>
 	 * 
+	 * <b>Usage</b>:<br/>
+	 * To copy the value of 10 to a text input named, "myTextInput" use the following:
+<pre>
+&ltcore:CopyDataToTarget data="10" 
+ * target="{myTextInput}" 
+ * targetPropertyName="text"/>
+</pre>
+	 * 
 	 * If data property is not set and there is no error then try setting the 
 	 * target to the parent on the original target and set the targetPropertyName like so,<br/><br/>
 	 * 
@@ -19,6 +27,7 @@ package com.flexcapacitor.effects.core {
 	 * After:<br/>
 	 * target = "{parentOfObjectA}" targetPropertyName="objectA" 
 	 * 
+	 * @see SetAction
 	 * */
 	public class CopyDataToTarget extends ActionEffect {
 		
@@ -110,5 +119,9 @@ package com.flexcapacitor.effects.core {
 		 * */
 		public var inspectData:Boolean;
 		
+		/**
+		 * Convert object to string
+		 * */
+		public var convertObjectToString:Boolean;
 	}
 }

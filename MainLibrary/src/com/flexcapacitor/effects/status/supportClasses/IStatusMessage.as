@@ -14,5 +14,7 @@ package com.flexcapacitor.effects.status.supportClasses {
 		function get fadeInDuration():int;
 		function set showBusyIndicator(value:Boolean):void;
 		function get showBusyIndicator():Boolean;
+		function set textAlignment(value:String):void;
+		function get textAlignment():String;
 	}
 }
