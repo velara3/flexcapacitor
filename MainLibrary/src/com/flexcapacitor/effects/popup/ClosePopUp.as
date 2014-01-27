@@ -36,6 +36,9 @@ package com.flexcapacitor.effects.popup {
 	 * <pre>
 	 * 	&lt;popup:ClosePopUp popUp="{this}" />
 	 * </pre>
+	 * 
+	 * Note: If there is flicker when closing then be sure to set the triggerEvent of this 
+	 * effect. 
 	 * */
 	public class ClosePopUp extends ActionEffect {
 		
@@ -84,8 +87,14 @@ package com.flexcapacitor.effects.popup {
 import com.flexcapacitor.effects.popup.ClosePopUp;
 import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 
+import mx.core.FlexGlobals;
 import mx.core.IFlexDisplayObject;
+import mx.core.IUIComponent;
+import mx.core.UIComponent;
 import mx.managers.PopUpManager;
+import mx.managers.SystemManager;
+
+import flashx.textLayout.tlf_internal;
 
 
 /**
@@ -165,8 +174,19 @@ class ClosePopUpInstance extends ActionEffectInstance {
 		// Continue with action
 		///////////////////////////////////////////////////////////
 		
-		PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+		// causes flicker when effects are used in pop up because 
+		// it is removed then added back so effects can run
+		//PopUpManager.removePopUp(popUp as IFlexDisplayObject);
 		
+		// can't use popUp call later 
+		// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+		// 		at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
+		if (FlexGlobals.topLevelApplication && triggerEvent) {
+			UIComponent(FlexGlobals.topLevelApplication).callLater(PopUpManager.removePopUp, [(popUp as IFlexDisplayObject)]);
+		}
+		else {
+			PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+		}
 		
 		///////////////////////////////////////////////////////////
 		// End the effect

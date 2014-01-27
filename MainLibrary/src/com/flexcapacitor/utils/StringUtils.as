@@ -137,5 +137,34 @@ package com.flexcapacitor.utils {
 			
 			return value.match(/\S+/g).length;
 		}
+		
+		/**
+		 * Changes camel case to a human readable format. So helloWorld, hello-world and hello_world becomes "Hello World". 
+		 * */
+		public static function prettifyCamelCase(value:String=""):String {
+			var value:String = 'helloWorld';
+		    var output:String = "";
+			var len:int = value.length;
+			var char:String;
+			
+		    for (var i:int;i<len;i++) {
+				char = value.charAt(i);
+				
+		        if (i==0) {
+		            output += char.toUpperCase();
+		        }
+		        else if (char !== char.toLowerCase() && char === char.toUpperCase()) {
+		            output += " " + char;
+		        }
+		        else if (char == "-" || char == "_") {
+		            output += " ";
+		        }
+		        else {
+		            output += char;
+		        }
+		    }
+			
+			return output;
+		}
 	}
 }

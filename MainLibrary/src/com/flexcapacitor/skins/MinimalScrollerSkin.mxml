@@ -32,7 +32,9 @@ viewport property to link them together.
       @playerversion AIR 1.5
       @productversion Flex 4
 -->
-<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:controls="com.flexcapacitor.controls.*">
 
     <fx:Metadata>
     <![CDATA[ 
@@ -45,7 +47,7 @@ viewport property to link them together.
         
     <fx:Script>
     <![CDATA[    
-		import mx.core.IUIComponent;
+		
         /**
          *  @private
          */

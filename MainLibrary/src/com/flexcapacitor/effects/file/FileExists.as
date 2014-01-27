@@ -22,6 +22,13 @@ package com.flexcapacitor.effects.file {
 	
 	/**
 	 * Checks if the file exists. AIR ONLY
+	 * 
+	 * @see BrowseForFile
+	 * @see GetFile
+	 * @see LoadFile
+	 * @see PromptSaveAs
+	 * @see SaveDataToFile
+	 * @see UploadFile
 	 * */
 	public class FileExists extends ActionEffect {
 		

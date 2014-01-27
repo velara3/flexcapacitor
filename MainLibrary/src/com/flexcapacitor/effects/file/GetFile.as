@@ -40,6 +40,11 @@ package com.flexcapacitor.effects.file {
 	/**
 	 * Get the file. AIR ONLY
 	 * @see BrowseForFile
+	 * @see FileExists
+	 * @see LoadFile
+	 * @see PromptSaveAs
+	 * @see SaveDataToFile
+	 * @see UploadFile
 	 * */
 	public class GetFile extends ActionEffect {
 		

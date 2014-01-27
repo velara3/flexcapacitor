@@ -6,6 +6,12 @@ package com.flexcapacitor.effects.popup {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import mx.core.IFlexDisplayObject;
+	import mx.effects.IEffect;
+	
+	/**
+	 * Mouse out event
+	 * */
+	[Event(name="mouseOut", type="flash.events.MouseEvent")]
 	
 	/**
 	 * Shows a popup anchor
@@ -38,6 +44,11 @@ package com.flexcapacitor.effects.popup {
 		}
 		
 		/**
+		 * Event name constant on mouse out
+		 * */
+		public static const MOUSE_OUT:String = "mouseOut";
+		
+		/**
 		 * @copy spark.components.PopUpAnchor#popUpHeightMatchesAnchorHeight
 		 * */
 		public var popUpHeightMatchesAnchorHeight:Boolean;
@@ -59,6 +70,11 @@ package com.flexcapacitor.effects.popup {
 		public var updatePopUpTransform:Boolean;
 		
 		/**
+		 * Close the pop up on mouse out
+		 * */
+		public var closeOnMouseOut:Boolean;
+		
+		/**
 		 * @copy spark.components.PopUpAnchor#popUp
 		 * */
 		public var popUp:IFlexDisplayObject;
@@ -67,6 +83,18 @@ package com.flexcapacitor.effects.popup {
 		 * Hide if already open
 		 * */
 		public var hideIfOpen:Boolean;
+		
+		/**
+		 * Array of display objects that should not close the pop up when 
+		 * close pop up when mouse out and mouse down options are enabled. 
+		 * */
+		public var displayObjectExceptions:Array;
+		
+		/**
+		 * Effect that is played on mouse out 
+		 * 
+		 * */
+		public var mouseOutEffect:IEffect;
 		
 	}
 }

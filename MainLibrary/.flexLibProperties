@@ -311,6 +311,9 @@
     <classEntry path="com.flexcapacitor.controls.FrameContainer"/>
     <classEntry path="com.flexcapacitor.data.chart.DataItem"/>
     <classEntry path="com.flexcapacitor.skins.ClearButton"/>
+    <classEntry path="com.flexcapacitor.effects.settings.supportClasses.SettingsDefault"/>
+    <classEntry path="com.flexcapacitor.controls.VScrollBar"/>
+    <classEntry path="com.flexcapacitor.services.IWPService"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

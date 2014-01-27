@@ -12,7 +12,6 @@ package com.flexcapacitor.handlers {
 	
 	import mx.core.IMXMLObject;
 	import mx.effects.CompositeEffect;
-	import mx.effects.Effect;
 	import mx.effects.IEffect;
 	import mx.effects.Sequence;
 	import mx.events.EffectEvent;
@@ -209,7 +208,15 @@ MyOtherComponent.mxml,<br/>
 	 * 
 	 * The local effects will play and then the hideMenuEffectAndGotoHome effect will play.
 	 * You can have the controller effect play first by changing to playControllerEffectDuring property
-	 * to before.<br/>
+	 * to before.<br/><br/>
+	 * 
+	 * NOTE: When a pop up is being removed from the stage and it contains effects
+	 * it can sometimes throw a TypeError since the effect trigger event is null. 
+	 * Set setTriggerEvent to true to avoid the following error. <br/><br/>
+	 * 
+	 * TypeError: Error #1009: Cannot access a property or method of a null object reference.<br/>
+	 * 		at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]<br/>
+	 * 		at flash.display::DisplayObjectContainer/removeChild()<br/>
 	 * */
 	public class EventHandler extends EventHandlerBase implements IHandler, IMXMLObject {
 		
@@ -327,13 +334,13 @@ MyOtherComponent.mxml,<br/>
 		
 		private var _effect:IEffect;
 		
-		[ArrayElementType("mx.effects.Effect")]
 		/**
 		 * A list of action effects to run in sequence. 
 		 * Since this is actually a Sequence it can accept 
 		 * Parallel or Sequence as well as any effects.
 		 * Can also contain a reference to a sequence 
 		 * */
+		[ArrayElementType("mx.effects.IEffect")]
 		public function get actions():Array {
 			return _actions;
 		}
@@ -349,6 +356,7 @@ MyOtherComponent.mxml,<br/>
 			
 			if (_actions && _actions.length>0) {
 				
+				// if effect is not set then create a sequence and add the actions to it
 				if (effect==null) {
 					compositeEffect = new Sequence();
 					compositeEffect.children = actions;
@@ -461,6 +469,16 @@ MyOtherComponent.mxml,<br/>
 				dispatchEvent(new EffectEvent(CONTROLLER_EFFECT_END, false, false, event.effectInstance));
 			}
 		}
+		
+		/**
+		 * Ends effects if they are playing
+		 * */
+		public var endPlayingEffects:Boolean;
+		
+		/**
+		 * Stops effects if they are playing
+		 * */
+		public var stopPlayingEffects:Boolean;
 		
 		private var preventDefaultKeyboardEvent:Boolean;
 		
@@ -1499,6 +1517,14 @@ MyOtherComponent.mxml,<br/>
 				controllerEffect = controller[controllerEffectName];
 			}
 			
+			// when the trigger event has been null and the element has been removed 
+			// or is being removed from the stage then it throws a TypeError
+			// since the effect trigger event is null. 
+			
+			// set this to true to avoid the following error
+			// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+			//	at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
+			//	at flash.display::DisplayObjectContainer/removeChild()
 			if (setTriggerEvent) {
 				controllerEffect.triggerEvent = event;
 			}
@@ -1527,6 +1553,14 @@ MyOtherComponent.mxml,<br/>
 		 * */
 		public function playEffect():void {
 			
+			// when the trigger event has been null and the element has been removed 
+			// or is being removed from the stage then it throws a TypeError
+			// since the effect trigger event is null. 
+			
+			// set this to true to avoid the following error
+			// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+			//	at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
+			//	at flash.display::DisplayObjectContainer/removeChild()
 			if (setTriggerEvent) {
 				effect.triggerEvent = event;
 			}
@@ -1535,6 +1569,14 @@ MyOtherComponent.mxml,<br/>
 				if (effect.target!=event.currentTarget) {
 					effect.target = event.currentTarget;
 				}
+			}
+			
+			if (stopPlayingEffects) {
+				if (effect.isPlaying) effect.stop();
+			}
+			
+			if (endPlayingEffects) {
+				if (effect.isPlaying) effect.end();
 			}
 			
 			_effect.addEventListener(EffectEvent.EFFECT_START, effectStart, false, 0, true);

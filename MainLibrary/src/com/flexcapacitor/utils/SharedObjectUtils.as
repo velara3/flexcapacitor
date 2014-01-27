@@ -157,8 +157,9 @@ package com.flexcapacitor.utils {
 				so = SharedObject.getLocal(name, localPath, secure);
 				return so;
 			}
-			catch (event:*) { // was event:Error but sometimes null would be returned below?
-				return event;
+			catch (error:*) { 
+				// sometimes it returns type Error, sometimes type Event and sometimes null
+				return error;
 			}
 			
 			return null;

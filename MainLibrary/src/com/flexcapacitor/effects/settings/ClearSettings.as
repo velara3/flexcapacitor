@@ -13,6 +13,8 @@ package com.flexcapacitor.effects.settings {
 	 * Gets a setting previously saved on clients disk. 
 	 * This uses Shared Objects to get the setting value. 
 	 * The group option is also the path to the shared object. 
+	 * 
+	 * Note: Should possibly use RemoveSetting from now on. 
 	 * */
 	public class ClearSettings extends ActionEffect {
 		

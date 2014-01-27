@@ -302,15 +302,15 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * Adds file listeners
 		 * */
 		private function addFileListeners(dispatcher:IEventDispatcher):void {
-			dispatcher.addEventListener(Event.CANCEL, 						cancelHandler);
-			dispatcher.addEventListener(Event.COMPLETE, 					completeHandler);
-			dispatcher.addEventListener(HTTPStatusEvent.HTTP_STATUS, 		httpStatusHandler);
-			dispatcher.addEventListener(IOErrorEvent.IO_ERROR, 				ioErrorHandler);
-			dispatcher.addEventListener(Event.OPEN, 						openHandler);
-			dispatcher.addEventListener(ProgressEvent.PROGRESS, 			progressHandler);
-			dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler);
-			dispatcher.addEventListener(Event.SELECT, 						selectHandler);
-			dispatcher.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA,		uploadCompleteDataHandler);
+			dispatcher.addEventListener(Event.CANCEL, 						cancelHandler, false, 0, true);
+			dispatcher.addEventListener(Event.COMPLETE, 					completeHandler, false, 0, true);
+			dispatcher.addEventListener(HTTPStatusEvent.HTTP_STATUS, 		httpStatusHandler, false, 0, true);
+			dispatcher.addEventListener(IOErrorEvent.IO_ERROR, 				ioErrorHandler, false, 0, true);
+			dispatcher.addEventListener(Event.OPEN, 						openHandler, false, 0, true);
+			dispatcher.addEventListener(ProgressEvent.PROGRESS, 			progressHandler, false, 0, true);
+			dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler, false, 0, true);
+			dispatcher.addEventListener(Event.SELECT, 						selectHandler, false, 0, true);
+			dispatcher.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA,		uploadCompleteDataHandler, false, 0, true);
 		}
 		
 		/**

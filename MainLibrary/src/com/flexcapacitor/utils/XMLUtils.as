@@ -60,11 +60,16 @@ package com.flexcapacitor.utils
 		/**
 		 * Set xml object node with the given value
 		 * */
-		public function setItemContents(xml:XML, propertyName:String = "content", value:Object=""):void {
+		public static function setItemContents(xml:XML, propertyName:String = "content", value:Object=""):XML {
 			if (xml) {
 				if (value is String) {
 					// The following code may do what we want - need to check
 					// XML(item.content).insertChildAfter(null, wrapInCDATA(String(value)));
+					//TypeError: Error #1088: The markup in the document following the root element must be well-formed.
+					// -- property name is not in xml
+					if (!(propertyName in xml)) {
+						xml[propertyName] = new XML();
+					}
 					XML(xml[propertyName]).replace(0, encloseInCDATA(String(value)));
 				}
 				else if (value is XML) {
@@ -73,6 +78,8 @@ package com.flexcapacitor.utils
 					XML(xml.content)[0] = XML(value);
 				}
 			}
+			
+			return xml;
 		}
 		
 		/**
@@ -81,9 +88,12 @@ package com.flexcapacitor.utils
 		 * xml.appendChild(encloseInCDATA(myXMLString));
 		 * */
 		public static function encloseInCDATA(value:String):XML {
-			var xml:XML = new XML("<![CDATA[" + value + "]]" + ">");
+			var xml:XML = new XML("<![" + "CDATA[" + value + "]]" + ">");
 			return xml;
 		}
+		
+		public static var validationError:Error;
+		public static var validationErrorMessage:String;
 		
 		/**
 		 * Checks whether the specified string is valid and well formed XML. Uses the Flash Player
@@ -94,8 +104,7 @@ package com.flexcapacitor.utils
 		 * @return A Boolean value indicating whether the specified string is
 		 * valid XML.
 		 *
-		 * @langversion ActionScript 3.0
-		 * @playerversion Flash 9.0
+		 * @see validate
 		 */
 		public static function isValidXML(value:String):Boolean {
 			var xml:XML;
@@ -103,11 +112,14 @@ package com.flexcapacitor.utils
 			try {
 				xml = new XML(value);
 			}
-			catch (e:Error) {
+			catch (error:Error) { // TypeError
+				validationError = error;
+				validationErrorMessage = error.message;
 				return false;
 			}
 			
 			if (xml.nodeKind() != ELEMENT) {
+				validationErrorMessage = "XML node kind is not element";
 				return false;
 			}
 			
@@ -126,6 +138,8 @@ package com.flexcapacitor.utils
 		 *
 		 * @langversion ActionScript 3.0
 		 * @playerversion Flash 9.0
+		 * 
+		 * @see isValid
 		 */
 		public static function validate(value:*):XMLValidationInfo {
 			(!addedXMLValidationToPage) ? insertValidationScript() : null;

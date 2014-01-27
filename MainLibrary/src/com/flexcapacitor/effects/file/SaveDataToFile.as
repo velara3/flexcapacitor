@@ -33,7 +33,38 @@ package com.flexcapacitor.effects.file {
 	[Event(name="fault", type="flash.events.Event")]
 	
 	/**
-	 * Save the data you supply to a file. Requires AIR.
+	 * Save the data you supply to a file. Set the data property to the data 
+	 * that you want to save. Requires AIR. When running in the browser use the 
+	 * PromptSaveAs effect.<br/><br/>
+	 * 
+<pre>
+ &lt;handlers:EventHandler eventName="click" 
+					   target="{exportButton}">
+
+	&lt;file:SaveDataToFile id="saveDataToFile" 
+						 directory="MyApp"
+						 baseFilePath="documents"
+						 traceFilePaths="true"
+						 traceErrors="true"
+						 data="Save this value to a file"
+						 fileName="MyDocument"
+						 fileExtension="txt"
+						 >
+		&lt;file:successEffect>
+			&lt;s:Sequence>
+				&lt;core:CallMethod method="openSavedFile"/>
+				&lt;status:ShowStatusMessage startDelay="500" duration="5000" message="The file was saved successfully in the directory, '{saveDataToFile.savedRelativeFilePath}'."/>
+			&lt;/s:Sequence>
+		&lt;/file:successEffect>
+		&lt;file:errorEffect>
+			&lt;s:Sequence>
+				&lt;status:ShowStatusMessage startDelay="500" message="The file was not saved. \nError {saveDataToFile.errorMessage}"/>
+			&lt;/s:Sequence>
+		&lt;/file:errorEffect>
+	&lt;/file:SaveDataToFile>
+&lt;/handlers:EventHandler>
+</pre>
+ * 
 	 * @see PromptSaveAs
 	 * */
 	public class SaveDataToFile extends ActionEffect {

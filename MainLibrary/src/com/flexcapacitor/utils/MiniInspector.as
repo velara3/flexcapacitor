@@ -10,12 +10,15 @@ package com.flexcapacitor.utils {
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
 	import flash.events.EventDispatcher;
+	import flash.events.FocusEvent;
+	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.text.Font;
 	import flash.text.TextFormat;
+	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
 	import flash.utils.clearTimeout;
 	import flash.utils.getQualifiedClassName;
@@ -27,6 +30,8 @@ package com.flexcapacitor.utils {
 	import mx.core.FlexGlobals;
 	import mx.core.FlexSprite;
 	import mx.core.IFlexDisplayObject;
+	import mx.core.IFlexModule;
+	import mx.core.IFlexModuleFactory;
 	import mx.core.IMXMLObject;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
@@ -59,6 +64,7 @@ package com.flexcapacitor.utils {
 	import spark.components.Group;
 	import spark.components.Image;
 	import spark.components.Label;
+	import spark.components.TextInput;
 	import spark.primitives.Rect;
 	
 	/**
@@ -708,7 +714,7 @@ package com.flexcapacitor.utils {
 			
 			
 			// if not on the component tree target may be a pop up
-			if (componentItem ==null) {
+			if (componentItem==null) {
 				componentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(mouseTarget), rootSystemManagerTree)
 			}
 			
@@ -1197,13 +1203,15 @@ package com.flexcapacitor.utils {
 		public var popUpBackground:Rect;
 		public var popUpBorder:Rect;
 		public var popUpLabel:Label;
+		public var popUpPropertyInput:TextInput;
+		public var popUpValueInput:TextInput;
 		public var popUpIsDisplaying:Boolean;
 		public var popUpBackgroundTransparentGrid:Boolean = true;
 		
 		/**
 		 * Displays an outline of the display object recursively up the component display list. 
 		 **/
-		public function postDisplayObject(displayTarget:DisplayObject, displayed:Boolean = false):void {
+		public function postDisplayObject(displayTarget:DisplayObject, displayed:Boolean = false, moveToNextParent:Boolean = true):void {
 			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 			var lastTarget:DisplayObject;
@@ -1216,11 +1224,14 @@ package com.flexcapacitor.utils {
 			if (displayed) {
 				//closePopUp(target);
 				lastTarget = displayTarget;
-				if ("owner" in displayTarget && Object(displayTarget).owner)  {
-					displayTarget = Object(displayTarget).owner;
-				}
-				else {
-					displayTarget = displayTarget.parent;
+				
+				if (moveToNextParent) {
+					if ("owner" in displayTarget && Object(displayTarget).owner)  {
+						displayTarget = Object(displayTarget).owner;
+					}
+					else {
+						displayTarget = displayTarget.parent;
+					}
 				}
 				
 				//popUpDisplayImage.setChildIndex(popUpLabel, popUpDisplayImage.numChildren-1);
@@ -1261,20 +1272,49 @@ package com.flexcapacitor.utils {
 				popUpLabel.setStyle("paddingBottom", 1);
 				popUpLabel.setStyle("paddingLeft", 4);
 				popUpLabel.setStyle("paddingRight", 4);
+				popUpLabel.useHandCursor = true;
+				popUpLabel.buttonMode = true;
+				//popUpLabel.addEventListener(MouseEvent.CLICK, labelClickHandler, false, 0, true);
+				
+				popUpPropertyInput = new TextInput();
+				popUpValueInput = new TextInput();
+				
+				popUpPropertyInput.width = 100;
+				popUpValueInput.width = 100;
+				
+				popUpPropertyInput.x = 50;
+				popUpValueInput.x = popUpPropertyInput.x + popUpPropertyInput.width + 5;
+				popUpPropertyInput.prompt = "Property";
+				popUpValueInput.prompt = "Value";
+				popUpPropertyInput.setStyle("prompt", "Property");
+				popUpValueInput.prompt = "Value";
+				popUpPropertyInput.tabIndex = 0;
+				popUpValueInput.tabIndex = 1;
+				
+				showInputControls(false);
+				popUpPropertyInput.addEventListener(KeyboardEvent.KEY_UP, propertyInputEnterHandler, false, 0, true);
+				popUpPropertyInput.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, function(event:FocusEvent):void {
+					event.preventDefault(); 
+					popUpValueInput.setFocus();
+				} , false, 0, true);
+				popUpValueInput.addEventListener(KeyboardEvent.KEY_UP, valueInputEnterHandler, false, 0, true);
 				
 				popUpDisplayGroup.addElement(popUpBackground);
 				popUpDisplayGroup.addElement(popUpDisplayImage);
 				popUpDisplayGroup.addElement(popUpBorder);
 				popUpDisplayGroup.addElement(popUpLabel);
+				popUpDisplayGroup.addElement(popUpPropertyInput);
+				popUpDisplayGroup.addElement(popUpValueInput);
 			}
 			
 			
-			if (displayTarget is Application) {
+			if (displayTarget is Application && moveToNextParent) {
 				isApplication = true;
 				closePopUp(displayTarget);
 				return;
 			}
 			
+			// refactor the following to updateDisplayGroup()
 			currentPopUpTarget = displayTarget;
 			
 			container = rasterize(displayTarget);
@@ -1370,8 +1410,251 @@ package com.flexcapacitor.utils {
 				}
 			}
 			
-			clearTimeout(popUpTimeout);
-			popUpTimeout = setTimeout(getNextOrClosePopUp, pupUpDisplayTime, displayTarget, true);
+			if (moveToNextParent) {// is this in the right place? refactor
+				clearTimeout(popUpTimeout);
+				popUpTimeout = setTimeout(getNextOrClosePopUp, pupUpDisplayTime, displayTarget, true);
+			}
+		}
+		
+		/**
+		 * Handles when enter key is pressed in the value input
+		 * */
+		protected function valueInputEnterHandler(event:KeyboardEvent):void {
+			if (event.keyCode==Keyboard.ENTER) {
+				setPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text, popUpValueInput.text);
+			}
+		}
+		
+		/**
+		 * Handles when enter key is pressed in the property input
+		 * */
+		protected function propertyInputEnterHandler(event:KeyboardEvent):void {
+			if (event.keyCode==Keyboard.ENTER) {
+				getPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text);
+				popUpValueInput.setFocus();
+			}
+		}
+		
+		/**
+		 * Handles when label of pop up is clicked to show or hide the property input controls
+		 * */
+		protected function labelClickHandler(event:MouseEvent):void {
+			showInputControls(!popUpPropertyInput.visible);
+			if (popUpPropertyInput.visible) {
+				popUpPropertyInput.setFocus();
+			}
+		}
+		
+		/**
+		 * Get the value of the property or style on the target
+		 * */
+		protected function getPropertyOrStyle(target:Object, property:String):* {
+			var currentValue:*;
+			
+			if (target && property in target) {
+				
+				try {
+					currentValue = target[property];
+					
+					if (popUpValueInput) {
+						popUpValueInput.text = currentValue;
+					}
+				}
+				catch (error:Error) {
+					logger.log(LogEventLevel.ERROR, "Error getting property:" + error.message);
+				}
+				
+			}
+			else if (target && property!="" && target is IStyleClient) {
+				
+				try {
+					currentValue = target.getStyle(property);
+					
+					if (popUpValueInput) {
+						popUpValueInput.text = currentValue;
+					}
+				}
+				catch (error:Error) {
+					logger.log(LogEventLevel.ERROR, "Error getting style:" + error.message);
+				}
+			}
+			
+			return currentValue;
+		}
+		
+		/**
+		 * Set property or style on target
+		 * */
+		public function setPropertyOrStyle(target:Object, property:String, value:String):void {
+			var currentValue:*;
+			
+			if (target && property in target) {
+				
+				try {
+					currentValue = target[property];
+					
+					setValue(target, property, value);
+					
+					currentValue = target[property];
+					
+					if (popUpValueInput) {
+						popUpValueInput.text = currentValue;
+						if ("validateNow" in target) target.validateNow();
+						postDisplayObject(DisplayObject(target), true, false);
+					}
+				}
+				catch (error:Error) {
+					logger.log(LogEventLevel.ERROR, "Error setting property:" + error.message);
+				}
+				
+			}
+			else if (target && property!="" && target is IStyleClient) {
+				
+				try {
+					currentValue = target.getStyle(property);
+					
+					// need to call clear style or allow setting undefined
+					// to support
+					if (value!="undefined") {
+						setValue(target, property, value);
+					}
+					else if (value=="undefined") {
+						target.setStyle(property, undefined);
+					}
+					
+					currentValue = target.getStyle(property);
+					
+					if (popUpValueInput) {
+						popUpValueInput.text = currentValue;
+						if ("validateNow" in target) target.validateNow();
+						postDisplayObject(DisplayObject(target), true, false);
+					}
+				}
+				catch (error:Error) {
+					logger.log(LogEventLevel.ERROR, "Error setting style:" + error.message);
+				}
+			}
+		}
+		
+		/**
+		 * Sets <code>property</code> to the value specified by 
+		 * <code>value</code>. This is done by setting the property
+		 * on the target if it is a property or the style on the target
+		 * if it is a style.  There are some special cases handled
+		 * for specific property types such as percent-based width/height
+		 * and string-based color values.
+		 * 
+		 * NOTE: This code was copied from another area in the Flex framework
+		 * There are a few areas that set values on objects
+		 * SetAction
+		 */
+		public static function setValue(target:Object, property:String, value:Object, complexData:Boolean = false):void {
+			var isStyle:Boolean = false;
+			var propName:String = property;
+			var val:Object = value;
+			var currentValue:Object;
+			
+			// Handle special case of width/height values being set in terms
+			// of percentages. These are handled through the percentWidth/Height
+			// properties instead                
+			if (property == "width" || property == "height") {
+				if (value is String && value.indexOf("%") >= 0) {
+					propName = property == "width" ? "percentWidth" : "percentHeight";
+					val = val.slice(0, val.indexOf("%"));
+				}
+			}
+			else {
+				currentValue = getValue(target, propName);
+				
+				// Handle situation of turning strings into Boolean values
+				if (currentValue is Boolean) {
+					if (val is String)
+						val = (value.toLowerCase() == "true");
+				}
+					// Handle turning standard string representations of colors
+					// into numberic values
+				else if (currentValue is Number &&
+					propName.toLowerCase().indexOf("color") != -1)
+				{
+					var moduleFactory:IFlexModuleFactory = null;
+					if (target is IFlexModule)
+						moduleFactory = target.moduleFactory;
+					
+					val = StyleManager.getStyleManager(moduleFactory).getColorName(value);
+				}
+			}
+			
+			if (target is XML) {
+				if (complexData) 
+					setItemCDATA(XML(target), propName, val);
+				else
+					XML(target)[propName] = val;
+			}
+			else if (propName in target)
+				target[propName] = val;
+			else if ("setStyle" in target)
+				target.setStyle(propName, val);
+			else
+				target[propName] = val;
+		}
+		
+		/**
+		 * Gets the current value of propName, whether it is a 
+		 * property or a style on the target.
+		 *  
+		 *  @langversion 3.0
+		 *  @playerversion Flash 10
+		 *  @playerversion AIR 1.5
+		 *  @productversion Flex 4
+		 */
+		public static function getValue(target:Object, propName:String):* {
+			var value:*;
+			if (target is XML) {
+				if (propName.indexOf("@")==0) {
+					value = XML(target).attribute(propName.slice(1))[0];
+					return value ? String(value) : "";
+				}
+				else {
+					return XML(target)[propName];
+				}
+			}
+			else if (propName in target) 
+				return target[propName];
+			else if (target.hasOwnProperty("getStyle"))
+				return target.getStyle(propName);
+			else 
+				return null;
+		}
+		
+		/**
+		 * Set the item contents inside CDATA tags
+		 * */
+		public static function setItemCDATA(item:XML, property:String, value:Object=""):void {
+			if (item) {
+				if (value is String) {
+					item.child(property).replace(0, wrapInCDATA(String(value)));
+				}
+				else if (value is XML) {
+					// right now we are not doing anything special if the value is already XML
+					item.child(property).replace(0, wrapInCDATA(String(value)));
+				}
+			}
+		}
+		
+		
+		/**
+		 * Wrap text inside of CDATA tags
+		 * */
+		public static function wrapInCDATA(value:String):XML {
+			return new XML("<![C"+"DATA[" + value + "]]>");
+		}
+		
+		/**
+		 * Show or hide the controls that let you set a property or style
+		 * */
+		protected function showInputControls(value:Boolean = true):void {
+			popUpPropertyInput.includeInLayout = popUpPropertyInput.visible = value;
+			popUpValueInput.includeInLayout = popUpValueInput.visible = value;
 		}
 		
 		/**
@@ -1406,7 +1689,19 @@ package com.flexcapacitor.utils {
 				checkTarget(currentPopUpTarget, event);
 			}
 			else {
-				closePopUp(DisplayObject(popUpDisplayGroup));
+				//if ((event.target is UITextField || event.target is RichEditableText) && 
+				if ((popUpPropertyInput.owns(event.target as DisplayObject) || popUpValueInput.owns(event.target as DisplayObject)) && 
+					event.currentTarget==popUpDisplayGroup) {
+					clearTimeout(popUpTimeout);
+					// do not close if in property text input
+				}
+				else if (event.target == popUpLabel) {
+					clearTimeout(popUpTimeout);
+					showInputControls(!popUpPropertyInput.visible);
+				}
+				else {
+					closePopUp(DisplayObject(popUpDisplayGroup));
+				}
 			}
 			
 			event.stopImmediatePropagation();

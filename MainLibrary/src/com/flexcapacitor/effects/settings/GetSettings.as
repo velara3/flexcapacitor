@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.settings {
 	
 	import com.flexcapacitor.effects.settings.supportClasses.GetSettingsInstance;
+	import com.flexcapacitor.effects.settings.supportClasses.SettingsDefault;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.net.SharedObject;
@@ -37,10 +38,10 @@ package com.flexcapacitor.effects.settings {
 	 * 
 	 * The localPath is the path to the shared object. This can be null, "/" or another value.<br/><br/> 
 	 * 
-	 * <b>Usage<b><br/>
+	 * <b>Usage</b><br/>
 
 	 * The following example saves an object to the shared object named, "user" with the 
-	 * properties, "name" and "age". 
+	 * properties, "name" and "age". After that we will use GetSettings to retrieve it. 
 	 * 
  * <pre>
  * &ltObject id="person" name="John" age="30" weight="160" />
@@ -142,9 +143,9 @@ package com.flexcapacitor.effects.settings {
 		public var sharedObject:SharedObject;
 		
 		/**
-		 * Name of the settings. Required. Cannot contain spaces. 
+		 * Name of the settings. Required. Default is "settings". Cannot contain spaces. 
 		 * */
-		public var name:String;
+		public var name:String = SettingsDefault.DEFAULT_NAME;
 		
 		/**
 		 * Optional. Default is null. 

@@ -3,6 +3,7 @@
 			   xmlns:s="library://ns.adobe.com/flex/spark"
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   xmlns:c="components.*"
+			   xmlns:fc="com.flexcapacitor.utils.*"
 			   
 			   minWidth="300" 
 			   minHeight="300" 
@@ -21,6 +22,7 @@
 	
 	<fx:Declarations>
 		<s:ArrayCollection id="statesCollection" source="{states}"/>
+		<fc:MiniInspector showDisplayObjectOutlines="true"/>
 	</fx:Declarations>
 	
 	<fx:Script>

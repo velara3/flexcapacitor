@@ -201,7 +201,6 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 			// Cast data to String
 			if (format==ClipboardFormats.TEXT_FORMAT 
 				|| format==ClipboardFormats.HTML_FORMAT
-				|| format==ClipboardFormats.RICH_TEXT_FORMAT
 				|| format==ClipboardFormats.URL_FORMAT) {
 				
 				try {

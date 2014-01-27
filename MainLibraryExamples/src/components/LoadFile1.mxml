@@ -11,7 +11,7 @@
 			import mx.collections.ArrayCollection;
 			
 			protected function loadFile_progressHandler(event:ProgressEvent):void {
-				files.itemUpdated(loadFile.currentFile);
+				filesCollection.itemUpdated(loadFile.currentFile);
 				return;
 				trace('progress ' + loadFile.currentFile.name + ', ' + event.bytesLoaded + ' of ' + event.bytesTotal);
 			}
@@ -90,13 +90,13 @@
 		
 		<handlers:EventHandler target="{cancelLoadButton}" eventName="click">
 			<file:CancelFileLoad target="{browseForFile.fileReferenceList}"/>
-			<core:SetAction target="{files}" property="source"
+			<core:SetAction target="{filesCollection}" property="source"
 							value="{[]}"/>
 			<status:ShowStatusMessage message="File loading has been canceled"/>
 		</handlers:EventHandler>
 			
 		
-		<s:ArrayCollection id="files" source="{loadFile.fileReferenceList.fileList}"/>
+		<s:ArrayCollection id="filesCollection" source="{loadFile.fileList}"/>
 		
 	</fx:Declarations>
 	
@@ -128,8 +128,9 @@
 		
 		<s:List top="40" left="10"
 				width="450"
+				height="100%"
 				borderAlpha=".25"
-				dataProvider="{files}"
+				dataProvider="{filesCollection}"
 				minHeight="300"
 				>
 			<s:itemRenderer>

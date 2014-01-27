@@ -85,14 +85,25 @@ package com.flexcapacitor.effects.file {
 	/**
 	 * Given a file reference or file reference list loads the files. 
 	 * You can use the BrowseForFile or similar action to get a file reference 
-	 * or file reference list
+	 * or file reference list. <br/><br/>
+	 * 
+	 * The loadWithLoader option is used to convert the bytes from a file into a bitmap object.
+	 * It may be moved to another class. <br/><br/>
 	 * 
 	 * When in the browser IT MUST be called within the scope of a click event. 
 	 * If it is part of an event handler it must be called within the call stack of a click event.
 	 * Set the targetAncestor property to the parent of the button that will trigger this event.
-	 * Must not have any effects before it that have any duration.
+	 * Must not have any effects before it that have any duration.<br/><br/>
+	 * 
+	 * To do:
+	 * Add overall progress support. 
 	 * 
 	 * @see BrowseForFile
+	 * @see GetFile
+	 * @see LoadFile
+	 * @see PromptSaveAs
+	 * @see SaveDataToFile
+	 * @see UploadFile
 	 * */
 	public class LoadFile extends ActionEffect {
 		
@@ -198,6 +209,23 @@ package com.flexcapacitor.effects.file {
 
 		
 		/**
+		 * Array of selected files
+		 * */
+		[Bindable]
+		public var fileList:Array;
+		
+		//--------------------------------------------------------------------------
+		//  Loader related properties
+		//--------------------------------------------------------------------------
+		
+		
+		/**
+		 * Loads the file reference raw data (byte array) with a loader. 
+		 * This allows you to get and set the bitmapData when the file is an image.
+		 * */
+		public var loadIntoLoader:Boolean;
+		
+		/**
 		 * The contents of the file. 
 		 * This is the value of the loaderInfo.contents property.
 		 * @copy flash.display.LoaderInfo.contents
@@ -230,12 +258,6 @@ package com.flexcapacitor.effects.file {
 		 * */
 		[Bindable]
 		public var bitmapData:BitmapData;
-		
-		/**
-		 * Loads the file reference raw data (byte array) with a loader. 
-		 * This allows you to get and set the bitmapData when the file is an image.
-		 * */
-		public var loadIntoLoader:Boolean;
 		
 		
 		//--------------------------------------------------------------------------

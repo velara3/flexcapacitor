@@ -5,11 +5,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	import com.flexcapacitor.utils.SharedObjectUtils;
 	
-	import flash.events.AsyncErrorEvent;
 	import flash.events.Event;
-	import flash.events.NetStatusEvent;
 	import flash.net.SharedObject;
-	import flash.net.SharedObjectFlushStatus;
 	
 	
 	/**

@@ -2,6 +2,7 @@
 
 package com.flexcapacitor.effects.settings.supportClasses {
 	import com.flexcapacitor.effects.settings.RemoveSetting;
+	import com.flexcapacitor.effects.settings.SaveSetting;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	import com.flexcapacitor.utils.SharedObjectUtils;
 	
@@ -162,8 +163,27 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				// Flash Player responds in the netStatus event when user allows or denies more disk space
 				sharedObject.addEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler, false, 0, true);
 				sharedObject.addEventListener(NetStatusEvent.NET_STATUS, netStatusHandler, false, 0, true);
-				
-				status = sharedObject.flush(action.minimumSettingsSpace);
+
+				try {
+					if (action.minimumSettingsSpace==0) {
+						status = sharedObject.flush();
+					}
+					else {
+						status = sharedObject.flush(action.minimumSettingsSpace);
+					}
+				}
+				catch (error:Error) {
+					
+					action.errorEvent = error;
+					
+					if (action.hasEventListener(SaveSetting.ERROR)) {
+						dispatchActionEvent(new Event(SaveSetting.ERROR));
+					}
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+				}
 				
 				// pending
 				if (status == SharedObjectFlushStatus.PENDING) {
@@ -204,19 +224,24 @@ package com.flexcapacitor.effects.settings.supportClasses {
 		//
 		//--------------------------------------------------------------------------
 		
+
 		/**
-		 * 
+		 * Handles net status events
+		 * NOT TESTED
 		 * */
 		protected function netStatusHandler(event:NetStatusEvent):void {
-			var action:RemoveSetting = RemoveSetting(effect);
+			var action:SaveSetting = SaveSetting(effect);
 			var sharedObject:SharedObject = action.sharedObject;
 			
 			// NOT TESTED
 			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
 			
 			sharedObject.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
 			sharedObject.removeEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
-		
+			
 			
 			// "SharedObject.Flush.Failed" "error" The "pending" status is resolved, but the SharedObject.flush() failed. 
 			// "SharedObject.Flush.Success" "status" The "pending" status is resolved and the SharedObject.flush() call succeeded. 
@@ -225,8 +250,8 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				
 				action.errorEvent = event;
 				
-				if (action.hasEventListener(RemoveSetting.ERROR)) {
-					dispatchActionEvent(new Event(RemoveSetting.ERROR));
+				if (action.hasEventListener(SaveSetting.ERROR)) {
+					dispatchActionEvent(new Event(SaveSetting.ERROR));
 				}
 				
 				if (action.errorEffect) {
@@ -237,12 +262,12 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				
 				action.netStatusEvent = event;
 				
-				if (action.hasEventListener(RemoveSetting.REMOVED)) {
-					dispatchActionEvent(new Event(RemoveSetting.REMOVED));
+				if (action.hasEventListener(SaveSetting.SAVED)) {
+					dispatchActionEvent(new Event(SaveSetting.SAVED));
 				}
 				
-				if (action.removedEffect) {
-					playEffect(action.removedEffect);
+				if (action.savedEffect) {
+					playEffect(action.savedEffect);
 				}
 			}
 			
@@ -254,24 +279,29 @@ package com.flexcapacitor.effects.settings.supportClasses {
 		}
 		
 		/**
-		 * 
+		 * Handles async error events
+		 * NOT TESTED
 		 * */
 		protected function asyncErrorHandler(event:AsyncErrorEvent):void {
-			var action:RemoveSetting = RemoveSetting(effect);
+			var action:SaveSetting = SaveSetting(effect);
 			var sharedObject:SharedObject = action.sharedObject;
 			
 			// NOT TESTED
 			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
 			
 			sharedObject.removeEventListener(AsyncErrorEvent.ASYNC_ERROR, asyncErrorHandler);
 			sharedObject.removeEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 			
 			
+			action.errorEvent = event;
 			action.asyncErrorEvent = event;
 			
 			
-			if (action.hasEventListener(RemoveSetting.ERROR)) {
-				dispatchActionEvent(new Event(RemoveSetting.ERROR));
+			if (action.hasEventListener(SaveSetting.ERROR)) {
+				dispatchActionEvent(new Event(SaveSetting.ERROR));
 			}
 			
 			if (action.errorEffect) {
@@ -285,7 +315,6 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			finish();
 			
 		}
-		
 		
 	}
 	

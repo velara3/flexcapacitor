@@ -25,18 +25,45 @@ package com.flexcapacitor.effects.file {
 	
 	/**
 	 * Opens a native Save as dialog to save data to a file. 
+	 * Set the data property to the contents of the file. <br/><br/>
 	 * 
 	 * NOTE! If nothing happens or you have to click the button twice
 	 * make sure that the button or *buttons* 
 	 * that are triggering this event have the targetAncestor property set and 
 	 * that the target ancestor is a parent or owner of the button or buttons 
-	 * and that there is no pause or duration effect between the click event and this effect
+	 * and that there is no pause or duration effect between the click event and 
+	 * this effect. See code example. <br/><br/>
 	 * 
-	 * IE no other effect that has a duration can run before this one.
+	 * IE no other effect that has a duration can run before this one.<br/><br/>
 	 * 
 	 * This effect MUST be called within the bubbling of a click event. 
-	 * If another effect is run before this one this effect may not be run in time. 
+	 * If another effect is run before this one this effect may not be run in time. <br/><br/>
 	 * 
+<pre>
+ &lt;handlers:EventHandler eventName="click" 
+					   target="{exportButton}">
+											
+	&lt;file:PromptSaveAs id="promptFile" 
+					   targetAncestor="{this}"
+					   data="Save this value to a file"
+					   fileName="MyDocument"
+					   fileExtension="txt"
+					   >
+		&lt;file:saveEffect>
+			&lt;s:Sequence>
+				&lt;status:ShowStatusMessage startDelay="500" message="The file was saved successfully."/>
+			&lt;/s:Sequence>
+		&lt;/file:saveEffect>
+		&lt;file:cancelEffect>
+			&lt;s:Sequence>
+				&lt;status:ShowStatusMessage startDelay="500" message="The user canceled the dialog."/>
+			&lt;/s:Sequence>
+		&lt;/file:cancelEffect>
+	&lt;/file:PromptSaveAs>
+&lt;/handlers:EventHandler>
+</pre>
+	 * 
+	 * @see SaveDataToFile
 	 * */
 	public class PromptSaveAs extends ActionEffect {
 		

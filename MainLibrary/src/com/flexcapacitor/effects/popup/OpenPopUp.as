@@ -42,28 +42,41 @@ package com.flexcapacitor.effects.popup {
 		 showDropShadow="true"
 		 modalBlurAmount="1"
 		 keepReference="true"
-		 options="{{source:myImage.source, gridItem:dataGrid.selectedItem}}">
+		 percentWidth="75"
+		 percentHeight="90"
+		 popUpOptions="{{source:myImage.source, item:list.selectedItem}}"
+		 data="{myData}"
+		 close="openpopup_closeHandler(event)"
 &lt;/popup:OpenPopUp>
+ * 
+
+protected function openpopup_closeHandler(event:Event):void {
+	var code:String = ExportPopUp(openExportEffect.popUp).code;
+	
+}
 </pre>
 
- * ExportPopUp.mxml: 
+	 * ExportPopUp.mxml: 
+	<pre>&lt;s:Group width="100%">&lt;s:Button label="Hello world"/>&lt;/s:Group>
+	</pre>
+	 * When inside the pop up call ClosePopUp to close the pop up:<br/>
 <pre>
-&lt;s:Group width="100%">&lt;s:Button label="Hello world"/>&lt;/s:Group>
-	 * </pre>
+&lt;popup:ClosePopUp popUp="{this}" />
+</pre>
 	 * 
-	 * Typically you will want to close the pop up. You can do so with ClosePopUp:<br/>
-	 * <pre>
-	 * 	&lt;popup:ClosePopUp popUp="{openExportToImageEffect.popUp}" />
-	 * </pre>
+	 * When outside of the pop up you can close the pop up with:<br/>
+<pre>
+&lt;popup:ClosePopUp popUp="{openExportToImageEffect.popUp}" />
+</pre>
 	 * 
-	 * When inside the pop up itself use:<br/>
-	 * <pre>
-	 * 	&lt;popup:ClosePopUp popUp="{this}" />
-	 * </pre>
 	 * 
 	 * Note: If the pop up is not centered the pop up width may too low. 
 	 * You may try removing the width on the pop up (so it will be sized to it's contents). 
-	 * Or the pop up parent may need to be set. 
+	 * Or the pop up parent may need to be set.<br/><br/> 
+	 * 
+	 * Note: If you call this too quickly and effects are applied to the 
+	 * pop up the modal overlay window may display above the application. 
+	 * 
 	 * */
 	public class OpenPopUp extends ActionEffect {
 		
@@ -110,7 +123,7 @@ package com.flexcapacitor.effects.popup {
 		/**
 		 * Popup options. Object of name value pairs used by the ClassFactory properties object.
 		 * */
-		public var options:Object;
+		public var popUpOptions:Object;
 		
 		/**
 		 * Percent width. This is the percent of pop up's size
@@ -205,8 +218,14 @@ package com.flexcapacitor.effects.popup {
 		public var closeEffect:IEffect;
 		
 		/**
+		 * If true then window is modal. 
+		 * */
+		public var isModal:Boolean = true;
+		
+		/**
 		 * If true and part of a sequence moves right to the next effect.
 		 * Otherwise the next effect starts at the end of this effects duration. 
+		 * @see modalDuration
 		 * */
 		public var nonBlocking:Boolean = true;
 		
@@ -224,6 +243,17 @@ package com.flexcapacitor.effects.popup {
 		 * Centers the pop up when stage resize
 		 * */
 		public var autoCenter:Boolean = true;
+		
+		/**
+		 * When true only allows one instance at a time
+		 * */
+		public var preventMultipleInstances:Boolean = true;
+		
+		/**
+		 * When preventMultipleInstances is true and this is true then 
+		 * closes previous open instances
+		 * */
+		public var closePreviousInstanceIfOpen:Boolean;
 		
 		/**
 		 * Keeps a reference of the pop up 

@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.settings {
 	
 	import com.flexcapacitor.effects.settings.supportClasses.GetSettingInstance;
+	import com.flexcapacitor.effects.settings.supportClasses.SettingsDefault;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.events.AsyncErrorEvent;
@@ -106,7 +107,7 @@ package com.flexcapacitor.effects.settings {
 		/**
 		 * Name of setting.
 		 * */
-		public var name:String;
+		public var name:String = SettingsDefault.DEFAULT_NAME;
 		
 		/**
 		 * Property on the saved data object. Optional. 

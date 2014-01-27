@@ -11,7 +11,11 @@ package com.flexcapacitor.effects.file {
 	
 	
 	/**
-	 * Opens a file dialog to select files to upload. 
+	 * Uploads a file. NOTE: This is not finished ...or started. Should probably extend 
+	 * browse for file. I have run into issues using uploading in Flash Player in the browser.
+	 * It seems cookies set in the browser are not sent with the upload request. 
+	 * Using something like ru.inspirit.net.MultipartURLLoader works as an alternative upload 
+	 * mechanism. AIR might not have this issue. 
 	 * 
 	 * NOTE: In the browser this effect MUST be called within the 
 	 * bubbling of a click event. If another effect is run before this one it may 
@@ -19,6 +23,13 @@ package com.flexcapacitor.effects.file {
 	 * If it is part of an event handler it must be called within the call stack of a click event.
 	 * Set the triggerButtonParent property to a parent of the button that triggers this event.
 	 * Must not have any effects before it that have any duration. 
+	 * 
+	 * @see BrowseForFile
+	 * @see GetFile
+	 * @see LoadFile
+	 * @see PromptSaveAs
+	 * @see SaveDataToFile
+	 * @see UploadFile
 	 * */
 	public class UploadFile extends ActionEffect {
 		

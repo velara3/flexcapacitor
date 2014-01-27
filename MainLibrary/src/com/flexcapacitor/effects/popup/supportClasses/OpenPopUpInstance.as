@@ -22,9 +22,16 @@ import mx.core.ClassFactory;
 import mx.core.FlexGlobals;
 import mx.core.FlexSprite;
 import mx.core.IFlexDisplayObject;
+import mx.core.ILayoutElement;
+import mx.core.IUIComponent;
+import mx.core.UIComponent;
+import mx.core.mx_internal;
+import mx.effects.EffectManager;
 import mx.managers.PopUpManager;
 import mx.managers.SystemManager;
+import mx.styles.IStyleClient;
 
+use namespace mx_internal;
 	
 	/**
 	 *
@@ -82,7 +89,7 @@ import mx.managers.SystemManager;
 			var action:OpenPopUp = OpenPopUp(effect);
 			var classFactory:ClassFactory;
 			var popUpType:Class = action.popUpType;
-			var options:Object = action.options;
+			var options:Object = action.popUpOptions;
 			var percentWidth:int = action.percentWidth;
 			var percentHeight:int = action.percentHeight;
 			var dropShadow:DropShadowFilter = action.dropShadow;
@@ -94,11 +101,14 @@ import mx.managers.SystemManager;
 			var modalBlurAmount:Number = action.modalBlurAmount;
 			var modalDuration:int = action.modalDuration;
 			var addMouseEvents:Boolean = action.addMouseEvents;
+			var isModal:Boolean = action.isModal;
 			var parent:Sprite = action.parent ? action.parent : Sprite(FlexGlobals.topLevelApplication);
 			var setBackgroundBlendMode:Boolean;
 			var height:int = action.height;
 			var width:int = action.width;
-			var popUp:Object;
+			var popUp:IFlexDisplayObject = action.popUp;
+			var preventMultipleInstances:Boolean = action.preventMultipleInstances;
+			var closePreviousInstanceIfOpen:Boolean = action.closePreviousInstanceIfOpen;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -108,9 +118,38 @@ import mx.managers.SystemManager;
 				dispatchErrorEvent("Please set the pop up class type");
 			}
 			
+			if (popUp && preventMultipleInstances) {
+				
+				//dispatchErrorEvent("Multiple instances are not allowed");
+			}
+			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
+			
+			if (popUp && popUp is UIComponent) {
+				UIComponent(popUp).isEffectStarted;
+				//trace("Effect started: " + UIComponent(popUp).isEffectStarted);
+			}
+			
+			if (popUp && popUp is IUIComponent) {
+				//trace("Ending effect for target: " + UIComponent(popUp).isEffectStarted);
+				//EffectManager.endEffectsForTarget(popUp as IUIComponent);
+				//trace("Ending effect for target: " + UIComponent(popUp).endEffectsStarted());
+			}
+			
+			if (popUp && popUp.parent!=null && preventMultipleInstances &&
+				!Object(popUp).isPopUp) {
+				
+				if (closePreviousInstanceIfOpen) {
+					PopUpManager.removePopUp(popUp);
+				}
+				else {
+					// do not add new one
+					finish();
+					return;
+				}
+			}
 			
 			classFactory = new ClassFactory();
 			classFactory.generator = popUpType;
@@ -120,24 +159,27 @@ import mx.managers.SystemManager;
 			
 			// item renderers use the data property to pass information into the view
 			if ("data" in popUp && action.data!=null) {
-				popUp.data = action.data;
+				Object(popUp).data = action.data;
 			}
 			
 			if (!(popUp is IFlexDisplayObject)) {
 				dispatchErrorEvent("The pop up class type must be of a type 'IFlexDisplayObject'");
 			}
 			
-			// more options could be set provided for these
-			popUp.setStyle("modalTransparency", modalTransparencyAlpha);
-			popUp.setStyle("modalTransparencyBlur", modalBlurAmount);
-			popUp.setStyle("modalTransparencyColor", modalTransparencyColor);
-			popUp.setStyle("modalTransparencyDuration", modalDuration);
+			// more options could be set for these
 			
-			if (percentWidth!=0) {
-				popUp.percentWidth = percentWidth;
+			if (popUp is IStyleClient) {
+				IStyleClient(popUp).setStyle("modalTransparency", modalTransparencyAlpha);
+				IStyleClient(popUp).setStyle("modalTransparencyBlur", modalBlurAmount);
+				IStyleClient(popUp).setStyle("modalTransparencyColor", modalTransparencyColor);
+				IStyleClient(popUp).setStyle("modalTransparencyDuration", modalDuration);
 			}
-			if (percentHeight!=0) {
-				popUp.percentHeight = percentHeight;
+			
+			if (percentWidth!=0 && popUp is ILayoutElement) {
+				ILayoutElement(popUp).percentWidth = percentWidth;
+			}
+			if (percentHeight!=0 && popUp is ILayoutElement) {
+				ILayoutElement(popUp).percentHeight = percentHeight;
 			}
 			if (width!=0) {
 				popUp.width = width;
@@ -187,14 +229,16 @@ import mx.managers.SystemManager;
 			}
 			
 			
-			PopUpManager.addPopUp(popUp as IFlexDisplayObject, parent, true);
+			PopUpManager.addPopUp(popUp as IFlexDisplayObject, parent, isModal);
 			PopUpManager.centerPopUp(popUp as IFlexDisplayObject);
 			
+			var systemManager:Object;
+				
 			// we have to set this after adding the pop up
 			// so we can access the display object the pop up is apart of
 			if (setBackgroundBlendMode) {
 				var modalWindow:FlexSprite;
-				var systemManager:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
+				systemManager = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 				var index:int = systemManager.rawChildren.getChildIndex(popUp);
 				
 				if (index>=0) {
@@ -202,8 +246,13 @@ import mx.managers.SystemManager;
 					
 					if (modalWindow) {
 						modalWindow.blendMode = BlendMode.NORMAL;
+						//modalWindow.addEventListener(MouseEvent.CLICK, mouseUpOutsideHandler, false, 0, true);
 					}
 				}
+			}
+			else {
+				//systemManager = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
+				//systemManager.addEventListener(MouseEvent.CLICK, mouseUpOutsideHandler, false, 0, true);
 			}
 			
 			
@@ -241,10 +290,13 @@ import mx.managers.SystemManager;
 		 * */
 		private function mouseUpOutsideHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
+			var close:Boolean;
 			
 			
 			if (action.closeOnMouseDownOutside) {
-				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
+				PopUpManager.removePopUp(action.popUp as IFlexDisplayObject);
+				removeEventListeners();
+				close = true;
 			}
 			
 			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE)) {
@@ -253,14 +305,13 @@ import mx.managers.SystemManager;
 			
 			if (action.mouseDownOutsideEffect) { 
 				playEffect(action.mouseDownOutsideEffect);
-				return;
 			}
 			
 			
 			///////////////////////////////////////////////////////////
 			// End the effect
 			///////////////////////////////////////////////////////////
-			finish();
+			close ? finish():-(0);
 		}
 		
 		/**
@@ -268,10 +319,13 @@ import mx.managers.SystemManager;
 		 * */
 		private function mouseUpInsideHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
+			var close:Boolean;
 			
 			
 			if (action.closeOnMouseDownInside) {
 				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
+				removeEventListeners();
+				close = true;
 			}
 		
 			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_INSIDE)) {
@@ -280,8 +334,12 @@ import mx.managers.SystemManager;
 			
 			if (action.mouseDownInsideEffect) { 
 				playEffect(action.mouseDownInsideEffect);
-				return;
 			}
+			
+			///////////////////////////////////////////////////////////
+			// End the effect
+			///////////////////////////////////////////////////////////
+			close ? finish():-(0);
 		}
 		
 		/**

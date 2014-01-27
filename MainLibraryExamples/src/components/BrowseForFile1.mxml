@@ -49,23 +49,31 @@
 					<s:Sequence>
 						<core:SetAction target="{filesCollection}" property="source"
 										value="{[]}"/>
+						<core:CopyDataToTarget source="{browseForFile}" 
+												sourcePropertyName="fileList"
+												target="{filesCollection}"
+												targetPropertyName="source"
+												/>
+						<status:ShowStatusMessage message="You selected {browseForFile.fileName}"/>
+						<!--Here you would get a reference to the fileReference or fileReferenceList 
+							to get the files that were selected. See loadfiles example -->
 					</s:Sequence>
 				</file:selectionEffect>
 				<file:multipleSelectionEffect>
 					<s:Sequence>
 						<core:CopyDataToTarget source="{browseForFile}" 
-												sourcePropertyName="fileReferenceList"
-												sourceSubPropertyName="fileList"
+												sourcePropertyName="fileList"
 												target="{filesCollection}"
 												targetPropertyName="source"
 												/>
+						<status:ShowStatusMessage message="You selected {browseForFile.hasMultipleSelections ? 'multiple files' : browseForFile.fileName}"/>
+						<!--Here you would get a reference to the fileReference or fileReferenceList 
+							to get the files that were selected. See loadfiles example -->
 					</s:Sequence>
 				</file:multipleSelectionEffect>
 			</file:BrowseForFile>
 			
-			<status:ShowStatusMessage message="You selected {browseForFile.hasMultipleSelections ? 'multiple files' : browseForFile.fileName}"/>
 			
-			<!--you would get a reference to the fileReference or fileReferenceList to get the files that were selected. see loadfiles example-->
 			
 		</handlers:EventHandler>
 		
@@ -103,6 +111,7 @@
 		<s:List id="selectedFiles" 
 				top="40" left="10"
 				width="450"
+				height="100%"
 				borderAlpha=".25"
 				labelField="name"
 				dataProvider="{filesCollection}"

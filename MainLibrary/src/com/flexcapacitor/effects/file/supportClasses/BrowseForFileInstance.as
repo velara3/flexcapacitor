@@ -122,7 +122,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var action:BrowseForFile = BrowseForFile(effect);
 			var fileFilters:Array = action.fileFilters ? action.fileFilters : [];
 			var fileFilterDescription:String = action.fileFilterDescription || " ";
-			var acceptedFileTypes:Array = action.fileTypes ? action.fileTypes.split(","):null;
+			var acceptedFileTypes:Array = action.fileTypes ? action.fileTypes.split(",") : null;
 			var fileLocation:String;
 			var fileExists:Boolean;
 			var fileReferenceObject:*; // could be file reference type? 
@@ -201,7 +201,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 				
 				// check for manually entered file filters and add to existing filters array
 				if (acceptedFileTypes) {
-					filtersString = acceptedFileTypes.join(";*.");
+					filtersString = "*." + acceptedFileTypes.join(";*.");
 					
 					fileFilter = new FileFilter(fileFilterDescription, filtersString);
 					fileFilters.push(fileFilter);
@@ -233,6 +233,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var file:FileReference = action.fileReference;
 			var multipleSelection:Boolean = action.allowMultipleSelection;
 			var fileList:Array;
+			var fileCount:uint;
 			
 			
 			///////////////////////////////////////////////////////////
@@ -249,8 +250,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 					removeFileListeners(files);
 					fileList = files.fileList;
 					file = fileList[0];
+					fileCount = fileList.length;
 					
-					if (fileList.length>1) {
+					if (fileCount>1) {
 						action.hasMultipleSelections = true;
 					}
 				}
@@ -269,6 +271,8 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.fileCreationDate = file.creationDate;
 			action.fileCreator = file.creator;
 			action.fileType = file.type;
+			action.fileList = multipleSelection ? fileList : [file];
+			action.fileCount = multipleSelection ? fileCount : 1;
 			
 			
 			// up for removal
@@ -325,7 +329,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function httpErrorHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
 			//trace("httpErrorHandler: name=" + file.name);
-			cancel("httpErrorHandler: name=" + file.name);
+			traceMessage("httpErrorHandler: name=" + file.name);
 		}
 		
 		/**
@@ -334,7 +338,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function ioErrorHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
 			//trace("ioErrorHandler: name=" + file.name);
-			cancel("ioErrorHandler: name=" + file.name);
+			traceMessage("ioErrorHandler: name=" + file.name);
 		}
 		
 		/**
@@ -343,7 +347,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function securityErrorHandler(event:Event):void {
 			var file:FileReference = FileReference(event.target);
 			//trace("securityErrorHandler: name=" + file.name + " event=" + event.toString());
-			cancel("securityErrorHandler: name=" + file.name + " event=" + event.toString());
+			traceMessage("securityErrorHandler: name=" + file.name + " event=" + event.toString());
 		}
 		
 		/**
@@ -370,11 +374,11 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// If cancel is pressed on the browser dialog then cancel 
 			// out of an effect sequence (if part of one).
 			if (action.cancelOnDismiss) {
-				cancel("cancelHandler: " + event);
+				//traceMessage("cancelHandler: " + event);
 			}
-			else {
-				finish();
-			}
+			
+			finish();
+			
 			
 		}
 

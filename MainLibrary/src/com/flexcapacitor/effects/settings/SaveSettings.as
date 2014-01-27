@@ -3,8 +3,12 @@
 package com.flexcapacitor.effects.settings {
 	
 	import com.flexcapacitor.effects.settings.supportClasses.SaveSettingsInstance;
+	import com.flexcapacitor.effects.settings.supportClasses.SettingsDefault;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
+	import flash.events.AsyncErrorEvent;
+	import flash.events.NetStatusEvent;
+	import flash.net.ObjectEncoding;
 	import flash.net.SharedObject;
 	
 	import mx.effects.Effect;
@@ -139,7 +143,7 @@ package com.flexcapacitor.effects.settings {
 		/**
 		 * Name of the setting.
 		 * */
-		public var name:String = "general";
+		public var name:String = SettingsDefault.DEFAULT_NAME;
 		
 		/**
 		 * Name of local path. Optional. 
@@ -200,6 +204,23 @@ package com.flexcapacitor.effects.settings {
 		 * are inclusive or exclusive. Default is inclusive.
 		 * */
 		public var propertiesStatus:String = "inclusive";
+		
+		/**
+		 * Object encoding. Default is ObjectEncoding.AMF3
+		 * */
+		public var objectEncoding:uint = ObjectEncoding.AMF3;
+		
+		/**
+		 * Reference to AsyncErrorEvent when an AsyncError event occurs.
+		 * */
+		[Bindable]
+		public var asyncErrorEvent:AsyncErrorEvent;
+		
+		/**
+		 * Reference to NetStatusEvent when an NetStatus event occurs.
+		 * */
+		[Bindable]
+		public var netStatusEvent:NetStatusEvent;
 		
 		/**
 		 * If an error occurs it contains the error event

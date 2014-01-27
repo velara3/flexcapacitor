@@ -84,6 +84,28 @@ package com.flexcapacitor.effects.services {
 		public var loader:URLLoader;
 		
 		/**
+		 * Inspects the request object
+		 * */
+		public var inspectRequestObject:Boolean;
+		
+		/**
+		 * Inspects the response object
+		 * */
+		public var inspectResultObject:Boolean;
+		
+		/**
+		 * Reference to the error event
+		 * */
+		[Bindable]
+		public var errorEvent:Object;
+		
+		/**
+		 * Reference to the error message
+		 * */
+		[Bindable]
+		public var errorMessage:String;
+		
+		/**
 		 * Effect to run when a service fault is generated
 		 * */
 		public var faultEffect:ActionEffect;
@@ -93,11 +115,5 @@ package com.flexcapacitor.effects.services {
 		 * You can set this or continue to the next effect if in a sequence
 		 * */
 		public var resultEffect:ActionEffect;
-		
-		/**
-		 * Inspects the request object
-		 * */
-		public var inspectRequestObject:Boolean;
-		public var inspectResultObject:Boolean;
 	}
 }

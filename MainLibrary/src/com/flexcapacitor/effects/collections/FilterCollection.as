@@ -37,6 +37,48 @@ package com.flexcapacitor.effects.collections {
 		showAllItemsOnEmpty="false"
 		exactMatch="true"
 		/>
+</pre><br/>
+	 * Filtering on change of multiple components:<br/>
+	 * <pre>
+
+		<!-- FILTER BY NAME -->
+		&lt;handlers:EventHandler eventName="change" 
+							   targets="{[filterInput,showAllItemsOnEmpty,caseSensitive,searchAtStart]}"
+							   >
+			&lt;collections:FilterCollection target="{libraryCollection}" 
+								   source="{filterInput}" 
+								   sourcePropertyName="text"
+								   fieldName="title"
+								   showAllItemsOnEmpty="{showAllItemsOnEmpty.selected}"
+								   caseSensitive="{caseSensitive.selected}"
+								   searchAtStart="{searchAtStart.selected}"
+								   />
+		&lt;/handlers:EventHandler>
+		 * 
+
+		&lt;s:Group height="22" 
+				 minHeight="22"
+				 width="100%" 
+				 >
+				
+			&lt;s:TextInput id="filterInput" 
+							   left="0" right="0" top="0" 
+							   width="100%"
+							   minWidth="60" 
+							   borderAlpha="0.2" 
+							   color="#2F3030" 
+							   focusAlpha="0" 
+							   fontWeight="normal" 
+							   prompt="Search"
+							   />
+			&lt;s:HGroup width="100%" top="32" left="4" verticalAlign="baseline">
+				&lt;s:CheckBox id="showAllItemsOnEmpty" label="All" selected="true"/>
+				&lt;s:CheckBox id="caseSensitive" label="Case" selected="false"/>
+				&lt;s:CheckBox id="searchAtStart" label="At start" selected="false"/>
+				&lt;s:Spacer width="100%"/>
+				&lt;s:Label text="Results: {libraryCollection.length}"/>
+			&lt;/s:HGroup>
+		&lt;/s:Group>
 </pre>
 	 * */
 	public class FilterCollection extends ActionEffect {
@@ -131,6 +173,9 @@ package com.flexcapacitor.effects.collections {
 				var fieldNames:Array;
 				var fieldNamesLength:int;
 				var match:Boolean;
+				var error:String;
+				var currentFieldName:String;
+				var hasProperty:Boolean;
 				
 				filterValue = sourcePropertyName ? source[sourcePropertyName] : String(source);
 				filterValueAsString = sourceSubPropertyName && filterValue ? filterValue[sourceSubPropertyName] : String(filterValue);
@@ -144,10 +189,18 @@ package com.flexcapacitor.effects.collections {
 				
 				fieldNamesLength = fieldNames.length;
 				
+				// check object has property
+				for (var j:int;j<fieldNamesLength;j++) {
+					currentFieldName = fieldNames[j];
+					hasProperty = (item is Object && currentFieldName in item);
+				}
 				
-				for (var i:int;i<fieldNamesLength;i++) {
+				for (var i:int = 0;i<fieldNamesLength;i++) {
 					match = false;
-					itemValue = fieldName ? item[fieldNames[i]] : String(item);
+					
+					// ReferenceError: Error #1069: Property title not found on object and there is no default value.
+					// The field name does not exist on the object
+					itemValue = currentFieldName ? item[currentFieldName] : String(item);
 					valueLength = filterValueAsString ? filterValueAsString.length : 0;
 					
 					// show all items if search is empty

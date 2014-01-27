@@ -184,7 +184,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			// set property - by default null data deletes the property --is this true?? maybe earlier fp?
 			// - sometimes fields are empty, "" but we still want the property 
-			// use RemoveSetting to remove the property
+			// use RemoveSetting or removeSettingWhenDataIsNull to remove the property
 			
 			// is property set
 			if (action.property!=null) {
@@ -375,6 +375,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			sharedObject.removeEventListener(NetStatusEvent.NET_STATUS, netStatusHandler);
 			
 			
+			action.errorEvent = event;
 			action.asyncErrorEvent = event;
 			
 			

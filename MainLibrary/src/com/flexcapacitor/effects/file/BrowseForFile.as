@@ -40,6 +40,7 @@ package com.flexcapacitor.effects.file {
 	 * 
 	 * <pre>
 	 &lt;file:BrowseForFile id="browseForFile"
+							fileTypes="png,jpg,jpeg,gif"
 							targetAncestor="{this}"
 							allowMultipleSelection="false">
 			&lt;file:selectionEffect>
@@ -53,6 +54,14 @@ package com.flexcapacitor.effects.file {
 	 * If it is part of an event handler it must be called within the call stack of a click event.
 	 * Set the targetAncestor property to a parent of the button that triggers this event.
 	 * Must not have any effects before it that have any duration. 
+	 * 
+	 * 
+	 * @see FileExists
+	 * @see GetFile
+	 * @see LoadFile
+	 * @see PromptSaveAs
+	 * @see SaveDataToFile
+	 * @see UploadFile
 	 * */
 	public class BrowseForFile extends ActionEffect {
 		
@@ -134,6 +143,12 @@ package com.flexcapacitor.effects.file {
 		public var fileObject:*;
 		
 		/**
+		 * Array of selected files
+		 * */
+		[Bindable]
+		public var fileList:Array;
+		
+		/**
 		 * Browse for folder rather than file. 
 		 * */
 		[Bindable]
@@ -209,6 +224,7 @@ package com.flexcapacitor.effects.file {
 		/**
 		 * If cancel is pressed on the browser dialog then cancel 
 		 * out of an effect sequence (if part of one).
+		 * Deprecated
 		 * */
 		public var cancelOnDismiss:Boolean = true;
 		
@@ -217,6 +233,12 @@ package com.flexcapacitor.effects.file {
 		 * */
 		[Bindable]
 		public var fileName:String;
+		
+		/**
+		 * Number of files selected.
+		 * */
+		[Bindable]
+		public var fileCount:uint;
 		
 		/**
 		 * File size of the selected file or first file if multiple files selected.

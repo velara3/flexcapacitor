@@ -5,20 +5,22 @@ package com.flexcapacitor.utils
 	import flash.utils.setTimeout;
 
 	/**
-	 * Allows Flash to take part in password storage and retrieval systems.<br/><br/>
+	 * Allows Flash to take part in password storage and retrieval systems.
+	 * http://www.judahfrangipane.com/blog/2012/10/12/auto-login-in-flash-and-flex/<br/><br/>
 	 * 
 	 * Add this to your HTML page:
 	 * 
 	 * 
 	 * <pre>
-       		&lt;form id="bridgeForm" action="#">
-			&lt;input id="username">
-			&lt;input id="password" type="password">
-		&lt;/form>
+&lt;form id="bridgeForm" action="#" target="loginframe" autocomplete="on" style="display:none">
+        &lt;input type="text" name="username" id="username" />
+        &lt;input type="password" name="password" id="password"/>
+&lt;/form>
+
+&lt;iframe id="loginframe" name="loginframe" src="blankpage.html" style="display:none">&lt;/iframe>
 		</pre>
 	 **/
-	public class StoreLogin
-	{
+	public class StoreLogin {
 		
 		/**
 		 * ID of the form element
@@ -45,8 +47,10 @@ package com.flexcapacitor.utils
 		 * */
 		public static const FORM_ERROR:String = "The form is not on the page. Make sure there is a form on the page with the same ID as in FORM_ID. See notes.";
 		
-		public function StoreLogin()
-		{
+		/**
+		 * Constructor
+		 * */
+		public function StoreLogin() {
 			
 		}
 		
@@ -84,8 +88,7 @@ package com.flexcapacitor.utils
 		 * Sets the form username and password inputs. You typically call this
 		 * right before submitting the form
 		 **/
-		public function setFormValues(username:String, password:String):Boolean
-		{
+		public function setFormValues(username:String, password:String):Boolean {
 			var results:Boolean = ExternalInterface.call("setFormValues", username, password);
 			return results;
 		}
@@ -93,8 +96,7 @@ package com.flexcapacitor.utils
 		/**
 		 * Clears the form
 		 **/
-		public function clearFormValues():Boolean
-		{
+		public function clearFormValues():Boolean {
 			var results:Boolean = ExternalInterface.call("clearFormValues");
 			return results;
 		}
@@ -102,8 +104,7 @@ package com.flexcapacitor.utils
 		/**
 		 * Gets the username and password or empty array if not set
 		 **/
-		public function getFormValues():Array
-		{
+		public function getFormValues():Array {
 			var results:Array = ExternalInterface.call("getFormValues");
 			return results;
 		}
@@ -111,8 +112,7 @@ package com.flexcapacitor.utils
 		/**
 		 * Gets the username or null if not set
 		 **/
-		public function getUsername():String
-		{
+		public function getUsername():String {
 			var value:String = ExternalInterface.call("getUsername");
 			return value;
 		}
@@ -120,8 +120,7 @@ package com.flexcapacitor.utils
 		/**
 		 * Gets the password value or null if not set
 		 **/
-		public function getPassword():String
-		{
+		public function getPassword():String {
 			var value:String = ExternalInterface.call("getPassword");
 			return value;
 		}
@@ -246,8 +245,13 @@ package com.flexcapacitor.utils
 		{
 			if (!initialized) {
 				var script:String = savePasswordScript;
-				ExternalInterface.call("eval", script);
 				formExists = confirmFormExists();
+				scriptExists = confirmScriptWritten();
+				
+				if (!scriptExists) {
+					ExternalInterface.call("eval", script);
+				}
+				
 				scriptExists = confirmScriptWritten();
 				initialized = scriptExists && formExists;
 				
@@ -295,7 +299,7 @@ package com.flexcapacitor.utils
 		
 		/**
 		 * This is written to the HTML page on load
-		 * Note: wherever we have linebreaks we have to escape them - \n -> \\n
+		 * Note: wherever we have written explicit linebreaks we have to escape them - \n -> \\n
 		 * 
 		 * Getting error in Firefox Firebug console:
 		 * 

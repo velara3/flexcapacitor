@@ -7,7 +7,9 @@ package com.flexcapacitor.effects.prompt {
 	
 	import flash.display.Sprite;
 	
-	
+	/**
+	 * Shows a prompt message with ok and cancel action. 
+	 * */
 	public class PromptAction extends ActionEffect {
 		
 		

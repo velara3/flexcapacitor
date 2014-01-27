@@ -8,11 +8,15 @@ package com.flexcapacitor.effects.core {
 	
 	/**
 	 * When part of a composite effect stops all sibling effects and 
-	 * cancels out of the parent composite effect.
+	 * cancels out of the parent composite effect.<br/><br/>
+	 * 
+	 * This is being deprecated unless there is some reason to keep it. Instead of canceling a
+	 * sequence of instances Action Effect authors should branch to subeffects that 
+	 * play based on success or failure of their intended action. 
 	 * 
 	 * By default this will recursively cancel out of all parent composite effects. 
 	 * If cancelAncestorEffects is set to false then this will only cancel out 
-	 * of the direct parent composite effect.
+	 * of the direct parent composite effect.<br/><br/>
 	 * 
 	 * Equivalent to:<br/><br/>
 	 * effectInstance.stop();<br/>

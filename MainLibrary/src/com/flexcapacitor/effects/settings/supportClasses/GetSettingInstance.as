@@ -65,6 +65,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			var action:GetSetting = GetSetting(effect);
 			var traceToConsole:Boolean = action.traceDataToConsole;
 			var sharedObject:SharedObject;
+			var properties:Array = [];
 			var result:Object;
 			var status:String;
 			var data:Object;
@@ -175,9 +176,21 @@ package com.flexcapacitor.effects.settings.supportClasses {
 			
 			data = action.property ? sharedObject.data[action.property] : sharedObject.data;
 			
+			for (var name:String in data) {
+				properties.push(name);
+				
+				if (traceToConsole) {
+					traceMessage(name + "=" + data[name]);
+				}
+			}
+			
+			if (traceToConsole && properties.length==0) {
+				traceMessage("No data on object");
+			}
+			
 			action.data = data;
 			
-			if (data == null) {
+			if (data == null || sharedObject.size==0 || properties.length==0) {
 				
 				if (action.hasEventListener(GetSetting.VALUE_NOT_SET)) {
 					dispatchActionEvent(new Event(GetSetting.VALUE_NOT_SET));

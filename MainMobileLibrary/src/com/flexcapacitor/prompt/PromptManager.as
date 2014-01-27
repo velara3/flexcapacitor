@@ -12,11 +12,8 @@ package com.flexcapacitor.prompt {
 	
 	import mx.core.FlexGlobals;
 	import mx.core.IFlexDisplayObject;
-	import mx.effects.Effect;
 	import mx.managers.ISystemManager;
 	import mx.managers.PopUpManager;
-	
-	import spark.components.View;
 	
 	/**
 	 * Displays a Prompt message showing icons and buttons with the component of your choice. 

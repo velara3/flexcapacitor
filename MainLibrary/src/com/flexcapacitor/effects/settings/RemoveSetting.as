@@ -3,13 +3,14 @@
 package com.flexcapacitor.effects.settings {
 	
 	import com.flexcapacitor.effects.settings.supportClasses.RemoveSettingInstance;
+	import com.flexcapacitor.effects.settings.supportClasses.SettingsDefault;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
+	import flash.events.AsyncErrorEvent;
+	import flash.events.NetStatusEvent;
 	import flash.net.SharedObject;
 	
 	import mx.effects.Effect;
-	import flash.events.NetStatusEvent;
-	import flash.events.AsyncErrorEvent;
 	
 	
 	/**
@@ -138,7 +139,7 @@ package com.flexcapacitor.effects.settings {
 		 * 
 		 * For errors see http://www.actionscripterrors.com/?p=806
 		 * */
-		public var name:String;
+		public var name:String = SettingsDefault.DEFAULT_NAME;
 		
 		/**
 		 * Name of property. Optional. 
