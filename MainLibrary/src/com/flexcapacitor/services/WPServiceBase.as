@@ -83,12 +83,59 @@ package com.flexcapacitor.services {
 		 * URLRequest to communicate with the server
 		 * */
 		public var request:URLRequest;
+		
+		/**
+		 * Detects multisite and updates the site after login is successful
+		 * */
+		public var updateSitePathOnLogin:Boolean = true;
 
 		/**
-		 * URL to Wordpress blog with trailing slash. For example,
-		 * http://www.radii8.com/blog/
+		 * URL to Wordpress blog. For example, http://www.domain.com
+		 * If the site is multisite then set the site variable. 
+		 * @see site
+		 * @see sites
+		 * @see usePermalink
 		 * */
 		public var host:String;
+
+		/**
+		 * Path to API when using permalink. For example,
+		 * if permalink is set to true and the path to the API is, http://www.domain.com/api/, 
+		 * the permlinkPath would be "api/". No slash before the value. 
+		 * @see usePermalink
+		 * @see sites
+		 * @see host
+		 * */
+		public var permalinkPath:String = "api/";
+
+		private var _site:String = "";
+
+		/**
+		 * Site of Wordpress blog when using multisite. For example,
+		 * in the URL, http://www.radii8.com/blog/mysite, the site is "/mysite/".
+		 * Add slashes before and after value. 
+		 * @see sites
+		 * @see host
+		 * @see usePermalink
+		 * */
+		public function get site():String {
+			return _site;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set site(value:String):void {
+			_site = value;
+		}
+
+		
+		/**
+		 * Array of sites when using multisite domain.
+		 * @see site
+		 * @see host
+		 * */
+		public var sites:Array = [];
 		
 		private var _url:String;
 
@@ -105,14 +152,31 @@ package com.flexcapacitor.services {
 		 * @private
 		 */
 		public function set url(value:String):void {
-			_url = host + value;
+			
+			if (usePermalinks) {
+				var path:String = permalinkPath.lastIndexOf("/")==permalinkPath.length-1 ? permalinkPath : permalinkPath + "/";
+				value = path + value;
+			}
+			else {
+				value = value.replace(/?/, "&"); // replace first ? since we will be using it
+				value = "?json=" + value;
+			}
+			
+			_url = host + site + value;
 			
 			if (request) {
 				request.url = _url;
 				request.data = null;
 			}
 		}
-
+		
+		/**
+		 * Specifies to use the syntax "api/controller/method" versus "?json=controller/method"
+		 * in the URL. For example, when enabled the URL would be something like,
+		 * "http://www.mysite.com/blog/api/user/get_logged_in". When set to false the URL 
+		 * would be something like, "http://www.mysite.com/blog/?json=user/get_logged_in". 
+		 * */
+		public var usePermalinks:Boolean;
 		
 		public var time:int;
 		
@@ -133,10 +197,17 @@ package com.flexcapacitor.services {
 		protected var deletePending:Boolean;
 		
 		/**
-		 * Data returned from the server
+		 * Data returned from the server converted to a JSON object 
+		 * or null if result could not be converted to JSON.
 		 * */
 		[Bindable]
 		public var data:Object;
+		
+		/**
+		 * Data returned from the server as string
+		 * */
+		[Bindable]
+		public var results:String;
 		
 		/**
 		 * Data to save to the server. Flash will convert the 
@@ -278,8 +349,9 @@ package com.flexcapacitor.services {
 			}
 			
 			if (json && json is Object && "status" in json && json.status=="error") {
-				serviceEvent.message = "Update token error";
+				serviceEvent.message = json.error;//"Update token error";
 				dispatchEvent(serviceEvent);
+				return;
 			}
 			else if (updatePending) {
 				updatePost(token);
@@ -296,6 +368,23 @@ package com.flexcapacitor.services {
 			else if (uploadPending) {
 				uploadAttachment(token);
 				anotherCallToGo = true;
+			}
+			
+			if (call==WPServiceEvent.LOGIN_USER) {
+				if (json && json is Object && json.blogs) {
+					
+					for each (var blog:Object in json.blogs) {
+						sites.push(blog);
+					}
+					
+					if (sites.length>0) {
+						var possibleSite:String = sites[0].siteurl;
+						
+						if (updateSitePathOnLogin) {
+							site = sites[0].path;
+						}
+					}
+				}
 			}
 			
 			inProgress = false;

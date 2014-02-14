@@ -6,7 +6,7 @@ package com.flexcapacitor.services {
 	/**
 	 * Event dispatched when result or fault is received from a WP Service
 	 * */
-	public class WPServiceEvent extends Event implements IServiceEvent {
+	public class WPServiceEvent extends ServiceEvent implements IServiceEvent {
 		
 		/**
 		 * Constructor.
@@ -44,17 +44,26 @@ package com.flexcapacitor.services {
 		public static const GET_POST:String		 			= "getPost";
 		public static const GET_POSTS:String 				= "getPosts";
 		public static const GET_ATTACHMENTS:String 			= "getAttachments";
+		public static const GET_CATEGORIES:String 			= "getCategories";
 		public static const GET_LOGGED_IN_USER:String 		= "getLoggedInUser";
 		public static const IS_USER_LOGGED_IN:String 		= "isUserLoggedIn";
-		public static const REGISTER_USER:String 			= "register";
+		public static const REGISTER_USER:String 			= "registerUser";
+		public static const REGISTER_USER_AND_SITE:String 	= "registerUserAndSite";
+		public static const REGISTER_SITE:String 			= "registerSite";
+		public static const IS_MAIN_SITE:String 			= "isMainSite";
+		public static const IS_MULTISITE:String 			= "isMultisite";
+		public static const IS_SUB_DOMAIN_INSTALL:String 	= "isSubDomainInstall";
+		public static const GET_CURRENT_SITE:String 		= "getCurrentSite";
 		public static const LOGIN_USER:String 				= "login";
 		public static const LOGOUT_USER:String 				= "logout";
 		public static const LOST_PASSWORD:String 			= "lostPassword";
 		public static const RESET_PASSWORD:String 			= "resetPassword";
 		public static const GET_PROJECTS:String 			= "getProjects";
+		public static const GET_POSTS_BY_USER:String 		= "getPostsByUser";
 		public static const GET_PROJECTS_BY_USER:String 	= "getProjectsByUser";
 		public static const GET_PROJECT_BY_ID:String 		= "getProjectsByID";
 		public static const GET_POSTS_BY_CATEGORY:String 	= "getPostsByCategory";
+		public static const GET_API_INFO:String 			= "info";
 		
 		private var _call:String;
 
@@ -74,29 +83,6 @@ package com.flexcapacitor.services {
 
 		private var _text:String;
 
-		/**
-		 * Raw text result from server
-		 * */
-		public function get text():String {
-			return _text;
-		}
-
-		public function set text(value:String):void {
-			_text = value;
-		}
-
-		private var _data:Object;
-
-		/**
-		 * JSON object
-		 * */
-		public function get data():Object {
-			return _data;
-		}
-
-		public function set data(value:Object):void {
-			_data = value;
-		}
 
 		private var _message:String;
 
@@ -111,18 +97,9 @@ package com.flexcapacitor.services {
 			_message = value;
 		}
 
-		public var resultEvent:Event;
-		private var _faultEvent:Event;
-
-		public function get faultEvent():Event {
-			return _faultEvent;
-		}
-
-		public function set faultEvent(value:Event):void {
-			_faultEvent = value;
-		}
 
 		public var parseError:Error;
+		
 		public var faultCode:String;
 		
 		override public function clone():Event {

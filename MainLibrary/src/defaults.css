@@ -30,3 +30,13 @@ controls|InsetLabel {
 controls|DataGrid {
 	skinClass: ClassReference("com.flexcapacitor.skins.DataGridSkin");
 }
+
+controls|Link {
+	color:#0000EE;
+	textDecoration:none;
+}
+
+controls|Link:over {
+	color:#0000EE;
+	textDecoration:underline;
+}

@@ -8,6 +8,10 @@
 		 click="rollOverAnimation.play(null, false)"
 		 >
 	
+	<!--- 
+	Shows a glow animation AFTER the label has been clicked.
+	-->
+	
 	<fx:Script>
 		<![CDATA[
 			import com.flexcapacitor.filters.BorderStrokeFilter;

@@ -8,10 +8,14 @@
 		 alpha=".5"
 		 >
 	
+	<!---
+	Changes the alpha on rollover. 
+	-->
+	
 	<fx:Declarations>
 		<fx:Number id="alphaOver">1</fx:Number>
 		<fx:Number id="alphaOut">.5</fx:Number>
-		<fx:int id="duration">200</fx:int>
+		<fx:int id="duration">250</fx:int>
 		
 		<s:Animate id="rollOverAnimation" duration="{duration}">
 			<s:SimpleMotionPath valueFrom="{alphaOut}" 

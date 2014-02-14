@@ -8,25 +8,13 @@ package com.flexcapacitor.services {
 	public interface IServiceEvent {
 		
 		/**
-		 * Call made to service
-		 * */
-		function get call():String;
-		function set call(value:String):void;
-		
-		/**
-		 * JSON string returned from server
+		 * String returned from server
 		 * */
 		function get text():String;
 		function set text(value:String):void;
 		
 		/**
-		 * Message giving status of call
-		 * */
-		function get message():String;
-		function set message(value:String):void;
-		
-		/**
-		 * Object converted from JSON string
+		 * Object returned from the server
 		 * @see text
 		 * */
 		function get data():Object;
@@ -37,5 +25,11 @@ package com.flexcapacitor.services {
 		 * */
 		function get faultEvent():Event;
 		function set faultEvent(value:Event):void;
+		
+		/**
+		 * Object that contains the result event
+		 * */
+		function get resultEvent():Event;
+		function set resultEvent(value:Event):void;
 	}
 }

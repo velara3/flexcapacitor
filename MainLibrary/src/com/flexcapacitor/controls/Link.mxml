@@ -1,0 +1,317 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Label xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:filters="com.flexcapacitor.filters.*"
+		 
+		 useHandCursor="true"
+		 buttonMode="true"
+		 click="clickHandler(event)"
+		 rollOver="currentState='over'"
+		 rollOut="currentState='up'"
+		 alpha.disabled=".5"
+		 >
+	
+	
+	<!---
+	Simple Link label with support for asyncronous calls
+	
+	Styles can be set in CSS using pseudo state selectors: 
+
+	controls|Link {
+		color:#0000ff;
+		textDecoration:none;
+	}
+	
+	controls|Link:over {
+		color:#0000ff;
+		textDecoration:underline;
+	}
+	-->
+	
+	<fx:Metadata>
+		
+		/**
+		 * The event that is dispatched on results. 
+		 * */
+		[Event(name="result", type="com.flexcapacitor.services.ServiceEvent")]
+		
+		/**
+		 * The event that is dispatched on fault. 
+		 * */
+		[Event(name="fault", type="com.flexcapacitor.services.ServiceEvent")]
+		
+		/**
+		 * The event that is dispatched on complete. 
+		 * */
+		[Event(name="complete", type="flash.events.Event")]
+		
+		/**
+		 * The event that is dispatched on open. 
+		 * */
+		[Event(name="open", type="flash.events.Event")]
+		
+		/**
+		 * The event that is dispatched on progress event. 
+		 * */
+		[Event(name="progress", type="flash.events.ProgressEvent")]
+		
+		/**
+		 * The event that is dispatched on Security Error. 
+		 * */
+		[Event(name="securityError", type="flash.events.SecurityErrorEvent")]
+		
+		/**
+		 * The event that is dispatched on HTTP Status. 
+		 * */
+		[Event(name="httpStatus", type="flash.events.HTTPStatusEvent")]
+		
+		/**
+		 * The event that is dispatched on IO Error.
+		 * */
+		[Event(name="ioError", type="flash.events.IOErrorEvent")]
+			
+	</fx:Metadata>
+	
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.services.ServiceEvent;
+			
+			import flash.net.navigateToURL;
+			
+			/**
+			 * URLLoader to communicate with the server
+			 * */
+			public var loader:URLLoader;
+			
+			/**
+			 * URLRequest to communicate with the server
+			 * */
+			public var request:URLRequest;
+			
+			/**
+			 * Whether link is asyncronous.
+			 * */
+			[Bindable]
+			public var asyncronous:Boolean;
+			
+			/**
+			 * Link to the URL to go to.
+			 * */
+			[Bindable]
+			public var url:String;
+			
+			/**
+			 * Target for the URL
+			 * */
+			[Bindable]
+			public var target:String;
+			
+			/**
+			 * Form data
+			 * */
+			[Bindable]
+			public var parameters:URLVariables;
+			
+			/**
+			 * Method
+			 * */
+			[Bindable]
+			public var method:String = URLRequestMethod.GET;
+			
+			
+			private var _dataFormat:String = URLLoaderDataFormat.TEXT;
+
+			/**
+			 * @see flash.net.URLLoaderDataFormat;
+			 * */
+			public function get dataFormat():String {
+				return _dataFormat;
+			}
+
+			public function set dataFormat(value:String):void {
+				_dataFormat = value;
+			}
+			
+			/**
+			 * Handle click event
+			 * */
+			protected function clickHandler(event:MouseEvent):void {
+				
+				if (asyncronous) {
+			
+					if (loader==null) {
+						loader = new URLLoader();
+						loader.dataFormat = dataFormat;
+						addEventListeners(loader);
+					}
+					
+					if (request==null) {
+						request = new URLRequest();
+					}
+					
+					request.url = url;
+					
+					if (parameters) {
+						request.data = parameters;
+					}
+					
+					request.method = method;
+					
+					load(request);
+					
+				}
+				else {
+					if (url) {
+						navigateToURL(new URLRequest(url), target);
+					}
+				}
+			}
+		
+			/**
+			 * Load request. We wrap the load call to cancel previous operations.
+			 * */
+			public function load(request:URLRequest = null):void {
+				
+				// close call if open
+				try {
+					loader.close();
+				}
+				catch (e:Error) {
+					// we don't care
+					//trace("loader not in progress");
+				}
+				
+				loader.load(request);
+			}
+			
+			/**
+			 * Add event listeners to the URLLoader instance
+			 * */
+			protected function addEventListeners(dispatcher:IEventDispatcher):void {
+	            dispatcher.addEventListener(Event.COMPLETE, completeHandler, false, 0, true);
+	            dispatcher.addEventListener(Event.OPEN, openHandler, false, 0, true);
+	            dispatcher.addEventListener(ProgressEvent.PROGRESS, progressHandler, false, 0, true);
+	            dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler, false, 0, true);
+	            dispatcher.addEventListener(HTTPStatusEvent.HTTP_STATUS, httpStatusHandler, false, 0, true);
+	            dispatcher.addEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler, false, 0, true);
+	        }
+			
+			/**
+			 * Remove event listeners from URLLoader instance.
+			 * */
+			protected function removeEventListeners(dispatcher:IEventDispatcher):void {
+	            dispatcher.removeEventListener(Event.COMPLETE, completeHandler);
+	            dispatcher.removeEventListener(Event.OPEN, openHandler);
+	            dispatcher.removeEventListener(ProgressEvent.PROGRESS, progressHandler);
+	            dispatcher.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, securityErrorHandler);
+	            dispatcher.removeEventListener(HTTPStatusEvent.HTTP_STATUS, httpStatusHandler);
+	            dispatcher.removeEventListener(IOErrorEvent.IO_ERROR, ioErrorHandler);
+			}
+			
+			//--------------------------------------------------------------------------
+			//
+			//  Event handlers
+			//
+			//--------------------------------------------------------------------------
+			
+			/**
+			 * URL Loader complete
+			 * */
+			protected function completeHandler(event:Event):void {
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
+				
+				onResult(loader.data, event);
+			}
+	
+			/**
+			 * 
+			 * */
+	        protected function openHandler(event:Event):void {
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
+	        }
+	
+			/**
+			 * 
+			 * */
+	        protected function progressHandler(event:ProgressEvent):void {
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
+	        }
+	
+			/**
+			 * 
+			 * */
+	        protected function httpStatusHandler(event:HTTPStatusEvent):void {
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
+	        }
+			
+			/**
+			 * IO Error handler
+			 * */
+			protected function ioErrorHandler(event:IOErrorEvent):void {
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
+				
+				onFault(event);
+			}
+			
+			/**
+			 * Security Error handler
+			 * */
+			protected function securityErrorHandler(event:SecurityErrorEvent):void {
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
+				
+				onFault(event);
+			}
+			
+			
+		
+			/**
+			 * Fault handler
+			 * */
+			public function onFault(event:Event):void {
+				if (hasEventListener(ServiceEvent.FAULT)) {
+					var fault:ServiceEvent = new ServiceEvent(ServiceEvent.FAULT);
+					fault.faultEvent = event;
+					dispatchEvent(fault);
+				}
+			}
+			
+			/**
+			 * Result handler
+			 * */
+			public function onResult(data:Object, event:Event = null):void {
+				if (hasEventListener(ServiceEvent.RESULT)) {
+					var result:ServiceEvent = new ServiceEvent(ServiceEvent.RESULT);
+					result.resultEvent = event;
+					result.data = data;
+					result.text = data is String ? data as String : (data).toString();
+					dispatchEvent(result);
+				}
+			}
+		]]>
+	</fx:Script>
+
+	
+	<fx:Declarations>
+		
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="up"/>
+		<s:State name="over"/>
+		<s:State name="disabled"/>
+	</s:states>
+	
+</s:Label>

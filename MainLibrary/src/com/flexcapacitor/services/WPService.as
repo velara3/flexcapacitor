@@ -76,54 +76,70 @@ if ( !empty($values["custom"]) ) {
 		public static const STATUS_PUBLISH:String = "publish";
 		public static const STATUS_DRAFT:String = "draft";
 		public static const STATUS_TRASH:String = "trash";
+
+		public var getAPIInfoURL:String = "core/info";
 		
 		/**
 		 * Attachments URL
 		 * Options parent
 		 * */
-		public var getAttachmentsURL:String = "?json=attachments/get_attachments";
+		public var getAttachmentsURL:String = "attachments/get_attachments";
 		
-		public var getPostURL:String = "?json=get_post&controller=posts&method=get_post";
+		public var getPostURL:String = "posts/get_post";
 		
-		public var getPostsURL:String = "?json=get_posts&controller=posts&method=get_posts";
+		public var getPostsURL:String = "posts/get_posts";
 		
-		public var getSearchURL:String = "?json=get_search_results&controller=posts&method=get_search_results";
+		public var getSearchURL:String = "posts/get_search_results";
 		
-		public var logoutUserURL:String = "?json=user/logout";
+		public var logoutUserURL:String = "user/logout";
 		
-		public var loginUserURL:String = "?json=user/login";
+		public var loginUserURL:String = "user/login";
 		
-		public var registerUserURL:String = "?json=user/register";
+		public var registerUserURL:String = "user/register";
 		
-		public var lostPasswordURL:String = "?json=user/lost_password";
+		public var registerSiteURL:String = "user/register_site";
 		
-		public var resetPasswordURL:String = "?json=user/reset_password";
+		public var registerUserAndSiteURL:String = "user/register_user_and_site";
 		
-		public var isUserLoggedInURL:String = "?json=user/is_user_logged_in";
+		public var lostPasswordURL:String = "user/lost_password";
 		
-		public var getLoggedInUserURL:String = "?json=user/get_logged_in_user";
+		public var resetPasswordURL:String = "user/reset_password";
 		
-		public var getProjectsURL:String = "?json=projects/get_projects";
+		public var isUserLoggedInURL:String = "user/is_user_logged_in";
 		
-		public var getProjectsByUserURL:String = "?json=projects/get_projects_by_user";
+		public var getLoggedInUserURL:String = "user/get_logged_in_user";
 		
-		public var getProjectByIdURL:String = "?json=projects/get_project_by_id";
+		public var isSubDomainInstallURL:String = "user/is_subdomain_install";
 		
-		public var getCategoriesURL:String = "?json=get_category_posts&controller=posts&method=get_category_posts";
+		public var isMultisiteURL:String = "user/is_multisite";
+		
+		public var isMainsiteURL:String = "user/is_mainsite";
+		
+		public var getCurrentSiteURL:String = "user/get_current_site";
+		
+		public var getProjectsURL:String = "projects/get_projects";
+		
+		public var getProjectsByUserURL:String = "projects/get_projects_by_user";
+		
+		public var getProjectByIdURL:String = "projects/get_project_by_id";
+		
+		public var getCategoriesURL:String = "core/get_category_index";
+		
+		public var getPostsByCategoryURL:String = "posts/get_posts_by_category";
 
-		public var createTokenURL:String = "?json=get_nonce&controller=posts&method=create_post";
+		public var createTokenURL:String = "posts/create_post?get_nonce";
 		
-		public var updateTokenURL:String = "?json=get_nonce&controller=posts&method=update_post";
+		public var updateTokenURL:String = "posts/update_post?get_nonce";
 
-		public var uploadTokenURL:String = "?json=get_nonce&controller=posts&method=update_post";
+		public var uploadTokenURL:String = "posts/update_post?get_nonce";
 
-		public var deleteTokenURL:String = "?json=get_nonce&controller=posts&method=delete_post";
+		public var deleteTokenURL:String = "posts/delete_post?get_nonce";
 		
-		public var createPostURL:String = "?json=posts/create_post";
+		public var createPostURL:String = "posts/create_post";
 		
-		public var updatePostURL:String = "?json=posts/update_post";
+		public var updatePostURL:String = "posts/update_post";
 		
-		public var deletePostURL:String = "?json=posts/delete_post";
+		public var deletePostURL:String = "posts/delete_post";
 		
 		/**
 		 * Save the document. If the document doesn't
@@ -151,7 +167,6 @@ if ( !empty($values["custom"]) ) {
 		//  Service Calls
 		// 
 		//----------------------------------
-		
 		
 		
 		/**
@@ -286,11 +301,11 @@ if ( !empty($values["custom"]) ) {
 		/**
 		 * Get posts
 		 * */
-		public function getPosts(query:String, post:Object = null, count:int = 10):void {
+		public function getPosts(query:String = "", form:URLVariables = null, count:int = 10):void {
 			url = getPostsURL + "&count=" + count + query;
 			call = WPServiceEvent.GET_POSTS;
 			request.method = URLRequestMethod.POST;
-			request.data = post;
+			request.data = form;
 			request.url = url;
 			load(request);
 		}
@@ -328,8 +343,19 @@ if ( !empty($values["custom"]) ) {
 		 * Get posts by categories
 		 * */
 		public function getPostsByCategory(category:String, count:int = 10):void {
-			url = getCategoriesURL + "&count=" + count + "&slug=" + category;
+			url = getPostsByCategoryURL + "&count=" + count + "&slug=" + category;
 			call = WPServiceEvent.GET_POSTS_BY_CATEGORY;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get categories
+		 * */
+		public function getCategories(category:String = "", count:int = 10):void {
+			url = getCategoriesURL + "&count=" + count + "&slug=" + category;
+			call = WPServiceEvent.GET_CATEGORIES;
 			request.method = URLRequestMethod.GET;
 			request.data = null;
 			load(request);
@@ -359,6 +385,16 @@ if ( !empty($values["custom"]) ) {
 			load(request);
 		}
 		
+		/**
+		 * Get projects by user. Publish status can be all, any, draft or publish, trash
+		 * */
+		public function getPostsByUser(userID:int, publishStatus:String=STATUS_ANY, count:int = 10):void {
+			url = getProjectsByUserURL + "&user_id=" + userID + "&count=" + count + "&status=" + publishStatus;
+			call = WPServiceEvent.GET_POSTS_BY_USER;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
 		
 		/**
 		 * Get project by id. TODO include parameter to include sub posts.
@@ -401,10 +437,82 @@ if ( !empty($values["custom"]) ) {
 			url = registerUserURL;
 			call = WPServiceEvent.REGISTER_USER;
 			var variables:URLVariables = new URLVariables();
-			variables.username = username;
-			variables.email = email;
+			variables.user_name = username;
+			variables.user_email = email;
 			request.method = URLRequestMethod.POST;
 			request.data = variables;
+			load(request);
+		}
+		
+		/**
+		 * Register site
+		 * */
+		public function registerSite(blogName:String = "", blogTitle:String = "", blogPublic:Boolean = true):void {
+			url = registerSiteURL;
+			call = WPServiceEvent.REGISTER_SITE;
+			var variables:URLVariables = new URLVariables();
+			variables.blogname = blogName;
+			variables.blog_title = blogTitle;
+			variables.blog_public = blogPublic ? 1 : 0;
+			request.method = URLRequestMethod.POST;
+			request.data = variables;
+			load(request);
+		}
+		
+		/**
+		 * Register user and site
+		 * */
+		public function registerUserAndSite(username:String, email:String, blogName:String = "", blogTitle:String = "", blogPublic:Boolean = true):void {
+			url = registerUserAndSiteURL;
+			call = WPServiceEvent.REGISTER_USER_AND_SITE;
+			var variables:URLVariables = new URLVariables();
+			variables.user_name = username;
+			variables.user_email = email;
+			variables.blogname = blogName;
+			variables.blog_title = blogTitle;
+			variables.blog_public = blogPublic ? 1 : 0;
+			request.method = URLRequestMethod.POST;
+			request.data = variables;
+			load(request);
+		}
+		
+		/**
+		 * Is multisite
+		 * */
+		public function isMultiSite():void {
+			url = isMultisiteURL;
+			call = WPServiceEvent.IS_MULTISITE;
+			request.method = URLRequestMethod.GET;
+			load(request);
+		}
+		
+		/**
+		 * Is mainsite
+		 * */
+		public function isMainSite():void {
+			url = isMainsiteURL;
+			call = WPServiceEvent.IS_MAIN_SITE;
+			request.method = URLRequestMethod.GET;
+			load(request);
+		}
+		
+		/**
+		 * Is sub domain insatll
+		 * */
+		public function isSubDomainInstall():void {
+			url = isSubDomainInstallURL;
+			call = WPServiceEvent.IS_SUB_DOMAIN_INSTALL;
+			request.method = URLRequestMethod.GET;
+			load(request);
+		}
+		
+		/**
+		 * Get current site
+		 * */
+		public function getCurrentSite():void {
+			url = getCurrentSiteURL;
+			call = WPServiceEvent.GET_CURRENT_SITE;
+			request.method = URLRequestMethod.GET;
 			load(request);
 		}
 		
@@ -458,6 +566,17 @@ if ( !empty($values["custom"]) ) {
 			call = WPServiceEvent.LOGOUT_USER;
 			request.method = URLRequestMethod.GET;
 			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get API info
+		 * */
+		public function getAPIInfo():void {
+			url = getAPIInfoURL;
+			call = WPServiceEvent.GET_API_INFO;
+			request.data = null;
+			request.method = URLRequestMethod.GET;
 			load(request);
 		}
 		
