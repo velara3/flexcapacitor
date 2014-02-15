@@ -6,7 +6,7 @@ package com.flexcapacitor.services {
 	/**
 	 * Event dispatched when result or fault is received from a WP Service
 	 * */
-	public class WPServiceEvent extends ServiceEvent implements IServiceEvent {
+	public class WPServiceEvent extends ServiceEvent implements IWPServiceEvent {
 		
 		/**
 		 * Constructor.
