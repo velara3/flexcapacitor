@@ -45,6 +45,10 @@ package com.flexcapacitor.services {
 		public static const GET_POSTS:String 				= "getPosts";
 		public static const GET_ATTACHMENTS:String 			= "getAttachments";
 		public static const GET_CATEGORIES:String 			= "getCategories";
+		public static const GET_CATEGORY:String 			= "getCategory";
+		public static const GET_CATEGORY_BY_SLUG:String		= "getCategoryBySlug";
+		public static const GET_CATEGORY_BY_ID:String 		= "getCategoryById";
+		public static const CREATE_CATEGORY:String 			= "createCategory";
 		public static const GET_LOGGED_IN_USER:String 		= "getLoggedInUser";
 		public static const IS_USER_LOGGED_IN:String 		= "isUserLoggedIn";
 		public static const REGISTER_USER:String 			= "registerUser";
@@ -61,9 +65,10 @@ package com.flexcapacitor.services {
 		public static const GET_PROJECTS:String 			= "getProjects";
 		public static const GET_POSTS_BY_USER:String 		= "getPostsByUser";
 		public static const GET_PROJECTS_BY_USER:String 	= "getProjectsByUser";
-		public static const GET_PROJECT_BY_ID:String 		= "getProjectsByID";
+		public static const GET_PROJECT_BY_ID:String 		= "getProjectsById";
 		public static const GET_POSTS_BY_CATEGORY:String 	= "getPostsByCategory";
 		public static const GET_API_INFO:String 			= "info";
+		public static const SEND_URL:String 				= "sendURL";
 		
 		private var _call:String;
 

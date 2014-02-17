@@ -143,6 +143,7 @@ package com.flexcapacitor.services {
 		 * URL to call. Prepends the host to the value passed in. 
 		 * Also sets the request.data to null so we don't have
 		 * to do this on every call. 
+		 * @see sendURL
 		 * */
 		public function get url():String {
 			return _url;
@@ -155,10 +156,11 @@ package com.flexcapacitor.services {
 			
 			if (usePermalinks) {
 				var path:String = permalinkPath.lastIndexOf("/")==permalinkPath.length-1 ? permalinkPath : permalinkPath + "/";
+				value = value.replace(/&/, "?"); // replace first & with ?
 				value = path + value;
 			}
 			else {
-				value = value.replace(/?/, "&"); // replace first ? since we will be using it
+				//value = value.replace(/?/, "&"); // replace first ? since we will be using it
 				value = "?json=" + value;
 			}
 			
@@ -231,6 +233,22 @@ package com.flexcapacitor.services {
 		 * */
 		[Bindable]
 		public var inProgress:Boolean;
+		
+		/**
+		 * Call method where you specify the url. Used for testing raw URL. 
+		 * 
+		 * url - url to call
+		 * method - "GET" or "POST"
+		 * post - object to send to the server. you should use URLVariables for post 
+		 * @see query
+		 * */
+		public function sendURL(url:String, method:String = "GET", data:Object = null):void {
+			call = WPServiceEvent.SEND_URL;
+			request.method = method;
+			request.data = data;
+			request.url = url;
+			load(request);
+		}
 		
 		/**
 		 * Call method where you specify the controller, method and add parameters

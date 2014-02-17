@@ -123,7 +123,15 @@ if ( !empty($values["custom"]) ) {
 		
 		public var getProjectByIdURL:String = "projects/get_project_by_id";
 		
-		public var getCategoriesURL:String = "core/get_category_index";
+		public var getCategoriesURL:String = "categories/get_categories";
+		
+		public var getCategoryURL:String = "categories/get_category";
+		
+		public var getCategoryBySlugURL:String = "categories/get_category_by_slug";
+		
+		public var getCategoryByIdURL:String = "categories/get_category_by_id";
+
+		public var createCategoryURL:String = "categories/create_category";
 		
 		public var getPostsByCategoryURL:String = "posts/get_posts_by_category";
 
@@ -356,6 +364,50 @@ if ( !empty($values["custom"]) ) {
 		public function getCategories(category:String = "", count:int = 10):void {
 			url = getCategoriesURL + "&count=" + count + "&slug=" + category;
 			call = WPServiceEvent.GET_CATEGORIES;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get category by name
+		 * */
+		public function getCategory(name:String, parent:int = 0):void {
+			url = getCategoryURL + "&name=" + name + "&parent=" + parent;
+			call = WPServiceEvent.GET_CATEGORY;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get category by slug
+		 * */
+		public function getCategoryBySlug(slug:String = ""):void {
+			url = getCategoryBySlugURL + "&slug=" + slug;
+			call = WPServiceEvent.GET_CATEGORY_BY_SLUG;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get category by id
+		 * */
+		public function getCategoryById(id:String = ""):void {
+			url = getCategoryByIdURL + "&id=" + id;
+			call = WPServiceEvent.GET_CATEGORY_BY_ID;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Create category
+		 * */
+		public function createCategory(name:String, parent:int = 0):void {
+			url = createCategoryURL + "&name=" + name + "&parent=" + parent;
+			call = WPServiceEvent.CREATE_CATEGORY;
 			request.method = URLRequestMethod.GET;
 			request.data = null;
 			load(request);
