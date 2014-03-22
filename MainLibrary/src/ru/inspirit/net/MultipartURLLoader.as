@@ -568,6 +568,7 @@
 
 	}
 }
+import flash.utils.ByteArray;
 
 internal class FilePart
 {

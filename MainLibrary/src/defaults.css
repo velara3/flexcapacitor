@@ -28,6 +28,15 @@ controls|InsetLabel {
 }
 
 controls|DataGrid {
+	columnSeparatorAlpha: 1;
+	columnSeparatorColor: #E6E6E6;
+	columnSeparatorWeight: 1;
+	headerBackgroundColor: #D8D8D8;
+	headerRowSeparatorColor: #696969;
+	rowSeparatorAlpha: 1;
+	rowSeparatorColor: #E6E6E6;
+	rowSeparatorWeight: 1;
+	showHeader: true;
 	skinClass: ClassReference("com.flexcapacitor.skins.DataGridSkin");
 }
 

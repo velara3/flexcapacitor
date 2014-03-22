@@ -178,6 +178,10 @@ in accordance with the terms of the license agreement accompanying it.
 				tbDivFill.color = getStyle("headerDividerColor");
 			}
             
+			if (getStyle("headerDividerWeight")!==undefined) {
+				tbDiv.height = getStyle("headerDividerWeight");
+			}
+            
 			if (getStyle("showHeader")===false) {
 				topGroup.visible = topGroup.includeInLayout = false;
 			}

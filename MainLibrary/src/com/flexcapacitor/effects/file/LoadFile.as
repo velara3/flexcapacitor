@@ -10,6 +10,7 @@ package com.flexcapacitor.effects.file {
 	import flash.events.ProgressEvent;
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;
+	import flash.utils.ByteArray;
 	
 	import mx.effects.IEffect;
 	
@@ -144,12 +145,18 @@ package com.flexcapacitor.effects.file {
 		}
 		
 		/**
-		 * The contents of the file. Same values as the data property
-		 * This is the value of the loaderInfo.contents property.
-		 * @copy flash.display.LoaderInfo
+		 * The data of the file.
+		 * @copy flash.net.FileReference.data
+		 * @see loaderData
 		 * */
 		[Bindable]
-		public var contents:Object;
+		public var data:ByteArray;
+		
+		/**
+		 * @copy flash.net.FileReference.type
+		 * @see loaderContentType
+		 * */
+		public var type:String;
 		
 		/**
 		 * Prints the file URL to the console.
@@ -226,12 +233,12 @@ package com.flexcapacitor.effects.file {
 		public var loadIntoLoader:Boolean;
 		
 		/**
-		 * The contents of the file. 
 		 * This is the value of the loaderInfo.contents property.
 		 * @copy flash.display.LoaderInfo.contents
+		 * @see data
 		 * */
 		[Bindable]
-		public var data:Object;
+		public var loaderContents:Object;
 		
 		/**
 		 * The bytes of the file. 
@@ -239,7 +246,7 @@ package com.flexcapacitor.effects.file {
 		 * @copy flash.display.LoaderInfo.bytes
 		 * */
 		[Bindable]
-		public var byteArray:Object;
+		public var loaderByteArray:ByteArray;
 		
 		/**
 		 * @copy flash.display.LoaderInfo
@@ -249,7 +256,7 @@ package com.flexcapacitor.effects.file {
 		/**
 		 * @copy flash.display.LoaderInfo.contentType
 		 * */
-		public var contentType:String;
+		public var loaderContentType:String;
 		
 		/**
 		 * The bitmapData of the file.  
@@ -358,10 +365,9 @@ package com.flexcapacitor.effects.file {
 			
 			data = null;
 			bitmapData = null;
-			byteArray = null;
-			contents = null;
+			loaderContents = null;
 			loaderInfo = null;
-			contentType = "";
+			loaderContentType = "";
 		}
 	}
 }

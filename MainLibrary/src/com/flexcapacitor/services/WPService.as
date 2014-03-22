@@ -85,11 +85,16 @@ if ( !empty($values["custom"]) ) {
 		 * */
 		public var getAttachmentsURL:String = "attachments/get_attachments";
 		
-		public var getPostURL:String = "posts/get_post";
+		/**
+		 * Delete attachment URL
+		 * */
+		public var deleteAttachmentURL:String = "attachments/delete_attachment";
 		
-		public var getPostsURL:String = "posts/get_posts";
+		public var getPostURL:String = "core/get_post";
 		
-		public var getSearchURL:String = "posts/get_search_results";
+		public var getPostsURL:String = "core/get_posts";
+		
+		public var getSearchURL:String = "core/get_search_results";
 		
 		public var logoutUserURL:String = "user/logout";
 		
@@ -135,13 +140,13 @@ if ( !empty($values["custom"]) ) {
 		
 		public var getPostsByCategoryURL:String = "posts/get_posts_by_category";
 
-		public var createTokenURL:String = "posts/create_post?get_nonce";
+		public var createTokenURL:String = "core/get_nonce?controller=posts&method=create_post";
 		
-		public var updateTokenURL:String = "posts/update_post?get_nonce";
+		public var updateTokenURL:String = "core/get_nonce?controller=posts&method=update_post";
 
-		public var uploadTokenURL:String = "posts/update_post?get_nonce";
+		public var uploadTokenURL:String = "core/get_nonce?controller=posts&method=update_post";
 
-		public var deleteTokenURL:String = "posts/delete_post?get_nonce";
+		public var deleteTokenURL:String = "core/get_nonce?controller=posts&method=delete_post";
 		
 		public var createPostURL:String = "posts/create_post";
 		
@@ -307,6 +312,17 @@ if ( !empty($values["custom"]) ) {
 		}
 		
 		/**
+		 * Delete attachment. 
+		 * */
+		public function deleteAttachment(id:int = 0, forceDelete:Boolean = true):void {
+			url = deleteAttachmentURL + "&id=" + id + "&force_delete=" + forceDelete;
+			call = WPServiceEvent.DELETE_ATTACHMENT;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
 		 * Get posts
 		 * */
 		public function getPosts(query:String = "", form:URLVariables = null, count:int = 10):void {
@@ -322,7 +338,7 @@ if ( !empty($values["custom"]) ) {
 		 * Get post by ID
 		 * */
 		public function getPostById(id:String, count:int = 10):void {
-			url = getPostURL + "&count=" + count + "&id=" + id;
+			url = getPostURL + "&id=" + id;
 			call = WPServiceEvent.GET_POST;
 			request.method = URLRequestMethod.GET;
 			request.data = null;

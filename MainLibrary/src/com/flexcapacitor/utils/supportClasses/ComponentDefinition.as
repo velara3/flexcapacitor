@@ -87,6 +87,11 @@ package com.flexcapacitor.utils.supportClasses {
 		public var skin:Class;
 		
 		/**
+		 * Used to indicate if this component type is shown in the components panel
+		 * */
+		public var enabled:Boolean = true;
+		
+		/**
 		 * Used to store if the instance is visible.
 		 * Does not check if an ancestor is visible 
 		 * @see parentVisible
@@ -105,7 +110,12 @@ package com.flexcapacitor.utils.supportClasses {
 		public var locked:Boolean = false;
 		
 		/**
-		 * Inspector class name.
+		 * Inspector class names.
+		 * */
+		public var inspectors:Array;
+		
+		/**
+		 * Inspector class name
 		 * */
 		public var inspectorClassName:String;
 		

@@ -31,7 +31,17 @@ package com.flexcapacitor.utils {
 	import spark.skins.IHighlightBitmapCaptureClient;
 	
 	/**
-	 * Utils used to manipulate the component tree and display list tree
+	 * Utils used to manipulate the component tree and display list tree.
+	 * 
+	 * There are a bunch of capture screen shot methods and a few other utility methods 
+	 * in this class. All of them have had issues at one point or another. Sometimes
+	 * things were clipped, other times things were not clipped, other times
+	 * the top left was off or included off screen objects. I would like to 
+	 * go through and test each method on each component type and display object 
+	 * and find one that works or just document things more but haven't had the 
+	 * time. I've come across numerous methods the Flex and Flash engineers used
+	 * to capture screenshots and added and referenced some of them here.
+	 * These include, spark.utils.BitmapUtil. 
 	 * */
 	public class DisplayObjectUtils {
 		
@@ -58,6 +68,8 @@ package com.flexcapacitor.utils {
 		 * transformed to be identical to the target.
 		 * @author Nick Bilyk (nbflexlib)
 		 * @modified possibly
+		 * 
+		 * see the documentation at the top of this class
 		 */
 		public static function getSpriteSnapshot(target:DisplayObject, useAlpha:Boolean = true, scaleX:Number = 1, scaleY:Number = 1):Sprite {
 			var bounds:Rectangle = target.getBounds(target);
@@ -91,6 +103,8 @@ package com.flexcapacitor.utils {
 		 * 
 		 * PROBLEMS
 		 * The images and edges are clipped on some objects. 
+		 * 
+		 * see the documentation at the top of this class
 		 */
 		public static function getBitmapDataSnapshot(target:DisplayObject, useAlpha:Boolean = true, scaleX:Number = 1, scaleY:Number = 1):BitmapData {
 			var bounds:Rectangle = target.getBounds(target);
@@ -135,6 +149,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Creates a snapshot of the display object passed to it
 		 * April 2013
+		 * see the documentation at the top of this class
 		 **/
 		public static function getBitmapAssetSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):BitmapAsset {
 			//var bounds:Rectangle = target.getBounds(target);
@@ -153,7 +168,7 @@ package com.flexcapacitor.utils {
 				drawBitmapData(bitmapData, target, matrix);
 			}
 			catch (e:Error) {
-				trace( "Can't get display object preview. " + e.message);
+				//trace( "Can't get display object preview. " + e.message);
 				// show something here
 			}
 			
@@ -206,6 +221,7 @@ package com.flexcapacitor.utils {
 		 * Get bitmap data of the display object passed to it
 		 * padding doesn't seem to work
 		 * April 2013
+		 * see the documentation at the top of this class
 		 **/
 		public static function getBitmapDataSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000, smoothing:Boolean = false):BitmapData {
 			var targetX:Number = target.x;
@@ -769,6 +785,37 @@ package com.flexcapacitor.utils {
 				}
 			}
 			// expand this to MX and IRawChildrenContainer?
+		}
+		
+		/**
+		 * Method to walk down component tree and run a function. 
+		
+		Usage:
+		<pre>
+		DisplayObjectUtils.walkDownComponentTree(componentDescription, traceTree);
+		
+		public function traceTree(description:ComponentDescription):void {
+			trace("component="+component.name);
+		}
+		</pre>
+		 * 
+		// trace
+		element=Application
+		element=SkinnableComponent
+		element=Button1
+		element=Button2
+		element=Group
+		 * 
+		 * */
+		public static function walkDownComponentTree(componentDescription:ComponentDescription, method:Function):void {
+			method(componentDescription);
+			
+			var length:int = componentDescription.children ? componentDescription.children.length :0;
+			
+			
+			for (var i:int = 0; i < length; i++) {
+				walkDownComponentTree(ComponentDescription(componentDescription.children.getItemAt(i)), method);
+			}
 		}
 		
 		/**
@@ -1418,6 +1465,7 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Gets the color as type from uint. 
+		 * 
 		 * */
 		public static function getColorAsType(color:uint, type:String):Object {
 			
@@ -1448,10 +1496,6 @@ package com.flexcapacitor.utils {
 		 * Gets the color under the mouse pointer. 
 		 * Returns null if taking bitmap screen shot results in a security violation.
 		 * IE location is an image showing content from another domain. 
-		 * 
-		 * @param type. If type is raw then returns the color as a uint. If type
-		 * is hex then returns the color as a number 0xFFFFFF. If prefix is set
-		 * then returns the color as a string with a pound sign before it, "#ffffff".
 		 * */
 		public static function getColorUnderMouse(event:MouseEvent):Object {
 			var eyeDropperColorValue:uint;

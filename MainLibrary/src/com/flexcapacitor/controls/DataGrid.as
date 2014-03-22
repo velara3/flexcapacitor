@@ -74,21 +74,42 @@ package com.flexcapacitor.controls
 	
 	/**
 	 * 
-	 * Adds a gridItemEditorSessionSaving event. 
+	 * Adds a gridItemEditorSessionSaving event and additional styles. 
 	 * It is up to the grid item editor to dispatch this event
 	 * 
+	 *
+	 *  <p>The <code>&lt;s:DataGrid&gt;</code> tag inherits all of the tag 
+	 *  attributes of its superclass and adds the following tag attributes:</p>
+	 *
+	 *  <pre>
+	 *  &lt;s:DataGrid
+	 *    <strong>Events</strong>
+	 *    gridItemEditorSessionSaving="<i>No default</i>"
+	 *  
+	 *    <strong>Styles</strong>
+	 *    columnSeparatorAlpha="0x0099FF"
+	 *    columnSeparatorColor="useDominantBaseline"
+	 *    columnSeparatorWeight=""
+	 *    headerBackgroundColor="1.0"
+	 *    headerRowSeparatorColor="0xFFFFFF"
+	 *    rowSeparatorAlpha="0.0"
+	 *    rowSeparatorColor="TB"
+	 *    rowSeparatorWeight="auto"
+	 *    showHeader="true"
+	 *  /&gt;
+	 *  </pre>
+	 * 
+	 * Backwards compatible with Flex 4.6.
 	 * 
 	 * Make sure this is using com.flexcapacitor.skins.DataGridSkin
 	 * @inherit
 	 * 
 	 * */
-	public class DataGrid extends spark.components.DataGrid
-	{
+	public class DataGrid extends spark.components.DataGrid {
 		
 		public static const GRID_ITEM_EDITOR_SESSION_SAVING:String = "gridItemEditorSessionSaving";
 		
-		public function DataGrid()
-		{
+		public function DataGrid() {
 			super();
 		}
 	}

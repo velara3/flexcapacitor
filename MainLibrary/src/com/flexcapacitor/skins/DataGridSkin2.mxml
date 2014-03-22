@@ -1,44 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <!--
 
-  Licensed to the Apache Software Foundation (ASF) under one or more
-  contributor license agreements.  See the NOTICE file distributed with
-  this work for additional information regarding copyright ownership.
-  The ASF licenses this file to You under the Apache License, Version 2.0
-  (the "License"); you may not use this file except in compliance with
-  the License.  You may obtain a copy of the License at
+ADOBE SYSTEMS INCORPORATED
+Copyright 2008 Adobe Systems Incorporated
+All Rights Reserved.
 
-      http://www.apache.org/licenses/LICENSE-2.0
-
-  Unless required by applicable law or agreed to in writing, software
-  distributed under the License is distributed on an "AS IS" BASIS,
-  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-  See the License for the specific language governing permissions and
-  limitations under the License.
+NOTICE: Adobe permits you to use, modify, and distribute this file
+in accordance with the terms of the license agreement accompanying it.
 
 -->
 
 <!--- 
-
-Works with the com.flexcapacitor.controls.DataGrid class.
-
- - Added columnSeparatorAlpha
- - Added columnSeparatorColor
- - Added columnSeparatorWeight
- - Added headerBackgroundColor
- - Added headerRowSeparatorColor
- - Added rowSeparatorAlpha
- - Added rowSeparatorColor
- - Added rowSeparatorWeight
- - Added showHeader
- - Fixes the header top line showing when borderVisible is false.
- - Backwards compatible with Flex 4.6
-
-
-
-
-
-
 The default skin class for a Spark DataGrid component.  
 
 <p>This skin defines all of the optional DataGrid skin parts except for rowBackground
@@ -52,7 +25,6 @@ columnHeaderGroup's headerRenderer property as
 and can be overridden by subclasses of this class: <code>alternatingRowColors</code>,
 <code>caretIndicator</code>, <code>columnSeparator</code>, <code>editorIndicator</code>, 
 <code>headerColumnSeparator</code>, <code>hoverIndicator</code>, 
-<code>lockedColumnsSeparator</code>, <code>lockedRowsSeparator</code>, 
 <code>rowSeparator</code>, <code>selectionIndicator</code>.  All of these 
 declarations define DataGrid skin parts except <code>headerColumnSeparator</code> and
 <code>headerRenderer</code> which are used for the values of the columnHeaderGroup's 
@@ -70,13 +42,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
     xmlns:s="library://ns.adobe.com/flex/spark" 
     xmlns:mx="library://ns.adobe.com/flex/mx"
     xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
-	xmlns:supportClasses="com.flexcapacitor.skins.supportClasses.*"
-	xmlns:supportClasses1="com.flexcapacitor.controls.supportClasses.*" 
-	xmlns:skins="skins.*" 
-	
-    alpha.disabled="0.5" minWidth="89" minHeight="84" 
-	creationComplete="creationCompleteHandler(event)"
-	>
+    alpha.disabled="0.5" minWidth="89" minHeight="84">
     
     <fx:Metadata>
     <![CDATA[
@@ -87,7 +53,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
           @playerversion AIR 1.5
           @productversion Flex 4
          */
-        [HostComponent("spark.components.DataGrid")]
+        [HostComponent("com.flexcapacitor.controls.DataGrid")]
     ]]>
     </fx:Metadata>
     
@@ -100,7 +66,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         <!--- @private -->        
         <fx:Component id="alternatingRowColorsBackground">
             <s:Rect implements="spark.components.gridClasses.IGridVisualElement">
-                <fx:Script fb:purpose="styling">
+                <fx:Script>
                     <![CDATA[
                         import spark.components.DataGrid;
                         import spark.components.Grid;
@@ -138,7 +104,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         <!--- @private -->        
         <fx:Component id="caretIndicator">
             <s:Rect implements="spark.components.gridClasses.IGridVisualElement">
-                <fx:Script fb:purpose="styling">
+                <fx:Script>
                     <![CDATA[
                         import spark.components.DataGrid;
                         import spark.components.Grid;
@@ -167,69 +133,32 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         
         <!--- @private -->
         <fx:Component id="columnSeparator">
-			<!--- haven't been able to set the visibility of the line -->
-			<!--- might be because this is a factory. try setting in updateDisplayList-->
-            <s:Line >
+            <s:Line>
                 <s:stroke>
-                    <s:SolidColorStroke color="{outerDocument.getStyle('columnSeparatorColor')}" 
-										weight="{outerDocument.getStyle('columnSeparatorWeight')}" 
-										alpha="{outerDocument.getStyle('columnSeparatorAlpha')}" 
-										caps="square"/>
-                   <!--<s:SolidColorStroke color="0xE6E6E6" weight="1" caps="square"/>-->
+                    <s:SolidColorStroke color="0xE6E6E6" weight="1" caps="square"/>
                 </s:stroke>
             </s:Line>
-        </fx:Component>
-        
-        <!--- 
-        Defines the appearance of the drop indicator.
-        The DataGrid's layout takes care to size and position the dropIndicator.
-        -->
-        <fx:Component id="dropIndicator">
-            <s:Group>
-                <s:Rect left="0" right="0" top="0" bottom="0">
-                    <s:fill>
-                        <!--- Defines the color of the background. -->
-                        <s:SolidColor color="0xBBBBBB" />
-                    </s:fill>
-                    <s:stroke>
-                        <s:SolidColorStroke color="0x868686" weight="1"/>
-                    </s:stroke>
-                </s:Rect>
-            </s:Group>
         </fx:Component>
         
         <!--- Defines the value of the columnSeparator property for the columnHeaderGroup. -->
         <fx:Component id="headerColumnSeparator">
             <s:Line>
                 <s:stroke>
-                    <s:SolidColorStroke color="{outerDocument.getStyle('headerColumnSeparatorColor')}" weight="1" caps="square"/>
-                    <!--<s:SolidColorStroke color="0x696969" weight="1" caps="square"/>-->
+                    <s:SolidColorStroke color="0x696969" weight="1" caps="square"/>
                 </s:stroke>
-				
-				<!--<s:filters>
-					<s:DropShadowFilter id="embossTextShadow" 
-										distance="1" 
-										alpha=".75"
-										angle="0" 
-										color="#ffffff" 
-										blurX="0" 
-										blurY="0"
-										/>
-				</s:filters>-->
             </s:Line>
         </fx:Component>
         
         <!--- Defines the value of the headerRenderer property for the columnHeaderGroup. 
               The default is spark.skins.spark.DefaultGridHeaderRenderer -->
         <fx:Component id="headerRenderer">
-            <supportClasses1:GridHeaderRenderer />
-			<!--<s:DefaultGridHeaderRenderer />-->
+            <s:DefaultGridHeaderRenderer />
         </fx:Component>
         
         <!--- @private -->
         <fx:Component id="hoverIndicator">
             <s:Rect implements="spark.components.gridClasses.IGridVisualElement">
-                <fx:Script fb:purpose="styling">
+                <fx:Script>
                     <![CDATA[
                         import spark.components.DataGrid;
                         import spark.components.Grid;
@@ -257,36 +186,10 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         </fx:Component>
         
         <!--- @private -->
-        <fx:Component id="lockedColumnsSeparator">
-            <s:Group>
-                <s:Line left="0" right="0" top="0" bottom="0">
-                    <s:stroke>
-                        <s:SolidColorStroke color="0x000000" weight="2" caps="square"/>
-                    </s:stroke>
-                </s:Line>
-            </s:Group>
-        </fx:Component>
-        
-        <!--- @private -->
-        <fx:Component id="lockedRowsSeparator">
-            <s:Group>
-                <s:Line left="0" right="0" top="0" bottom="0">
-                    <s:stroke>
-                        <s:SolidColorStroke color="0x000000" weight="2" caps="square"/>
-                    </s:stroke>
-                </s:Line>
-            </s:Group>
-        </fx:Component>           
-        
-        <!--- @private -->
         <fx:Component id="rowSeparator">
             <s:Line>
                 <s:stroke>
-                    <s:SolidColorStroke color="{outerDocument.getStyle('rowSeparatorColor')}" 
-										weight="{outerDocument.getStyle('rowSeparatorWeight')}" 
-										alpha="{outerDocument.getStyle('rowSeparatorAlpha')}" 
-										caps="square"/>
-                    <!--<s:SolidColorStroke color="0xE6E6E6" weight="1" caps="square"/>-->
+                    <s:SolidColorStroke color="0xE6E6E6" weight="1" caps="square"/>
                 </s:stroke>
             </s:Line>
         </fx:Component>
@@ -294,7 +197,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         <!--- @private -->
         <fx:Component id="selectionIndicator">
             <s:Rect implements="spark.components.gridClasses.IGridVisualElement">
-                <fx:Script fb:purpose="styling">
+                <fx:Script>
                     <![CDATA[
                         import spark.components.DataGrid;
                         import spark.components.Grid;
@@ -305,7 +208,6 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
                         public function prepareGridVisualElement(grid:Grid, rowIndex:int, columnIndex:int):void
                         {
                             const dataGrid:DataGrid = grid.dataGrid;
-							
                             if (!dataGrid)
                                 return;
                             
@@ -318,7 +220,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
                 <s:fill>
                     <!--- @private -->
                     <s:SolidColor id="selectionIndicatorFill" color="0xA8C6EE"/>
-                </s:fill>
+                </s:fill>                
             </s:Rect>
         </fx:Component>
         
@@ -327,25 +229,14 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
             <s:Rect>
                 <s:fill>
                     <s:SolidColor color="0xFFFFFF"/>
-                </s:fill>
+                </s:fill>                
             </s:Rect>
-        </fx:Component>
+        </fx:Component>                    
         
-        <fx:Array id="gridLayers">
-                <s:GridLayer name="backgroundLayer"/>
-                <s:GridLayer name="selectionLayer"/>
-                <s:GridLayer name="editorIndicatorLayer"/>                            
-                <s:GridLayer name="rendererLayer"/>
-                <s:GridLayer name="overlayLayer"/>
-        </fx:Array>
     </fx:Declarations>
     
     <fx:Script fb:purpose="styling">
     <![CDATA[
-		import mx.core.FlexVersion;
-		import mx.events.FlexEvent;
-		import mx.managers.SystemManager;
-		
         static private const exclusions:Array = ["scroller", "background", "columnHeaderGroup"];
         static private const contentFill:Array = ["bgFill"];
         
@@ -391,31 +282,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
             
             super.updateDisplayList(unscaledWidth, unscaledHeight);
         }
-		
-		protected function creationCompleteHandler(event:FlexEvent):void {
-			var classDefinition:String = "spark.components.gridClasses.GridView";
-			var applicationDomain:ApplicationDomain;
-			var classFound:Boolean;
-			var Definition:Object;
-			
-			if (FlexVersion.compatibilityVersion <= FlexVersion.VERSION_4_6) {
-				grid.mxmlContent = gridLayers;
-			}
-			else {
-				applicationDomain = SystemManager.getSWFRoot(this).loaderInfo.applicationDomain;
-				classFound = applicationDomain.hasDefinition(classDefinition);
-				
-				if (classFound) {
-					Definition = applicationDomain.getDefinition(classDefinition);
-					var factory:ClassFactory = new ClassFactory(Definition as Class);
-					ClassFactory(factory).properties = {mxmlContent: gridLayers};
-					grid["gridView"] = factory;
-					
-				}
-			}
-		}
-		
-	]]>
+    ]]>
     </fx:Script>
     
     <!-- column header, content -->
@@ -425,16 +292,8 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         <s:GridColumnHeaderGroup id="columnHeaderGroup"
             paddingLeft="1" paddingTop="1" paddingRight="1" minHeight="21" 
             columnSeparator="{headerColumnSeparator}"
-            headerRenderer="{headerRenderer}"
-			visible="{getStyle('showHeader')}"
-			includeInLayout="{getStyle('showHeader')}"
-			/>
-        
-		<!--<s:GridColumnHeaderGroup id="columnHeaderGroup"
-            paddingLeft="1" paddingTop="1" paddingRight="1" minHeight="21" 
-            columnSeparator="{headerColumnSeparator}"
-            headerRenderer="{headerRenderer}"/>-->
-		
+            headerRenderer="{headerRenderer}"/>
+
         <s:Group height="100%">
             
             <!--- @private -->
@@ -448,22 +307,21 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
             <!-- header separator, scroller and grid -->
             <s:VGroup horizontalAlign="justify" height="100%" width="100%" gap="-1">
                 <!--- @private -->
-                <s:Line id="headerSeparator"
-						visible="{getStyle('showHeader')}"
-						includeInLayout="{getStyle('showHeader')}">
-				
-                <!--<s:Line id="headerSeparator">-->
+                <s:Line id="headerSeparator">
                     <s:stroke>
-                        <s:SolidColorStroke color="{getStyle('headerRowSeparatorColor')}" weight="1" caps="square"/>
-                        <!--<s:SolidColorStroke color="0x696969" weight="1" caps="square"/>-->
+                        <s:SolidColorStroke color="0x696969" weight="1" caps="square"/>
                     </s:stroke>
-                </s:Line>
+                </s:Line>          
                 
                 <!--- @private -->
                 <s:Scroller id="scroller" minViewportInset="1" hasFocusableChildren="false" height="100%">
                     <!--- @private -->
                     <s:Grid id="grid" itemRenderer="spark.skins.spark.DefaultGridItemRenderer">
-
+                        <s:GridLayer name="backgroundLayer"/>
+                        <s:GridLayer name="selectionLayer"/>
+                        <s:GridLayer name="editorIndicatorLayer"/>                            
+                        <s:GridLayer name="rendererLayer"/>
+                        <s:GridLayer name="overlayLayer"/>
                     </s:Grid>                    
                 </s:Scroller>
             </s:VGroup>

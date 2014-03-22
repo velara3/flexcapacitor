@@ -1,6 +1,6 @@
 
 package com.flexcapacitor.services {
-	import flash.events.Event;
+	
 	
 	/**
 	 * Interface for Service Event. 

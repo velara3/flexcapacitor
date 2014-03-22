@@ -8,6 +8,7 @@
 			   minWidth="300" 
 			   minHeight="300" 
 			   viewSourceURL="srcview/index.html"
+			   applicationComplete="applicationCompleteHandler(event)"
 			   >
 	
 	<fx:Style>
@@ -21,12 +22,14 @@
 	</fx:Style>
 	
 	<fx:Declarations>
-		<s:ArrayCollection id="statesCollection" source="{states}"/>
+		<s:ArrayCollection id="statesCollection" />
 		<fc:MiniInspector showDisplayObjectOutlines="true"/>
 	</fx:Declarations>
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.events.FlexEvent;
+			
 			import spark.events.IndexChangeEvent;
 			
 			protected function list1_changeHandler(event:IndexChangeEvent):void {
@@ -36,6 +39,10 @@
 			
 			protected function getDisplayName(item:Object):String {
 				return String(item.name).split("_").join(" ");
+			}
+			
+			protected function applicationCompleteHandler(event:FlexEvent):void {
+				statesCollection.source= states;
 			}
 			
 		]]>

@@ -108,6 +108,8 @@ package com.flexcapacitor.services {
 		 * */
 		public var permalinkPath:String = "api/";
 
+		public var originalSite:String = "";
+
 		private var _site:String = "";
 
 		/**
@@ -160,7 +162,7 @@ package com.flexcapacitor.services {
 				value = path + value;
 			}
 			else {
-				//value = value.replace(/?/, "&"); // replace first ? since we will be using it
+				value = value.replace(/\?/, "&"); // replace first ? since we will be using it
 				value = "?json=" + value;
 			}
 			
@@ -323,6 +325,8 @@ package com.flexcapacitor.services {
 			var token:String;
 			var anotherCallToGo:Boolean;
 			var profile:Boolean;
+			var error:Boolean;
+			var tokenFound:Boolean;
 			
 			profile ? responseTime = getTimer() - time :-3;
 			
@@ -335,7 +339,6 @@ package com.flexcapacitor.services {
 				profile ? currentTime = getTimer():-0;
 				json = JSON.parse(result);
 				profile ? parseTime = getTimer()- currentTime:-(1);
-				
 			}
 			catch (e:Error) {
 				// Error #1132: Invalid JSON parse input.
@@ -355,35 +358,39 @@ package com.flexcapacitor.services {
 				return;
 			}
 		
-			if (json && json is Object && "nonce" in json) {
-				token = json.nonce;
-			}
-			else if (json==null) {
+			if (json==null) {
 				serviceEvent.message = "JSON object is null";
 			}
 			
-			if (json) {
-				serviceEvent.data = json;
+			// token call
+			if (createPending || updatePending || uploadPending || deletePending) {
+				if (json && json is Object && "nonce" in json) {
+					token = json.nonce;
+					tokenFound = true;
+				}
 			}
 			
+			serviceEvent.data = json;
+			
 			if (json && json is Object && "status" in json && json.status=="error") {
+				error = true;
 				serviceEvent.message = json.error;//"Update token error";
-				dispatchEvent(serviceEvent);
-				return;
+				//dispatchEvent(serviceEvent);
+				//return;
 			}
-			else if (updatePending) {
+			else if (updatePending && tokenFound) {
 				updatePost(token);
 				anotherCallToGo = true;
 			}
-			else if (createPending) {
+			else if (createPending && tokenFound) {
 				createPost(token);
 				anotherCallToGo = true;
 			}
-			else if (deletePending) {
+			else if (deletePending && tokenFound) {
 				deletePost(token);
 				anotherCallToGo = true;
 			}
-			else if (uploadPending) {
+			else if (uploadPending && tokenFound) {
 				uploadAttachment(token);
 				anotherCallToGo = true;
 			}
@@ -399,9 +406,32 @@ package com.flexcapacitor.services {
 						var possibleSite:String = sites[0].siteurl;
 						
 						if (updateSitePathOnLogin) {
+							originalSite = site;
 							site = sites[0].path;
 						}
 					}
+				}
+			}
+			
+			if (call==WPServiceEvent.LOGOUT_USER) {
+				/*if (json && json is Object && json.blogs) {
+					
+					for each (var blog:Object in json.blogs) {
+						sites.push(blog);
+					}
+					
+					if (sites.length>0) {
+						var possibleSite:String = sites[0].siteurl;
+						
+						if (updateSitePathOnLogin) {
+							originalSite = site;
+							site = sites[0].path;
+						}
+					}
+				}*/
+				
+				if (updateSitePathOnLogin && originalSite && site != originalSite) {
+					site = originalSite;
 				}
 			}
 			

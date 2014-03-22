@@ -314,6 +314,7 @@
     <classEntry path="com.flexcapacitor.effects.settings.supportClasses.SettingsDefault"/>
     <classEntry path="com.flexcapacitor.controls.VScrollBar"/>
     <classEntry path="com.flexcapacitor.services.IWPService"/>
+    <classEntry path="com.flexcapacitor.skins.DataGridSkin2"/>
   </includeClasses>
   <includeResources/>
   <namespaceManifests/>

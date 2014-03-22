@@ -146,6 +146,8 @@ package com.flexcapacitor.effects.file.supportClasses {
 				removeFileListeners(file);
 				action.fileReference = file;
 				action.currentFile = file;
+				action.data = file.data;
+				action.type = file.type;
 				
 				if (loadBytesWithLoader) {
 					loader = new Loader();
@@ -155,7 +157,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 				}
 			}
 			else if (files) {
-				
+				// not sure if multi file support is correct here
 				removeFileListeners(file);
 				action.fileReferenceList = files;
 				
@@ -311,9 +313,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			removeLoaderListeners(loaderInfo);
 			
 			action.loaderInfo = loaderInfo;
-			action.byteArray = loaderInfo.bytes;
-			action.data = loaderInfo.content;
-			action.contentType = loaderInfo.contentType;
+			action.loaderByteArray = loaderInfo.bytes;
+			action.loaderContents = loaderInfo.content;
+			action.loaderContentType = loaderInfo.contentType;
 			
 			if (loaderInfo.content is Bitmap) {
 				action.bitmapData = Bitmap(loaderInfo.content).bitmapData;

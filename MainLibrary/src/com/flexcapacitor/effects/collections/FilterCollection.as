@@ -198,7 +198,9 @@ package com.flexcapacitor.effects.collections {
 				for (var i:int = 0;i<fieldNamesLength;i++) {
 					match = false;
 					
-					// ReferenceError: Error #1069: Property title not found on object and there is no default value.
+					// GOT AN ERROR? 
+					// ReferenceError: Error #1069: 
+					// Property title not found on object and there is no default value.
 					// The field name does not exist on the object
 					itemValue = currentFieldName ? item[currentFieldName] : String(item);
 					valueLength = filterValueAsString ? filterValueAsString.length : 0;

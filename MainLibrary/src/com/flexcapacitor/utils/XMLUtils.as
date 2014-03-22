@@ -83,13 +83,50 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Wraps the value in CDATA tags. Use like this
-		 * var xml:XML = encloseInCDATA(myCDATAString);
-		 * xml.appendChild(encloseInCDATA(myXMLString));
+		 * Wraps the value in CDATA tags. 
+		 *
+		 * For example, 
+ * <pre>
+ * var xml:XML = encloseInCDATA("Some value");
+ * </pre>
+ * 
+ * Append to a node: 
+ * <pre>
+ * var value:String = "&lt;span>Hello&lt;/span>";
+ * var xml:XML = &lt;p/>;
+ * xml.appendChild(encloseInCDATA(value));
+ * </pre>
 		 * */
 		public static function encloseInCDATA(value:String):XML {
 			var xml:XML = new XML("<![" + "CDATA[" + value + "]]" + ">");
 			return xml;
+		}
+		
+		/**
+		 * Encodes values that are not allowed in attribute quotes. 
+		 * Replaces double quote, ampersand, less than sign and greater than sign. 
+		 * For example, replaces double quote with "&quot;"
+		 * */
+		public static function getAttributeSafeString(value:String = ""):String {
+			var outputValue:String = value.replace(/"/g, "&quot;");
+			outputValue = outputValue.replace(/&(?!amp;)/g, "&amp;");
+			outputValue = outputValue.replace(/</g, "&lt;");
+			outputValue = outputValue.replace(/>/g, "&gt;");
+			return outputValue;
+		}
+		
+		/**
+		 * Decodes HTML entities that are not allowed in attribute quotes. 
+		 * Replaces double quote, ampersand, less than sign and greater than sign. 
+		 * 
+		 * For example, replaces "&quot;" with double quote.
+		 * */
+		public static function decodeAttributeString(value:String = ""):String {
+			var outputValue:String = value.replace(/&quot;/g, '"');
+			outputValue = outputValue.replace(/&amp;/g, "&");
+			outputValue = outputValue.replace(/&lt;/g, "<");
+			outputValue = outputValue.replace(/&gt;/g, ">");
+			return outputValue;
 		}
 		
 		public static var validationError:Error;

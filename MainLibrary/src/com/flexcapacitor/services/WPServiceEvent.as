@@ -43,6 +43,7 @@ package com.flexcapacitor.services {
 		public static const SEARCH_POSTS:String 			= "searchPosts";
 		public static const GET_POST:String		 			= "getPost";
 		public static const GET_POSTS:String 				= "getPosts";
+		public static const DELETE_ATTACHMENT:String 		= "deleteAttachment";
 		public static const GET_ATTACHMENTS:String 			= "getAttachments";
 		public static const GET_CATEGORIES:String 			= "getCategories";
 		public static const GET_CATEGORY:String 			= "getCategory";

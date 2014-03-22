@@ -9,8 +9,10 @@ package com.flexcapacitor.utils {
 	import flash.display.JointStyle;
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.FocusEvent;
+	import flash.events.IEventDispatcher;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
@@ -22,6 +24,7 @@ package com.flexcapacitor.utils {
 	import flash.utils.Dictionary;
 	import flash.utils.clearTimeout;
 	import flash.utils.getQualifiedClassName;
+	import flash.utils.getQualifiedSuperclassName;
 	import flash.utils.setTimeout;
 	
 	import mx.collections.ArrayList;
@@ -65,6 +68,7 @@ package com.flexcapacitor.utils {
 	import spark.components.Image;
 	import spark.components.Label;
 	import spark.components.TextInput;
+	import spark.components.WindowedApplication;
 	import spark.primitives.Rect;
 	
 	/**
@@ -220,7 +224,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Shows the boundries of elements in the component tree
 		 * */
-		public var showDisplayObjectOutlines:Boolean;
+		public var showDisplayObjectOutlines:Boolean = true;
 		
 		/**
 		 * Point of origin when using ruler
@@ -432,10 +436,10 @@ package com.flexcapacitor.utils {
 			
 			// this does something
 			if (_backgroundImage) {
-				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_WHEEL, mouseWheelHandler, true, 0, true);
+				swfRoot.addEventListener(MouseEvent.MOUSE_WHEEL, mouseWheelHandler, true, 0, true);
 			}
 			else {
-				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_WHEEL, mouseWheelHandler, true);
+				swfRoot.removeEventListener(MouseEvent.MOUSE_WHEEL, mouseWheelHandler, true);
 			}
 			
 		}
@@ -454,13 +458,14 @@ package com.flexcapacitor.utils {
 		}
 		
 		protected function addMouseHandler(value:Boolean = true):void {
+			
 			if (value) {
-				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.CLICK, handleClick, true, EventPriority.CURSOR_MANAGEMENT, true);
-				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true, EventPriority.CURSOR_MANAGEMENT, true);
+				swfRoot.addEventListener(MouseEvent.CLICK, handleClick, true, EventPriority.CURSOR_MANAGEMENT, true);
+				swfRoot.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true, EventPriority.CURSOR_MANAGEMENT, true);
 			}
 			else {
-				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.CLICK, handleClick, true);
-				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true);
+				swfRoot.removeEventListener(MouseEvent.CLICK, handleClick, true);
+				swfRoot.removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true);
 			}
 		}
 		
@@ -470,8 +475,8 @@ package com.flexcapacitor.utils {
 		protected function addRulerHandlers(value:Boolean = true, event:MouseEvent = null):void {
 			
 			if (value) {
-				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
-				SystemManager.getSWFRoot(this).addEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+				swfRoot.addEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+				swfRoot.addEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
 				
 				rulerStartingPoint = new Point(event.stageX, event.stageY);
 				
@@ -487,8 +492,8 @@ package com.flexcapacitor.utils {
 				}
 			}
 			else {
-				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true);
-				SystemManager.getSWFRoot(this).removeEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true);
+				swfRoot.removeEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true);
+				swfRoot.removeEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true);
 				
 				PopUpManager.removePopUp(rulerPopUp);
 				
@@ -497,6 +502,17 @@ package com.flexcapacitor.utils {
 				}
 			}
 		}
+		
+		private var _swfRoot:IEventDispatcher;
+
+		public function get swfRoot():IEventDispatcher {
+			return SystemManager.getSWFRoot(this);
+		}
+
+		public function set swfRoot(value:IEventDispatcher):void {
+			_swfRoot = value;
+		}
+
 		
 		protected function mouseRulerMoveHandler(event:MouseEvent):void
 		{
@@ -1215,7 +1231,7 @@ package com.flexcapacitor.utils {
 			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 			var lastTarget:DisplayObject;
-			var isApplication:Boolean;
+			var isApp:Boolean;
 			var targetX:Number;
 			var targetY:Number;
 			var container:Sprite;
@@ -1293,10 +1309,7 @@ package com.flexcapacitor.utils {
 				
 				showInputControls(false);
 				popUpPropertyInput.addEventListener(KeyboardEvent.KEY_UP, propertyInputEnterHandler, false, 0, true);
-				popUpPropertyInput.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, function(event:FocusEvent):void {
-					event.preventDefault(); 
-					popUpValueInput.setFocus();
-				} , false, 0, true);
+				popUpPropertyInput.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, propertyInputEnterHandler, false, 0, true);
 				popUpValueInput.addEventListener(KeyboardEvent.KEY_UP, valueInputEnterHandler, false, 0, true);
 				
 				popUpDisplayGroup.addElement(popUpBackground);
@@ -1308,8 +1321,8 @@ package com.flexcapacitor.utils {
 			}
 			
 			
-			if (displayTarget is Application && moveToNextParent) {
-				isApplication = true;
+			if (isApplication(displayTarget) && moveToNextParent) {
+				isApp = true;
 				closePopUp(displayTarget);
 				return;
 			}
@@ -1336,7 +1349,7 @@ package com.flexcapacitor.utils {
 			popUpDisplayImage.source = container;
 			//popUpDisplayImage.blendMode = BlendMode.ERASE;
 			
-			if (isApplication) {
+			if (isApp) {
 				popUpDisplayGroup.x = 0;
 				popUpDisplayGroup.y = 0;
 			}
@@ -1416,6 +1429,23 @@ package com.flexcapacitor.utils {
 			}
 		}
 		
+		public function isApplication(displayObject:Object):Boolean {
+			
+			if (displayObject is Application) {
+				return true;
+			}
+			
+			var definition:String = "spark.components::WindowedApplication";
+			var window:Boolean = SystemManager.getSWFRoot(this).loaderInfo.applicationDomain.hasDefinition(definition);
+			
+			if (window && displayObject is WindowedApplication) {
+				return true;
+			}
+			
+			return false;
+		}
+			
+		
 		/**
 		 * Handles when enter key is pressed in the value input
 		 * */
@@ -1428,10 +1458,18 @@ package com.flexcapacitor.utils {
 		/**
 		 * Handles when enter key is pressed in the property input
 		 * */
-		protected function propertyInputEnterHandler(event:KeyboardEvent):void {
-			if (event.keyCode==Keyboard.ENTER) {
-				getPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text);
+		protected function propertyInputEnterHandler(event:Event):void {
+			if (event is KeyboardEvent) {
+				if (KeyboardEvent(event).keyCode==Keyboard.ENTER) {
+					getPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text);
+					popUpValueInput.setFocus();
+					popUpValueInput.selectAll();
+				}
+			}
+			else if (event is FocusEvent) {
+				event.preventDefault(); 
 				popUpValueInput.setFocus();
+				popUpValueInput.selectAll();
 			}
 		}
 		
@@ -1655,6 +1693,8 @@ package com.flexcapacitor.utils {
 		protected function showInputControls(value:Boolean = true):void {
 			popUpPropertyInput.includeInLayout = popUpPropertyInput.visible = value;
 			popUpValueInput.includeInLayout = popUpValueInput.visible = value;
+			popUpPropertyInput.validateNow();
+			popUpPropertyInput.setFocus();
 		}
 		
 		/**
@@ -2302,7 +2342,7 @@ package com.flexcapacitor.utils {
 			while (componentItem) {
 				
 				// we don't want to add id to application because it just becomes MyApp.MyApp
-				if (includeID && componentItem.id && !(componentItem.target is Application)) {
+				if (includeID && componentItem.id && !(isApplication(componentItem.target))) {
 					//items.push(componentItem.id + ":" + componentItem.name);
 					
 					if (pathFormat=="format1") {

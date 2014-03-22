@@ -73,7 +73,7 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 			if (validate) {
 				// check for required properties
 				if (!action.classDefinition) {
-					throw new Error("The class definition is not defined.");
+					dispatchErrorEvent("The class definition is not defined.");
 				}
 			}
 			
@@ -90,21 +90,21 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 			if (!classFound) {
 				
 				if (action.hasEventListener(ClassAvailable.CLASS_NOT_FOUND)) {
-					action.dispatchEvent(new Event(ClassAvailable.CLASS_NOT_FOUND));
+					dispatchActionEvent(new Event(ClassAvailable.CLASS_NOT_FOUND));
 				}
 				
 				if (action.classNotFoundEffect) { 
 					playEffect(action.classNotFoundEffect);
 				}
 				
-				cancel("This class " + action.classDefinition + " was not found");
-				return;
+				//cancel("This class " + action.classDefinition + " was not found");
+				//return;
 				
 			}
 			else {
 				
 				if (action.hasEventListener(ClassAvailable.CLASS_FOUND)) {
-					action.dispatchEvent(new Event(ClassAvailable.CLASS_FOUND));
+					dispatchActionEvent(new Event(ClassAvailable.CLASS_FOUND));
 				}
 				
 				if (action.classFoundEffect) { 
