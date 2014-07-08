@@ -22,7 +22,7 @@ package com.flexcapacitor.effects.database {
 	[Event(name="fault", type="flash.events.Event")]
 	
 	/**
-	 * Inserts a record into the database.
+	 * Updates a record in the database.
 	 * AIR Only
 	 * */
 	public class UpdateRecord extends ActionEffect {
@@ -58,29 +58,36 @@ package com.flexcapacitor.effects.database {
 		public var connection:SQLConnection;
 		
 		/**
-		 * Effect played if file open is successful.  
-		 * */
-		public var successEffect:IEffect;
-		
-		/**
-		 * Effect played if file open is unsuccessful.  
-		 * */
-		public var faultEffect:IEffect;
-		
-		/**
 		 * Name of table
 		 * */
 		public var tableName:String;
 		
 		/**
-		 * Array of columns and values to insert into the new row
+		 * Item
 		 * */
+		[Bindable]
+		public var data:Object;
+		
+		/**
+		 * Name of primary key
+		 * */
+		public var primaryKey:String = "id";
+		
+		/**
+		 * Name of property on data object. If not set uses primary key value. 
+		 * */
+		public var idPropertyName:String;
+		
+		/**
+		 * Array of columns and values to update into the new row
+		 * */
+		[Bindable]
 		public var fields:Vector.<SQLColumnData>;
 		
 		/**
-		 * ID of the last row inserted. 
+		 * ID of the last row updated. 
 		 * */
-		public var lastInsertRowID:uint;
+		public var lastUpdateRowID:uint;
 		
 		/**
 		 * Array of columns and values to filter the update
@@ -96,6 +103,16 @@ package com.flexcapacitor.effects.database {
 		 * Effect played on error
 		 * */
 		public var errorEffect:IEffect;
+		
+		/**
+		 * Effect played if file open is successful.  
+		 * */
+		public var successEffect:IEffect;
+		
+		/**
+		 * Effect played if file open is unsuccessful.  
+		 * */
+		public var faultEffect:IEffect;
 		
 	}
 }

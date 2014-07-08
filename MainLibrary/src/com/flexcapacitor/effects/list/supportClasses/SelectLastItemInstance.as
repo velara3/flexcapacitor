@@ -2,12 +2,13 @@
 
 package com.flexcapacitor.effects.list.supportClasses {
 	
+	import com.flexcapacitor.effects.list.SelectFirstItem;
 	import com.flexcapacitor.effects.list.SelectLastItem;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
 	import flash.events.Event;
 	
-	import spark.components.supportClasses.ListBase;
+	import mx.core.IInvalidating;
 	
 
 	/**
@@ -64,6 +65,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 			var action:SelectLastItem = SelectLastItem(effect);
 			// we were checking for ListBase but DataGrid doesn't use ListBase so list is an object
 			var list:Object = target;
+			var validateBeforeSelection:Boolean = action.validateBeforeSelection;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -78,7 +80,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 					dispatchErrorEvent("The list must have a dataProvider property");
 				}
 				
-				if (list.dataProvider==null) {
+				if (list.dataProvider==null && !action.allowNullDataProvider) {
 					dispatchErrorEvent("The list data provider is not set");
 				}
 			}
@@ -87,8 +89,12 @@ package com.flexcapacitor.effects.list.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
+			if (validateBeforeSelection && list is IInvalidating) {
+				IInvalidating(list).validateNow();
+			}
+				
 			// no items in the data provider
-			if (!list.dataProvider.length==0) { 
+			if (list.dataProvider==null || list.dataProvider.length==0) { 
 				
 				if (action.hasEventListener(SelectLastItem.NO_ITEMS)) {
 					action.dispatchEvent(new Event(SelectLastItem.NO_ITEMS));
@@ -103,6 +109,14 @@ package com.flexcapacitor.effects.list.supportClasses {
 				list.selectedIndex = list.dataProvider.length-1;
 				action.data = list.selectedItem;
 				action.dataIndex = list.selectedIndex;
+				
+				if (action.hasEventListener(SelectFirstItem.ITEM_SELECTED)) {
+					action.dispatchEvent(new Event(SelectFirstItem.ITEM_SELECTED));
+				}
+				
+				if (action.itemSelectedEffect) { 
+					playEffect(action.itemSelectedEffect);
+				}
 			}
 			
 			///////////////////////////////////////////////////////////

@@ -1099,11 +1099,19 @@ MyOtherComponent.mxml,<br/>
 		/**
 		 * Sets the event to the triggerEvent property of the root effect.
 		 * 
+		 * Sometimes an error occurs when an effect is played that is part of a pop up. 
+		 * Setting this value to true resolves the error. 
+		 * 
+		 * <pre> 
+		 * TypeError: Error #1009: Cannot access a property or method of a null object reference.
+		 * 		at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
+		 * </pre>
+		 *  
 		 * @see mx.effects.Effect.triggerEvent
 		 * @see keepEvent
 		 * @see keepEventTargets
 		 * */
-		public var setTriggerEvent:Boolean;
+		public var setTriggerEvent:Boolean = true;
 		
 		/**
 		 * When set to true the target property of the main sequence

@@ -7,6 +7,8 @@ package com.flexcapacitor.effects.list.supportClasses {
 	
 	import flash.events.Event;
 	
+	import mx.core.IInvalidating;
+	
 
 	/**
 	 * @copy SelectFirstItem
@@ -63,6 +65,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 			var allowNullDataProvider:Boolean = action.allowNullDataProvider;
 			// we were checking for ListBase but DataGrid doesn't use ListBase so list is an object
 			var list:Object = target;
+			var validateBeforeSelection:Boolean = action.validateBeforeSelection;
 			
 			
 			///////////////////////////////////////////////////////////
@@ -87,6 +90,10 @@ package com.flexcapacitor.effects.list.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
+			
+			if (validateBeforeSelection && list is IInvalidating) {
+				IInvalidating(list).validateNow();
+			}
 			
 			// no items in the data provider
 			if (list.dataProvider==null || list.dataProvider.length==0) {

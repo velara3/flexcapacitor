@@ -57,6 +57,18 @@ package com.flexcapacitor.effects.list {
 		}
 		
 		/**
+		 * The reference to the selected item. 
+		 * */
+		[Bindable]
+		public var data:Object;
+		
+		/**
+		 * The index of the selected item 
+		 * */
+		[Bindable]
+		public var dataIndex:int;
+		
+		/**
 		 * Effect that is played if there is no selected item.
 		 * */
 		public var noSelectedItemEffect:Effect;
@@ -65,16 +77,6 @@ package com.flexcapacitor.effects.list {
 		 * Effect that is played if there is a selected item.
 		 * */
 		public var selectedItemEffect:Effect;
-		
-		/**
-		 * The reference to the selected item. 
-		 * */
-		public var data:Object;
-		
-		/**
-		 * The index of the selected item 
-		 * */
-		public var dataIndex:int;
 		
 	}
 }

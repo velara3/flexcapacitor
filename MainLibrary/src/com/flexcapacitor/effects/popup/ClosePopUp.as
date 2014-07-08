@@ -87,14 +87,13 @@ package com.flexcapacitor.effects.popup {
 import com.flexcapacitor.effects.popup.ClosePopUp;
 import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 
+import flash.events.Event;
+
 import mx.core.FlexGlobals;
 import mx.core.IFlexDisplayObject;
-import mx.core.IUIComponent;
 import mx.core.UIComponent;
 import mx.managers.PopUpManager;
-import mx.managers.SystemManager;
 
-import flashx.textLayout.tlf_internal;
 
 
 /**
@@ -174,18 +173,33 @@ class ClosePopUpInstance extends ActionEffectInstance {
 		// Continue with action
 		///////////////////////////////////////////////////////////
 		
-		// causes flicker when effects are used in pop up because 
-		// it is removed then added back so effects can run
-		//PopUpManager.removePopUp(popUp as IFlexDisplayObject);
 		
-		// can't use popUp call later 
+		// can't use popUp call later so using top level application call later
 		// TypeError: Error #1009: Cannot access a property or method of a null object reference.
 		// 		at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
+		
+		// adding trigger event if not set otherwise we get errors if effect is still playing at 
+		// the time other code in EffectManager is called
+		// if using EventHandler the trigger event must be set on each effect playing. 
+		if (triggerEvent==null) {
+			triggerEvent = new Event(Event.REMOVED);
+		}
+		
 		if (FlexGlobals.topLevelApplication && triggerEvent) {
+			// causes flicker when effects are used in pop up because 
+			// it is removed then added back so effects can run
+			// so we wait a frame
+			//PopUpManager.removePopUp(popUp as IFlexDisplayObject);
 			UIComponent(FlexGlobals.topLevelApplication).callLater(PopUpManager.removePopUp, [(popUp as IFlexDisplayObject)]);
 		}
 		else {
-			PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+			try {
+				PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+			}
+			catch (error:Error) {
+				// sometimes the pop up is already closed or something 
+				// or there's a bug in PopUpManager or EffectManager	
+			}
 		}
 		
 		///////////////////////////////////////////////////////////

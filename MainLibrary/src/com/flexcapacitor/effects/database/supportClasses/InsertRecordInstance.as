@@ -64,6 +64,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var field:SQLColumnData;
 			var fieldsLength:int;
 			var successful:Boolean;
+			var parameters:Object;
 			var alias:String;
 			var executeError:SQLError;
 			
@@ -87,6 +88,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			
 			statement = new SQLStatement();
 			statement.sqlConnection = connection;
+			parameters = statement.parameters;
 			
 			request = "INSERT INTO ";
 			
@@ -109,7 +111,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 				if (i>0) request += ",";
 				alias = ":" + field.name;
 				request += alias;
-				statement.parameters[alias] = field.value;
+				parameters[alias] = field.value;
 			}
 			
 			request += ")";

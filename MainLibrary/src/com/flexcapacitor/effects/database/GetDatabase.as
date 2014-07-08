@@ -130,7 +130,7 @@ or if the backup is newer than the current database. It checks the modification 
 							directory="assets/data/" 
 							fileName="database" 
 							backupPath="assets/data/database"
-							useBackupIfNewer="true"
+							useBackup="newer"
 							connection="{connection}"
 							traceErrors="true"
 							traceFilePaths="true"
@@ -221,6 +221,12 @@ or if the backup is newer than the current database. It checks the modification 
 		public static const PROGRESS:String = "progress";
 		public static const OUTPUT_PROGRESS:String = "outputProgress";
 		public static const CLOSE:String = "close";
+
+		public static const AUTO:String = "auto";
+		public static const DOES_NOT_EXIST:String = "doesNotExist";
+		public static const ALWAYS:String = "always";
+		public static const NEVER:String = "never";
+		public static const NEWER:String = "newer";
 		
 		/**
 		 *  Constructor.
@@ -276,13 +282,18 @@ or if the backup is newer than the current database. It checks the modification 
 		public var createFile:Boolean;
 		
 		/**
-		 * Copies and overwrites the current database file 
-		 * if the backup database is newer 
-		 * than the current database. 
+		 * Determines the behavior of the use of the backup database file. Options are: <br/><br/>
+		 * 
+		 * Auto - if the database doesn't exist the backup is used. <br/>
+		 * Always - always overwrites the existing database<br/>
+		 * Newer - if the backup database is newer than overwrites existing database<br/>
+		 * Does Not Exist - only if the database does not exist.<br/>
+		 * Never - does not use the backup<br/><br/>
 		 * 
 		 * @see backupPath
 		 * */
-		public var useBackupIfNewer:Boolean;
+		[Inspectable(enumeration="auto,always,newer,doesNotExist,never")]
+		public var useBackup:String = "auto";
 		
 		/**
 		 * Location of backup file if database does not exist in target location.

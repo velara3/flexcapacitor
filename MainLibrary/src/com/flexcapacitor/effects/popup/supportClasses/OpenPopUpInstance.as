@@ -119,13 +119,16 @@ use namespace mx_internal;
 			}
 			
 			if (popUp && preventMultipleInstances) {
-				
+				// could not get this to work at first
+				// need to check EffectManager effects in progress???
 				//dispatchErrorEvent("Multiple instances are not allowed");
 			}
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
+			
+			action.dispatchedCloseEvent = false;
 			
 			if (popUp && popUp is UIComponent) {
 				UIComponent(popUp).isEffectStarted;
@@ -241,7 +244,7 @@ use namespace mx_internal;
 				systemManager = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 				var index:int = systemManager.rawChildren.getChildIndex(popUp);
 				
-				if (index>=0) {
+				if (index>=0) {// need to check id? because other display objects could be open (rare)
 					modalWindow = systemManager.rawChildren.getChildAt(index-1) as FlexSprite;
 					
 					if (modalWindow) {
@@ -291,7 +294,18 @@ use namespace mx_internal;
 		private function mouseUpOutsideHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			var close:Boolean;
+			var popUp:IFlexDisplayObject = action.popUp;
 			
+			if (popUp && popUp as IUIComponent && UIComponent(popUp).isEffectStarted) {
+				if (action.endEffectsPlaying && popUp && popUp as IUIComponent) {
+					EffectManager.endEffectsForTarget(popUp as IUIComponent);
+				}
+				
+				// we exit out because if we continue we close the pop up but 
+				// when the effect ends it puts up a display object and there 
+				// is no way to close the screen shield
+				return;
+			}
 			
 			if (action.closeOnMouseDownOutside) {
 				PopUpManager.removePopUp(action.popUp as IFlexDisplayObject);
@@ -347,19 +361,51 @@ use namespace mx_internal;
 		 * */
 		private function removedHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
+			var popUp:Object = action.popUp;
+			var actionProperty:String = action.actionPropertyName;
+			var continueValue:String = action.continueActionValue;
+			var cancelValue:String = action.cancelActionValue;
 			
 			// prevent bubbled up removed events from content inside the pop up
-			if (event.target != action.popUp) { return; }
+			if (event.target != popUp) { return; }
 			
-			removeEventListeners();
 			
-			if (action.hasEventListener(OpenPopUp.CLOSE)) {
-				action.dispatchEvent(new Event(OpenPopUp.CLOSE));
+			if (!action.dispatchedCloseEvent) {
+				
+				removeEventListeners();
+				
+				if (action.hasEventListener(OpenPopUp.CLOSE)) {
+					action.dispatchEvent(new Event(OpenPopUp.CLOSE));
+				}
+				
+				if (action.closeEffect) { 
+					playEffect(action.closeEffect);
+				}
+				
+				if (actionProperty in popUp && popUp[actionProperty]==continueValue) {
+					if (action.hasEventListener(OpenPopUp.CONTINUE_ACTION)) {
+						action.dispatchEvent(new Event(OpenPopUp.CONTINUE_ACTION));
+					}
+					
+					if (action.continueEffect) { 
+						playEffect(action.continueEffect);
+					}
+				}
+				else if (actionProperty in popUp && popUp[actionProperty]==cancelValue) {
+					if (action.hasEventListener(OpenPopUp.CANCEL_ACTION)) {
+						action.dispatchEvent(new Event(OpenPopUp.CANCEL_ACTION));
+					}
+					
+					if (action.cancelEffect) { 
+						playEffect(action.cancelEffect);
+					}
+				}
+				
+				action.dispatchedCloseEvent = true;
 			}
 			
-			if (action.closeEffect) { 
-				playEffect(action.closeEffect);
-			}
+			//traceMessage("Closing pop up");
+			
 			
 			///////////////////////////////////////////////////////////
 			// End the effect

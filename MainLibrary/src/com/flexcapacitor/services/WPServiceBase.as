@@ -75,6 +75,29 @@ package com.flexcapacitor.services {
 		public static const FAULT:String = "fault";
 		
 		/**
+		 * Error occured. There are various types of errors that can occur.
+		 * There is a network error where the network is down, there is URL error,
+		 * where we have an incorrect URL, there is service error, where the 
+		 * site is down, there is a incorrect parameters error where we are missing
+		 * data needed by the API and there is error where we don't find what we're 
+		 * looking for, such as post is deleted. 
+		 * */
+		[Bindable]
+		public var errorOccured:Boolean;
+		
+		/**
+		 * Error event.
+		 * */
+		[Bindable]
+		public var errorEvent:Event;
+		
+		/**
+		 * Error message.
+		 * */
+		[Bindable]
+		public var errorMessage:String;
+		
+		/**
 		 * URLLoader to communicate with the server
 		 * */
 		public var loader:URLLoader;
@@ -294,6 +317,9 @@ package com.flexcapacitor.services {
 				//trace("loader not in progress");
 			}
 			
+			errorOccured = false;
+			errorMessage = null;
+			
 			loader.load(request);
 		}
 	
@@ -304,8 +330,9 @@ package com.flexcapacitor.services {
 			var serviceEvent:WPServiceEvent = new WPServiceEvent(WPServiceEvent.FAULT);
 			serviceEvent.call = call;
 			serviceEvent.faultEvent = event;
-			//serviceEvent.faultCode = event.fault.faultCode;
-			//serviceEvent.message = "Could not create update token";
+			errorOccured = true;
+			errorMessage = event.toString();
+			errorEvent = event;
 			inProgress = false;
 			createPending = false;
 			updatePending = false;
@@ -347,6 +374,10 @@ package com.flexcapacitor.services {
 				serviceEvent.data = json;
 				serviceEvent.message = "Parse result error";
 				
+				errorOccured = true;
+				errorMessage = event.toString();
+				errorEvent = event;
+				
 				inProgress = false;
 				createPending = false;
 				updatePending = false;
@@ -360,6 +391,10 @@ package com.flexcapacitor.services {
 		
 			if (json==null) {
 				serviceEvent.message = "JSON object is null";
+				
+				errorOccured = true;
+				errorMessage = event.toString();
+				errorEvent = event;
 			}
 			
 			// token call
@@ -375,6 +410,9 @@ package com.flexcapacitor.services {
 			if (json && json is Object && "status" in json && json.status=="error") {
 				error = true;
 				serviceEvent.message = json.error;//"Update token error";
+				errorOccured = true;
+				errorMessage = event.toString();
+				errorEvent = event;
 				//dispatchEvent(serviceEvent);
 				//return;
 			}

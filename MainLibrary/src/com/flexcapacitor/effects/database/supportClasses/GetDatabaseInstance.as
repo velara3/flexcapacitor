@@ -67,7 +67,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var connection:SQLConnection = action.connection;
 			var traceFilePaths:Boolean = action.traceFilePaths;
 			var backupPath:String = action.backupPath;
-			var useBackupIfNewer:Boolean = action.useBackupIfNewer;
+			var useBackup:String = action.useBackup;
 			var fileMode:String = action.fileMode;
 			var async:Boolean = action.async;
 			var findFile:Boolean = true;
@@ -75,8 +75,10 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var fileLocation:String;
 			var fileExists:Boolean;
 			var stream:FileStream;
-			var backupFile:File;
-			var file:File;
+			var backupDatabaseFile:File;
+			var databaseFile:File;
+			var backupModifiedDate:Date;
+			var databaseModifiedDate:Date;
 			
 			
 			///////////////////////////////////////////////////////////
@@ -88,7 +90,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 					dispatchErrorEvent("The file name is required.");
 				}
 				
-				if (useBackupIfNewer && backupPath==null) {
+				if (useBackup==GetDatabase.NEWER && backupPath==null) {
 					dispatchErrorEvent("Use backup database if newer is set but the path to the backup database is not.");
 				}
 			}
@@ -118,69 +120,82 @@ package com.flexcapacitor.effects.database.supportClasses {
 				fileLocation += "." + fileExtension;
 			}
 			
-			// get base file path
+			// get file path to database
 			if (base==GetDatabase.APPLICATION_STORAGE) {
-				file = File.applicationStorageDirectory.resolvePath(fileLocation);
+				databaseFile = File.applicationStorageDirectory.resolvePath(fileLocation);
 			}
 			else if (base==GetDatabase.APPLICATION) {
-				file = File.applicationDirectory.resolvePath(fileLocation);
+				databaseFile = File.applicationDirectory.resolvePath(fileLocation);
 			}
 			else if (base==GetDatabase.DESKTOP) {
-				file = File.desktopDirectory.resolvePath(fileLocation);
+				databaseFile = File.desktopDirectory.resolvePath(fileLocation);
 			}
 			else if (base==GetDatabase.DOCUMENTS) {
-				file = File.documentsDirectory.resolvePath(fileLocation);
+				databaseFile = File.documentsDirectory.resolvePath(fileLocation);
 			}
 			else if (base==GetDatabase.USER) {
-				file = File.userDirectory.resolvePath(fileLocation);
+				databaseFile = File.userDirectory.resolvePath(fileLocation);
 			}
 			else if (base==GetDatabase.ROOT) {
-				file = new File(fileLocation);
+				databaseFile = new File(fileLocation);
 			}
 			
 			// check file exists
-			fileExists = file && file.exists;
+			fileExists = databaseFile && databaseFile.exists;
+			// modified date
+			databaseModifiedDate = new Date(databaseFile.modificationDate);
 			
 			// store file
-			action.file = file;
+			action.file = databaseFile;
 			
 			// get file location
-			action.filePath = file.url;
-			action.nativeFilePath = file.nativePath;
+			action.filePath = databaseFile.url;
+			action.nativeFilePath = databaseFile.nativePath;
 			action.relativeFilePath = fileLocation;
 			
 			if (traceFilePaths) {
-				traceMessage(" Target File Exists: " + (fileExists?"true":"false"));
-				traceMessage(" Target Defined File Path: " + fileLocation);
-				traceMessage(" Target File URL: " + file.url);
-				traceMessage(" Target Native File Path: " + file.nativePath);
-				traceMessage(" Target Space Available: " + file.spaceAvailable);
-				traceMessage(" Target File Mode: " + fileMode);
+				traceMessage(" Database File Exists: " + (fileExists?"true":"false"));
+				traceMessage(" Database Defined File Path: " + fileLocation);
+				traceMessage(" Database File URL: " + databaseFile.url);
+				traceMessage(" Database Native File Path: " + databaseFile.nativePath);
+				traceMessage(" Database Space Available: " + formatSize(databaseFile.spaceAvailable) + "GB");
+				traceMessage(" Database File Mode: " + fileMode);
+				traceMessage(" Database Modified Date: " + databaseModifiedDate);
 			}
 			
+			// If a writable DB doesn't exist, we then copy it into the app folder so it's writeable
 			// copy backup database if it doesn't exist
 			if (backupPath) {
 				var backupIsNewer:Boolean;
-				backupFile = File.applicationDirectory.resolvePath(backupPath);
+				backupDatabaseFile = File.applicationDirectory.resolvePath(backupPath);
+				backupModifiedDate = new Date(backupDatabaseFile.modificationDate);
 				
 				if (traceFilePaths) {
 					traceMessage("");
-					traceMessage(" Backup File Exists: " + (backupFile.exists ? "true":"false"));
+					traceMessage(" Backup File Exists: " + (backupDatabaseFile.exists ? "true":"false"));
 					traceMessage(" Backup Defined File Path: " + backupPath);
-					traceMessage(" Backup File URL: " + backupFile.url);
-					traceMessage(" Backup Native File Path: " + backupFile.nativePath);
-					traceMessage(" Backup File Space Available: " + backupFile.spaceAvailable);
+					traceMessage(" Backup File URL: " + backupDatabaseFile.url);
+					traceMessage(" Backup Native File Path: " + backupDatabaseFile.nativePath);
+					traceMessage(" Backup File Space Available: " + formatSize(backupDatabaseFile.spaceAvailable) + "GB");
+					traceMessage(" Backup Modified Date: " + backupModifiedDate);
 				}
 				
 				if (fileExists && 
-					backupFile.exists && backupFile.modificationDate>file.modificationDate) {
+					backupDatabaseFile.exists && backupDatabaseFile.modificationDate>databaseFile.modificationDate) {
 					backupIsNewer = true;
+					
+					if (traceFilePaths) {
+						traceMessage(" Backup is newer than saved. ");
+					}
 				}
 				
-				if (!fileExists || (action.useBackupIfNewer && backupIsNewer)) {
-					if (backupFile.exists) {
+				if ((!fileExists && (useBackup==GetDatabase.AUTO || useBackup==GetDatabase.DOES_NOT_EXIST)) 
+					|| (useBackup==GetDatabase.NEWER && backupIsNewer) 
+					|| useBackup==GetDatabase.ALWAYS) {
+					
+					if (backupDatabaseFile.exists) {
 						try {
-							backupFile.copyTo(file);
+							backupDatabaseFile.copyTo(databaseFile, true);
 							fileExists = true;
 							
 							// backup file used
@@ -191,11 +206,25 @@ package com.flexcapacitor.effects.database.supportClasses {
 							if (action.backupFileUsedEffect) {
 								playEffect(action.backupFileUsedEffect);
 							}
+							
+							if (traceFilePaths) {
+								traceMessage(" Backup file was copied to: " + databaseFile.nativePath);
+							}
 						}
 						catch (ee:Error) {
+							// Error #3012: Cannot delete file or directory.
+							
+							// IOError - The source does not exist; or the destination exists and overwrite is false; 
+							// or the source could not be copied to the target; or the source and destination refer 
+							// to the same file or folder and overwrite is set to true. On Windows, you cannot copy 
+							// a file that is open or a directory that contains a file that is open.
+							
+							// SecurityError - The application does not have the necessary permissions to write to 
+							// the destination.
+	
 							action.errorEvent = ee;
 							action.errorMessage = ee.message;
-						
+							
 							if (action.traceErrors) {
 								traceMessage(" Database Error: " + ee.message);
 							}
@@ -208,11 +237,12 @@ package com.flexcapacitor.effects.database.supportClasses {
 							if (action.errorEffect) {
 								playEffect(action.errorEffect);
 							}
+							
+							if (traceFilePaths) {
+								traceMessage(" Backup file was not copied to: " + databaseFile.nativePath);
+							}
 						}
 						
-						if (traceFilePaths) {
-							traceMessage(" Backup file was copied to: " + file.nativePath);
-						}
 					}
 					else {
 						
@@ -224,11 +254,14 @@ package com.flexcapacitor.effects.database.supportClasses {
 						if (action.backupFileNotFoundEffect) {
 							playEffect(action.backupFileNotFoundEffect);
 						}
+						
+						if (traceFilePaths) {
+							traceMessage(" Backup database does not exist at the location: " + backupDatabaseFile.nativePath);
+						}
 					}
 				}
 			}
 			
-			// If a writable DB doesn't exist, we then copy it into the app folder so it's writteable
 			
 			////////////// CREATE CONNECTION /////////////
 			
@@ -241,11 +274,11 @@ package com.flexcapacitor.effects.database.supportClasses {
 			try {
 				if (!async) {
 					// open(reference:Object=null, openMode:String="create", autoCompact:Boolean=false, pageSize:int=1024, encryptionKey:ByteArray=null)
-					connection.open(file, action.fileMode, action.autoCompact, action.pageSize, action.encryptionKey);
+					connection.open(databaseFile, action.fileMode, action.autoCompact, action.pageSize, action.encryptionKey);
 				}
 				else {
 					// openAsync(reference:Object=null, openMode:String="create", responder:Responder=null, autoCompact:Boolean=false, pageSize:int=1024, encryptionKey:ByteArray=null)
-					connection.openAsync(file, action.fileMode, action.responder, action.autoCompact, action.pageSize, action.encryptionKey);
+					connection.openAsync(databaseFile, action.fileMode, action.responder, action.autoCompact, action.pageSize, action.encryptionKey);
 				}
 				//trace("connection opened");
 			}
@@ -464,6 +497,31 @@ package com.flexcapacitor.effects.database.supportClasses {
 			dispatcher.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler);
 			dispatcher.removeEventListener(OutputProgressEvent.OUTPUT_PROGRESS, outputProgressHandler);
 			dispatcher.removeEventListener(ProgressEvent.PROGRESS, 				progressHandler);
+		}
+		
+		/**
+		 * Get size in format
+		 * */
+		public function formatSize(value:Number, format:String="GB", decimalPlaces:int = 3):String {
+			
+			if (format.toLowerCase()=="kb") {
+				value = value/1024;
+			}
+			
+			else if (format=="MB") {
+				value = value/1024/1024;
+			}
+			
+			else if (format=="GB") {
+				value = value/1024/1024/1024;
+			}
+			
+			else if (format=="TB") {
+				value = value/1024/1024/1024/1024;
+			}
+			
+
+			return value.toFixed(decimalPlaces);;
 		}
 	}
 }

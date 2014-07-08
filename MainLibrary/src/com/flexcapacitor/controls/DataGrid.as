@@ -28,6 +28,11 @@ package com.flexcapacitor.controls
 	[Style(name="showHeader", inherit="no", type="Boolean")]
 	
 	/**
+	 * Shows or hides the border
+	 * */
+	[Style(name="borderVisible", inherit="no", type="Boolean")]
+	
+	/**
 	 * Sets the color of the header row separator
 	 * */
 	[Style(name="headerRowSeparatorColor", inherit="no", type="uint", format="Color")]

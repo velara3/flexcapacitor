@@ -807,14 +807,20 @@ package com.flexcapacitor.utils {
 		element=Group
 		 * 
 		 * */
-		public static function walkDownComponentTree(componentDescription:ComponentDescription, method:Function):void {
-			method(componentDescription);
+		public static function walkDownComponentTree(componentDescription:ComponentDescription, method:Function, args:Array = null):void {
+			if (args) {
+				var newArgs:Array = [componentDescription].concat(args);
+				method.apply(method, newArgs);
+			}
+			else {
+				method(componentDescription);
+			}
 			
 			var length:int = componentDescription.children ? componentDescription.children.length :0;
 			
 			
 			for (var i:int = 0; i < length; i++) {
-				walkDownComponentTree(ComponentDescription(componentDescription.children.getItemAt(i)), method);
+				walkDownComponentTree(ComponentDescription(componentDescription.children.getItemAt(i)), method, args);
 			}
 		}
 		

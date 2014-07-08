@@ -6,6 +6,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 	
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
+	import flash.events.FileListEvent;
 	import flash.events.IOErrorEvent;
 	import flash.events.MouseEvent;
 	import flash.events.SecurityErrorEvent;
@@ -62,7 +63,23 @@ package com.flexcapacitor.effects.file.supportClasses {
 			super.play();// Dispatch an effectStart event
 			
 			var action:BrowseForFile = BrowseForFile(effect);
+			var applicationDomain:ApplicationDomain;
+			var classDefinition:String = "flash.filesystem.File";
+			var browseForFolder:Boolean = action.browseForFolder;
+			var FileClass:Object = action.FileClass;
+			var fileClassFound:Boolean = FileClass!=null;
 			
+			// get reference to flash.filesystem.File - not supported in the browser
+			if (!FileClass) {
+				applicationDomain = SystemManager.getSWFRoot(this).loaderInfo.applicationDomain;
+				fileClassFound = applicationDomain.hasDefinition(classDefinition); 
+				action.fileClassFound = fileClassFound;
+				
+				if (fileClassFound) {
+					FileClass = applicationDomain.getDefinition(classDefinition);
+					action.FileClass = FileClass as Class;
+				}
+			}
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -77,6 +94,15 @@ package com.flexcapacitor.effects.file.supportClasses {
 				}
 				else if (!(action.targetAncestor is DisplayObjectContainer)) {
 					dispatchErrorEvent("The trigger button must be a Display Object Container");
+				}
+				
+				if (browseForFolder) {
+					if (!fileClassFound && !action.ignoreBrowseForFolderError) {
+						dispatchErrorEvent("Browse for folder is not supported on this device.");
+					}
+					else if (action.useFileReferences && !action.ignoreBrowseForFolderError) {
+						dispatchErrorEvent("Browse for folder is not supported when use file reference is enabled.");
+					}
 				}
 			}
 			
@@ -123,11 +149,15 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var fileFilters:Array = action.fileFilters ? action.fileFilters : [];
 			var fileFilterDescription:String = action.fileFilterDescription || " ";
 			var acceptedFileTypes:Array = action.fileTypes ? action.fileTypes.split(",") : null;
-			var fileLocation:String;
-			var fileExists:Boolean;
-			var fileReferenceObject:*; // could be file reference type? 
+			var title:String = action.title ? action.title : "";
+			var fileClassFound:Boolean = action.fileClassFound;
+			var browseForFolder:Boolean = action.browseForFolder;
+			var FileClass:Class = action.FileClass;
+			var fileReferenceObject:*;
 			var fileFilter:FileFilter;
 			var filtersString:String;
+			var fileLocation:String;
+			var fileExists:Boolean;
 			var length:int;
 			
 			///////////////////////////////////////////////////////////
@@ -138,7 +168,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.targetAncestor.removeEventListener(MouseEvent.CLICK, buttonHandler);
 			
 			if (!action.invokeBrowseDialog) {
-				// this means... the event listener was not removed
+				// this means... the event listener was not removed - we shouldn't be here
 				dispatchErrorEvent("The browse for file event handler was not previously removed.");
 				return;
 			}
@@ -146,45 +176,48 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// reset browse dialog flag
 			action.invokeBrowseDialog = false;
 			
-			// Upload Support SHOULD BE MOVED TO UPLOAD FILES EFFECT
-			//action.uploadURLRequest = new URLRequest();
-			//action.uploadURLRequest.url = "http://www.[yourDomain].com/yourUploadHandlerScript.cfm";
+			// check for manually entered file filters and add to existing filters array
+			if (acceptedFileTypes) {
+				filtersString = "*." + acceptedFileTypes.join(";*.");
+				
+				fileFilter = new FileFilter(fileFilterDescription, filtersString);
+				fileFilters.push(fileFilter);
+			}
 			
-			 // browse for folder has been somewhat tacked on -
-			if (action.browseForFolder) {
-				var applicationDomain:ApplicationDomain;
-				var supportsBrowseForDirectory:Boolean;
-				var definition:Object;
-				var classFound:Boolean;
-				var classDefinition:String = "flash.filesystem.File";
+			// Use File rather than FileReference if available
+			// check if the File class is found
+			if (fileClassFound && !action.useFileReferences) {
 				
-				applicationDomain = SystemManager.getSWFRoot(this).loaderInfo.applicationDomain;
-				classFound = applicationDomain.hasDefinition(classDefinition); 
-				
-				
-				// check if the class is found
-				if (classFound) {
+				fileReferenceObject = action.fileReference = new FileClass();
+				addFileListeners(fileReferenceObject);
+			
+				try {
 					
-					definition = applicationDomain.getDefinition(classDefinition);
-					
-					try {
-						fileReferenceObject = action.fileObject = new definition();
-						addFileListeners(fileReferenceObject);
-						fileReferenceObject.browseForDirectory(action.browseForFolderTitle);
+					if (browseForFolder) {
+						fileReferenceObject.browseForDirectory(title);
 					}
-					catch (error:Error)
-					{
-					   // trace("Failed:", error.message);
-					    trace("Failed:", error.message);
+					else if (action.allowMultipleSelection) {
+						fileReferenceObject.browseForOpenMultiple(title, fileFilters);
 					}
-					
-					if (definition.hasOwnProperty("browseForDirectory")) {
-						supportsBrowseForDirectory = true;
+					else {
+						fileReferenceObject.browseForOpen(title, fileFilters);
 					}
-					
 				}
-				
-			
+				catch (error:Error) {
+				   // trace("Failed:", error.message);
+				   // traceMessage("BrowseForFile:" + error.message);
+					
+					action.error = error;
+					
+					// dispatch events and run effects
+					if (action.hasEventListener(BrowseForFile.ERROR)) {
+						action.dispatchEvent(new Event(BrowseForFile.ERROR));
+					}
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+				}
 			}
 			else {
 				
@@ -199,20 +232,32 @@ package com.flexcapacitor.effects.file.supportClasses {
 					addFileListeners(fileReferenceObject);
 				}
 				
-				// check for manually entered file filters and add to existing filters array
-				if (acceptedFileTypes) {
-					filtersString = "*." + acceptedFileTypes.join(";*.");
-					
-					fileFilter = new FileFilter(fileFilterDescription, filtersString);
-					fileFilters.push(fileFilter);
-				}
-				
 				
 				// if you get an error here enter a file filter description such as "Images" or "Files"
 				// SEE action.fileFilterDescription
 				// add filters and open
-				fileReferenceObject.browse(fileFilters);
+				
+				try {
+					
+					fileReferenceObject.browse(fileFilters);
+				}
+				catch (error:Error) {
+				   // trace("Failed:", error.message);
+				   // traceMessage("BrowseForFile:" + error.message);
+					
+					action.error = error;
+					
+					// dispatch events and run effects
+					if (action.hasEventListener(BrowseForFile.ERROR)) {
+						action.dispatchEvent(new Event(BrowseForFile.ERROR));
+					}
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+				}
 			}
+			
 
 			
 			
@@ -229,27 +274,34 @@ package com.flexcapacitor.effects.file.supportClasses {
 		
 		protected function selectHandler(event:Event):void {
 			var action:BrowseForFile = BrowseForFile(effect);
-			var files:FileReferenceList = action.fileReferenceList;
-			var file:FileReference = action.fileReference;
+			var fileReferenceList:FileReferenceList = action.fileReferenceList;
+			var fileReference:FileReference = action.fileReference;
 			var multipleSelection:Boolean = action.allowMultipleSelection;
+			var fileObject:Object = action.fileObject;
+			var fileClassFound:Boolean = action.fileClassFound;
+			var useFileReferences:Boolean = action.useFileReferences;
 			var fileList:Array;
 			var fileCount:uint;
-			
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
-			if (action.browseForFolder) {
-				file = action.fileObject;
-				removeFileListeners(file);
-			}
-			else {
-				// get selected file or first file if multiple selections
-				if (multipleSelection) {
-					removeFileListeners(files);
-					fileList = files.fileList;
-					file = fileList[0];
+			if (fileClassFound && !useFileReferences) {
+				
+				if (action.browseForFolder) {
+					action.fileReference = fileReference;
+					action.file = fileReference as Object;
+					removeFileListeners(fileReference);
+				}
+				else if (multipleSelection) {
+					
+					// get selected file or first file if multiple selections
+					removeFileListeners(fileReference);
+					fileList = Object(event).files; // FileListEvent(event)
+					fileReference = fileList[0];
+					action.fileReference = fileReference;
+					action.file = fileReference as Object;
 					fileCount = fileList.length;
 					
 					if (fileCount>1) {
@@ -257,38 +309,62 @@ package com.flexcapacitor.effects.file.supportClasses {
 					}
 				}
 				else {
-					file = action.fileReference;
-					removeFileListeners(file);
+					action.fileReference = fileReference;
+					action.file = fileReference as Object;
+					removeFileListeners(fileReference);
+				}
+			}
+			else {
+				
+				if (multipleSelection) {
+					
+					// get selected file or first file if multiple selections
+					removeFileListeners(fileReferenceList);
+					fileList = fileReferenceList.fileList; // FileReferenceList
+					fileReference = fileList[0];
+					fileCount = fileList.length;
+					action.fileReference = fileReference;
+					action.file = fileReference as Object;
+					
+					if (fileCount>1) {
+						action.hasMultipleSelections = true;
+					}
+				}
+				else {
+					action.fileReference = fileReference;
+					action.file = fileReference as Object;
+					removeFileListeners(fileReference);
 				}
 			}
 			
+			
 			// set some file properties
-			// NOTE: file.data is null until a method like file.load() is called
-			action.fileData = file.data;
-			action.fileName = file.name;
-			action.fileSize = file.size;
-			action.fileModificationDate = file.modificationDate;
-			action.fileCreationDate = file.creationDate;
-			action.fileCreator = file.creator;
-			action.fileType = file.type;
-			action.fileList = multipleSelection ? fileList : [file];
+			// NOTE: file.data is null in the browser until a method like file.load() is called
+			action.fileData = fileReference.data;
+			action.fileName = fileReference.name;
+			action.fileSize = fileReference.size;
+			action.fileModificationDate = fileReference.modificationDate;
+			action.fileCreationDate = fileReference.creationDate;
+			action.fileCreator = fileReference.creator;
+			action.fileType = fileReference.type;
+			action.fileList = multipleSelection ? fileList : [fileReference];
 			action.fileCount = multipleSelection ? fileCount : 1;
 			
 			
-			// up for removal
 			// file paths are not available in the fileReference class
-			if (action.traceFileURL) {
-				//trace(action.className + " File URL: " + file.url);
+			// need to check if on the desktop and add support
+			if (fileClassFound && !useFileReferences && action.traceFileURL) {
+				traceMessage(action.className + " File URL: " + Object(fileReference).url);
 			}
 			
 			// file paths are not available in the fileReference class
-			if (action.traceFileNativePath) {
-				//trace(action.className + " File Native Path: " + file.nativePath);
+			if (fileClassFound && !useFileReferences && action.traceFileNativePath) {
+				traceMessage(action.className + " File Native Path: " + Object(fileReference).nativePath);
 			}
 			
 			// dispatch events and run effects
 			if (action.hasEventListener(BrowseForFile.SELECT)) {
-				action.dispatchEvent(event);
+				action.dispatchEvent(new Event(BrowseForFile.SELECT));
 			}
 			
 			if (multipleSelection) {
@@ -317,7 +393,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// LOAD OR UPLOAD
 			
-			// we should subclass this to Upload File
+			// we could subclass this to Upload File
 			/*if (action.uploadURL) {
 				file.upload(action.uploadURL);
 			}*/
@@ -327,27 +403,85 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * Not sure if needed - up for removal
 		 * */
 		private function httpErrorHandler(event:Event):void {
-			var file:FileReference = FileReference(event.target);
-			//trace("httpErrorHandler: name=" + file.name);
-			traceMessage("httpErrorHandler: name=" + file.name);
+			var action:BrowseForFile = BrowseForFile(effect);
+			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
+			action.errorEvent = event;
+			
+			// dispatch events and run effects
+			if (action.hasEventListener(BrowseForFile.ERROR)) {
+				action.dispatchEvent(event);
+			}
+			
+			if (action.errorEffect) {
+				playEffect(action.errorEffect);
+			}
+					
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
+			
+			finish();
 		}
 		
 		/**
 		 * Not sure if needed - up for removal
 		 * */
 		private function ioErrorHandler(event:Event):void {
-			var file:FileReference = FileReference(event.target);
-			//trace("ioErrorHandler: name=" + file.name);
-			traceMessage("ioErrorHandler: name=" + file.name);
+			var action:BrowseForFile = BrowseForFile(effect);
+			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
+			action.errorEvent = event;
+			
+			// dispatch events and run effects
+			if (action.hasEventListener(BrowseForFile.ERROR)) {
+				action.dispatchEvent(event);
+			}
+			
+			if (action.errorEffect) {
+				playEffect(action.errorEffect);
+			}
+			
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
+			
+			finish();
 		}
 		
 		/**
 		 * Not sure if needed - up for removal
 		 * */
 		private function securityErrorHandler(event:Event):void {
-			var file:FileReference = FileReference(event.target);
-			//trace("securityErrorHandler: name=" + file.name + " event=" + event.toString());
-			traceMessage("securityErrorHandler: name=" + file.name + " event=" + event.toString());
+			var action:BrowseForFile = BrowseForFile(effect);
+			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
+			action.errorEvent = event;
+			
+			// dispatch events and run effects
+			if (action.hasEventListener(BrowseForFile.ERROR)) {
+				action.dispatchEvent(event);
+			}
+			
+			if (action.errorEffect) {
+				playEffect(action.errorEffect);
+			}
+			
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
+			
+			finish();
+			
 		}
 		
 		/**
@@ -356,6 +490,10 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function cancelHandler(event:Event):void {
 			var action:BrowseForFile = BrowseForFile(effect);
 			
+			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
 			
 			if (action.hasEventListener(BrowseForFile.CANCEL)) {
 				action.dispatchEvent(event);
@@ -370,12 +508,6 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			
-			// If cancel is pressed on the browser dialog then cancel 
-			// out of an effect sequence (if part of one).
-			if (action.cancelOnDismiss) {
-				//traceMessage("cancelHandler: " + event);
-			}
 			
 			finish();
 			
@@ -394,6 +526,8 @@ package com.flexcapacitor.effects.file.supportClasses {
 			dispatcher.addEventListener(IOErrorEvent.IO_ERROR, 				ioErrorHandler);
 			dispatcher.addEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler);
 			dispatcher.addEventListener(Event.SELECT, 						selectHandler);
+			dispatcher.addEventListener("selectMultiple", 					selectHandler);
+			//dispatcher.addEventListener(FileListEvent.SELECT_MULTIPLE, 		selectHandler);
 			//dispatcher.addEventListener(DataEvent.UPLOAD_COMPLETE_DATA,		uploadCompleteDataHandler);
 		}
 		
@@ -405,6 +539,8 @@ package com.flexcapacitor.effects.file.supportClasses {
 			dispatcher.removeEventListener(IOErrorEvent.IO_ERROR, 				ioErrorHandler);
 			dispatcher.removeEventListener(SecurityErrorEvent.SECURITY_ERROR, 	securityErrorHandler);
 			dispatcher.removeEventListener(Event.SELECT, 						selectHandler);
+			dispatcher.removeEventListener("selectMultiple",			 		selectHandler);
+			//dispatcher.removeEventListener(FileListEvent.SELECT_MULTIPLE, 		selectHandler);
 			//dispatcher.removeEventListener(DataEvent.UPLOAD_COMPLETE_DATA,		uploadCompleteDataHandler);
 		}
 		

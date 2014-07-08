@@ -1,6 +1,6 @@
 
 package com.flexcapacitor.data.database {
-	import flash.data.SQLColumnSchema;
+	
 	
 	/**
 	 * SQL Column used for select, update and insert
@@ -18,5 +18,10 @@ package com.flexcapacitor.data.database {
 		[Bindable]
 		public var value:Object;
 		
+		/**
+		 * If set to true the value is accessed from the data object provided. 
+		 * Default is false on insert and true on update.
+		 * */
+		public var getValueFromData:Boolean;
 	}
 }

@@ -13,9 +13,22 @@ package com.flexcapacitor.effects.sound {
 	import flash.media.SoundLoaderContext;
 	import flash.net.URLRequest;
 	
+	import mx.effects.IEffect;
 	import mx.effects.IEffectInstance;
 	import mx.resources.IResourceManager;
 	import mx.resources.ResourceManager;
+	
+	/**
+	 *  Dispatched when the sound finishes playing.
+	 *
+	 *  @eventType flash.events.Event.COMPLETE
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion Flash 9
+	 *  @playerversion AIR 1.1
+	 *  @productversion Flex 3
+	 */
+	[Event(name="soundComplete", type="flash.events.Event")]
 	
 	/**
 	 *  Dispatched when the sound file finishes loading.
@@ -54,6 +67,14 @@ package com.flexcapacitor.effects.sound {
 	[Event(name="ioError", type="flash.events.IOErrorEvent")]
 	
 	/**
+	 *  Dispatched when an error occurs when attempting to play the sound file.
+	 *
+	 *  @eventType flash.events.ArgumentError 
+	 *  
+	 */
+	[Event(name="argumentError", type="flash.events.ArgumentError")]
+	
+	/**
 	 *  Dispatched periodically as the sound file loads.
 	 *
 	 *  <p>Within the event object, you can access the number of bytes
@@ -74,28 +95,35 @@ package com.flexcapacitor.effects.sound {
 	[ResourceBundle("effects")]
 	
 	/**
-	 *  This class is nearly identical to the mx.effects.PlaySound except it 
+	 * This class is nearly identical to the mx.effects.PlaySound except it 
 	 * extends the ActionEffects class and fixes a few issues.
 	 * 
 	 * The PlaySound class plays an MP3 audio file. 
-	 *  For example, you could play a sound when a user clicks a Button control. 
-	 *  This effect lets you repeat the sound, select the source file,
-	 *  and control the volume and pan. 
+	 * For example, you could play a sound when a user clicks a Button control. 
+	 * This effect lets you repeat the sound, select the source file,
+	 * and control the volume and pan. 
 	 *
-	 *  <p>You specify the MP3 file using the <code>source</code> property. 
-	 *  If you have already embedded the MP3 file, using the <code>Embed</code>
-	 *  keyword, you can pass the Class object of the MP3 file to the
-	 *  <code>source</code> property. 
-	 *  Otherwise, specify the full URL to the MP3 file.</p>
+	 * <p>You specify the MP3 file using the <code>source</code> property. 
+	 * If you have already embedded the MP3 file, using the <code>Embed</code>
+	 * keyword, you can pass the Class object of the MP3 file to the
+	 * <code>source</code> property. 
+	 * Otherwise, specify the full URL to the MP3 file.</p>
 	 *  
-	 *  @mxml
+	 * <b>Examples</b><br/>
+	 * <b>The following plays the sound for the full length of the sound and loops it 10 times:</b>
+	 * <pre>
+	 * &lt;sound:PlaySound id="playSound" source="mySound.mp3"
+				 workingDirectory="assets/sounds/"
+				 playForSpecifiedDuration="false"
+				 ioError="trace(playSound.ioErrorEvent)" />
+	 * </pre>
 	 *
-	 *  <p>The <code>&lt;mx:PlaySound&gt;</code> tag
-	 *  inherits all of the tag attributes of its superclass,
-	 *  and adds the following tag attributes:</p>
-	 *  
-	 *  <pre>
-	 *  &lt;mx:PlaySound
+	 * <p>The <code>&lt;mx:PlaySound&gt;</code> tag
+	 * inherits all of the tag attributes of its superclass,
+	 * and adds the following tag attributes:</p>
+	 * 
+	 * <pre>
+	 * &lt;PlaySound
 	 *    <b>Properties</b>
 	 *    id="ID"
 	 *    autoLoad="true|false"
@@ -105,7 +133,7 @@ package com.flexcapacitor.effects.sound {
 	 *    panFrom="0"
 	 *    source=""
 	 *    startTime="0"
-	 *    useDuration="true|false"
+	 *    playForSpecifiedDuration="true|false"
 	 *    volumeEasingFunction="true|false"
 	 *    volumeTo="1"
 	 *     
@@ -114,21 +142,26 @@ package com.flexcapacitor.effects.sound {
 	 *    id3="<i>No default</i>"
 	 *    ioError="<i>No default</i>"
 	 *    progress="<i>No default</i>"
-	 *  /&gt;
-	 *  </pre>
+	 * /&gt;
+	 * </pre>
 	 *  
-	 *  @see mx.effects.effectClasses.PlaySoundInstance
-	 *  @see flash.media.Sound
+	 * @see flash.media.Sound
 	 *
-	 *  @includeExample examples/PlaySoundExample.mxml
+	 * @includeExample examples/PlaySoundExample.mxml
 	 *  
-	 *  @langversion 3.0
-	 *  @playerversion Flash 9
-	 *  @playerversion AIR 1.1
-	 *  @productversion Flex 3
+	 * @langversion 3.0
+	 * @playerversion Flash 9
+	 * @playerversion AIR 1.1
+	 * @productversion Flex 3
 	 */
 	public class PlaySound extends ActionEffect {
 		
+		public static const SOUND_COMPLETE:String = "soundComplete";
+		public static const COMPLETE:String = "complete";
+		public static const ID3:String = "id3";
+		public static const IO_ERROR:String = "ioError";
+		public static const ARGUMENT_ERROR:String = "argumentError";
+		public static const PROGRESS:String = "progress";
 		
 		/**
 		 *  Constructor.
@@ -269,15 +302,19 @@ package com.flexcapacitor.effects.sound {
 		[Inspectable(category="General", defaultValue="0")]
 		
 		/**
-		 *  The number of times to play the sound in a loop, where a value of
-		 *  0 means play the effect once, a value of 1 means play the effect twice,
-		 *  and so on. If you repeat the MP3 file, it still uses the setting of the
-		 *  <code>useDuration</code> property to determine the playback time.
+		 * The number of times to play the sound in a loop, where a value of
+		 * 0 means play the effect once, a value of 1 means play the effect twice,
+		 * and so on. If you repeat the MP3 file, it still uses the setting of the
+		 * <code>playForSpecifiedDuration</code> property to determine 
+		 * if the playback ends after the sound plays including loops or at the 
+		 * end of the duration specified. Set playForSpecifiedDuration to false
+		 * to let the sound play until it ends. 
 		 *
 		 *  <p>The <code>duration</code> property takes precedence
 		 *  over this property. 
 		 *  If the effect duration is not long enough to play the sound
-		 *  at least once, the sound does not loop.</p>
+		 *  at least once and playForSpecifiedDuration is true, the sound will end
+		 *  before it has a chance to loop.</p>
 		 *
 		 *  @default 0
 		 *  
@@ -384,8 +421,10 @@ package com.flexcapacitor.effects.sound {
 		 *  The URL or class of the MP3 file to play.
 		 *  If you have already embedded the MP3 file, using the <code>Embed</code> keyword, 
 		 *  you can pass the Class object of the MP3 file to the <code>source</code> property. 
-		 *  Otherwise, specify the full URL to the MP3 file.
+		 *  Otherwise, specify the full URL to the MP3 file. You can specify a working
+		 *  directory that will prepend to the source value. 
 		 *  
+		 *  @see workingDirectory
 		 *  @langversion 3.0
 		 *  @playerversion Flash 9
 		 *  @playerversion AIR 1.1
@@ -415,6 +454,8 @@ package com.flexcapacitor.effects.sound {
 				removeSoundListeners();
 			}
 			
+			ioErrorEvent = null;
+			
 			_source = value;
 			
 			if (_source is Class)
@@ -439,6 +480,11 @@ package com.flexcapacitor.effects.sound {
 			if (autoLoad)
 				load();
 		}
+		
+		/**
+		 * Working directory. The value is prepended to the source value if source is a string. 
+		 * */
+		public var workingDirectory:String;
 		
 		//----------------------------------
 		//  startTime
@@ -467,10 +513,10 @@ package com.flexcapacitor.effects.sound {
 		
 		/**
 		 *  If <code>true</code>, stop the effect
+		 *  after the MP3 finishes playing or looping.
+		 *  If <code>false</code>, stop the effect
 		 *  after the time specified by the <code>duration</code> 
 		 *  property has elapsed.
-		 *  If <code>false</code>, stop the effect
-		 *  after the MP3 finishes playing or looping.
 		 *
 		 *  @default true    
 		 *  
@@ -479,7 +525,7 @@ package com.flexcapacitor.effects.sound {
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public var useDuration:Boolean = true;
+		public var playForSpecifiedDuration:Boolean = false;
 		
 		//----------------------------------
 		//  volumeEasingFunction
@@ -535,6 +581,38 @@ package com.flexcapacitor.effects.sound {
 		 */
 		public var volumeTo:Number;
 		
+		/**
+		 * When this is set to true if a sound is playing stop it before playing a new sound.
+		 * */
+		public var stopPlayingSounds:Boolean;
+		
+		/**
+		 * Reference to io error event if error occurs
+		 * */
+		[Bindable]
+		public var argumentError:Error;
+		
+		/**
+		 * Reference to io error event if error occurs
+		 * */
+		[Bindable]
+		public var ioErrorEvent:IOErrorEvent;
+		
+		/**
+		 * Effect played when error occurs
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
+		 * Effect played on sound load
+		 * */
+		public var completeEffect:IEffect;
+		
+		/**
+		 * Effect played on sound playback complete
+		 * */
+		public var soundCompleteEffect:IEffect;
+		
 		//--------------------------------------------------------------------------
 		//
 		//  Overridden methods
@@ -561,7 +639,7 @@ package com.flexcapacitor.effects.sound {
 			playSoundInstance.volumeEasingFunction = volumeEasingFunction;
 			playSoundInstance.loops = loops;
 			playSoundInstance.startTime = startTime;
-			playSoundInstance.useDuration = useDuration;
+			playSoundInstance.playForSpecifiedDuration = playForSpecifiedDuration;
 		}
 		
 		//--------------------------------------------------------------------------
@@ -580,8 +658,14 @@ package com.flexcapacitor.effects.sound {
 		 */
 		public function load():void
 		{
-			if (_sound && _source && _source is String && needsLoading)
-				_sound.load(new URLRequest(String(_source)), new SoundLoaderContext(bufferTime));
+			var path:String;
+			var request:URLRequest;
+			
+			if (_sound && _source && _source is String && needsLoading) {
+				path = workingDirectory ? String(workingDirectory + _source) : String(_source);
+				request = new URLRequest(String(path));
+				_sound.load(request, new SoundLoaderContext(bufferTime));
+			}
 		}
 		
 		/**
@@ -628,7 +712,14 @@ package com.flexcapacitor.effects.sound {
 		 */
 		private function soundEventHandler(event:Event):void
 		{
-			dispatchEvent(event);
+			if (event is IOErrorEvent) {
+				ioErrorEvent = event as IOErrorEvent;
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
 		}
 	}
 }

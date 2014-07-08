@@ -21,6 +21,16 @@ package com.flexcapacitor.effects.popup {
 	[Event(name="close", type="flash.events.Event")]
 	
 	/**
+	 * Pop up close event when continue condition is met
+	 * */
+	[Event(name="continue", type="flash.events.Event")]
+	
+	/**
+	 * Pop up close event when cancel condition is met
+	 * */
+	[Event(name="cancel", type="flash.events.Event")]
+	
+	/**
 	 * Mouse down outside event
 	 * */
 	[Event(name="mouseDownOutside", type="flash.events.MouseEvent")]
@@ -84,6 +94,16 @@ protected function openpopup_closeHandler(event:Event):void {
 		 * Event name constant when pop up is closed
 		 * */
 		public static const CLOSE:String = "close";
+		
+		/**
+		 * Event name constant when pop up is closed and user cancels
+		 * */
+		public static const CANCEL_ACTION:String = "cancel";
+		
+		/**
+		 * Event name constant when pop up is closed and user continues
+		 * */
+		public static const CONTINUE_ACTION:String = "continue";
 		
 		/**
 		 * Event name constant when mouse down outside
@@ -198,26 +218,6 @@ protected function openpopup_closeHandler(event:Event):void {
 		public var parent:Sprite;
 		
 		/**
-		 * Effect that is played when mouse down outside
-		 * 
-		 * @see #closeOnMouseDownOutside
-		 * */
-		public var mouseDownOutsideEffect:IEffect;
-		
-		/**
-		 * Effect that is played when mouse down inside
-		 * 
-		 * @see #closeOnMouseDownInside
-		 * */
-		public var mouseDownInsideEffect:IEffect;
-		
-		/**
-		 * Effect that is played when the pop up is closed
-		 * 
-		 * */
-		public var closeEffect:IEffect;
-		
-		/**
 		 * If true then window is modal. 
 		 * */
 		public var isModal:Boolean = true;
@@ -256,11 +256,83 @@ protected function openpopup_closeHandler(event:Event):void {
 		public var closePreviousInstanceIfOpen:Boolean;
 		
 		/**
+		 * Indicates if close event has been dispatched yet.
+		 * */
+		public var dispatchedCloseEvent:Boolean;
+		
+		/**
 		 * Keeps a reference of the pop up 
 		 * 
 		 * @see #keepReference
 		 * */
 		[Bindable]
 		public var popUp:IFlexDisplayObject;
+		
+		/**
+		 * Name of property to check for additional action. Default is action. 
+		 * */
+		[Bindable]
+		public var actionPropertyName:String = "action";
+		
+		/**
+		 * Value of property to action variable contains to play the continue effect
+		 * */
+		[Bindable]
+		public var continueActionValue:String = CONTINUE_ACTION;
+		
+		/**
+		 * Value of property that action variable contains to play cancel effect
+		 * */
+		[Bindable]
+		public var cancelActionValue:String = CANCEL_ACTION;
+		
+		/**
+		 * If you want to stop playing effects on mouse down outside
+		 * */
+		public var endEffectsPlaying:Boolean;
+		
+		/**
+		 * Effect that is played when mouse down outside
+		 * 
+		 * @see #closeOnMouseDownOutside
+		 * */
+		public var mouseDownOutsideEffect:IEffect;
+		
+		/**
+		 * Effect that is played when mouse down inside
+		 * 
+		 * @see #closeOnMouseDownInside
+		 * */
+		public var mouseDownInsideEffect:IEffect;
+		
+		/**
+		 * Effect that is played when the pop up is closed
+		 * 
+		 * @see continueEffect
+		 * @see cancelEffect
+		 * */
+		public var closeEffect:IEffect;
+		
+		/**
+		 * Effect that is played when the pop up is closed but has a continue value.
+		 * 
+		 * @see action
+		 * @see continueActionValue
+		 * @see cancelActionValue
+		 * @see closeEffect
+		 * @see cancelEffect
+		 * */
+		public var continueEffect:IEffect;
+		
+		/**
+		 * Effect that is played when the pop up is closed but has a cancel value.
+		 * 
+		 * @see action
+		 * @see continueActionValue
+		 * @see cancelActionValue
+		 * @see closeEffect
+		 * @see cancelEffect
+		 * */
+		public var cancelEffect:IEffect;
 	}
 }

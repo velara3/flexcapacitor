@@ -71,13 +71,29 @@ package com.flexcapacitor.effects.core {
 		/**
 		 * Name of property to check for on the target. For example, if the target
 		 * is a BitmapImage you could check if "bitmapData" is set.
+		 * @see targetPropertyValueMayBeNull
+		 * @see targetSubPropertyName
 		 * */
 		public var targetPropertyName:String;
+		
+		/**
+		 * The property on the data object may be allowed to be null. 
+		 * For example, consider the case where the target is a list, 
+		 * the target property name is selectedItem and the sub property 
+		 * to check is "name". If the list does not have a selectedItem
+		 * then we would throw an error. If this property is set to 
+		 * true then we don't throw an error and conclude the property is not set. 
+		 * @see targetPropertyValueMayBeNull
+		 * @see targetSubPropertyName
+		 * */
+		public var targetPropertyValueMayBeNull:Boolean;
 		
 		/**
 		 * Name of a sub property to check for on the target. 
 		 * For example, if the target is a BitmapImage and the target propertyName 
 		 * is "bitmapData" then a subProperty could be "rect".
+		 * @see targetPropertyValueMayBeNull
+		 * @see targetPropertyName
 		 * */
 		public var targetSubPropertyName:String;
 		
@@ -95,12 +111,6 @@ package com.flexcapacitor.effects.core {
 		 * Effect that is played if the property is set.
 		 * */
 		public var propertySetEffect:Effect;
-		
-		/**
-		 * If this property is true and if the property on the target 
-		 * is NOT set then this will cancel out of the sequence.
-		 * */
-		public var cancelIfNotSet:Boolean;
 		
 	}
 }

@@ -108,8 +108,9 @@ package com.flexcapacitor.utils
 		 * For example, replaces double quote with "&quot;"
 		 * */
 		public static function getAttributeSafeString(value:String = ""):String {
-			var outputValue:String = value.replace(/"/g, "&quot;");
+			var outputValue:String = value;
 			outputValue = outputValue.replace(/&(?!amp;)/g, "&amp;");
+			outputValue = outputValue.replace(/"/g, "&quot;");
 			outputValue = outputValue.replace(/</g, "&lt;");
 			outputValue = outputValue.replace(/>/g, "&gt;");
 			return outputValue;

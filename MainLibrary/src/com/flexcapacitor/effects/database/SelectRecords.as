@@ -227,6 +227,7 @@ selecting records from it
 		
 		/**
 		 * @copy flash.data.SQLResult#data
+		 * @see dataType
 		 * */
 		[Bindable]
 		public var data:Array;

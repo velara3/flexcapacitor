@@ -61,13 +61,18 @@ package com.flexcapacitor.effects.database.supportClasses {
 			var tableName:String = action.tableName;
 			var fields:Vector.<SQLColumnData> = action.fields;
 			var filterFields:Vector.<SQLColumnFilter> = action.filterFields;
+			var data:Object = action.data;
+			var primaryKey:String = action.primaryKey;
+			var idPropertyName:String = action.idPropertyName;
 			var statement:SQLStatement;
 			var request:String;
 			var field:SQLColumnData;
 			var filterField:SQLColumnFilter;
 			var fieldsLength:int;
+			var filtersLength:int;
 			var successful:Boolean;
 			var parameters:Object;
+			var keyValue:String;
 			var alias:String;
 			
 			///////////////////////////////////////////////////////////
@@ -80,6 +85,9 @@ package com.flexcapacitor.effects.database.supportClasses {
 				}
 				if (!tableName) {
 					dispatchErrorEvent("A table name must be specified");
+				}
+				if (!data) {
+					dispatchErrorEvent("No data is available to update");
 				}
 			}
 			
@@ -102,24 +110,28 @@ package com.flexcapacitor.effects.database.supportClasses {
 				field = fields[i];
 				alias = ":" + field.name;
 				request += field.name + "=" + alias;
-				parameters[alias] = field.value;
-			}
-			
-			fieldsLength = filterFields ? filterFields.length : 0;
-			
-			// where clause
-			if (fieldsLength>0) {
-				request += " WHERE ";
 				
-				// get column name and value
-				for (i=0;i<fieldsLength;i++) {
-					if (i>0) request += ",";
-					field = filterFields[i];
-					alias = ":" + field.name;
-					request += field.name + "=" + alias;
+				if (field.getValueFromData) {
+					parameters[alias] = data[field.name];
+				}
+				else {
 					parameters[alias] = field.value;
 				}
 			}
+			
+			// try and guess
+			//if (fieldsLength && data) {
+				
+			//}
+			
+			filtersLength = filterFields ? filterFields.length : 0;
+			
+			// where clause
+			request += " WHERE ";
+			keyValue = data[primaryKey];
+			alias = ":" + primaryKey;
+			request += primaryKey + "=" + alias;
+			parameters[alias] = keyValue;
 			
 			
 			// sql statement
@@ -151,7 +163,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			// success
 			if (successful) {
 				
-				if (hasEventListener(UpdateRecord.SUCCESS)) {
+				if (action.hasEventListener(UpdateRecord.SUCCESS)) {
 					dispatchActionEvent(new Event(UpdateRecord.SUCCESS));
 				}
 				
@@ -162,7 +174,7 @@ package com.flexcapacitor.effects.database.supportClasses {
 			else {
 				
 				// fault
-				if (hasEventListener(UpdateRecord.FAULT)) {
+				if (action.hasEventListener(UpdateRecord.FAULT)) {
 					dispatchActionEvent(new Event(UpdateRecord.FAULT));
 				}
 				

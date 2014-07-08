@@ -11,6 +11,7 @@
 
 package com.flexcapacitor.effects.sound.supportClasses {
 	
+	import com.flexcapacitor.effects.clipboard.CopyToClipboard;
 	import com.flexcapacitor.effects.sound.PlaySound;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
@@ -20,6 +21,7 @@ package com.flexcapacitor.effects.sound.supportClasses {
 	import flash.media.SoundChannel;
 	import flash.media.SoundTransform;
 	import flash.utils.Timer;
+	import flash.utils.getTimer;
 	
 	import mx.core.mx_internal;
 	import mx.effects.Tween;
@@ -129,7 +131,7 @@ package com.flexcapacitor.effects.sound.supportClasses {
 		 */
 		private function get totalDuration():Number
 		{
-			if (useDuration)
+			if (playForSpecifiedDuration)
 			{
 				return duration;
 			}
@@ -375,7 +377,7 @@ package com.flexcapacitor.effects.sound.supportClasses {
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public var useDuration:Boolean = true;
+		public var playForSpecifiedDuration:Boolean = true;
 		
 		//----------------------------------
 		//  volumeEasingFunction
@@ -439,11 +441,16 @@ package com.flexcapacitor.effects.sound.supportClasses {
 		override public function play():void { 
 			var action:PlaySound = PlaySound(effect);
 			var actionSource:Object = action.source;
+			var stopPlayingSounds:Boolean = action.stopPlayingSounds;
 			var transform:SoundTransform;
 			var timer:Timer;
 			
 			// source was reassigned - reload
 			if (actionSource!=source) {
+				
+				if (stopPlayingSounds && soundChannel) {
+					soundChannel.stop();
+				}
 				action.reinitializeInstance(this);
 			}
 			
@@ -453,6 +460,12 @@ package com.flexcapacitor.effects.sound.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
 			///////////////////////////////////////////////////////////
+			
+			// an error occured when loading the sound - usually the URL is incorrect
+			if (action.ioErrorEvent && action.errorEffect) {
+				playEffect(action.errorEffect);
+				finish();
+			}
 			
 			// sound is not loaded so exit - handle differently?
 			if (!sound) {
@@ -509,7 +522,7 @@ package com.flexcapacitor.effects.sound.supportClasses {
 			
 			endOnTweens = (tweenCount > 0);
 			
-			if (useDuration && !endOnTweens) {
+			if (playForSpecifiedDuration && !endOnTweens) {
 				timer = new Timer(totalDuration, 1);
 				timer.addEventListener(TimerEvent.TIMER, durationEndHandler);
 				timer.start();
@@ -520,10 +533,24 @@ package com.flexcapacitor.effects.sound.supportClasses {
 			
 			// ArgumentError: Error #2068: Invalid sound.
 			// at flash.media::Sound/play()
-			_soundChannel = sound.play(startTime, loops, transform);
+			try {
+				_soundChannel = sound.play(startTime, loops, transform);
+			}
+			catch (e:Error) {
+				
+				action.argumentError = e as ArgumentError;
+				
+				if (action.errorEffect) {
+					playEffect(action.errorEffect);
+				}
+				
+				if (action.hasEventListener(PlaySound.ARGUMENT_ERROR)) {
+					dispatchActionEvent(new Event(PlaySound.ARGUMENT_ERROR));
+				}
+			}
 			
 			if (soundChannel) {
-				soundChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+				soundChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler, false, 0, true);
 			}
 			
 			///////////////////////////////////////////////////////////
@@ -531,7 +558,7 @@ package com.flexcapacitor.effects.sound.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			// wait for sound complete handler
-			if (!useDuration) {
+			if (!playForSpecifiedDuration) {
 				waitForHandlers();
 			}
 			
@@ -595,7 +622,7 @@ package com.flexcapacitor.effects.sound.supportClasses {
 			if (sound) {
 				_soundChannel = sound.play(resumedPosition, loops, pausedTransform);
 				if (soundChannel) {
-					soundChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler);
+					soundChannel.addEventListener(Event.SOUND_COMPLETE, soundCompleteHandler, false, 0, true);
 				}
 			}
 		}
@@ -717,13 +744,33 @@ package com.flexcapacitor.effects.sound.supportClasses {
 		 *  @private
 		 */
 		private function soundCompleteHandler(event:Event):void {
-			dispatchEvent(event);
+			var action:PlaySound = PlaySound(effect);
+			
+			
+			///////////////////////////////////////////////////////////
+			// Continue with action
+			///////////////////////////////////////////////////////////
+			
+			if (action.soundCompleteEffect) {
+				playEffect(action.soundCompleteEffect);
+			}
+			
+			if (action.hasEventListener(PlaySound.SOUND_COMPLETE)) {
+				dispatchActionEvent(event);
+			}
+					
+			///////////////////////////////////////////////////////////
+			// Finish the effect
+			///////////////////////////////////////////////////////////
 			
 			// We don't have any tweens, so we need to explicitly 
 			// tell the effect that we are finished.
-			if (!useDuration && !endOnTweens) {
+			if (!playForSpecifiedDuration && !endOnTweens) {
 				finishTween();
 			}
+			
+			
+			//finish();
 		}
 		
 	}

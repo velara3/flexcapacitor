@@ -6,6 +6,7 @@ package com.flexcapacitor.effects.file {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.display.DisplayObjectContainer;
+	import flash.events.Event;
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;
 	import flash.utils.ByteArray;
@@ -24,10 +25,15 @@ package com.flexcapacitor.effects.file {
 	 * */
 	[Event(name="cancel", type="flash.events.Event")]
 	
+	/**
+	 * Dispatched on a file browse error event
+	 * */
+	[Event(name="error", type="flash.events.Event")]
+	
 	
 	/**
 	 * Opens a browse for file dialog to select files. 
-	 * This does NOT load the file it only selects it. 
+	 * In the browser this effect does NOT load the file it only selects it. 
 	 * You must use the LoadFile to load the file.
 	 * 
 	 * The selection effect or multiple selection effect is run 
@@ -75,6 +81,7 @@ package com.flexcapacitor.effects.file {
 		// file reference event names
 		public static const SELECT:String 		= "select";
 		public static const CANCEL:String 		= "cancel";
+		public static const ERROR:String 		= "error";
 		
 		/**
 		 *  Constructor.
@@ -149,16 +156,10 @@ package com.flexcapacitor.effects.file {
 		public var fileList:Array;
 		
 		/**
-		 * Browse for folder rather than file. 
+		 * Browse for folder rather than file. Not supported in the browser. 
 		 * */
 		[Bindable]
 		public var browseForFolder:Boolean;
-		
-		/**
-		 * Title when using browse for folder . 
-		 * */
-		[Bindable]
-		public var browseForFolderTitle:String = "Select Directory";
 		
 		/**
 		 * An ancestor of the display object generating the click event. You can most likely 
@@ -215,6 +216,11 @@ package com.flexcapacitor.effects.file {
 		 * */
 		public var cancelEffect:IEffect;
 		
+		/**
+		 * Effect played on the file browse error
+		 * */
+		public var errorEffect:IEffect;
+		
 		//---------------------------------------------
 		// 
 		// File results
@@ -222,11 +228,52 @@ package com.flexcapacitor.effects.file {
 		//---------------------------------------------
 		
 		/**
-		 * If cancel is pressed on the browser dialog then cancel 
-		 * out of an effect sequence (if part of one).
-		 * Deprecated
+		 * On the desktop, File instances can be created which provide more information. 
+		 * Set this to true to use FileReferences rather than Files. 
 		 * */
-		public var cancelOnDismiss:Boolean = true;
+		public var useFileReferences:Boolean;
+		
+		/**
+		 * Reference to the File class
+		 * */
+		public var FileClass:Class;
+		
+		/**
+		 * Indicates if the File class was found in the current domain.
+		 * */
+		public var fileClassFound:Boolean;
+		
+		/**
+		 * When set to true no error is thrown when browse for folder is not supported.
+		 * Browse for folder is not supported in the browser.
+		 *  
+		 * @see browseForFolder
+		 * */
+		public var ignoreBrowseForFolderError:Boolean;
+		
+		/**
+		 * File. Not available in the browser. 
+		 * */
+		[Bindable]
+		public var file:Object;
+		
+		/**
+		 * Title for browse window dialog. Not supported in the browser.
+		 * */
+		[Bindable]
+		public var title:String = "Browse";
+		
+		/**
+		 * Reference to error when using attempting to open browse dialog. 
+		 * */
+		[Bindable]
+		public var error:Error;
+		
+		/**
+		 * Reference to error event when using attempting to open browse dialog. 
+		 * */
+		[Bindable]
+		public var errorEvent:Event;
 		
 		/**
 		 * Name of selected file

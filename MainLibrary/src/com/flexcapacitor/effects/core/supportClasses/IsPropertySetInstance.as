@@ -63,6 +63,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			var propertyName:String = action.targetPropertyName;
 			var subPropertyName:String = action.targetSubPropertyName;
 			var emptyStringsAreNull:Boolean = action.emptyStringsAreNull;
+			var propertyValueMayBeNull:Boolean = action.targetPropertyValueMayBeNull;
 			var propertySet:Boolean;
 			var value:Object;
 			var subValue:Object;
@@ -89,28 +90,39 @@ package com.flexcapacitor.effects.core.supportClasses {
 				value = target[propertyName];// "data" is the default property
 				
 				// if value is set and sub property exists
-				if (value && subPropertyName in value) {
-					subValue = value[subPropertyName];
-					
-					if (subValue is Number) {
-						if (isNaN(Number(subValue))) {
+				if (value) {
+					if (subPropertyName in value) {
+						subValue = value[subPropertyName];
+						
+						if (subValue is Number) {
+							if (isNaN(Number(subValue))) {
+								propertySet = false;
+							}
+							else {
+								propertySet = true;
+							}
+						}
+						else if (subValue==null ||
+								(subValue=="" && emptyStringsAreNull)) {
+							
 							propertySet = false;
 						}
 						else {
 							propertySet = true;
 						}
-					}
-					else if (subValue==null ||
-							(subValue=="" && emptyStringsAreNull)) {
 						
-						propertySet = false;
 					}
 					else {
-						propertySet = true;
+						dispatchErrorEvent("The sub property " + subPropertyName + " is not on the " + propertyName + " object");
 					}
 				}
 				else {
-					dispatchErrorEvent("The sub property " + subPropertyName + " is not on the " + propertyName + " object");
+					if (propertyValueMayBeNull) {
+						propertySet = false;
+					}
+					else {
+						dispatchErrorEvent("The property " + propertyName + " may not be null. To change this behavior see targetPropertyValueMayBeNull");
+					}
 				}
 			}
 			else {

@@ -63,14 +63,9 @@ package com.flexcapacitor.effects.list {
 		}
 		
 		/**
-		 * Effect that is played if there is a selected item.
+		 * Validate list before selection
 		 * */
-		public var itemSelectedEffect:Effect;
-		
-		/**
-		 * Effect that is played if there is no selected item.
-		 * */
-		public var noItemsEffect:Effect;
+		public var validateBeforeSelection:Boolean;
 		
 		/**
 		 * The reference to the selected item. 
@@ -88,6 +83,16 @@ package com.flexcapacitor.effects.list {
 		 * When true does not throw an error if the data provider of the list is null.
 		 * */
 		public var allowNullDataProvider:Boolean = true;
+		
+		/**
+		 * Effect that is played if there is a selected item.
+		 * */
+		public var itemSelectedEffect:Effect;
+		
+		/**
+		 * Effect that is played if there is no selected item.
+		 * */
+		public var noItemsEffect:Effect;
 		
 	}
 }
