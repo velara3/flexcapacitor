@@ -3,7 +3,7 @@ Flex Capacitor Library
 
 A library of resources for Flex projects (beta).
 
-==A library of resources for Flex projects^beta^==
+==A library of resources for Flex projects^beta^== <br/>
 This library contains Flex controls, classes and utilities. The main feature of this library are the action effects classes (work in progress). Their goal is to take common Flex and AS3 code and wrap it up into an an abstract reusable class and apply it in MXML. In other environments these have been similar to or known as contracts, interactions, behaviors, commands, tasks and so on ([http://www.flexcapacitor.com/examples/LibraryExamples/examples demo]).<br/>
 
 ===Contents===<br/>
@@ -36,6 +36,7 @@ http://www.judahfrangipane.com/examples/uigraphics<br/>
 The action effects are the main attraction here. A few lines of MXML code can replace millions of lines of code (ed. - it's all relative). Below is example code for sorting and filtering an array collection:<br/>
 
 {{{
+      
      <fx:Declarations>
     
         <!-- SORT BY NAME -->
