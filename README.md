@@ -6,7 +6,7 @@ A library of resources for Flex projects (beta).
 ==A library of resources for Flex projects^beta^==
 This library contains Flex controls, classes and utilities. The main feature of this library are the action effects classes (work in progress). Their goal is to take common Flex and AS3 code and wrap it up into an an abstract reusable class and apply it in MXML. In other environments these have been similar to or known as contracts, interactions, behaviors, commands, tasks and so on ([http://www.flexcapacitor.com/examples/LibraryExamples/examples demo]).<br/>
 
-===Contents===
+===Contents===<br/>
   * Webview - composes the StageWebView in a UIComponent 
   * Minimal Scroller - adds MacOSX style scroll bars
   * Mini Inspector - helps designers and developers design and develop and debug at runtime
@@ -15,7 +15,7 @@ This library contains Flex controls, classes and utilities. The main feature of 
   * Action Effects - common behaviors applied in MXML allowing synchronous behavior on asynchronous objects.<br/>
 
 
-===Libraries===
+===Libraries===<br/>
 There's two libraries, one general and one mobile. There are example projects for each (well, the general one so far). <br/>
 
 *Main Library*<br/>
@@ -32,11 +32,11 @@ http://www.flexcapacitor.com/examples/LibraryExamples<br/>
 http://www.judahfrangipane.com/examples/uigraphics<br/>
 <br/>
 
-===Action Effects===
+===Action Effects===<br/>
 The action effects are the main attraction here. A few lines of MXML code can replace millions of lines of code (ed. - it's all relative). Below is example code for sorting and filtering an array collection:<br/>
 
 {{{
-    <fx:Declarations>
+     <fx:Declarations>
     
         <!-- SORT BY NAME -->
         <handlers:EventHandler eventName="creationComplete" >
@@ -62,12 +62,12 @@ The action effects are the main attraction here. A few lines of MXML code can re
 In the code above the array collection is sorted on creation complete of the document. The array collection is filtered when the user types text into the search text input. The code above uses the EventHandler class to add event handlers via MXML and run the sequence of actions it contains. A live example is shown on the examples page.<br/>
 
 
-===Action Effects Examples===
+===Action Effects Examples=== <br/>
 Here are some initial examples including sorting, filtering, browsing for files and loading files. Right click to view source. 
 [http://www.flexcapacitor.com/examples/LibraryExamples/ Action Effects Examples]<br/>
 
 
-===Action Effects Benefits===
+===Action Effects Benefits=== <br/>
   * Easy to read and apply - Easy to write MXML (XML) and set options easily. Same benefits as other MXML components and classes.
   * Less typing - You don't have to type the same things you type all the time.
   * Less error prone - Parameters and options are set through typed properties preventing incorrect values. Code is written once, not every time. Only the options change. 
