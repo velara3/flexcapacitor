@@ -89,7 +89,7 @@ package com.flexcapacitor.utils
 		 * right before submitting the form
 		 **/
 		public function setFormValues(username:String, password:String):Boolean {
-			var results:Boolean = ExternalInterface.call("setFormValues", username, password);
+			var results:Boolean = ExternalInterface.call("StoreLogin.setFormValues", username, password);
 			return results;
 		}
 		
@@ -97,7 +97,7 @@ package com.flexcapacitor.utils
 		 * Clears the form
 		 **/
 		public function clearFormValues():Boolean {
-			var results:Boolean = ExternalInterface.call("clearFormValues");
+			var results:Boolean = ExternalInterface.call("StoreLogin.clearFormValues");
 			return results;
 		}
 		
@@ -105,7 +105,7 @@ package com.flexcapacitor.utils
 		 * Gets the username and password or empty array if not set
 		 **/
 		public function getFormValues():Array {
-			var results:Array = ExternalInterface.call("getFormValues");
+			var results:Array = ExternalInterface.call("StoreLogin.getFormValues");
 			return results;
 		}
 		
@@ -113,7 +113,7 @@ package com.flexcapacitor.utils
 		 * Gets the username or null if not set
 		 **/
 		public function getUsername():String {
-			var value:String = ExternalInterface.call("getUsername");
+			var value:String = ExternalInterface.call("StoreLogin.getUsername");
 			return value;
 		}
 		
@@ -121,7 +121,7 @@ package com.flexcapacitor.utils
 		 * Gets the password value or null if not set
 		 **/
 		public function getPassword():String {
-			var value:String = ExternalInterface.call("getPassword");
+			var value:String = ExternalInterface.call("StoreLogin.getPassword");
 			return value;
 		}
 		
@@ -130,7 +130,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function isUsernameSet():Boolean
 		{
-			var value:String = ExternalInterface.call("getUsername");
+			var value:String = ExternalInterface.call("StoreLogin.getUsername");
 			return value!=null && value!="";
 		}
 		
@@ -139,7 +139,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function isPasswordSet():Boolean
 		{
-			var value:String = ExternalInterface.call("getPassword");
+			var value:String = ExternalInterface.call("StoreLogin.getPassword");
 			return value!=null && value!="";
 		}
 		
@@ -149,7 +149,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function submitForm():Boolean
 		{
-			var value:String = ExternalInterface.call("submitForm", FORM_ID);
+			var value:String = ExternalInterface.call("StoreLogin.submitForm", FORM_ID);
 			return value!=null;
 		}
 		
@@ -158,7 +158,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function showForm():Boolean
 		{
-			var value:String = ExternalInterface.call("showForm", FORM_ID);
+			var value:String = ExternalInterface.call("StoreLogin.showForm", FORM_ID);
 			return value!=null;
 		}
 		
@@ -167,7 +167,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function hideForm():Boolean
 		{
-			var value:String = ExternalInterface.call("hideForm", FORM_ID);
+			var value:String = ExternalInterface.call("StoreLogin.hideForm", FORM_ID);
 			return value!=null;
 		}
 		
@@ -176,7 +176,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function invokeSavePasswordPrompt():String
 		{
-			var value:String = ExternalInterface.call("submitForm", FORM_ID);
+			var value:String = ExternalInterface.call("StoreLogin.submitForm", FORM_ID);
 			return value;
 		}
 		
@@ -187,7 +187,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function checkForPassword(username:String = ""):String
 		{
-			var value:String = ExternalInterface.call("checkForPassword", username);
+			var value:String = ExternalInterface.call("StoreLogin.checkForPassword", username);
 			return value;
 		}
 		
@@ -200,7 +200,7 @@ package com.flexcapacitor.utils
 		public function setFocusOnFlash():Boolean
 		{
 			clearTimeout(timeout);
-			var value:Boolean = ExternalInterface.call("setFocusOnFlash", ExternalInterface.objectID);
+			var value:Boolean = ExternalInterface.call("StoreLogin.setFocusOnFlash", ExternalInterface.objectID);
 			return value;
 		}
 		
@@ -224,7 +224,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function insertForm():Boolean
 		{
-			var value:Boolean = ExternalInterface.call("insertForm");
+			var value:Boolean = ExternalInterface.call("StoreLogin.insertForm");
 			return value;
 		}
 		
@@ -272,7 +272,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function confirmScriptWritten():Boolean
 		{
-			var value:Boolean = ExternalInterface.call("scriptConfirmation");
+			var value:Boolean = ExternalInterface.call("StoreLogin.scriptConfirmation");
 			return value;
 		}
 		
@@ -281,7 +281,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function confirmFormExists():Boolean
 		{
-			var value:Boolean = ExternalInterface.call("formExists", FORM_ID);
+			var value:Boolean = ExternalInterface.call("StoreLogin.formExists", FORM_ID);
 			return value;
 		}
 		
@@ -293,7 +293,7 @@ package com.flexcapacitor.utils
 		 **/
 		public function resizeApplication(value:String = "75%"):Boolean
 		{
-			var result:Boolean = ExternalInterface.call("resizeApplication", ExternalInterface.objectID, value);
+			var result:Boolean = ExternalInterface.call("StoreLogin.resizeApplication", ExternalInterface.objectID, value);
 			return result;
 		}
 		
@@ -316,151 +316,152 @@ package com.flexcapacitor.utils
 		 * http://www.dustindiaz.com/add-remove-elements-reprise/
 		 * */
 		public static var savePasswordScript:XML = <root><![CDATA[
-				var DocumentManager = {
-					get: function(el) {
-						if (typeof el === 'string') {
-							return document.getElementById(el);
-						} else {
-							return el;
-						}
-					},
-					add: function(el, dest) {
-						var el = this.get(el);
-						var dest = this.get(dest);
-						if (!dest) dest = document.body;
-						dest.appendChild(el);
-					},
-					remove: function(el) {
-						var el = this.get(el);
-						el.parentNode.removeChild(el);
-					}
-				};
-			
-				var EventManager = {
-					add: function() {
-						if (window.addEventListener) {
-							return function(el, type, fn) {
-								DocumentManager.get(el).addEventListener(type, fn, false);
-							};
-						} else if (window.attachEvent) {
-							return function(el, type, fn) {
-								var f = function() {
-									fn.call(DocumentManager.get(el), window.event);
-								};
-								DocumentManager.get(el).attachEvent('on' + type, f);
-							};
-						}
-					}()
-				};
-			
-				function resizeApplication(id, value) {
-					var el = DocumentManager.get(id);
-					el.style.height = value;
-					return true;
-				}
-				
-				function insertForm(id) {
-					var form 		= document.createElement('form');
-					var textinput 	= document.createElement('input');
-					var password 	= document.createElement('input');
-			
-					form.id 		= id;
-					textinput.id 	= "username";
-					password.id 	= "password";
-					password.type 	= "password";
-			
-					form.appendChild(textinput);
-					form.appendChild(password);
-					DocumentManager.add(form);
-			
-					return true;
-				}
-				
-				function setFormValues(username, password) {
-					var usernameInput = DocumentManager.get('username');
-					var passwordInput = DocumentManager.get('password');
-					usernameInput.value = username;
-					passwordInput.value = password;
-					return true;
-				}
-				
-				function getFormValues() {
-					var usernameInput = DocumentManager.get('username');
-					var passwordInput = DocumentManager.get('password');
-					return [usernameInput.value, passwordInput.value];
-				}
-				
-				function clearFormValues() {
-					var usernameInput = DocumentManager.get('username');
-					var passwordInput = DocumentManager.get('password');
-					usernameInput.value = "";
-					passwordInput.value = "";
-					return true;
-				}
-			
-				function getUsername() {
-					var usernameInput = DocumentManager.get('username');
-					return usernameInput.value;
-				}
-				
-				function getPassword() {
-					var passwordInput = DocumentManager.get('password');
-					return passwordInput.value;
-				}
-				
-				function submitForm(id) {
-					var form = DocumentManager.get(id);
-					form.submit();
-					form.submit();// chrome
-					return true;
-				}
-			
-				function noDirectLogin(){
-					return false;
-				}
+var StoreLogin = {
 
-				function checkForPassword(username) {
-					var usernameInput = DocumentManager.get('username');
-					var passwordInput = DocumentManager.get('password');
-					usernameInput.value = username;
-					if (username!="") {
-						usernameInput.focus();
-						usernameInput.blur();
-					}
-					else {
-						passwordInput.value = "";
-					}
-					//passwordInput.focus();
-					return passwordInput.value;
-				}
-				
-				function setFocusOnFlash(id) {
-					var application = DocumentManager.get(id);
-					application.tabIndex = 0;
-					application.focus();
-					return true;
-				}
-			
-				function formExists(id) {
-					var form = DocumentManager.get(id);
-					return form!=null;
-				}
-				
-				function showForm(id) {
-					var form = DocumentManager.get(id);
-					form.style.display = "block";
-					return true;
-				}
-				
-				function hideForm(id) {
-					var form = DocumentManager.get(id);
-					form.style.display = "none";
-					return true;
-				}
-			
-				function scriptConfirmation() {
-					return true;
-				}
+	getElement: function(element) {
+		if (typeof element === 'string') {
+			return document.getElementById(element);
+		} else {
+			return element;
+		}
+	},
+	
+	addElement: function(element, target) {
+		var element = this.getElement(element);
+		var target = this.getElement(target);
+		if (!target) { target = document.body; }
+		target.appendChild(element);
+	},
+	
+	removeElement: function(element) {
+		var element = this.getElement(element);
+		element.parentNode.removeChild(element);
+	},
+	
+	addListener: function() {
+		if (window.addEventListener) {
+			return function(element, type, handler) {
+				this.getElement(element).addEventListener(type, handler, false);
+			};
+		} else if (window.attachEvent) {
+			return function(element, type, listener) {
+				var handler = function() {
+					listener.call(this.getElement(element), window.event);
+				};
+				this.getElement(element).attachEvent('on' + type, handler);
+			};
+		}
+	}(),
+
+	resizeApplication: function(id, value) {
+		var element = this.getElement(id);
+		element.style.height = value;
+		return true;
+	},
+
+	insertForm: function(id) {
+		var form 		= document.createElement('form');
+		var textinput 	= document.createElement('input');
+		var password 	= document.createElement('input');
+
+		form.id 		= id;
+		textinput.id 	= "username";
+		password.id 	= "password";
+		password.type 	= "password";
+
+		form.appendChild(textinput);
+		form.appendChild(password);
+		this.addElement(form);
+
+		return true;
+	},
+
+	setFormValues: function(username, password) {
+		var usernameInput = this.getElement('username');
+		var passwordInput = this.getElement('password');
+		usernameInput.value = username;
+		passwordInput.value = password;
+		return true;
+	},
+
+	getFormValues: function() {
+		var usernameInput = this.getElement('username');
+		var passwordInput = this.getElement('password');
+		return [usernameInput.value, passwordInput.value];
+	},
+
+	clearFormValues: function() {
+		var usernameInput = this.getElement('username');
+		var passwordInput = this.getElement('password');
+		usernameInput.value = "";
+		passwordInput.value = "";
+		return true;
+	},
+
+	getUsername: function() {
+		var usernameInput = this.getElement('username');
+		return usernameInput.value;
+	},
+
+	getPassword: function() {
+		var passwordInput = this.getElement('password');
+		return passwordInput.value;
+	},
+
+	submitForm: function(id) {
+		var form = this.getElement(id);
+		form.submit();
+		form.submit();// chrome required two submits before prompt
+		return true;
+	},
+
+	noDirectLogin: function() {
+		return false;
+	},
+
+	checkForPassword: function(username) {
+		var usernameInput = this.getElement('username');
+		var passwordInput = this.getElement('password');
+		usernameInput.value = username;
+		if (username!="") {
+			usernameInput.focus();
+			usernameInput.blur();
+		}
+		else {
+			passwordInput.value = "";
+		}
+		return passwordInput.value;
+	},
+
+	setFocusOnFlash: function(id) {
+		var application = this.getElement(id);
+		application.tabIndex = 0;
+		application.focus();
+		return true;
+	},
+
+	formExists: function(id) {
+		var form = this.getElement(id);
+		return form!=null;
+	},
+
+	showForm: function(id) {
+		var form = this.getElement(id);
+		form.style.display = "block";
+		return true;
+	},
+
+	hideForm: function(id) {
+		var form = this.getElement(id);
+		form.style.display = "none";
+		return true;
+	},
+
+	scriptConfirmation: function() {
+		return true;
+	}
+};
+
 				]]></root>;
 		
 	}

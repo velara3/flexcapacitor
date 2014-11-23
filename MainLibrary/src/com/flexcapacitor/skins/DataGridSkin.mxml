@@ -27,6 +27,7 @@ Works with the com.flexcapacitor.controls.DataGrid class.
  - Added columnSeparatorWeight
  - Added headerBackgroundColor
  - Added headerRowSeparatorColor
+ - Added headerRowSeparatorAlpha
  - Added rowSeparatorAlpha
  - Added rowSeparatorColor
  - Added rowSeparatorWeight
@@ -454,7 +455,9 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
 				
                 <!--<s:Line id="headerSeparator">-->
                     <s:stroke>
-                        <s:SolidColorStroke color="{getStyle('headerRowSeparatorColor')}" weight="1" caps="square"/>
+                        <s:SolidColorStroke color="{getStyle('headerRowSeparatorColor')}" 
+											weight="1" caps="square"
+											alpha="{getStyle('headerRowSeparatorAlpha')}"/>
                         <!--<s:SolidColorStroke color="0x696969" weight="1" caps="square"/>-->
                     </s:stroke>
                 </s:Line>

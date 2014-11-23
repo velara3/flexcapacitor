@@ -33,6 +33,7 @@ controls|DataGrid {
 	columnSeparatorWeight: 1;
 	headerBackgroundColor: #D8D8D8;
 	headerRowSeparatorColor: #696969;
+	headerRowSeparatorAlpha: 1;
 	rowSeparatorAlpha: 1;
 	rowSeparatorColor: #E6E6E6;
 	rowSeparatorWeight: 1;

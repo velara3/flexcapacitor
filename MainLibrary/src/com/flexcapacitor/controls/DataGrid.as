@@ -38,6 +38,11 @@ package com.flexcapacitor.controls
 	[Style(name="headerRowSeparatorColor", inherit="no", type="uint", format="Color")]
 	
 	/**
+	 * Sets the alpha on the header row separator
+	 * */
+	[Style(name="headerRowSeparatorAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
+	
+	/**
 	 * Vertical column separator color
 	 * */
 	[Style(name="columnSeparatorColor", inherit="no", type="uint", format="Color")]
@@ -94,9 +99,10 @@ package com.flexcapacitor.controls
 	 *    <strong>Styles</strong>
 	 *    columnSeparatorAlpha="0x0099FF"
 	 *    columnSeparatorColor="useDominantBaseline"
-	 *    columnSeparatorWeight=""
+	 *    columnSeparatorWeight="1"
 	 *    headerBackgroundColor="1.0"
 	 *    headerRowSeparatorColor="0xFFFFFF"
+	 *    headerRowSeparatorAlpha="1"
 	 *    rowSeparatorAlpha="0.0"
 	 *    rowSeparatorColor="TB"
 	 *    rowSeparatorWeight="auto"
