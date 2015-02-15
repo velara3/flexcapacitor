@@ -51,20 +51,56 @@ package com.flexcapacitor.effects.nativeProcess {
 	/**
 	 * Runs a process on the system. Runs on desktop with extendedDesktop profile.<br/><br/>
 	 * 
-	 * COMMON COMMANDS<br/>
+	 * Be sure to add "extendedDesktop" to the supported profiles tag in the application descriptor file like so:
+	 * 
+	 * <pre>
+	 * &lt;supportedProfiles&gt;extendedDesktop desktop&lt;/supportedProfiles&gt;
+	 * </pre>
+	 * 
+	 * <b>The following example runs a script that starts the screen saver:</b> 
+<pre>
+&lt;nativeProcess:RunProcess id="runProcess"
+	  executablePath="/usr/bin/osascript"
+	  arguments="StartScreenSaver.scpt"
+	  standardOutputData="trace('StandardOutput:' + runProcess.outputData)"
+	  standardErrorData="trace('Error Data:' + runProcess.errorData)"
+	  standardErrorIOError="trace('Error IO Error:' + event.toString())"
+	  standardOutputIOError="trace('Output IO Error:' + event.toString())"
+	  exit="trace('Process exited with: ' + event.exitCode)">
+	&lt;nativeProcess:notSupportedEffect>
+		&lt;status:ShowStatusMessage message="Native process not supported"/>
+	&lt;/nativeProcess:notSupportedEffect>
+	&lt;nativeProcess:processNotFoundEffect>
+		&lt;status:ShowStatusMessage message="Process not found"/>
+	&lt;/nativeProcess:processNotFoundEffect>
+	&lt;nativeProcess:processFoundEffect>
+		&lt;status:ShowStatusMessage message="Process found"/>
+	&lt;/nativeProcess:processFoundEffect>
+&lt;/nativeProcess:RunProcess>
+</pre>
+ * 
+ * StartScreenSaver.scpt (file is located in the application directory): 
+<pre>
+tell application "System Events" 
+	start current screen saver
+end tell
+</pre>
+	 * 
+	 * <b>COMMON EXECUTABLES:</b><br/>
 	 * OSAScript - used for running applescript scpt scripts on Mac. Path is /usr/bin/osascript.<br/>
 	 * Ditto - used to copy files to another directory. Path is /usr/bin/ditto. <br/><br/>
 	 * 
-	 * ERROR<br/>
+	 * <b>ERROR</b><br/>
 	 * Error: Error #3219: The NativeProcess could not be started. 'Not supported in current profile.'<br/>
+	 * The Native Process is not supported on this platform. You may need to add extendedDesktop option to your application profile.<br/><br/>
 	 * 
-	 * SOLUTION<br/>
-	 * Add 	<supportedProfiles>extendedDesktop desktop</supportedProfiles> to the application descriptor file<br/><br/>
+	 * <b>SOLUTION</b><br/>
+	 * Add <supportedProfiles>extendedDesktop desktop</supportedProfiles> to the application descriptor file<br/><br/>
 	 * 
-	 * ERROR<br/>
+	 * <b>ERROR</b><br/>
 	 * ArgumentError: Error #3214: NativeProcessStartupInfo.executable does not specify a valid executable file.<br/><br/>
 	 * 
-	 * SOLUTION<br/>
+	 * <b>SOLUTION</b><br/>
 	 * Path to executable incorrect. Script executable, "usr/bin/osascript"<br/>
 	 * */
 	public class RunProcess extends ActionEffect {
@@ -112,25 +148,38 @@ package com.flexcapacitor.effects.nativeProcess {
 		}
 		
 		/**
-		 * Path to command that runs scripts on Mac. 
-		 * Need to update path to support other OS. 
+		 * Convenience path to command that runs scripts. Currently set to AppleScript executable on Mac. 
+		 * Need to update path to support other OS.
 		 * */
 		public var scriptOrigin:String = "/usr/bin/osascript";
 		
 		/**
-		 * Path to executable. The executable must be on the path 
+		 * Path to executable. For example, the path to the AppleScript executable is "/usr/bin/osascript".
+		 * 
+		 * @see scriptOrigin 
 		 * */
-		public var executablePath:String;
+		public var executablePath:String = "";
 		
 		/**
 		 * Array of arguments to pass to the executable. 
+		 * 
+		 * For example, if you want to run an AppleScript set the executablePath to 
+		 * "/usr/bin/osascript" and the arguments to the path of the file, typically
+		 * "myScript.scpt". The full path does not need to be set if the script is in the
+		 * application directory since the working directory is set to the application directory 
+		 * by default. 
+		 * 
+		 * @see workingDirectory
 		 * */
 		[Bindable]
 		public var arguments:Array = [];
 		
 		/**
 		 * Working directory. If not set then the File.applicationDirectory path is used.
+		 * 
+		 * @see arguments
 		 * */
+		[Bindable]
 		public var workingDirectory:String;
 		
 		/**
@@ -183,7 +232,8 @@ package com.flexcapacitor.effects.nativeProcess {
 		public var errorMessage:String;
 		
 		/**
-		 * Exit code
+		 * Exit code.<br/>
+		 * @copy flash.events.NativeProcessExitEvent.exitCode
 		 * */
 		[Bindable]
 		public var exitCode:Number;

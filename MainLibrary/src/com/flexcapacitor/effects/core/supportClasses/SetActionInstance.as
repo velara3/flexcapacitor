@@ -7,6 +7,7 @@ package com.flexcapacitor.effects.core.supportClasses
 	import mx.core.IFlexModule;
 	import mx.core.IFlexModuleFactory;
 	import mx.core.mx_internal;
+	import mx.styles.IStyleClient;
 	import mx.styles.StyleManager;
 	
 	use namespace mx_internal;
@@ -124,6 +125,13 @@ package com.flexcapacitor.effects.core.supportClasses
 		 */
 		public var property:String;
 		
+		/** 
+		 *  @copy spark.effects.SetAction#property
+		 *  
+		 *  @see property
+		 */
+		public var subProperty:String;
+		
 		//----------------------------------
 		//  value
 		//----------------------------------
@@ -193,12 +201,20 @@ package com.flexcapacitor.effects.core.supportClasses
 					errorMessage = "The target cannot be null";
 					dispatchErrorEvent(errorMessage);
 				}
-					
-				// check if target property exists on target
-				else if (property && !(property in target)) {
+				
+				// check if target property exists on target - does not check if style exists
+				/*else if (property && !(property in target)) {
 					errorMessage = "The '" + property + "' property does not exist on the target object";
 					dispatchErrorEvent(errorMessage);
-				}
+					
+					// check if sub property exists on target
+					if (subProperty && !(subProperty in target[property])) {
+						errorMessage = "The '" + subProperty + "' sub property does not exist on the target." + property + " object";
+						dispatchErrorEvent(errorMessage);
+					}
+				}*/
+				
+				// we need to check if the property or style exists to do
 				
 			}
 			
@@ -208,8 +224,9 @@ package com.flexcapacitor.effects.core.supportClasses
 			///////////////////////////////////////////////////////////
 			
 			// Don't save the value if we are playing in reverse.
-			if (!playReversed)
+			if (!playReversed) {
 				_startValue = saveStartValue();
+			}
 			
 			playedAction = true;
 			
@@ -221,8 +238,9 @@ package com.flexcapacitor.effects.core.supportClasses
 					value = propertyChanges.end[property];
 			}
 			
-			if (value !== undefined)
+			if (value !== undefined) {
 				setValue(property, value);
+			}
 			
 			///////////////////////////////////////////////////////////
 			// Finish the effect
@@ -248,6 +266,20 @@ package com.flexcapacitor.effects.core.supportClasses
 			var isStyle:Boolean = false;
 			var propName:String = property;
 			var val:Object = value;
+			var newTarget:Object;
+			
+			
+			if (subProperty) {
+				if (propName in target) {
+					newTarget = target[propName];
+				}
+				else {
+					newTarget = target.getStyle(propName);
+				}
+			}
+			else {
+				newTarget = target;
+			}
 			
 			// Handle special case of width/height values being set in terms
 			// of percentages. These are handled through the percentWidth/Height
@@ -262,7 +294,7 @@ package com.flexcapacitor.effects.core.supportClasses
 			}
 			else
 			{
-				var currentVal:Object = getValue(propName);
+				var currentVal:Object = getValue(propName, subProperty);
 				// Handle situation of turning strings into Boolean values
 				if (currentVal is Boolean)
 				{
@@ -275,17 +307,29 @@ package com.flexcapacitor.effects.core.supportClasses
 					propName.toLowerCase().indexOf("color") != -1)
 				{
 					var moduleFactory:IFlexModuleFactory = null;
-					if (target is IFlexModule)
-						moduleFactory = target.moduleFactory;
+					if (newTarget is IFlexModule)
+						moduleFactory = newTarget.moduleFactory;
 					
 					val = StyleManager.getStyleManager(moduleFactory).getColorName(value);
 				}
 			}
 			
-			if (propName in target)
-				target[propName] = val;
-			else
-				target.setStyle(propName, val);
+			if (subProperty) {
+				if (subProperty in newTarget) {
+					newTarget[subProperty] = val;
+				}
+				else {
+					newTarget.setStyle(subProperty, val);
+				}
+			}
+			else {
+				if (propName in target) {
+					target[propName] = val;
+				}
+				else {
+					target.setStyle(propName, val);
+				}
+			}
 		}
 		
 		/**
@@ -297,12 +341,36 @@ package com.flexcapacitor.effects.core.supportClasses
 		 *  @playerversion AIR 1.5
 		 *  @productversion Flex 4
 		 */
-		private function getValue(propName:String):*
-		{
-			if (propName in target)
-				return target[propName];
-			else
-				return target.getStyle(propName);
+		private function getValue(propName:String, subProperty:String = null):* {
+			
+			if (subProperty) {
+				// get property property
+				if (propName in target && subProperty in target[propName]) {
+					return target[propName][subProperty];
+				}
+				else {
+					// get property style
+					if (propName in target) {
+						return target[propName].getStyle(propName);
+					}
+					// get style property
+					else if (target.getStyle(propName) && subProperty in target.getStyle(propName)) {
+						return target.getStyle(propName)[subProperty];
+					}
+					// get style style
+					else if (target.getStyle(propName) && target.getStyle(propName) is IStyleClient) {
+						return target.getStyle(propName).getStyle(subProperty);
+					}
+				}
+			}
+			else {
+				if (propName in target) {
+					return target[propName];
+				}
+				else {
+					return target.getStyle(propName);
+				}
+			}
 		}
 		
 		/** 
@@ -314,7 +382,7 @@ package com.flexcapacitor.effects.core.supportClasses
 			{
 				try
 				{
-					return getValue(property);
+					return getValue(property, subProperty);
 				}
 				catch(e:Error)
 				{

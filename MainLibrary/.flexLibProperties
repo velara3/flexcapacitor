@@ -4,7 +4,7 @@
     <classEntry path="com.flexcapacitor.controls.BlinkingImageButton"/>
     <classEntry path="com.flexcapacitor.controls.DataGrid"/>
     <classEntry path="com.flexcapacitor.controls.ImageButton"/>
-    <classEntry path="com.flexcapacitor.controls.RichText"/>
+    <classEntry path="com.flexcapacitor.controls.RichDisplayText"/>
     <classEntry path="com.flexcapacitor.controls.SearchTextInput"/>
     <classEntry path="com.flexcapacitor.data.database.SQLColumn"/>
     <classEntry path="com.flexcapacitor.data.database.SQLColumnData"/>
@@ -317,6 +317,10 @@
     <classEntry path="com.flexcapacitor.skins.DataGridSkin2"/>
     <classEntry path="com.flexcapacitor.utils.RandomData"/>
   </includeClasses>
-  <includeResources/>
+  <includeResources>
+    <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>
+    <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>
+    <resourceEntry destPath="defaults.css" sourcePath="defaults.css"/>
+  </includeResources>
   <namespaceManifests/>
 </flexLibProperties>

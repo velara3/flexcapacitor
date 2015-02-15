@@ -1570,6 +1570,8 @@ MyOtherComponent.mxml,<br/>
 			//	at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
 			//	at flash.display::DisplayObjectContainer/removeChild()
 			if (setTriggerEvent) {
+				// if effect is null check that the effects are also defined in the current state
+				// you can set includeIn on an effect this is not fully supported
 				effect.triggerEvent = event;
 			}
 			

@@ -8,17 +8,40 @@ package com.flexcapacitor.effects.core {
 	/**
 	 * Copies a value from the effect directly before this one into the effect directly after this one.
 	 * It gets the value of the "data" property by default in the effect before and copies it to the data property
-	 * by default in the effect after it. You can set the targetPropertyName and sourcePropertyName to any 
-	 * property besides "data". 
+	 * by default in the effect after it. <br/><br/>
+	 * 
+	 * <b>Usage</b>:<br/>
+	 * The following gets the data from the GetDataFromTarget effect 
+	 * and copies it to the Trace effect after. Both effects have a property named "data":
+<pre>
+&lt;handlers:EventHandler eventName="click" target="{button}">
+ 	&lt;core:GetDataFromTarget target="{myTextInput}" targetPropertyName="text"/>
+	
+	&lt;core:CopyPreviousToNext />
+	
+	&lt;debugging:Trace />
+&lt;handlers:EventHandler>
+</pre>
+	 * 
 	 * If value in the data property of the previous or next effect is an object you can set the targetSubPropertyName
-	 * and sourceSubPropertyName to get values on that object.
-	 * If value in the data property of the previous or next effect is an you can set the targetPropertyIndex 
-	 * and sourcePropertyIndex to get the value at that index.
-	 * You can cast the value to a type by setting the valueType property. 
-	 * It is necessary to cast to type "String" when getting a String value from an XML object.
+	 * and sourceSubPropertyName to get values on that object.<br/><br/>
+	 * 
+	 * If value in the data property of the previous or next effect is a list you can set the targetPropertyIndex 
+	 * and sourcePropertyIndex to get the value at that index.<br/><br/>
+	 * 
+	 * You can cast the value to a type by setting the valueType property. <br/><br/>
+	 * 
+	 * Note: It is necessary to cast to type "String" when getting a String value from an XML object.<br/><br/>
+	 * 
 	 * You can set the previousEffectIndex to target an effect at a different index than the index of the previous effect. 
-	 * You can set the nextEffectIndex to target an effect at a different index than the index of the next effect. 
-	 * You can set the targetEffectIndices to target multiple effects
+	 * <br/><br/>
+	 * 
+	 * You can set the nextEffectIndex to target an effect at a different index than the index of the next effect.<br/><br/>
+	 *  
+	 * You can set the targetEffectIndices to copy data to multiple effects<br/><br/>
+	 * 
+	 * You can change the default property name from "data" to another value using the sourcePropertyName and
+	 * targetPropertyName properties. 
 	 * */
 	public class CopyPreviousToNext extends ActionEffect {
 		

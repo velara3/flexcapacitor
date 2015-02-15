@@ -17,12 +17,12 @@
 	
 	Styles can be set in CSS using pseudo state selectors: 
 
-	controls|Link {
+	controls|Hyperlink {
 		color:#0000ff;
 		textDecoration:none;
 	}
 	
-	controls|Link:over {
+	controls|Hyperlink:over {
 		color:#0000ff;
 		textDecoration:underline;
 	}
@@ -78,6 +78,8 @@
 			import com.flexcapacitor.services.ServiceEvent;
 			
 			import flash.net.navigateToURL;
+			
+			import mx.core.UIComponentGlobals;
 			
 			/**
 			 * URLLoader to communicate with the server
@@ -137,6 +139,10 @@
 			 * Handle click event
 			 * */
 			protected function clickHandler(event:MouseEvent):void {
+				
+				if (UIComponentGlobals.designMode) {
+					return;
+				}
 				
 				if (asyncronous) {
 			

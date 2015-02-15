@@ -1,21 +1,17 @@
 
 
-package com.flexcapacitor.effects.email.supportClasses {
+package com.flexcapacitor.effects.core.supportClasses {
 	
-	import com.flexcapacitor.effects.email.OpenMail;
+	import com.flexcapacitor.effects.core.StopEffect;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
-	import flash.net.URLRequest;
-	import flash.net.URLVariables;
-	import flash.net.navigateToURL;
+	import mx.effects.IEffect;
 	
-	import mx.utils.URLUtil;
 	
-
 	/**
-	 * @copy OpenMail
-	 * */  
-	public class OpenMailInstance extends ActionEffectInstance {
+	 *  @copy StopEffect
+	 */  
+	public class StopEffectInstance extends ActionEffectInstance {
 		
 		//--------------------------------------------------------------------------
 		//
@@ -34,8 +30,9 @@ package com.flexcapacitor.effects.email.supportClasses {
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public function OpenMailInstance(target:Object) {
+		public function StopEffectInstance(target:Object) {
 			super(target);
+			
 		}
 		
 		
@@ -59,61 +56,41 @@ package com.flexcapacitor.effects.email.supportClasses {
 		
 		/**
 		 *  @private
-		 * */
-		override public function play():void {
-			super.play(); // dispatch startEffect
+		 */
+		override public function play():void { 
+			super.play();
 			
-			var action:OpenMail = OpenMail(effect);
-			var variables:URLVariables;
-			var request:URLRequest;
-			var source:String;
+			// Dispatch an effectStart event
+			var action:StopEffect = StopEffect(effect);
+			
+			// IF we assign the effect to a local variable the instances don't
+			// get deleted ever!? 
+			//var targetEffect:IEffect = action.effect || target as IEffect;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
 			///////////////////////////////////////////////////////////
 			
-			if (validate) {
-				// dispatchErrorEvent("");
+			if (!action.effect && !(action.target is IEffect)) {
+				errorMessage = "Effect is a required property";
+				dispatchErrorEvent(errorMessage);
 			}
+			
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
-			
-			variables 			= new URLVariables();
-			//variables.cc 		= action.cc ? action.cc : "";
-			//variables.bcc 	= action.bcc ? action.bcc : "";
-			variables.to 		= action.to ? action.to : "";
-			variables.body 		= action.data ? action.data : "";
-			variables.subject 	= action.subject ? action.subject : "";
-			
-			request				= new URLRequest();
-			request.url			= "mailto:";
-			
-			source  			= URLUtil.objectToString(variables, "&", true);
-			request.url			= request.url + "?" +source;
-			
-			// truncate the total length of the body text
-			if (request.url.length>action.bodyLimit) {
-				request.url = request.url.substr(0, action.bodyLimit);
-				// UPDATE this and use encodeURIComponent() instead of URLUtil.objectToString()
-				
-				// the variables show up randomly, some at the end some at the beginning
-				// need to make sure the "to" field is not truncated
-				//if (request.url.indexOf("to=")!=-1) {
-				//	request.url = request.url.substr(0, action.to + 5); //hack
-				//}
-				
+			if (action.effect) {
+				action.effect.stop();
+			}
+			else {
+				action.target.stop();
 			}
 			
-			//trace(request.url.length);
-			
-			navigateToURL(request, "_self");
 			
 			///////////////////////////////////////////////////////////
-			// finish the effect
+			// Finish the effect
 			///////////////////////////////////////////////////////////
-			
 			finish();
 			
 		}
@@ -125,6 +102,4 @@ package com.flexcapacitor.effects.email.supportClasses {
 		//--------------------------------------------------------------------------
 		
 	}
-	
-	
 }

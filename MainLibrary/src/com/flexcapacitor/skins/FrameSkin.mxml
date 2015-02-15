@@ -79,7 +79,7 @@
 								angle="90" 
 								blurX="0" blurY="0" 
 								color="#FFFFFF"
-								distance="1" 
+								distance=".5" 
 								hideObject="false" 
 								inner="false" 
 								knockout="false"

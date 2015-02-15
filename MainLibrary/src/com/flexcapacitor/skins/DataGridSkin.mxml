@@ -32,6 +32,9 @@ Works with the com.flexcapacitor.controls.DataGrid class.
  - Added rowSeparatorColor
  - Added rowSeparatorWeight
  - Added showHeader
+ - Added selectionBorderColor style check which is alternative for caretColor
+ - Added selectionBorderAlpha
+ - Added rollOverAlpha
  - Fixes the header top line showing when borderVisible is false.
  - Backwards compatible with Flex 4.6
 
@@ -152,9 +155,21 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
                             const dataGrid:DataGrid = grid.dataGrid;
                             if (!dataGrid)
                                 return;
-                            
-                            const color:uint = dataGrid.getStyle("caretColor");
+                            var color:uint;
+							
+							if (dataGrid.getStyle("selectionBorderColor")!==undefined) {
+	                            color = dataGrid.getStyle("selectionBorderColor");
+							}
+							else {
+                            	color = dataGrid.getStyle("caretColor");
+							}
+							
                             caretIndicatorFill.color = color;
+							
+							if (dataGrid.getStyle("selectionBorderAlpha")!==undefined) {
+	                            var borderAlpha:Number = dataGrid.getStyle("selectionBorderAlpha");
+								caretIndicatorFill.alpha = borderAlpha;
+							}
                         }
                     ]]>
                 </fx:Script>
@@ -189,7 +204,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
             <s:Group>
                 <s:Rect left="0" right="0" top="0" bottom="0">
                     <s:fill>
-                        <!--- Defines the color of the background. -->
+                        <!--- Defines the color of the drop indicator background. -->
                         <s:SolidColor color="0xBBBBBB" />
                     </s:fill>
                     <s:stroke>
@@ -246,6 +261,11 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
                             
                             const color:uint = dataGrid.getStyle("rollOverColor");
                             hoverIndicatorFill.color = color;
+                            const alpha:Number = dataGrid.getStyle("rollOverAlpha");
+							
+							if (!isNaN(alpha)) {
+	                            hoverIndicatorFill.alpha = alpha;
+							}
                         }
                     ]]>
                 </fx:Script>
@@ -346,6 +366,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
 		import mx.core.FlexVersion;
 		import mx.events.FlexEvent;
 		import mx.managers.SystemManager;
+		import spark.components.DataGrid;
 		
         static private const exclusions:Array = ["scroller", "background", "columnHeaderGroup"];
         static private const contentFill:Array = ["bgFill"];
@@ -374,6 +395,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
          */
         override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
         {
+			
             if (getStyle("borderVisible") == true)
             {
                 border.visible = true;
@@ -390,6 +412,23 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
             borderStroke.color = getStyle("borderColor");
             borderStroke.alpha = getStyle("borderAlpha");
             
+            const dataGrid:DataGrid = hostComponent as DataGrid;
+			
+			// remove background from content fill items from contentBackgroundColor in spark.skins.SparkSkin
+			if (dataGrid && dataGrid.getStyle("backgroundColor")!==undefined) {
+				bgFill.color = dataGrid.getStyle("backgroundColor");
+				if (contentFill.indexOf("bgFill")!=-1) {
+					contentFill.splice(contentFill.indexOf("bgFill"));
+				}
+			}
+			
+			if (dataGrid && dataGrid.getStyle("backgroundAlpha")!==undefined) {
+				bgFill.alpha = dataGrid.getStyle("backgroundAlpha");
+				if (contentFill.indexOf("bgFill")!=-1) {
+					contentFill.splice(contentFill.indexOf("bgFill"));
+				}
+			}
+			
             super.updateDisplayList(unscaledWidth, unscaledHeight);
         }
 		
@@ -442,6 +481,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
             <s:Rect id="background" left="1" right="1" top="1" bottom="1" >
                 <s:fill>
                     <!--- Defines the color of the background. The default color is 0xFFFFFF. -->
+                    <!--- Do not change the name of this without updating string references used elsewhere -->
                     <s:SolidColor id="bgFill" color="0xFFFFFF" />
                 </s:fill>
             </s:Rect>

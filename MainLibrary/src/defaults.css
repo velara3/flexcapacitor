@@ -38,15 +38,20 @@ controls|DataGrid {
 	rowSeparatorColor: #E6E6E6;
 	rowSeparatorWeight: 1;
 	showHeader: true;
+	selectionBorderAlpha: 1;
 	skinClass: ClassReference("com.flexcapacitor.skins.DataGridSkin");
 }
 
-controls|Link {
+controls|Hyperlink {
 	color:#0000EE;
 	textDecoration:none;
 }
 
-controls|Link:over {
+controls|Hyperlink:over {
 	color:#0000EE;
 	textDecoration:underline;
+}
+
+controls|ItemRendererButton {
+	gap:6;
 }

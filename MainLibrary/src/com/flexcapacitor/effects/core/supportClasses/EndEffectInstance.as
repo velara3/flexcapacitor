@@ -73,7 +73,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			if (!action.effect && !(action.target is IEffect)) {
-				errorMessage = "Effect is a required property";
+				errorMessage = "Set the target or effect property to the effect you want to end";
 				dispatchErrorEvent(errorMessage);
 			}
 			

@@ -1,21 +1,18 @@
 
 
-package com.flexcapacitor.effects.email.supportClasses {
-	
-	import com.flexcapacitor.effects.email.OpenMail;
+package com.flexcapacitor.effects.application.supportClasses {
+	import com.flexcapacitor.effects.application.CloseApplication;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
-	import flash.net.URLRequest;
-	import flash.net.URLVariables;
-	import flash.net.navigateToURL;
+	import flash.events.ErrorEvent;
 	
-	import mx.utils.URLUtil;
+	import mx.core.FlexGlobals;
 	
-
+	
 	/**
-	 * @copy OpenMail
+	 * @copy CloseApplication
 	 * */  
-	public class OpenMailInstance extends ActionEffectInstance {
+	public class CloseApplicationInstance extends ActionEffectInstance {
 		
 		//--------------------------------------------------------------------------
 		//
@@ -34,7 +31,7 @@ package com.flexcapacitor.effects.email.supportClasses {
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public function OpenMailInstance(target:Object) {
+		public function CloseApplicationInstance(target:Object) {
 			super(target);
 		}
 		
@@ -59,63 +56,56 @@ package com.flexcapacitor.effects.email.supportClasses {
 		
 		/**
 		 *  @private
-		 * */
-		override public function play():void {
-			super.play(); // dispatch startEffect
+		 */
+		override public function play():void { 
+			super.play(); // dispatch effectStart
 			
-			var action:OpenMail = OpenMail(effect);
-			var variables:URLVariables;
-			var request:URLRequest;
-			var source:String;
+			var action:CloseApplication = CloseApplication(effect);
+			var application:Object = action.application;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
 			///////////////////////////////////////////////////////////
 			
 			if (validate) {
-				// dispatchErrorEvent("");
+				// check for required properties
+				var noExitMethod:Boolean;
+				
+				if (application && !("exit" in application)) {
+					noExitMethod = true;
+				}
+				
+				if (!application && !("exit" in FlexGlobals.topLevelApplication)) {
+					noExitMethod = true;
+				}
+				
+				if (noExitMethod) {
+					dispatchErrorEvent("The application does not define an exit method. It must have a exit method or be a WindowedApplication.");
+				}
 			}
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
-			variables 			= new URLVariables();
-			//variables.cc 		= action.cc ? action.cc : "";
-			//variables.bcc 	= action.bcc ? action.bcc : "";
-			variables.to 		= action.to ? action.to : "";
-			variables.body 		= action.data ? action.data : "";
-			variables.subject 	= action.subject ? action.subject : "";
 			
-			request				= new URLRequest();
-			request.url			= "mailto:";
-			
-			source  			= URLUtil.objectToString(variables, "&", true);
-			request.url			= request.url + "?" +source;
-			
-			// truncate the total length of the body text
-			if (request.url.length>action.bodyLimit) {
-				request.url = request.url.substr(0, action.bodyLimit);
-				// UPDATE this and use encodeURIComponent() instead of URLUtil.objectToString()
-				
-				// the variables show up randomly, some at the end some at the beginning
-				// need to make sure the "to" field is not truncated
-				//if (request.url.indexOf("to=")!=-1) {
-				//	request.url = request.url.substr(0, action.to + 5); //hack
-				//}
-				
+			try {
+				if (application) {
+					Object(application).exit();
+				}
+				else {
+					Object(FlexGlobals.topLevelApplication).exit();
+				}
+				// note when the stage is set to 0 the flash player reports fps being 0.01;
+			}
+			catch (error:ErrorEvent) {
+				dispatchErrorEvent("Could not close the application. " + error.toString());
 			}
 			
-			//trace(request.url.length);
-			
-			navigateToURL(request, "_self");
-			
 			///////////////////////////////////////////////////////////
-			// finish the effect
+			// Finish the effect
 			///////////////////////////////////////////////////////////
-			
 			finish();
-			
 		}
 		
 		//--------------------------------------------------------------------------
@@ -124,7 +114,6 @@ package com.flexcapacitor.effects.email.supportClasses {
 		//
 		//--------------------------------------------------------------------------
 		
+		
 	}
-	
-	
 }

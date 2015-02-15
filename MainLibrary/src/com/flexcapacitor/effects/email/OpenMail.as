@@ -7,7 +7,22 @@ package com.flexcapacitor.effects.email {
 	
 	
 	/**
-	 * Opens the default email application.
+	 * Opens the default email application and allows you to set the to, subject and body. 
+	 * 
+	 * This creates a "mailto" link and launches it as a URL. On the desktop this launches 
+	 * the default mail client. A typical URL looks like the following: 
+	 * 
+	 * <pre>
+	 * mailto:
+	 * </pre>
+	 * 
+	 * <pre>
+&lt;email:OpenMail to="support@example.com"
+		subject="Support"
+		data="Please explain the problem"/>
+	 * </pre>
+	 * 
+	 * 
 	 * */
 	public class OpenMail extends ActionEffect {
 		

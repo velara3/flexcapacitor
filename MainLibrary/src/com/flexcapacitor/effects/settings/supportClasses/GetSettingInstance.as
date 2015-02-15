@@ -184,13 +184,13 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				}
 			}
 			
-			if (traceToConsole && properties.length==0) {
+			if (traceToConsole && (action.property==null && properties.length==0)) {
 				traceMessage("No data on object");
 			}
 			
 			action.data = data;
 			
-			if (data == null || sharedObject.size==0 || properties.length==0) {
+			if (data == null || sharedObject.size==0 || (action.property==null && properties.length==0)) {
 				
 				if (action.hasEventListener(GetSetting.VALUE_NOT_SET)) {
 					dispatchActionEvent(new Event(GetSetting.VALUE_NOT_SET));

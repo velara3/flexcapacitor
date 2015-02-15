@@ -18,10 +18,10 @@ package com.flexcapacitor.controls
 	 * 
 	 * @copy spark.components.RichEditableText
 	 * */
-	public class RichText extends spark.components.RichEditableText {
+	public class RichDisplayText extends RichEditableText {
 		
 		
-		public function RichText() {
+		public function RichDisplayText() {
 			super();
 			editable = false;
 			selectable = true;

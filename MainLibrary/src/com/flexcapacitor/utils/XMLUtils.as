@@ -2,9 +2,27 @@
 
 package com.flexcapacitor.utils
 {
+	import com.flexcapacitor.utils.supportClasses.XMLValidationEvent;
+	import com.flexcapacitor.utils.supportClasses.XMLValidationInfo;
+	
+	import flash.events.ErrorEvent;
+	import flash.events.EventDispatcher;
+	import flash.events.LocationChangeEvent;
 	import flash.external.ExternalInterface;
+	import flash.system.ApplicationDomain;
+	import flash.system.Capabilities;
+	import flash.utils.getDefinitionByName;
 
-	public class XMLUtils
+	
+	/**
+	 * Dispatched when XML validation is complete
+	 * */
+	[Event(name="validationComplete", type="flash.events.Event")]
+	
+	/**
+	 * A set of XML utilities
+	 * */
+	public class XMLUtils extends EventDispatcher
 	{
 		
 		// I don't know if this is the correct method to identify byte order markers 60% confident
@@ -179,11 +197,11 @@ package com.flexcapacitor.utils
 		 * 
 		 * @see isValid
 		 */
-		public static function validate(value:*):XMLValidationInfo {
+		public static function validate(value:*, callbackFunction:Function = null, callbackValidation:Object = null):XMLValidationInfo {
 			(!addedXMLValidationToPage) ? insertValidationScript() : null;
 			var xml:String = value != null ? value : "";
 			var hasMarker:Boolean = hasByteOrderMarker(value);
-			var validationResult:String = ExternalInterface.call("validateXML", xml);
+			var validationResult:String;
 			var validationInfo:XMLValidationInfo = new XMLValidationInfo();
 			var byteMarkerType:String;
 			var isValidMarker:Boolean;
@@ -197,6 +215,47 @@ package com.flexcapacitor.utils
 			var lines:Array;
 			var column:int;
 			var row:int;
+			
+			
+			if (ExternalInterface.available) {
+				validationResult = ExternalInterface.call("validateXML", xml);
+			}
+			else if (Capabilities.playerType == "Desktop") {
+				
+				if (callbackValidation) {
+					validationResult = callbackValidation.result;
+				}
+				else {
+					var stageWebView:String = "flash.media.StageWebView";
+					if (ApplicationDomain.currentDomain.hasDefinition(stageWebView)) {
+						var definition:Object = getDefinitionByName(stageWebView);
+						var instance:Object = new definition();
+						
+						instance.addEventListener("locationChanging", function (event:Object):void {
+							var locationValue:String = event.location;
+							
+							try {
+								// check if it's an event dispatched from JS
+								var object:Object = JSON.parse(locationValue);
+								var eventName:String = object.event;
+								var methodName:String = object.method;
+								validate(value, callbackFunction, object);
+							}
+							catch (error:Error) {
+								//validate(value, callbackFunction, object);
+							}
+						});
+						
+						instance.addEventListener(ErrorEvent.ERROR, function (error:ErrorEvent):void {
+							trace("Error:" + error.toString());
+						});
+						var out:String = ""
+						instance.loadURL("javascript:"+XMLUtils.browserXMLValidationScript);
+						var output:String = "javascript:validateXMLWebView(\""+JSON.stringify(xml)+"\")";
+						instance.loadURL(output);
+					}
+				}
+			}
 			
 			if (hasMarker) {
 				byteMarkerType = XMLUtils.getByteOrderMarkerType(xml);
@@ -276,8 +335,13 @@ package com.flexcapacitor.utils
 				validationInfo.valid = false;
 			}
 			
+			if (callbackFunction!=null) {
+				callbackFunction(validationInfo);
+			}
+			
 			return validationInfo;
 		}
+		
 		
 		/**
 		 * Checks for a Byte-Order-Marker or BOM at the beginning of the text. This character is invisible in many text editors.
@@ -489,129 +553,11 @@ package com.flexcapacitor.utils
 						return "Your browser cannot handle the truth. I mean XML validation";
 					}
 				}
+
+				function validateXMLWebView(txt) {
+					var result = validateXML(txt);
+					document.location = JSON.stringify({event:"result", method:"result","result":result});
+				}
 				]]></root>
 	}
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  Helper class: XML Validation Info
-//
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- *  @private
- */
-class XMLValidationInfo
-{
-	//--------------------------------------------------------------------------
-	//
-	//  Constructor
-	//
-	//--------------------------------------------------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public function XMLValidationInfo () {
-		super();
-		
-	}
-	
-	//--------------------------------------------------------------------------
-	//
-	//  Properties
-	//
-	//--------------------------------------------------------------------------
-	
-	//----------------------------------
-	//  hasMarker
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var hasMarker:Boolean;
-	
-	//----------------------------------
-	//  byteMarkerType
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var byteMarkerType:String;
-	
-	//----------------------------------
-	//  row
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var row:int;
-	
-	//----------------------------------
-	//  column
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var column:int;
-	
-	//----------------------------------
-	//  valid
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var valid:Boolean;
-	
-	//----------------------------------
-	//  browser error message
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var browserErrorMessage:String;
-	
-	//----------------------------------
-	//  Flash Player parsing error message
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var errorMessage:String;
-	
-	//----------------------------------
-	//  value
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var value:String;
-	
-	//----------------------------------
-	//  error begin index
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var beginIndex:int;
-	
-	//----------------------------------
-	//  error end index
-	//----------------------------------
-	
-	/**
-	 *  @private
-	 */
-	public var endIndex:int;
 }

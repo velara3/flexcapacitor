@@ -57,7 +57,8 @@ package com.flexcapacitor.controls  {
 	/**
 	 * This class wraps the standard StageWebView with a UIComponent. 
 	 * This allows it to be sized and positioned in the same way 
-	 * any UIComponent would. <br/><br/>
+	 * any UIComponent would. Consider using StyleableWebView if you need to 
+	 * display your own dynamic HTML markup. <br/><br/>
 	 * 
 	 * It also adds a snap shot mode that takes a snapshot of
 	 * the current contents of the StageWebView. This snapshot is non-interactive.
@@ -79,6 +80,19 @@ package com.flexcapacitor.controls  {
 	 * Loading HTML text:<br/>
 	 * &lt;local:WebView content="&lt;html&gt;...&lt;/html&gt;" width="400" height="300"/&gt;<br/>
 	 * &lt;local:WebView content="&lt;b&gt;Hello World&lt;/b&gt;" width="400" height="300"/&gt;<br/><br/>
+	 *
+	 * Inserting and calling JavaScript:<br/>
+<pre>
+webView.insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_GET_BROWSER_MEASURED_WIDTH); // contains string of JavaScript function
+webView.callJavaScript(WebViewExternalCalls.FUNCTION_GET_BROWSER_MEASURED_WIDTH, getBrowserWidth); // method to call and handler to respond
+</pre>
+	 * Your web page can dispatch events to your application by setting the 
+	 * document.location property.<br/><br/> 
+	 * 
+	 * You can test if JavaScript communication is working by calling the testJavaScript method. <br/><br/>
+	 * 
+	 * For communicating with JavaScript see the documentation for the insertJavaScript and callJavaScript methods.
+	 * <br/>
 	 * 
 	 * Note: When using transitions you may need to enable the snapshot mode before 
 	 * beginning the transition.<br/><br/>
@@ -86,16 +100,17 @@ package com.flexcapacitor.controls  {
 	 * Note: When setting the webview source or visibility, focus may be inexplicitly set to the webview.<br/><br/> 
 	 *
 	 * Note: To see all of the output you may need to increase the consoles buffer size
-	 * Check out Preferences > Run Debug > Console > Buffer Size<br/><br/>
+	 * In Flash Builder check out Preferences > Run Debug > Console > Buffer Size<br/><br/>
 	 * 
-	 * Note: To help debug set debug to true. <br/><br/> 
-	 * 
-	 * The StageWebView class documentation follows:<br/>
-	 * 
+	 * Note: To help debug set debug property to true. <br/><br/> 
 	 * 
 	 * Note: Some code from https://github.com/flex-users/flex-iframe used. 
 	 * 
+	 * The StageWebView class documentation follows:<br/>
+	 * 
 	 * @copy flash.media.StageWebView
+	 * @see WebView.insertJavaScript()
+	 * @see WebView.callJavaScript()
 	 * */
 	public class WebView extends UIComponent implements IWebView {
 		
@@ -188,30 +203,53 @@ package com.flexcapacitor.controls  {
 		}
 		
 		/**
-		 * Calls the JavaScript code. Specify a callback function if expecting a return value.
+		 * Inserts the JavaScript code onto the page. 
+		 * To get a value back from JavaScript set the document.location to the value you want to return.
 		 * Your JavaScript can only return a string value (or JSON string) and must be passed to the 
-		 * document.location property. <br/><br/>For example, 
+		 * document.location property. If you specify a JSON object it will be deserialized for you
+		 * and a WebViewEvent will be dispatched if you specify an event name. <br/><br/>
 		 * 
-		 * <pre>
-		 * document.location = 'my return value';
-		 * </pre><br/>Or using JSON notation, 
-		 * 
-		 * <pre>
-		 * document.location = '{"width":'+width+',"height":'+height+'}';
-		 * </pre>
+		 * For example, the following inserts a function on the HTML page that can be called later. 
+		 * When we call it it returns a JSON formatted string. The WebView converts that into a 
+		 * JSON object and passes it to our call back function if we include the method 
+		 * name in the object. WebView will dispatch a WebViewEvent if we specify 
+		 * the event in the return JSON object. 
+<pre>
+var myJavascript = "myTestFunction = function ()" +
+"{ " +
+	"alert('Insert script test passed! Now attempting to return results. Click OK');" +
+	"document.location = JSON.stringify({event:'test',method:'test',results:'success'});" +
+"}";
+
+webView.insertJavaScript(myJavascript);
+webView.callJavaScript("myTestFunction", testCallbackHandler); // we can pass arguments in the third parameter
+webView.addEventListener("test", testResultsHandler);
+
+public function testCallbackHandler(object:Object):void {
+	trace("object.results: " + object.results); //object == {event:'test',method:'test',results:'success'}
+}
+
+public function testEventHandler(object:Object):void {
+	trace("object.results: " + object.results); //object == {event:'test',method:'test',results:'success'}
+}
+</pre>
 		 * 
 		 * */
 		public function insertJavaScript(value:String):void {
 			
 			webView.loadURL("javascript:"+value+"");
-			webView.loadURL("javascript:document.insertScript()");
+			if (value.indexOf("document.insertScript")==0) {
+				webView.loadURL("javascript:document.insertScript()");
+			}
 			
 		}
 		
 		/**
-		 * Calls the JavaScript method. Specify a callback function if expecting a return value.
-		 * Your JavaScript can only return a string value (or JSON string) and must be passed to the 
-		 * document.location property. <br/><br/>For example, 
+		 * Calls a JavaScript method with the name specified. Specify a ActionScript callback function 
+		 * if expecting a return value. Your JavaScript function can only return a string value (or JSON string) 
+		 * and must be passed by setting the document.location property. 
+		 * 
+		 * <br/><br/>For example, 
 		 * 
 		 * <pre>
 		 * document.location = 'my return value';
@@ -220,16 +258,23 @@ package com.flexcapacitor.controls  {
 		 * <br/>Or using JSON notation, 
 		 * 
 		 * <pre>
-		 * document.location = JSON.stringify({event:"myEventName", width:width, height:height});
+		 * document.location = JSON.stringify({event:"myEventName", result:"hello"});
 		 * </pre>
 		 * 
-		 * <br/>NOTE: According to this site, http://caniuse.com/json, native JSON is supported in all major desktop and mobile browsers. 
+		 * You can dispatch events by setting the document.location with a JSON object with an event property.
+		 * A WebViewEvent event will be dispatched that you can listen for. 
+<pre>
+webView.addEventListener(WebViewEvent.RESULT, function (event:WebViewEvent):void {
+	trace("Web view event type: " + event.event + ". data.result: " + event.data.result);
+});
+</pre>
 		 * 
+		 * <br/>NOTE: According to this site, http://caniuse.com/json, native JSON is supported in all major desktop and mobile browsers. 
 		 * */
 		public function callJavaScript(method:String, callback:Function = null, arguments:String = null):void {
 			
 			if (debug) {
-				logger.info("Calling the JavaScript method: {0} with arguments {1}", method, arguments);
+				logger.info("WebView. Calling the JavaScript method: {0} with arguments {1}", method, arguments);
 			}
 			
 			if (callback!=null) {
@@ -343,7 +388,7 @@ package com.flexcapacitor.controls  {
 				if (addHTMLWrapperPolicy=="yes" || 
 					(addHTMLWrapperPolicy=="auto" &&  
 					(initialValue.toLowerCase().indexOf("<html")<=minimumBeginHTMLIndex ||
-					initialValue.toLowerCase().indexOf("<!DOCTYPE")<=minimumBeginHTMLIndex))) {
+					initialValue.toLowerCase().indexOf("<!doctype")<=minimumBeginHTMLIndex))) {
 					
 					htmlContent = htmlWrapperHook(htmlWrapper, value);
 					
@@ -354,7 +399,7 @@ package com.flexcapacitor.controls  {
 					// Note to see all of the output you may need to increase the consoles max buffer size
 					// Check out Preferences > Run Debug > Console > Buffer Size
 					if (debug) {
-						logger.info("Loading the following content with mime type {0}:", mimeType);
+						logger.info("WebView. Loading the following content with mime type {0}:", mimeType);
 						logger.info("{0}", htmlContent);
 					}
 					
@@ -650,7 +695,7 @@ package com.flexcapacitor.controls  {
 		 * This value is usually set on complete event.
 		 * */
 		[Bindable]
-		public var measureContent:Boolean = true;
+		public var measureContent:Boolean = false;
 		
 		/**
 		 * Flag indicating if a snapshot is being shown
@@ -850,7 +895,7 @@ package com.flexcapacitor.controls  {
 			}
 			
 			if (debug) {
-				logger.info("Measured width: {0} Measured height: {1}", measuredWidth, measuredHeight);
+				logger.info("WebView. Measured width: {0} Measured height: {1}", measuredWidth, measuredHeight);
 			}
 		}
 		
@@ -991,7 +1036,7 @@ package com.flexcapacitor.controls  {
 				invalidateParentSizeAndDisplayList();
 			}
 			catch(e:Error) {
-				trace("Error:" + e.message);
+				logger.info("Error:" + e.message);
 			}
 				
 		}
@@ -1009,7 +1054,7 @@ package com.flexcapacitor.controls  {
 			var scaledY:int;
 			
 			if (debug) {
-				logger.info("Update display list. Unscaled size is: {0} x {1}", unscaledWidth, unscaledHeight);
+				logger.info("WebView. Update display list. Unscaled size is: {0} x {1}", unscaledWidth, unscaledHeight);
 			}
 			
 			// NOTE: IF THE WEBVIEW IS NOT BEING SIZED CORRECTLY 
@@ -1038,7 +1083,7 @@ package com.flexcapacitor.controls  {
 				}*/
 				
 				if (debug) {
-					logger.info("Setting viewport scaled size to: {0} x {1}", scaledWidth, scaledHeight);
+					logger.info("WebView. Setting viewport scaled size to: {0} x {1}", scaledWidth, scaledHeight);
 				}
 				
 				webView.viewPort = new Rectangle(point.x, point.y, scaledWidth, scaledHeight);
@@ -1138,7 +1183,7 @@ package com.flexcapacitor.controls  {
 		protected function completeHandler(event:Event):void {
 			
 			if (debug) {
-				logger.info("The page load is complete");
+				logger.info("WebView. The page load is complete");
 			}
 			
 			// insert script into document
@@ -1231,13 +1276,6 @@ package com.flexcapacitor.controls  {
 				
 				// 
 				
-				if (debug && runTestScript) {
-					// test inserting a function and then calling it
-					// we should get a response in the location change event
-					insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_TEST);
-					callJavaScript(WebViewExternalCalls.FUNCTION_INSERT_TEST_SCRIPT, insertTestScriptComplete);
-				}
-				
 				// next, get the size of the document
 				// add a call back function for when the value is returned
 				insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_MEASURE_DOCUMENT);
@@ -1258,38 +1296,32 @@ package com.flexcapacitor.controls  {
 		 * Handles result of measurement
 		 * */
 		protected function insertTestScriptComplete(value:Object):void {
-			trace("insertTestScriptComplete value:"+value);
-			
-			if (value=="success") {
-				trace("Communications available");
-			}
-			else {
-				trace("Communications NOT available");
-			}
-				
+			logger.info("WebView runTestScript successful.");
 		}
 		
 		/**
 		 * Dispatched when the JavaScript document.location has been changed. 
 		 * This event is dispatched before the locationChange event is dispatched. 
-		 * Calling event.preventDefault() prevents the location from changing.  
+		 * Calling event.preventDefault() prevents the location from changing.<br/><br/>
 		 * 
 		 * We also use this to get results from a JavaScript function. The function
 		 * sets the document.location property to a String value and it triggers this event.
 		 * The String value does not have to be a URL. It can be any value. 
 		 * We use JSON String to pass data from the web view document to the component instance.
-		 * We then parse it into an object. 
+		 * We then parse it into an object. <br/><br/>
 		 * 
-		 * If you create a function, return the results as a String and include the method name and
-		 * event if you would like to redispatch the results to an event. 
+		 * If you create a function, return the results as a JSON String and include the callback method name or
+		 * event if you would like to redispatch the results to an event. Add a listener to the WebViewResult.RESULT
+		 * event and it will contain your JSON string and object.<br/>
 		 * 
-		 * Add a listener to the WebViewResult.Result event.  
+		 * @see WebView.insertJavaScript()
+		 * @see WebView.callJavaScript()
 		 * */
 		protected function locationChangingHandler(event:LocationChangeEvent):void {
 			var locationValue:String = event.location;
 			
 			if (debug) {
-				logger.info("The location is changing to: {0}", locationValue);
+				logger.info("WebView. The location is changing to: {0}", locationValue);
 			}
 			
 			
@@ -1299,28 +1331,33 @@ package com.flexcapacitor.controls  {
 				var eventName:String = object.event;
 				var methodName:String = object.method;
 				
-				// prevent from dispatching a location change
-				event.preventDefault();
+				
+				if (object && methodName && callbackDictionary[methodName]!=null) {
+					if (debug) {
+						logger.info("WebView JSON callback received. Calling method: {0}", methodName);
+					}
+					callbackDictionary[methodName](object);
+				}
 				
 				if (object && eventName) {
 					if (debug) {
-						logger.info("JSON event. Event: {0}", eventName);
+						logger.info("WebView JSON event received. Dispatching event: {0}", eventName);
 					}
 					dispatchEvent(new WebViewEvent(WebViewEvent.RESULT, false, false, eventName, methodName, locationValue, object));
-					return;
 				}
-				else if (methodName && callbackDictionary[methodName]!=null) {
-					if (debug) {
-						logger.info("JSON callback. Method: {0}", methodName);
-					}
-					callbackDictionary[methodName](object);
-					return;
-				}
+				
+				logger.info("WebView location changing event prevented due to receiving JSON string");
+				// prevent from dispatching a location change
+				event.preventDefault();
+				return;
 			}
 			catch (error:Error) {
 				// not JSON or not valid JSON - should i dispatch an event here?
 			}
 			
+			if (debug) {
+				logger.info("WebView location changing. Dispatching location changing event to any listeners.");
+			}
 			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
 			}
@@ -1330,6 +1367,9 @@ package com.flexcapacitor.controls  {
 		 * Dispatched when the location has changed
 		 * */
 		protected function locationChangeHandler(event:LocationChangeEvent):void {
+			if (debug) {
+				logger.info("WebView location change. Dispatching location change event.");
+			}
 			
 			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
@@ -1340,6 +1380,10 @@ package com.flexcapacitor.controls  {
 		 * Dispatched when an error occurs
 		 * */
 		protected function errorHandler(event:ErrorEvent):void {
+			
+			if (debug) {
+				logger.info("WebView error event: " + event.text);
+			}
 			
 			if (hasEventListener(event.type)) {
 				dispatchEvent(event);
@@ -1367,10 +1411,18 @@ package com.flexcapacitor.controls  {
         protected var logger:ILogger = Log.getLogger("WebView");
 		
 		/**
-		 * Displays a JavaScript alert and issues an WebViewEvent.Result event with 
+		 * Checks if JavaScript to WebView is working at creation complete. 
+		 * Displays a JavaScript alert and dispatches a WebViewEvent.RESULT event with 
 		 * the response from a JavaScript call. 
 		 * */
-        public var runTestScript:Boolean;
+        public function runTestScript():void {
+			// test inserting a function and then calling it
+			// we should get a response in the location changing event
+			// which we cancel when we then cancel and dispatch an event or call 
+			// and call back function if defined
+			insertJavaScript(WebViewExternalCalls.INSERT_FUNCTION_TEST);
+			callJavaScript(WebViewExternalCalls.FUNCTION_INSERT_TEST_SCRIPT, insertTestScriptComplete);
+		}
 		
 		/**
 		 * Get the state of the debug mode.

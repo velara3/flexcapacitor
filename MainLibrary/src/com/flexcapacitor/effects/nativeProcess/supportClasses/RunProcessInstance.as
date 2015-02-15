@@ -14,9 +14,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 	import flash.filesystem.File;
 	import flash.system.ApplicationDomain;
 	import flash.utils.IDataInput;
-	import flash.utils.IDataOutput;
 	
-	import mx.managers.SystemManager;
 	import mx.utils.StringUtil;
 
 	/**

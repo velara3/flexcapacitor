@@ -15,10 +15,8 @@ package com.flexcapacitor.effects.core {
 	[Exclude(name="duration", kind="property")]
 	
 	/**
-	 * The same as spark.effects.SetAction except it extends the ActionEffect class<br/><br/>
-	 * 
-	 * SetAction is more framework aware. Use it for setting properties on UIComponents and
-	 * visual elements. <br/><br/>
+	 * The same as spark.effects.SetAction except it extends the ActionEffect class. 
+	 * It also adds subProperty. SubProperty may not be supported fully supported for MXMLC created transitions. <br/><br/>
 	 * 
 	 * Notes: There are things in this class that should be in CopyDataToTarget
 	 * and things in CopyDataToTarget that should be in this class. At some point these
@@ -71,8 +69,22 @@ package com.flexcapacitor.effects.core {
 		 *  @playerversion Flash 10
 		 *  @playerversion AIR 1.5
 		 *  @productversion Flex 4
+		 * @see subProperty
 		 */
 		public var property:String;
+		
+		[Inspectable(category="General")]
+		
+		/** 
+		 *  The name of the sub property being changed. 
+		 *  
+		 *  @langversion 3.0
+		 *  @playerversion Flash 10
+		 *  @playerversion AIR 1.5
+		 *  @productversion Flex 4
+		 * @see property
+		 */
+		public var subProperty:String;
 		
 		//----------------------------------
 		//  propertyChangesArray
@@ -142,10 +154,10 @@ package com.flexcapacitor.effects.core {
 		{
 			super.initInstance(instance);
 			
-			var actionInstance:SetActionInstance =
-				SetActionInstance(instance);
+			var actionInstance:SetActionInstance = SetActionInstance(instance);
 			
 			actionInstance.property = property;
+			actionInstance.subProperty = subProperty;
 			actionInstance.value = value;
 			
 		}

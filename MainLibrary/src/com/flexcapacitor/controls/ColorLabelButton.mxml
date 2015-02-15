@@ -8,49 +8,87 @@
 		 alpha="1"
 		 >
 	
-	<fx:Declarations>
-		<fx:Number id="colorOver">0xFF0000</fx:Number>
-		<fx:Number id="colorOut">0x0000FF</fx:Number>
-		<fx:Number id="alphaOver">1</fx:Number>
-		<fx:Number id="alphaOut">1</fx:Number>
-		<s:RGBInterpolator id="rgbInterpolator" />
-		<!--<s:Animate id="rollOverAnimation" duration="250">
-			<s:SimpleMotionPath valueFrom="{alphaOut}" 
-								valueTo="{alphaOver}" 
-								property="alpha" />
+	<!---
+		Changes the color of the label on roll over and restores the color on roll out. 
+	
+	We should use states and then CSS psuedo states to update the values
+	-->
+	
+	<fx:Metadata>
+		[Style(name="colorOver", inherit="no", type="type")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.EffectEvent;
 			
-			<s:SimpleMotionPath valueFrom="{colorOut}"
-								valueTo="{colorOver}" 
-								property="color" 
-								/>
-		</s:Animate>-->
+			[Bindable]
+			public var originalColor:Number;
+			protected function rollOverAnimation_effectStartHandler(event:EffectEvent):void {
+				originalColor = getStyle("color");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:Number id="duration">250</fx:Number>
 		
 		<s:AnimateColor id="rollOverAnimation" 
-						duration="500" 
-						colorFrom="{colorOut}" 
-						colorTo="{colorOver}"
+						duration="{duration}" 
+						effectStart="rollOverAnimation_effectStartHandler(event)"
+						colorFrom="{getStyle('color')}" 
+						colorTo="{getStyle('colorOver')}"
 						>
 			
 		</s:AnimateColor>
 		
-		<!--<s:Animate id="rollOutAnimation" duration="250">
-			<s:SimpleMotionPath valueFrom="{alphaOver}"
-								valueTo="{alphaOut}" 
-								property="alpha" 
-								/>
-			<s:SimpleMotionPath valueFrom="{colorOver}"
-								valueTo="{colorOut}" 
-								property="color" 
-								/>
-			
-		</s:Animate>-->
 		<s:AnimateColor id="rollOutAnimation" 
-						duration="500" 
-						colorFrom="{colorOver}" 
-						colorTo="{colorOut}"
+						duration="{duration}" 
+						colorFrom="{getStyle('colorOver')}" 
+						colorTo="{originalColor}"
 						>
 			
 		</s:AnimateColor>
+		
+		<!--<fx:Number id="colorOver">0xFF0000</fx:Number>
+		<fx:Number id="colorOut">{getStyle("color")}</fx:Number>
+		<fx:Number id="backgroundColorOver">{getStyle("backgroundColor")}</fx:Number>
+		<fx:Number id="backgroundColorOut">{getStyle("backgroundColor")}</fx:Number>
+		<fx:Number id="alphaOver">1</fx:Number>
+		<fx:Number id="alphaOut">1</fx:Number>
+		<fx:Number id="duration">250</fx:Number>
+		
+		<s:Parallel id="rollOverAnimationSequence">
+			<s:AnimateColor id="colorOverAnimation" 
+							duration="{duration}" 
+							colorFrom="{colorOut}" 
+							colorTo="{colorOver}"
+							>
+			</s:AnimateColor>
+			<s:AnimateColor id="backgroundColorOverAnimation" 
+							duration="{duration}" 
+							colorPropertyName="backgroundColor"
+							colorFrom="{backgroundColorOut}" 
+							colorTo="{backgroundColorOver}"
+							>
+			</s:AnimateColor>
+		</s:Parallel>
+		
+		<s:Parallel id="rollOutAnimationSequence">
+			<s:AnimateColor id="colorOutAnimation" 
+							duration="{duration}" 
+							colorFrom="{colorOver}" 
+							colorTo="{colorOut}"
+							>
+			</s:AnimateColor>
+			<s:AnimateColor id="backgroundColorOutAnimation" 
+							duration="{duration}" 
+							colorPropertyName="backgroundColor"
+							colorFrom="{backgroundColorOver}" 
+							colorTo="{backgroundColorOut}"
+							>
+			</s:AnimateColor>
+		</s:Parallel>-->
 	</fx:Declarations>
 	
 </s:Label>

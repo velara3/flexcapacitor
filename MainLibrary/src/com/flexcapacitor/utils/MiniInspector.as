@@ -1219,6 +1219,7 @@ package com.flexcapacitor.utils {
 		public var popUpBackground:Rect;
 		public var popUpBorder:Rect;
 		public var popUpLabel:Label;
+		public var moveUpLabel:Label;
 		public var popUpPropertyInput:TextInput;
 		public var popUpValueInput:TextInput;
 		public var popUpIsDisplaying:Boolean;
@@ -1227,7 +1228,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Displays an outline of the display object recursively up the component display list. 
 		 **/
-		public function postDisplayObject(displayTarget:DisplayObject, displayed:Boolean = false, moveToNextParent:Boolean = true):void {
+		public function postDisplayObject(displayTarget:DisplayObject, isOutlineDisplayed:Boolean = false, getNextParent:Boolean = true, moveToNextParentAutomatically:Boolean = true):Object {
 			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
 			var lastTarget:DisplayObject;
@@ -1235,13 +1236,15 @@ package com.flexcapacitor.utils {
 			var targetX:Number;
 			var targetY:Number;
 			var container:Sprite;
+			
 			popUpIsDisplaying = true;
 			
-			if (displayed) {
+			// is outline and pop up displayed
+			if (isOutlineDisplayed) {
 				//closePopUp(target);
 				lastTarget = displayTarget;
 				
-				if (moveToNextParent) {
+				if (getNextParent) {
 					if ("owner" in displayTarget && Object(displayTarget).owner)  {
 						displayTarget = Object(displayTarget).owner;
 					}
@@ -1279,6 +1282,7 @@ package com.flexcapacitor.utils {
 					BitmapFill(popUpBackground.fill).fillMode = BitmapFillMode.REPEAT;
 				}
 				
+				moveUpLabel = new Label();
 				popUpLabel = new Label();
 				popUpLabel.setStyle("backgroundColor", 0xFF0000);
 				popUpLabel.setStyle("color", 0xFFFFFF);
@@ -1286,11 +1290,22 @@ package com.flexcapacitor.utils {
 				popUpLabel.setStyle("fontSize", 12);
 				popUpLabel.setStyle("paddingTop", 3);
 				popUpLabel.setStyle("paddingBottom", 1);
-				popUpLabel.setStyle("paddingLeft", 4);
+				popUpLabel.setStyle("paddingLeft", 6);
 				popUpLabel.setStyle("paddingRight", 4);
 				popUpLabel.useHandCursor = true;
 				popUpLabel.buttonMode = true;
 				//popUpLabel.addEventListener(MouseEvent.CLICK, labelClickHandler, false, 0, true);
+				
+				moveUpLabel.useHandCursor = true;
+				moveUpLabel.buttonMode = true;
+				moveUpLabel.text = "^";
+				moveUpLabel.styleName = popUpLabel;
+				moveUpLabel.setStyle("fontSize", 16);
+				moveUpLabel.width = 14;
+				//moveUpLabel.setStyle("backgroundColor", "red");
+				//moveUpLabel.setStyle("backgroundAlpha", 1);
+				moveUpLabel.setStyle("paddingLeft", 2);
+				moveUpLabel.setStyle("paddingRight", 0);
 				
 				popUpPropertyInput = new TextInput();
 				popUpValueInput = new TextInput();
@@ -1298,7 +1313,9 @@ package com.flexcapacitor.utils {
 				popUpPropertyInput.width = 100;
 				popUpValueInput.width = 100;
 				
-				popUpPropertyInput.x = 50;
+				popUpPropertyInput.alpha = .75;
+				popUpValueInput.alpha = .75;
+				popUpPropertyInput.x = 0;
 				popUpValueInput.x = popUpPropertyInput.x + popUpPropertyInput.width + 5;
 				popUpPropertyInput.prompt = "Property";
 				popUpValueInput.prompt = "Value";
@@ -1315,16 +1332,17 @@ package com.flexcapacitor.utils {
 				popUpDisplayGroup.addElement(popUpBackground);
 				popUpDisplayGroup.addElement(popUpDisplayImage);
 				popUpDisplayGroup.addElement(popUpBorder);
+				popUpDisplayGroup.addElement(moveUpLabel);
 				popUpDisplayGroup.addElement(popUpLabel);
 				popUpDisplayGroup.addElement(popUpPropertyInput);
 				popUpDisplayGroup.addElement(popUpValueInput);
 			}
 			
 			
-			if (isApplication(displayTarget) && moveToNextParent) {
+			if (isApplication(displayTarget) && getNextParent) {
 				isApp = true;
 				closePopUp(displayTarget);
-				return;
+				return null;
 			}
 			
 			// refactor the following to updateDisplayGroup()
@@ -1362,10 +1380,15 @@ package com.flexcapacitor.utils {
 			
 			if (popUpLabel.height==0) { 
 				popUpLabel.y = popUpDisplayGroup.y>=15 ? -15 : 0;
+				moveUpLabel.y = popUpLabel.y;
 			}
 			else { 
 				popUpLabel.y = popUpDisplayGroup.y>=15 ? -popUpLabel.height : 0;
+				moveUpLabel.y = popUpLabel.y;
 			}
+			
+			popUpLabel.x = 10;
+			moveUpLabel.height = 16;
 			
 			
 			//container.x = inspector.target.localToGlobal(new Point()).x;
@@ -1387,7 +1410,7 @@ package com.flexcapacitor.utils {
 			
 			var modalBlendMode:String = BlendMode.NORMAL;
 			
-			if (!displayed) {
+			if (!isOutlineDisplayed) {
 				PopUpManager.addPopUp(popUpDisplayGroup, DisplayObject(systemManagerObject), true);
 				
 				// ArgumentError: Error #2025: The supplied DisplayObject must be a child of the caller.
@@ -1423,10 +1446,15 @@ package com.flexcapacitor.utils {
 				}
 			}
 			
-			if (moveToNextParent) {// is this in the right place? refactor
+			if (moveToNextParentAutomatically) {// is this in the right place? refactor
 				clearTimeout(popUpTimeout);
 				popUpTimeout = setTimeout(getNextOrClosePopUp, pupUpDisplayTime, displayTarget, true);
 			}
+			else {
+				clearTimeout(popUpTimeout);
+			}
+			
+			return displayTarget;
 		}
 		
 		public function isApplication(displayObject:Object):Boolean {
@@ -1538,7 +1566,8 @@ package com.flexcapacitor.utils {
 					if (popUpValueInput) {
 						popUpValueInput.text = currentValue;
 						if ("validateNow" in target) target.validateNow();
-						postDisplayObject(DisplayObject(target), true, false);
+						postDisplayObject(DisplayObject(target), true, false, false);
+						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [DisplayObject(target), true, false, false]);
 					}
 				}
 				catch (error:Error) {
@@ -1565,7 +1594,8 @@ package com.flexcapacitor.utils {
 					if (popUpValueInput) {
 						popUpValueInput.text = currentValue;
 						if ("validateNow" in target) target.validateNow();
-						postDisplayObject(DisplayObject(target), true, false);
+						postDisplayObject(DisplayObject(target), true, false, false);
+						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [DisplayObject(target), true, false, false]);
 					}
 				}
 				catch (error:Error) {
@@ -1698,16 +1728,18 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * 
+		 * Get next parent or owner of the target or close the popup if no parent
 		 **/
-		public function getNextOrClosePopUp(target:DisplayObject, displayed:Boolean = false):void {
+		public function getNextOrClosePopUp(target:DisplayObject, displayed:Boolean = false, getNextParent:Boolean = true, automaticallyMoveToNextParent:Boolean = true):Object {
 			if (target.parent && !(target is SystemManager)) {
-				postDisplayObject(DisplayObject(target), displayed);
+				return postDisplayObject(DisplayObject(target), displayed, getNextParent, automaticallyMoveToNextParent);
 			}
 			else {
 				closePopUp(DisplayObject(popUpDisplayGroup));
 				clearTimeout(popUpTimeout);
 			}
+			
+			return null;
 		}
 		
 		/**
@@ -1730,7 +1762,8 @@ package com.flexcapacitor.utils {
 			}
 			else {
 				//if ((event.target is UITextField || event.target is RichEditableText) && 
-				if ((popUpPropertyInput.owns(event.target as DisplayObject) || popUpValueInput.owns(event.target as DisplayObject)) && 
+				if ((popUpPropertyInput.owns(event.target as DisplayObject) 
+					|| popUpValueInput.owns(event.target as DisplayObject)) && 
 					event.currentTarget==popUpDisplayGroup) {
 					clearTimeout(popUpTimeout);
 					// do not close if in property text input
@@ -1738,6 +1771,11 @@ package com.flexcapacitor.utils {
 				else if (event.target == popUpLabel) {
 					clearTimeout(popUpTimeout);
 					showInputControls(!popUpPropertyInput.visible);
+				}
+				else if (event.target == moveUpLabel) {
+					clearTimeout(popUpTimeout);
+					getNextOrClosePopUp(currentPopUpTarget as DisplayObject, true, true, false);
+					showInputControls(false);
 				}
 				else {
 					closePopUp(DisplayObject(popUpDisplayGroup));

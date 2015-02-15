@@ -33,6 +33,31 @@ package com.flexcapacitor.controls
 	[Style(name="borderVisible", inherit="no", type="Boolean")]
 	
 	/**
+	 * Sets the color of the caret
+	 * */
+	[Style(name="selectionBorderColor", inherit="no", type="uint", format="Color")]
+	
+	/**
+	 * Sets the alpha of the caret
+	 * */
+	[Style(name="selectionBorderAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
+	
+	/**
+	 * Sets the alpha of the roll over color
+	 * */
+	[Style(name="rollOverAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
+	
+	/**
+	 * Sets the background color
+	 * */
+	[Style(name="backgroundColor", inherit="no", type="uint", format="Color")]
+	
+	/**
+	 * Sets the background alpha
+	 * */
+	[Style(name="backgroundAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
+	
+	/**
 	 * Sets the color of the header row separator
 	 * */
 	[Style(name="headerRowSeparatorColor", inherit="no", type="uint", format="Color")]
@@ -106,6 +131,10 @@ package com.flexcapacitor.controls
 	 *    rowSeparatorAlpha="0.0"
 	 *    rowSeparatorColor="TB"
 	 *    rowSeparatorWeight="auto"
+	 *    backgroundColor="undefined"
+	 *    selectionBorderColor="undefined"
+	 *    selectionBorderAlpha="1"
+	 *    rollOverAlpha="1"
 	 *    showHeader="true"
 	 *  /&gt;
 	 *  </pre>

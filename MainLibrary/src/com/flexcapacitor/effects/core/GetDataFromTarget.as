@@ -6,7 +6,20 @@ package com.flexcapacitor.effects.core {
 	
 	
 	/**
-	 * Get's the value from the target object and copies it into the data property.
+	 * Get's the value from the target object and copies it into it's own data property.<br/><br/>
+	 * 
+	 * <b>Usage</b>:<br/>
+	 * To get the value of the "text" property from a component named "myTextInput" 
+	 * and trace it to the console:
+<pre>
+&lt;handlers:EventHandler eventName="click" target="{button}">
+ 	&lt;core:GetDataFromTarget target="{myTextInput}" targetPropertyName="text"/>
+	
+	&lt;core:CopyPreviousToNext />
+	
+	&lt;debugging:Trace />
+&lt;handlers:EventHandler>
+</pre>
 	 * */
 	public class GetDataFromTarget extends ActionEffect {
 		
