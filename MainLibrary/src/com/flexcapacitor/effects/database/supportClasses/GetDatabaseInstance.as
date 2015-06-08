@@ -142,8 +142,14 @@ package com.flexcapacitor.effects.database.supportClasses {
 			
 			// check file exists
 			fileExists = databaseFile && databaseFile.exists;
+			
 			// modified date
-			databaseModifiedDate = new Date(databaseFile.modificationDate);
+			if (fileExists) {
+				databaseModifiedDate = new Date(databaseFile.modificationDate);
+			}
+			else {
+				databaseModifiedDate = new Date();
+			}
 			
 			// store file
 			action.file = databaseFile;

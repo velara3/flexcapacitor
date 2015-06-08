@@ -10,9 +10,35 @@ package com.flexcapacitor.effects.text {
 	
 	/**
 	 * Resizes a Text component to fit a fixed pixel width or height by 
-	 * lowering the font size. 
+	 * lowering the font size. <br/><br/>
 	 * 
-	 * Set the desired font size as the max font size. 
+	 * Set the desired font size as the max font size.<br/><br/>
+	 * Example: 
+	 * 
+<pre>
+&lt;text:ResizeTextToFit target="{sourceLabel}" 
+	  maxWidth="{groupContainer.width-100}"
+	  textComponentOwner="{groupContainer}"
+	  padding="100"
+	  minimumFontSize="1"
+	  desiredFontSize="15"
+	  />
+
+ 
+&lt;s:Label id="sourceLabel"
+	 color="#FFFFFF" 
+	 fontFamily="Myriad Pro" 
+	 fontSize="84" 
+	 text="Prosperity" 
+	 textAlign="center" 
+	 paddingLeft="80" 
+	 paddingRight="100"
+	 fontWeight="normal"
+	 typographicCase="uppercase"
+	 visible="true"
+	 >
+&lt;/s:Label>
+</pre> 
 	 * */
 	public class ResizeTextToFit extends ActionEffect {
 		

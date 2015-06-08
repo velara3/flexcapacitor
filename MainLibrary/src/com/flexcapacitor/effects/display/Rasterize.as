@@ -29,8 +29,18 @@ package com.flexcapacitor.effects.display {
 	[Event(name="error", type="flash.events.Event")]
 	
 	/**
-	 * Takes a snapshot of the source display object and copies the results
+	 * Takes a snapshot of the source display object and optionally copies the results
 	 * into the bitmapData property or to the drawTarget display object.
+	 * 
+<pre>
+&lt;display:Rasterize source="{sourceLabel}" 
+	   drawTarget="{myUIComponent}"
+	   horizontalPadding="50"
+	   smoothing="true"
+	   transparentFill="true"
+	   fillColor="0xFF0000"
+	   />
+</pre>
 	 * */
 	public class Rasterize extends ActionEffect {
 		

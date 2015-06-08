@@ -282,6 +282,7 @@ and <code>sortIndicator</code> properties.</p>
 			}
 			
 			private var chromeColorChanged:Boolean = false;
+			private var headerTextColorChanged:Boolean = false;
 			private var colorized:Boolean = false;
 			
 			/**
@@ -290,6 +291,11 @@ and <code>sortIndicator</code> properties.</p>
 			 */
 			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void
 			{
+				
+				if (headerTextColorChanged) {
+					labelDisplayGroup.setStyle("color",  getStyle("headerTextColor"));
+				}
+				
 				// Apply chrome color
 				if (chromeColorChanged)
 				{
@@ -354,6 +360,12 @@ and <code>sortIndicator</code> properties.</p>
 				if (allStyles || styleProp == "chromeColor")
 				{
 					chromeColorChanged = true;
+					invalidateDisplayList();
+				}
+				
+				if (styleProp == "headerTextColor")
+				{
+					headerTextColorChanged = true;
 					invalidateDisplayList();
 				}
 			}

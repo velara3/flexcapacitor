@@ -58,6 +58,11 @@ package com.flexcapacitor.controls
 	[Style(name="backgroundAlpha", inherit="no", type="Number", minValue="0", maxValue="1")]
 	
 	/**
+	 * Sets the color of the header text
+	 * */
+	[Style(name="headerTextColor", inherit="no", type="uint", format="Color")]
+	
+	/**
 	 * Sets the color of the header row separator
 	 * */
 	[Style(name="headerRowSeparatorColor", inherit="no", type="uint", format="Color")]
@@ -109,9 +114,26 @@ package com.flexcapacitor.controls
 	
 	/**
 	 * 
-	 * Adds a gridItemEditorSessionSaving event and additional styles. 
-	 * It is up to the grid item editor to dispatch this event
+	 * Adds additional styles: <br/> <br/>
 	 * 
+	 * - Added columnSeparatorAlpha <br/>
+	 * - Added columnSeparatorColor <br/>
+	 * - Added columnSeparatorWeight <br/>
+	 * - Added headerBackgroundColor <br/>
+	 * - headerRowSeparatorColor <br/>
+	 * - headerRowSeparatorAlpha <br/>
+	 * - rowSeparatorAlpha <br/>
+	 * - rowSeparatorColor <br/>
+	 * - rowSeparatorWeight <br/>
+	 * - showHeader <br/>
+	 * - selectionBorderColor style check which is alternative for caretColor <br/>
+	 * - selectionBorderAlpha <br/>
+	 * - rollOverAlpha <br/>
+	 * - backgroundColor<br/>
+	 * - backgroundAlpha<br/>
+	 * - Fixes the header top line showing when borderVisible is false. <br/>
+	 * - Adds a gridItemEditorSessionSaving event. It is up to the grid item editor to dispatch this event. <br/>
+	 * - Backwards compatible with Flex 4.6 <br/> <br/>
 	 *
 	 *  <p>The <code>&lt;s:DataGrid&gt;</code> tag inherits all of the tag 
 	 *  attributes of its superclass and adds the following tag attributes:</p>
@@ -128,12 +150,13 @@ package com.flexcapacitor.controls
 	 *    headerBackgroundColor="1.0"
 	 *    headerRowSeparatorColor="0xFFFFFF"
 	 *    headerRowSeparatorAlpha="1"
-	 *    rowSeparatorAlpha="0.0"
-	 *    rowSeparatorColor="TB"
-	 *    rowSeparatorWeight="auto"
-	 *    backgroundColor="undefined"
-	 *    selectionBorderColor="undefined"
+	 *    rowSeparatorAlpha="1.0"
+	 *    rowSeparatorColor="red"
+	 *    rowSeparatorWeight="1"
+	 *    selectionBorderColor="blue"
 	 *    selectionBorderAlpha="1"
+	 *    backgroundColor="0xFFFFFF"
+	 *    backgroundAlpha="1"
 	 *    rollOverAlpha="1"
 	 *    showHeader="true"
 	 *  /&gt;
@@ -142,7 +165,7 @@ package com.flexcapacitor.controls
 	 * Backwards compatible with Flex 4.6.
 	 * 
 	 * Make sure this is using com.flexcapacitor.skins.DataGridSkin
-	 * @inherit
+	 * @inheritDoc
 	 * 
 	 * */
 	public class DataGrid extends spark.components.DataGrid {

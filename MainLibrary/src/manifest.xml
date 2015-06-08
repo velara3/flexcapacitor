@@ -1,6 +1,63 @@
 <?xml version="1.0"?>
 <componentPackage>
-	<component id="RichText" class="com.flexcapacitor.controls.RichText"/>
+	<component id="AlphaLabelButton" class="com.flexcapacitor.controls.AlphaLabelButton"/>
+	<component id="BeveledImageButton" class="com.flexcapacitor.controls.BeveledImageButton"/>
+	<component id="BlinkingImageButton" class="com.flexcapacitor.controls.BlinkingImageButton"/>
+	<component id="BorderContainer" class="com.flexcapacitor.controls.BorderContainer"/>
+	<component id="ClickImageButton" class="com.flexcapacitor.controls.ClickImageButton"/>
+	<component id="ColorLabelButton" class="com.flexcapacitor.controls.ColorLabelButton"/>
+	<component id="DataGrid" class="com.flexcapacitor.controls.DataGrid"/>
+	<component id="FilterLabelButton" class="com.flexcapacitor.controls.FilterLabelButton"/>
+	<component id="FormItemComponent" class="com.flexcapacitor.controls.FormItemComponent"/>
+	<component id="FrameContainer" class="com.flexcapacitor.controls.FrameContainer"/>
+	<component id="HorizontalLine" class="com.flexcapacitor.controls.HorizontalLine"/>
+	<component id="Hyperlink" class="com.flexcapacitor.controls.Hyperlink"/>
+	<component id="ImageButton" class="com.flexcapacitor.controls.ImageButton"/>
+	<component id="InsetLabel" class="com.flexcapacitor.controls.InsetLabel"/>
+	<component id="ItemRendererButton" class="com.flexcapacitor.controls.ItemRendererButton"/>
+	<component id="LabelButton" class="com.flexcapacitor.controls.LabelButton"/>
+	<component id="MouseDownImageButton" class="com.flexcapacitor.controls.MouseDownImageButton"/>
+	<component id="MouseDownLabelButton" class="com.flexcapacitor.controls.MouseDownLabelButton"/>
+	<component id="PaginationText" class="com.flexcapacitor.controls.PaginationText"/>
+	<component id="RichDisplayText" class="com.flexcapacitor.controls.RichDisplayText"/>
+	<component id="SimpleFormLayout" class="com.flexcapacitor.controls.SimpleFormLayout"/>
+	<component id="VerticalLine" class="com.flexcapacitor.controls.VerticalLine"/>
+	<component id="VScrollBar" class="com.flexcapacitor.controls.VScrollBar"/>
+	
+	<component id="EventHandler" class="com.flexcapacitor.handlers.EventHandler"/>
+	<component id="GestureEventHandler" class="com.flexcapacitor.handlers.GestureEventHandler"/>
+	<component id="KeyboardEventHandler" class="com.flexcapacitor.handlers.KeyboardEventHandler"/>
+	
+	<component id="HTMLFormatterTLF" class="com.flexcapacitor.formatters.HTMLFormatterTLF"/>
+	
+	<component id="XMLUtils" class="com.flexcapacitor.utils."/>
+	
+	<component id="SQLColumn" class="com.flexcapacitor.data.database.SQLColumn"/>
+	<component id="SQLColumnData" class="com.flexcapacitor.data.database.SQLColumnData"/>
+	<component id="SQLColumnFilter" class="com.flexcapacitor.data.database.SQLColumnFilter"/>
+	<component id="SQLColumnUpdateData" class="com.flexcapacitor.data.database.SQLColumnUpdateData"/>
+	<component id="SQLConnection" class="com.flexcapacitor.data.database.SQLConnection"/>
+	
+	<component id="BlackAndWhiteFilter" class="com.flexcapacitor.filters.BlackAndWhiteFilter"/>
+	<component id="BorderStrokeFilter" class="com.flexcapacitor.filters.BorderStrokeFilter"/>
+	<component id="TextShadowFilter" class="com.flexcapacitor.filters.TextShadowFilter"/>
+	
+	<component id="FormElement" class="com.flexcapacitor.form.vo.FormElement"/>
+	<component id="ItemElement" class="com.flexcapacitor.form.vo.ItemElement"/>
+	
+	<component id="FormAdapter" class="com.flexcapacitor.form.FormAdapter"/>
+	<component id="FormManager" class="com.flexcapacitor.form.FormManager"/>
+	<component id="FormUtilities" class="com.flexcapacitor.form.FormUtilities"/>
+	
+	<component id="WordpressService" class="com.flexcapacitor.services.WPService"/>
+	<component id="WordpressAttachmentService" class="com.flexcapacitor.services.WPAttachmentService"/>
+	
+	<component id="ClassUtils" class="com.flexcapacitor.utils.ClassUtils"/>
+	<component id="CompilationDate" class="com.flexcapacitor.utils.CompilationDate"/>
+	<component id="StoreLogin" class="com.flexcapacitor.utils.StoreLogin"/>
+	<component id="MiniInspector" class="com.flexcapacitor.utils.MiniInspector"/>
+	<component id="XMLUtils" class="com.flexcapacitor.utils.XMLUtils"/>
+	
 	
 </componentPackage>
 

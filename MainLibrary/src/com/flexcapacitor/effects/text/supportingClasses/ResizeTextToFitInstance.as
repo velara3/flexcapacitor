@@ -67,7 +67,7 @@ package com.flexcapacitor.effects.text.supportingClasses {
 			var maxHeight:int = action.maxHeight;
 			var padding:int = action.padding;
 			var targetHeight:int;
-			var targetWidth:int;
+			var labelWidth:int;
 			var time:int;
 			
 			
@@ -85,7 +85,7 @@ package com.flexcapacitor.effects.text.supportingClasses {
 						container = textBase.owner as IInvalidating;
 					}
 					else {
-						dispatchErrorEvent("Container cannot be null");
+						dispatchErrorEvent("Container cannot be null. Set the textComponentOwner property.");
 					}
 				}
 			}
@@ -108,11 +108,11 @@ package com.flexcapacitor.effects.text.supportingClasses {
 			
 			if (maxWidth!=0) {
 				// get size of label
-				targetWidth = textBase.width - padding;
+				labelWidth = textBase.width - padding;
 				
 				time = getTimer();
 				
-				while (targetWidth>maxWidth && fontSize!=minimumFontSize) {
+				while (labelWidth>maxWidth && fontSize!=minimumFontSize) {
 					fontSize = fontSize-stepSize;
 					
 					if (fontSize<minimumFontSize) {
@@ -123,7 +123,7 @@ package com.flexcapacitor.effects.text.supportingClasses {
 					// forces text field to remeasure itself (textfield.validateNow does not work)
 					container.validateNow();
 					// get size of label
-					targetWidth = textBase.width;
+					labelWidth = textBase.width;
 				}
 				
 				time = getTimer()-time;

@@ -3,8 +3,8 @@
 @namespace controls "com.flexcapacitor.controls.*";
 @namespace view "com.flexcapacitor.prompt.view.*";
 
-controls|ImageButton {
-	skinClass:ClassReference("com.flexcapacitor.skins.ImageButtonSkin");
+controls|BeveledImageButton {
+	skinClass:ClassReference("com.flexcapacitor.skins.BeveledImageButtonSkin");
 }
 
 view|PromptDialog {

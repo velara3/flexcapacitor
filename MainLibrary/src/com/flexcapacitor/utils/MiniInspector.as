@@ -77,52 +77,118 @@ package com.flexcapacitor.utils {
 	[Event(name="click", type="flash.events.MouseEvent")]
 	
 	/**
-	 * At runtime it will display information about the object you click on in the console.
-	 * It also lets you manually fade in and out a bitmap image.<br/><br/>
+	 * This class allows you to display information about the visual element you click on 
+	 * at runtime and get or set properties or styles of that instance at runtime.<br/><br/> 
+	 *  
+	 * • You can also manually fade in and out a bitmap image for comparing a mockup image 
+	 * with the runtime layout.<br/>
+	 * • You can also get the CSS heirarchy and style information of a visual element <br/>
+	 * • You can get the font family, font embedding and font device information. <br/>
+	 * • You can get the color under the mouse.<br/>
+	 * • You can show a ruler at runtime and get size and angle information with it. <br/><br/>
+	 * 
+	 * Please read through all of the documentation in this class to 
+	 * save yourself time debugging.<br/><br/> 
 	 *
-	 * Click anywhere on the application while pressing the CTRL / COMMAND key and
-	 * information about the object under the mouse (that is also in the component tree excluding the skin) will be written to the console.<br/><br/>
+	 * To get started click anywhere on the application while pressing the CTRL / COMMAND key and
+	 * information about the object under the mouse (that is also in the component tree excluding the skin) will be written to the console
+	 * and the object will be outlined in the app. After a few seconds the next object
+	 * in the component tree, which is the owner or parent of the currently selected object will be selected. 
+	 * Click on the component again to stop from moving to the next object in the heirarchy. 
+	 * You can click on the area to the left of the outline label to stop the automatic selection of the next object
+	 * in the hierarchy. Note: When moving to the next object no information will be written to 
+	 * the console like the first object you clicked on.  
+	 * 
+	 * The information output to the console includes a way to find the object in Eclipse.
+	 * It will create a search pattern using a regular expression that will locate instance and 
+	 * show you the document the object is defined in. You use this pattern in conjunction with 
+	 * the Eclipse Search in Files dialog.<br/><br/>
 	 *
 	 * Click anywhere on the application while pressing CTRL / CMD + SHIFT key and
-	 * information about the object under the mouse (that is in the component tree OR in the skin) will be written to the console.<br/><br/>
+	 * information about the object under the mouse (that is in the component tree OR in the skin or display list) will be 
+	 * written to the console and the object will be outlined in the app.<br/><br/>
 	 *
 	 * Adding the ALT key to the above keyboard shortcuts will cause you to enter the debugger
-	 * during a click handler event to inspect the properties and values of the item you clicked.<br/><br/>
-	 *
-	 * The information output to the console includes a way to find the object in Eclipse. <br/>
-	 * It will create a search pattern using a regular expression that will locate the document the object is defined in.
-	 * This is used with the Eclipse Search in Files dialog.<br/><br/>
-	 *
-	 * To use find in files:<br/>
-	 * • Open the Search in Files dialog (CTRL + H)<br/>
-	 * • Copy the created pattern from the console and paste it into the search text input<br/>
-	 * • select regular expression checkbox <br/>
-	 * • select current workspace or project<br/>
-	 * • click search.<br/><br/>
-	 *
-	 * Note: If it has an ID it will find it quickly. If it doesn't it will narrow it down and in most cases still find it. <br/><br/>
-	 *
-	 * Mini Inspector Usage<br/>
+	 * during a click event to inspect the properties and values of the item you clicked.
+	 * You can click on an element, find it and then step into it's click handler method.<br/><br/>
+	 * 
+	 * <b>Mini Inspector Usage</b><br/>
 	 * Add the class to the declarations tag usually in the root application like so,<br/><br/>
 	 *
-	 * &lt;utils:MiniInspector /><br/><br/>
+ * <pre>
+ * &lt;fx:Declarations>
+ * 	 &lt;utils:MiniInspector/>
+ * &lt;/fx:Declarations>
+ * </pre>
+	 * 
+	 * <b>To select a display object or UI component</b><br/><br/>
+	 * Hold down COMMAND and CLICK on the component with your mouse.
+	 * This will select the UIComponent in the component tree and show an outline around it. 
+	 * Press SHIFT + COMMAND + CLICK to select a sub-component of a UIComponent on the display list. 
+	 * The difference is the Component tree should match your MXML project exactly while a display object
+	 * may be part of a skin of a UIComponent and is not necessarily part of the component tree. <br/><br/>
+	 * Pressing CMD+CLICK or SHIFT+CMD+CLICK will also output the location of the visual element 
+	 * in the console. You can use this information to find the instance of the element. <br/><br/>
+	 * 
+	 * <b>To get or set the property or style of a display object or UI component</b><br/><br/>
+	 * Hold down COMMAND+CLICK or SHIFT+COMMAND+CLICK to select the component and then click the label 
+	 * above the component with your mouse. This will show two text fields. The first is the 
+	 * property or style. Type the name of the property or style in the first field and press enter. 
+	 * This will retrieve the value and place it in the second text field. To change or update
+	 * the property or style value, type the new value in the second text field and press enter. 
+	 * You can type in colors using a color name or hexidecimal value such as, "red", "#FF0000" or "0xFF0000".
+	 * You can also set the value to null or undefined. Just type in the word "undefined" without the quotes. 
 	 *
-	 * To use the image fade in fade out:<br/>
+	 * <b>To use find in files:<b><br/><br/>
+	 * • COMMAND+CLICK or COMMAND+SHIFT+CLICK on an visual element (UIComponent) at runtime. This writes a RegEx pattern to the console. 
+	 * • Open the Search in Files dialog (CTRL + H)<br/>
+	 * • Copy the pattern from the console and paste it into the search text input<br/>
+	 * • Select Regular Expression checkbox in the dialog if it's not selected already<br/>
+	 * • Select Current Workspace or Project option in the dialog if it's not selected already<br/>
+	 * • Click the Search button.<br/>
+	 * • Double click on the search results. It will open the document containing the item you clicked on.<br/>
+	 *
+	 * Note: If it has an ID it will find it quickly. If it doesn't it will narrow it down and in most cases still find it. 
+	 * <br/><br/>
+	 *
+	 * <b>To use the image fade in fade out:</b><br/><br/>
 	 *
 	 * • Add an image to your component for example, <br/>
 	 * &lt;s:BitmapImage id="image" source="mockup.png" /><br/><br/>
 	 * • Set the background image property to the image like so, <br/>
 	 * &lt;utils:MiniInspector backgroundImage="{image}"/><br/><br/>
 	 * • Run the application<br/>
-	 * • While holding COMMAND / CTRL scroll the mouse wheel up or down. <br/><br/>
+	 * • While holding COMMAND / CTRL scroll the mouse wheel up or down. 
+	 * This will fade the image in and out allowing you to compare the actual layout
+	 * with the bitmap image screenshot.<br/><br/>
 	 *
-	 * <b>NOTES</b><br/>
+	 * <b>To use the ruler:<b><br/><br/>
+	 * • Set showRuler to true: 
+ * <pre>
+ * &lt;fx:Declarations>
+ * 	 &lt;utils:MiniInspector showRuler="true"/>
+ * &lt;/fx:Declarations>
+ * </pre>
+	 * • Hold down the COMMAND / CTRL key and press the mouse button down and drag.<br/>
+	 * • Drag drag left, right, up or down.<br/>
+	 * A ruler and tool tip will be shown with length, width, height and angle of the line.<br/>
+	 * • Hold the SHIFT key to lock the ruler to vertical or horizontal position.<br/>
+	 * • Release the SHIFT and COMMAND to stop showing the ruler.<br/><br/>
+	 * NOTE: If the app has tool tips itself it is possible it will remove the ruler tool tip and
+	 * show it's own. To prevent this disable the areas where the app shows it's tool tips or
+	 * output the coordinates to the console with the output ruler values to the console setting.<br/>
+	 * 
+	 * <b>NOTES:</b><br/>
 	 * 
 	 * If two outlines show up check that there are not two instances 
 	 * of this class in use. You can check the document property of this
 	 * class to see where an instance is declared.<br/><br/>
 	 * 
-	 * More information at http://code.google.com/p/flexcapacitor/
+	 * There are more features than described here. Please read through the properties and 
+	 * documentation in this class.<br/><br/>
+	 * 
+	 * More information at https://github.com/monkeypunch3/flexcapacitor
+	 * Please send feature requests and bug reports. 
 	 * */
 	public class MiniInspector extends EventDispatcher implements IMXMLObject {
 		
@@ -146,12 +212,6 @@ package com.flexcapacitor.utils {
 		 * Flag indicating if the url starts with "http"
 		 * */
 		public var isOnServer:Boolean;
-		
-		/**
-		 * Shows display object information instead of component information
-		 * Does not work at this time
-		 * */
-		public var showDisplayObjectInformation:Boolean = true;
 		
 		/**
 		 * Shows styles from the "global" type declaration
@@ -217,9 +277,23 @@ package com.flexcapacitor.utils {
 		public var showColorUnderMouse:Boolean;
 		
 		/**
-		 * Shows a ruler when dragging
+		 * Shows a ruler when dragging. Set this value to true 
+		 * and press and hold the COMMAND / CTRL key, the mouse down
+		 * button and then move the mouse. 
+		 * @see requireCTRLKey
 		 * */
 		public var showRuler:Boolean;
+		
+		/**
+		 * Shows the ruler values in the console when ruler is active
+		 * */
+		public var showRulerValuesInConsole:Boolean;
+		
+		/**
+		 * Shows display object information instead of component information
+		 * Does not work at this time
+		 * */
+		public var showDisplayObjectInformation:Boolean = true;
 		
 		/**
 		 * Shows the boundries of elements in the component tree
@@ -233,13 +307,31 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Pop up when using ruler
+		 * @see rulerColor
 		 **/
 		public var rulerPopUp:UIComponent;
+		
+		/**
+		 * Color of the ruler line. Default is black
+		 **/
+		public var rulerColor:Number = 0x000000;
 		
 		/**
 		 * Tooltip when using popup
 		 **/
 		public var toolTipPopUp:ToolTip;
+		
+		/**
+		 * Recreate ruler tooltip if needed. If an app has tool tips 
+		 * it will destroy the current tool tip we are using for the ruler.
+		 * Setting this to true takes back the tool tip. 
+		 **/
+		public var recreateToolTipIfNeeded:Boolean = true;
+		
+		/**
+		 * Minimum tool tip width
+		 * */
+		public var minToolTipWidth:int = 70;
 		
 		/**
 		 * Space before some output text
@@ -484,10 +576,14 @@ package com.flexcapacitor.utils {
 					rulerPopUp = new UIComponent();
 				}
 				else {
-					PopUpManager.removePopUp(rulerPopUp);
+					if (rulerPopUp.isPopUp) {
+						PopUpManager.removePopUp(rulerPopUp);
+					}
 					
 					if (toolTipPopUp && toolTipPopUp.stage) {
 						ToolTipManager.destroyToolTip(toolTipPopUp);
+						ToolTipManager.currentToolTip = null;
+						toolTipPopUp = null;
 					}
 				}
 			}
@@ -495,10 +591,14 @@ package com.flexcapacitor.utils {
 				swfRoot.removeEventListener(MouseEvent.MOUSE_MOVE, mouseRulerMoveHandler, true);
 				swfRoot.removeEventListener(MouseEvent.MOUSE_UP, mouseRulerUpHandler, true);
 				
-				PopUpManager.removePopUp(rulerPopUp);
+				if (rulerPopUp.isPopUp) {
+					PopUpManager.removePopUp(rulerPopUp);
+				}
 				
 				if (toolTipPopUp && toolTipPopUp.stage) {
 					ToolTipManager.destroyToolTip(toolTipPopUp);
+					ToolTipManager.currentToolTip = null;
+					toolTipPopUp = null;
 				}
 			}
 		}
@@ -514,16 +614,16 @@ package com.flexcapacitor.utils {
 		}
 
 		
-		protected function mouseRulerMoveHandler(event:MouseEvent):void
-		{
+		protected function mouseRulerMoveHandler(event:MouseEvent):void {
+			var message:String;
+			
 			if (!rulerPopUp.stage) {
 				PopUpManager.addPopUp(rulerPopUp, SystemManager.getSWFRoot(this));
-				toolTipPopUp = ToolTipManager.createToolTip("HELLO", event.stageX, event.stageY) as ToolTip;
-				ToolTipManager.currentToolTip = toolTipPopUp;
+				createRulerToolTip(event.stageX, event.stageY);
 			}
 			
 			rulerPopUp.graphics.clear();
-			rulerPopUp.graphics.lineStyle(1);
+			rulerPopUp.graphics.lineStyle(1, rulerColor);
 			
 			var distance:Number;
 			var targetX:int = event.stageX;
@@ -533,9 +633,12 @@ package com.flexcapacitor.utils {
 			var deltaX:Number = Number(Number(targetX - startX).toFixed(1));
 			var deltaY:Number = Number(Number(targetY - startY).toFixed(1));
 			
+			// This may not be correct. Or we may want to show an alternative degree unit
 			//var angleInDegrees:int = Math.abs(Math.atan2(deltaY, deltaX) * 180 / Math.PI);
 			var angleInDegrees:int = -(Math.atan2(deltaY, deltaX) * 180 / Math.PI);
 			var sign:int = angleInDegrees<0 ? -1 : 1;
+			var angle2:int = Math.atan2(-deltaY, -deltaX) * 180 / Math.PI - 90;
+			angle2 = angle2 < 0 ? 360 + angle2 : angle2;
 			
 			distance = Math.max(Math.abs(startX-targetX), Math.abs(startY-targetY));
 			distance = Number(distance.toFixed(1));
@@ -595,26 +698,32 @@ package com.flexcapacitor.utils {
 					if (angleInDegrees>=0 && angleInDegrees<=45) {
 						targetY = startY;
 						angleInDegrees = 0;
+						angle2 = 90;
 					}
 					else if (angleInDegrees>=45 && angleInDegrees<=135) {
 						targetX = startX;
 						angleInDegrees = 90;
+						angle2 = 0;
 					}
 					else if (angleInDegrees>=135 && angleInDegrees<=180) {
 						targetY = startY;
 						angleInDegrees = 180;
+						angle2 = 270;
 					}
 					else if (angleInDegrees<=0 && angleInDegrees>=-45) {
 						targetY = startY;
 						angleInDegrees = 0;
+						angle2 = 90;
 					}
 					else if (angleInDegrees<=-45 && angleInDegrees>=-135) {
 						targetX = startX;
 						angleInDegrees = -90;
+						angle2 = 180;
 					}
 					else if (angleInDegrees<=-135 && angleInDegrees>=-180) {
 						targetY = startY;
 						angleInDegrees = -180;
+						angle2 = 270;
 					}
 				}
 			}
@@ -622,13 +731,24 @@ package com.flexcapacitor.utils {
 			rulerPopUp.graphics.moveTo(startX, startY);
 			rulerPopUp.graphics.lineTo(targetX, targetY);
 			
-			if (ToolTipManager.currentToolTip) {
+			//message = "" + distance + "px";
+			message = "x:" + deltaX + " y:" + deltaY;
+			//message += "\nx:" + targetX + ",y:" + targetY;
+			message += "\n" + angle2 + "°" + "  " + angleInDegrees + "°";
+			
+			if (ToolTipManager.currentToolTip || recreateToolTipIfNeeded) {
+				
+				if (!ToolTipManager.currentToolTip && recreateToolTipIfNeeded) {
+					createRulerToolTip(event.stageX, event.stageY);
+				}
+				
 				ToolTipManager.currentToolTip.x = targetX+5;
 				ToolTipManager.currentToolTip.y = targetY;
-				//toolTipPopUp.text = "" + distance + "px";
-				toolTipPopUp.text = "x:" + deltaX + " y:" + deltaY;
-				//toolTipPopUp.text += "\nx:" + targetX + ",y:" + targetY;
-				toolTipPopUp.text += "\n" +angleInDegrees + "°";
+				toolTipPopUp.text = message;
+			}
+			
+			if (showRulerValuesInConsole) {
+				logger.log(LogEventLevel.INFO, message);
 			}
 			
 		}
@@ -636,7 +756,15 @@ package com.flexcapacitor.utils {
 		protected function mouseRulerUpHandler(event:MouseEvent):void
 		{
 			addRulerHandlers(false, event);
-			
+		}
+		
+		/**
+		 * Creates a tool tip and sets the toolTipPopUp property
+		 * */
+		public function createRulerToolTip(x:Number, y:Number):void {
+			toolTipPopUp = ToolTipManager.createToolTip("", x, y) as ToolTip;
+			toolTipPopUp.minWidth = minToolTipWidth;
+			ToolTipManager.currentToolTip = toolTipPopUp;
 		}
 		
 		

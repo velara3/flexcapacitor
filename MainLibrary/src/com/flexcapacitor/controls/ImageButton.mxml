@@ -1,10 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Image xmlns:fx="http://ns.adobe.com/mxml/2009" 
-		 xmlns:s="library://ns.adobe.com/flex/spark"
-		 buttonMode="true">
+<!--
+
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+-->
+<s:Button xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  buttonMode="true"
+		  mouseChildren="false"
+		  >
+	
+	<!---
+	
+	Creates a button with no background that supports
+	padding, background color, background alpha and up, over and down images. <br/><br/>
+	
+	To use, set the CSS for your button: 
+	
+		controls|ImageButton#myImage {
+			paddingRight: 8;
+			paddingLeft: 8;
+			backgroundColor: black;
+			backgroundAlpha: .1;
+		}
+		controls|ImageButton#myImage:up {
+			icon: "assets/upImage.png";
+		}
+		controls|ImageButton#myImage:over {
+			icon: "assets/downImage.png";
+		}
+		controls|ImageButton#myImage:down {
+			icon: "assets/overImage.png";
+		}
+		controls|ImageButton#myImage:disabled {
+			icon: "assets/disabledImage.png";
+		}
+	
+	
+	-->
 	
 	<fx:Metadata>
-		[Style(name="useButtonUpStyle", inherit="no", type="type")]
+		[Style(name="padding", inherit="no", type="int")]
+		[Style(name="paddingBottom", inherit="no", type="int")]
+		[Style(name="paddingLeft", inherit="no", type="int")]
+		[Style(name="paddingRight", inherit="no", type="int")]
+		[Style(name="paddingTop", inherit="no", type="int")]
 	</fx:Metadata>
-	
-</s:Image>
+</s:Button>

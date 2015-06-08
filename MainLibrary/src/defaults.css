@@ -2,8 +2,22 @@
 @namespace s "library://ns.adobe.com/flex/spark";
 @namespace controls "com.flexcapacitor.controls.*";
 
+controls|BorderContainer {
+	skinClass: ClassReference("com.flexcapacitor.skins.BorderContainerSkin");
+}
+
 controls|ImageButton {
-	skinClass:ClassReference("com.flexcapacitor.skins.ImageButtonSkin");
+	icon: not_nothing; /* used to fix padding bug in SparkButtonSkin */
+	paddingLeft: 10;
+	paddingRight: 10;
+	paddingBottom: 2;
+	paddingTop: 2;
+	backgroundAlpha: ClassReference(null);
+	skinClass: ClassReference("com.flexcapacitor.skins.ImageButtonSkin");
+}
+
+controls|BeveledImageButton {
+	skinClass: ClassReference("com.flexcapacitor.skins.BeveledImageButtonSkin");
 }
 
 controls|FrameContainer {
@@ -32,6 +46,7 @@ controls|DataGrid {
 	columnSeparatorColor: #E6E6E6;
 	columnSeparatorWeight: 1;
 	headerBackgroundColor: #D8D8D8;
+	headerTextColor: #696969;
 	headerRowSeparatorColor: #696969;
 	headerRowSeparatorAlpha: 1;
 	rowSeparatorAlpha: 1;

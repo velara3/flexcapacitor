@@ -67,7 +67,7 @@ package com.flexcapacitor.effects.display.supportClasses {
 			
 			var action:Rasterize = Rasterize(effect);
 			var source:DisplayObject = action.source as DisplayObject;
-			var targetDisplayObject:Sprite = action.drawTarget as Sprite;
+			var targetDisplayObject:Sprite = action.drawTarget ? action.drawTarget as Sprite : action.target as Sprite;
 			var transparentFill:Boolean = action.transparentFill;
 			var horizontalPadding:int = action.horizontalPadding;
 			var verticalPadding:int = action.verticalPadding;
@@ -89,6 +89,11 @@ package com.flexcapacitor.effects.display.supportClasses {
 				
 				if (source.width==0 || source.height==0) {
 					dispatchErrorEvent("Target displayObject does not have size");
+				}
+				
+				if ((action.drawTarget && !targetDisplayObject) ||
+					(action.target && !targetDisplayObject) ) {
+					dispatchErrorEvent("Draw target must be a subclass of Sprite");
 				}
 				
 			}

@@ -70,6 +70,8 @@
 		<s:State name="Simple_Collection_Filtering"/>
 		<s:State name="Complex_Collection_Filtering"/>
 		<s:State name="Collection_Add_Item"/>
+		
+		<s:State name="DataGrid"/>
 	</s:states>
 	
 	<s:Rect width="240" height="100%" >
@@ -96,6 +98,7 @@
 		<c:BrowseForFile1 			width="100%" height="100%" includeIn="Browse_For_File" />
 		<c:BranchingByRuntimeVersion1 width="100%" height="100%" includeIn="Branching_By_Runtime_Version" />
 		<c:ChangeStates1 			width="100%" height="100%" includeIn="Change_States" />
+		<c:FCDataGrid 			width="100%" height="100%" includeIn="DataGrid" />
 	</s:Group>
 	
 	<s:Label id="title" 

@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 
+		 xmlns:core="com.flexcapacitor.effects.core.*" 
+		 xmlns:handlers="com.flexcapacitor.handlers.*" 
+		 xmlns:status="com.flexcapacitor.effects.status.*" 
+		 xmlns:controls="com.flexcapacitor.controls.*" xmlns:supportClasses="com.flexcapacitor.form.supportClasses.*" 
+		 >
+	
+	
+	<fx:Declarations>
+		
+		<!-- DataGrid -->
+		<!--- 
+		
+		The DataGrid supports additional styles and events
+		
+		-->
+	
+	</fx:Declarations>
+	
+	
+	<s:Group width="100%" height="100%" 
+			 left="10" top="10" bottom="10">
+		<s:layout>
+			<s:VerticalLayout horizontalAlign="left"/>
+		</s:layout>
+		
+		<s:Label text="DataGrid with additional styles and events" 
+				 color="#333333"
+				 top="10" left="10"
+				 width="100%"
+				 fontSize="12">
+		</s:Label>
+		
+		<s:Spacer height="10"/>
+		
+		<controls:DataGrid columnSeparatorAlpha="0x0099FF"
+						   columnSeparatorColor="red"
+						   columnSeparatorWeight="1"
+						   headerBackgroundColor="green"
+						   headerRowSeparatorColor="blue"
+						   headerRowSeparatorAlpha="1"
+						   headerTextColor="white"
+						   rowSeparatorAlpha="1.0"
+						   rowSeparatorColor="purple"
+						   rowSeparatorWeight="1"
+						   selectionBorderColor="gray"
+						   selectionBorderAlpha="1"
+						   backgroundColor="yellow"
+						   backgroundAlpha="1"
+						   rollOverAlpha="1"
+						   showHeader="true"
+						   >
+			<controls:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="content" minWidth="150"/>
+					<s:GridColumn dataField="title" minWidth="300"/>
+				</s:ArrayList>
+			</controls:columns>
+			<controls:dataProvider>
+				<s:ArrayCollection>
+					<supportClasses:Item content="Item 1" title="Books"/>
+					<supportClasses:Item content="Item 2" title="Videos"/>
+					<supportClasses:Item content="Item 3" title="TV"/>
+					<supportClasses:Item content="Item 4" title="Radio"/>
+				</s:ArrayCollection>
+			</controls:dataProvider>
+		</controls:DataGrid>
+		
+		<s:Spacer height="10"/>
+		
+		<s:DataGrid id="defaultSparkDataGrid">
+			<s:columns>
+				<s:ArrayList>
+					<s:GridColumn dataField="content" minWidth="150"/>
+					<s:GridColumn dataField="title" minWidth="300"/>
+				</s:ArrayList>
+			</s:columns>
+			<s:dataProvider>
+				<s:ArrayCollection>
+					<supportClasses:Item content="Item 1" title="Books"/>
+					<supportClasses:Item content="Item 2" title="Videos"/>
+					<supportClasses:Item content="Item 3" title="TV"/>
+					<supportClasses:Item content="Item 4" title="Radio"/>
+				</s:ArrayCollection>
+			</s:dataProvider>
+		</s:DataGrid>
+	</s:Group>
+	
+</s:Group>
