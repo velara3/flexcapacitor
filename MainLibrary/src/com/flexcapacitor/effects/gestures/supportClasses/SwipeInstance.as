@@ -75,7 +75,7 @@ package com.flexcapacitor.effects.gestures.supportClasses {
 			
 			if (gestureEvent.offsetX==-1) {
 				if (action.hasEventListener(Swipe.SWIPE_LEFT)) {
-					action.dispatchEvent(new Event(Swipe.SWIPE_LEFT));
+					dispatchActionEvent(new Event(Swipe.SWIPE_LEFT));
 				}
 				if (action.swipeLeftEffect) {
 					playEffect(action.swipeLeftEffect);
@@ -83,7 +83,7 @@ package com.flexcapacitor.effects.gestures.supportClasses {
 			}
 			else if (gestureEvent.offsetX==1) {
 				if (action.hasEventListener(Swipe.SWIPE_RIGHT)) {
-					action.dispatchEvent(new Event(Swipe.SWIPE_RIGHT));
+					dispatchActionEvent(new Event(Swipe.SWIPE_RIGHT));
 				}
 				if (action.swipeRightEffect) {
 					playEffect(action.swipeRightEffect);
@@ -94,7 +94,7 @@ package com.flexcapacitor.effects.gestures.supportClasses {
 			// VERTICAL SWIPE
 			if (gestureEvent.offsetY==-1) {
 				if (action.hasEventListener(Swipe.SWIPE_UP)) {
-					action.dispatchEvent(new Event(Swipe.SWIPE_UP));
+					dispatchActionEvent(new Event(Swipe.SWIPE_UP));
 				}
 				if (action.swipeUpEffect) {
 					playEffect(action.swipeUpEffect);
@@ -103,7 +103,7 @@ package com.flexcapacitor.effects.gestures.supportClasses {
 			
 			else if (gestureEvent.offsetY==1) {
 				if (action.hasEventListener(Swipe.SWIPE_DOWN)) {
-					action.dispatchEvent(new Event(Swipe.SWIPE_DOWN));
+					dispatchActionEvent(new Event(Swipe.SWIPE_DOWN));
 				}
 				if (action.swipeDownEffect) {
 					playEffect(action.swipeDownEffect);

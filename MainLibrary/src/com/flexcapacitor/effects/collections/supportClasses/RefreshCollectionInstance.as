@@ -93,7 +93,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 					}
 					
 					if (action.hasEventListener(RefreshCollection.REFRESH_COMPLETE)) {
-						action.dispatchEvent(new Event(RefreshCollection.REFRESH_COMPLETE));
+						dispatchActionEvent(new Event(RefreshCollection.REFRESH_COMPLETE));
 					}
 				}
 				else {
@@ -103,7 +103,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 					}
 					
 					if (action.hasEventListener(RefreshCollection.REFRESH_NOT_COMPLETE)) {
-						action.dispatchEvent(new Event(RefreshCollection.REFRESH_NOT_COMPLETE));
+						dispatchActionEvent(new Event(RefreshCollection.REFRESH_NOT_COMPLETE));
 					}
 				}
 			}
@@ -114,7 +114,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				}
 				
 				if (action.hasEventListener(RefreshCollection.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(RefreshCollection.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(RefreshCollection.COLLECTION_NOT_SET));
 				}
 			}
 			

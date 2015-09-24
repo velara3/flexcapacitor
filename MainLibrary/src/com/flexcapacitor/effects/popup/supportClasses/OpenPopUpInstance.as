@@ -314,7 +314,7 @@ use namespace mx_internal;
 			}
 			
 			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE)) {
-				action.dispatchEvent(new Event(OpenPopUp.MOUSE_DOWN_OUTSIDE));
+				dispatchActionEvent(new Event(OpenPopUp.MOUSE_DOWN_OUTSIDE));
 			}
 			
 			if (action.mouseDownOutsideEffect) { 
@@ -343,7 +343,7 @@ use namespace mx_internal;
 			}
 		
 			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_INSIDE)) {
-				action.dispatchEvent(new Event(OpenPopUp.MOUSE_DOWN_INSIDE));
+				dispatchActionEvent(new Event(OpenPopUp.MOUSE_DOWN_INSIDE));
 			}
 			
 			if (action.mouseDownInsideEffect) { 
@@ -375,7 +375,7 @@ use namespace mx_internal;
 				removeEventListeners();
 				
 				if (action.hasEventListener(OpenPopUp.CLOSE)) {
-					action.dispatchEvent(new Event(OpenPopUp.CLOSE));
+					dispatchActionEvent(new Event(OpenPopUp.CLOSE));
 				}
 				
 				if (action.closeEffect) { 
@@ -384,7 +384,7 @@ use namespace mx_internal;
 				
 				if (actionProperty in popUp && popUp[actionProperty]==continueValue) {
 					if (action.hasEventListener(OpenPopUp.CONTINUE_ACTION)) {
-						action.dispatchEvent(new Event(OpenPopUp.CONTINUE_ACTION));
+						dispatchActionEvent(new Event(OpenPopUp.CONTINUE_ACTION));
 					}
 					
 					if (action.continueEffect) { 
@@ -393,7 +393,7 @@ use namespace mx_internal;
 				}
 				else if (actionProperty in popUp && popUp[actionProperty]==cancelValue) {
 					if (action.hasEventListener(OpenPopUp.CANCEL_ACTION)) {
-						action.dispatchEvent(new Event(OpenPopUp.CANCEL_ACTION));
+						dispatchActionEvent(new Event(OpenPopUp.CANCEL_ACTION));
 					}
 					
 					if (action.cancelEffect) { 

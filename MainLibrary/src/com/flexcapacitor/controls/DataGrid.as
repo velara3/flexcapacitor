@@ -113,8 +113,10 @@ package com.flexcapacitor.controls
 	[Style(name="headerBackgroundColor", inherit="yes", type="uint", format="Color")]
 	
 	/**
+	 * This is an attempt at a better DataGrid. It uses the com.flexcapacitor.skins.DataGridSkin class. 
+	 * This skin is set in the defaults.css of the Flex Capacitor library (FCLibrary). 
 	 * 
-	 * Adds additional styles: <br/> <br/>
+	 * This adds additional styles, properties and events: <br/> <br/>
 	 * 
 	 * - Added columnSeparatorAlpha <br/>
 	 * - Added columnSeparatorColor <br/>

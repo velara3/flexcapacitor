@@ -107,7 +107,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				
 				if (action.hasEventListener(ResumeEffect.NOT_PAUSED)) {
-					action.dispatchEvent(new Event(ResumeEffect.NOT_PAUSED));
+					dispatchActionEvent(new Event(ResumeEffect.NOT_PAUSED));
 				}
 				
 				if (action.notPausedEffect) { 

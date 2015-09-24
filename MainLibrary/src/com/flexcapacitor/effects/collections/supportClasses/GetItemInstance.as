@@ -95,7 +95,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				else {
 					
 					if (action.hasEventListener(GetItem.COLLECTION_EMPTY)) {
-						action.dispatchEvent(new Event(GetItem.COLLECTION_EMPTY));
+						dispatchActionEvent(new Event(GetItem.COLLECTION_EMPTY));
 					}
 					
 					// collection is empty
@@ -109,7 +109,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 			else {
 				
 				if (action.hasEventListener(GetItem.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(GetItem.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(GetItem.COLLECTION_NOT_SET));
 				}
 				
 				// collection is not set

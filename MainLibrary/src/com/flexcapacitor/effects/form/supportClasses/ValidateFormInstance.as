@@ -76,7 +76,7 @@ package com.flexcapacitor.effects.form.supportClasses {
 			if (valid) {
 				
 				if (action.hasEventListener(ValidateForm.VALID)) {
-					dispatchEvent(new Event(ValidateForm.VALID));
+					dispatchActionEvent(new Event(ValidateForm.VALID));
 				}
 				
 				if (action.validEffect) {
@@ -87,7 +87,7 @@ package com.flexcapacitor.effects.form.supportClasses {
 			// if not valid
 			else {
 				if (action.hasEventListener(ValidateForm.INVALID)) {
-					dispatchEvent(new Event(ValidateForm.INVALID));
+					dispatchActionEvent(new Event(ValidateForm.INVALID));
 				}
 				
 				if (action.invalidEffect) {

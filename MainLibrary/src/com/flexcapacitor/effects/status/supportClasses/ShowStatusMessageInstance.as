@@ -69,8 +69,12 @@ package com.flexcapacitor.effects.status.supportClasses {
 			var textAlignment:String = action.textAlignment;
 			var location:String = action.location;
 			var parent:Sprite = action.parentView;
+			var useObjectUtilToString:Boolean = action.useObjectUtilToString;
 			var message:String = action.message;
+			var matchDurationToTextContent:Boolean = action.matchDurationToTextContent;
 			var statusMessage:IStatusMessage;
+			var minimumDuration:int = action.minimumDuration;
+			var maximumDuration:int = action.maximumDuration;
 			var factory:ClassFactory;
 			var position:Number;
 			
@@ -106,12 +110,26 @@ package com.flexcapacitor.effects.status.supportClasses {
 			
 			
 			if (action.data) {
-				if (action.data is String) {
-					message += "\n" + action.data;
+				if (message==null) {
+					message = ""; 
 				}
 				else {
-					message += "\n" + ObjectUtil.toString(action.data);
+					message += "\n";
 				}
+				
+				if (action.data is String) {
+					message += action.data;
+				}
+				else if (useObjectUtilToString) {
+					message += ObjectUtil.toString(action.data);
+				}
+				else {
+					message += action.data + "";
+				}
+			}
+			
+			if (message==null) {
+				message = "";
 			}
 			
 			if (action.data==null && action.showNullData) {
@@ -125,6 +143,14 @@ package com.flexcapacitor.effects.status.supportClasses {
 				statusMessage.fadeInDuration = action.fadeInDuration;
 				statusMessage.showBusyIndicator = action.showBusyIcon;
 				statusMessage.title = action.title;
+			}
+			
+			if (matchDurationToTextContent && !action.doNotClose) {
+				var wordCount:int = message.split(" ").length;
+				var matchedDuration:int = wordCount * action.durationPerWord;
+				matchedDuration = matchedDuration<minimumDuration ? minimumDuration : matchedDuration;
+				matchedDuration = matchedDuration>maximumDuration ? maximumDuration : matchedDuration;
+				statusMessage.duration = matchedDuration;
 			}
 			
 			if (!parent) {

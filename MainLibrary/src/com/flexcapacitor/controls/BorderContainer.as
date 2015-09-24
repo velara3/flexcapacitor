@@ -2,11 +2,15 @@ package com.flexcapacitor.controls
 {
 	import spark.components.BorderContainer;
 	
+	[Style(name="borderSides", type="String", inherit="no", defaultValue="left top right bottom")]
 	[Style(name="borderJoints", type="String", inherit="no", enumeration="round,miter,bevel", defaultValue="miter")]
 	[Style(name="borderCaps", type="String", inherit="no", enumeration="round,square,none", defaultValue="round")]
 	[Style(name="borderMiterLimit", type="Number", inherit="no", defaultValue="3")]
 	[Style(name="borderPixelHinting", type="Boolean", inherit="no", defaultValue="false")]
 	[Style(name="borderScaleMode", type="String", inherit="no", enumeration="normal,horizontal,vertical,none", defaultValue="normal")]
+	[Style(name="backgroundAlpha", type="Number", inherit="no", max="1", min="0")]
+	[Style(name="backgroundColor", type="uint", format="Color", inherit="no")]
+	[Style(name="roundedBottomCorners", type="Boolean", inherit="no")]
 	
 	/**
 	 *  This BorderContainer class extends the Spark BorderContainer and adds 
@@ -35,23 +39,15 @@ package com.flexcapacitor.controls
 	 *  &lt;s:BorderContainer
 	 *    <b>Properties</b>
 	 *    backgroundFill="null"
-	 *    borderStroke="null"
 	 * 
 	 *    <b>Styles</b>
-	 *    backgroundImage="undefined"
-	 *    backgroundImageFillMode="scale"
-	 *    borderAlpha="1.0"
-	 *    borderColor="0xB7BABC"
-	 *    borderStyle="solid"
-	 *    borderVisible="true"
-	 *    borderWeight="1"
+	 *    backgroundAlpha="1"
 	 *    borderJoints="miter"
 	 *    borderCaps="rount"
 	 *    borderMiterLimit="3"
 	 *    borderPixelHinting="false"
 	 *    borderScaleMode="normal"
-	 *    cornerRadius="0"
-	 *    dropShadowVisible="false"
+	 *    borderSides="left top right bottom"
 	 *  /&gt;
 	 *  </pre>
 	 * 

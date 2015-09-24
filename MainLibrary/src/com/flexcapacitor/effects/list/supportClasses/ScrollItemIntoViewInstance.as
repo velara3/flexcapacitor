@@ -102,7 +102,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 				
 				// item is null
 				if (action.hasEventListener(ScrollItemIntoView.ITEM_NOT_SET)) {
-					action.dispatchEvent(new Event(ScrollItemIntoView.ITEM_NOT_SET));
+					dispatchActionEvent(new Event(ScrollItemIntoView.ITEM_NOT_SET));
 				}
 				
 				if (action.itemNotSetEffect) { 
@@ -114,7 +114,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 				
 				// data provider is null
 				if (action.hasEventListener(ScrollItemIntoView.DATAPROVIDER_NOT_SET)) {
-					action.dispatchEvent(new Event(ScrollItemIntoView.DATAPROVIDER_NOT_SET));
+					dispatchActionEvent(new Event(ScrollItemIntoView.DATAPROVIDER_NOT_SET));
 				}
 				
 				if (action.dataProviderNotSetEffect) { 
@@ -131,7 +131,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 						
 						// item is found
 						if (action.hasEventListener(ScrollItemIntoView.ITEM_FOUND)) {
-							action.dispatchEvent(new Event(ScrollItemIntoView.ITEM_FOUND));
+							dispatchActionEvent(new Event(ScrollItemIntoView.ITEM_FOUND));
 						}
 						
 						if (action.itemFoundEffect) { 
@@ -143,7 +143,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 						
 						// item is not found
 						if (action.hasEventListener(ScrollItemIntoView.ITEM_NOT_FOUND)) {
-							action.dispatchEvent(new Event(ScrollItemIntoView.ITEM_NOT_FOUND));
+							dispatchActionEvent(new Event(ScrollItemIntoView.ITEM_NOT_FOUND));
 						}
 						
 						if (action.itemNotFoundEffect) { 

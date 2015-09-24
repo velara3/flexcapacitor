@@ -96,7 +96,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 				//list.selectedIndex = -1;
 				
 				if (action.hasEventListener(SelectNoItems.NO_ITEMS)) {
-					action.dispatchEvent(new Event(SelectNoItems.NO_ITEMS));
+					dispatchActionEvent(new Event(SelectNoItems.NO_ITEMS));
 				}
 				
 				if (action.noItemsEffect) { 

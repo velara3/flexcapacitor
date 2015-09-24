@@ -28,37 +28,41 @@ package com.flexcapacitor.effects.clipboard {
 	[Event(name="noData", type="flash.events.Event")]
 
 	/**
-	 * Copies data to the clipboard. <br/><br/>
+	 * Copies data to the clipboard. If nothing is copied to the clipboard it may be the format is not supported where 
+	 * you are trying to paste or you need to run it in a specific frame. See below.<br/><br/>
 	 * 
 	 * For this to work correctly in the browser it must be run in the bubble phase of a 
-	 * click event. You cannot automatically copy to the clipboard without user interaction. <br/><br/> 
+	 * click event. In the browser sandbox you cannot automatically set the contents of the clipboard without 
+	 * user interaction. <br/><br/> 
 	 * 
-	 * For AIR you do not need to set the target or targetAncestor property.<br/><br/>
+	 * For AIR there is no restriction. With AIR you do not need to set the target or targetAncestor property.<br/><br/>
 	 * 
-	 * Add a "copy to clipboard" type of button for the user to click, set the targetAncestor property of this effect 
+	 * Add a "copy to clipboard" type of button to capture the click event, set the targetAncestor property of this effect 
 	 * to a parent container of the button (usually you can set it to the "this" keyword)
 	 * and run the effect in the button click handler. You may also need to set the triggerEvent 
-	 * of the effect.<br/><br/><br/>
-	 * <pre><code>
-		&lt;handlers:EventHandler eventName="click" target="{list}" setTriggerEvent="true" >
+	 * of the effect.<br/><br/>
+<pre>
+&lt;handlers:EventHandler eventName="click" target="{list}" setTriggerEvent="true" >
 
-			&lt;clipboard:CopyToClipboard id="copyToClipboard" data="{dataForTheClipboard}" targetAncestor="{anyParentContainer}" allowNullData="true">
-				&lt;clipboard:successEffect>
-					&lt;status:ShowStatusMessage message="Data copied to the clipboard"/>
-				&lt;/clipboard:successEffect>
-				&lt;clipboard:noDataEffect>
-					&lt;status:ShowStatusMessage message="Nothing to copy to the clipboard"/>
-				&lt;/clipboard:noDataEffect>
-				&lt;clipboard:errorEffect>
-					&lt;status:ShowStatusMessage message="An error occurred while attempting to copy to the clipboard. {copyToClipboard.errorEvent.message}"/>
-				&lt;/clipboard:errorEffect>
-			&lt;/clipboard:CopyToClipboard>
-			 * 
-		&lt;/handlers:EventHandler></code></pre>
+	&lt;clipboard:CopyToClipboard id="copyToClipboard" data="{dataForTheClipboard}" targetAncestor="{anyParentContainer}" allowNullData="true">
+		&lt;clipboard:successEffect>
+			&lt;status:ShowStatusMessage message="Data copied to the clipboard"/>
+		&lt;/clipboard:successEffect>
+		&lt;clipboard:noDataEffect>
+			&lt;status:ShowStatusMessage message="Nothing to copy to the clipboard"/>
+		&lt;/clipboard:noDataEffect>
+		&lt;clipboard:errorEffect>
+			&lt;status:ShowStatusMessage message="An error occurred while attempting to copy to the clipboard. {copyToClipboard.errorEvent.message}"/>
+		&lt;/clipboard:errorEffect>
+	&lt;/clipboard:CopyToClipboard>
 	 * 
+&lt;/handlers:EventHandler>
+</pre>
+
 	 * NOTE: If nothing is happening make sure that you set the targetAncestor property to a display object
 	 * that is a parent of the target (event target) and that there is no pause or duration between the 
-	 * click event and this effect.
+	 * click event and this effect. If the button is the target and the button is part of a group, then 
+	 * set the targetAncestor to the group. 
 	 * 
 	 * What we are trying to do is add an event listener for the click event while the click event is in progress.
 	 * To do this it has to be added to a parent of the display object that generated the click event. 

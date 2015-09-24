@@ -5,8 +5,13 @@ package com.flexcapacitor.performance {
 	
 	/**
 	 * Used to hold the start time and duration of a single test
+	 * @see ProfileTest
 	 * */
 	public class Timestamp {
+		
+		public function Timestamp() {
+			
+		}
 		
 		/**
 		 * Stores the start time
@@ -23,10 +28,5 @@ package com.flexcapacitor.performance {
 		 * */
 		public var duration:uint;
 		
-		
-		
-		public function Timestamp() {
-			
-		}
 	}
 }

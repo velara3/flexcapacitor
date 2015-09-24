@@ -2,31 +2,28 @@
 
 package com.flexcapacitor.utils
 {
-	import com.flexcapacitor.utils.supportClasses.XMLValidationEvent;
 	import com.flexcapacitor.utils.supportClasses.XMLValidationInfo;
 	
 	import flash.events.ErrorEvent;
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.LocationChangeEvent;
 	import flash.external.ExternalInterface;
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities;
 	import flash.utils.getDefinitionByName;
-
+	
 	
 	/**
-	 * Dispatched when XML validation is complete
+	 * A set of utilities for working with XML
 	 * */
-	[Event(name="validationComplete", type="flash.events.Event")]
-	
-	/**
-	 * A set of XML utilities
-	 * */
-	public class XMLUtils extends EventDispatcher
-	{
+	public class XMLUtils extends EventDispatcher {
+		
+		public function XMLUtils() {
+			
+		}
 		
 		// I don't know if this is the correct method to identify byte order markers 60% confident
-		// Sources:
+		// Sources: Wikipedia
 		// 
 		
 		// While identifying text as UTF-8, this is not really a "byte order" mark. Since the byte 
@@ -57,14 +54,6 @@ package com.flexcapacitor.utils
 		public static const BOCU_1:RegExp		= /^\xFB\xEE\x28/; // FB EE 28 optionally followed by FF
 		public static const GB_18030:RegExp		= /^\x84\x31\x95\x33/;
 		
-		[Bindable]
-		public static var addedXMLValidationToPage:Boolean;
-		
-		public function XMLUtils() {
-			
-		}
-		
-		
 		/**
 		 * Constant representing a element type returned from XML.nodeKind.
 		 *
@@ -74,6 +63,18 @@ package com.flexcapacitor.utils
 		 * @playerversion Flash 9.0
 		 */
 		public static const ELEMENT:String = "element";
+		
+		public static var addedXMLValidationToPage:Boolean;
+		
+		public static var notInitializedMessage:String = "The validateXML() call was invalid. You must call initialize() a few frames before calling validateXML().";
+		
+		public static var validationError:Error;
+		
+		public static var validationErrorMessage:String;
+		
+		public static var htmlLoader:Object;
+		
+		public static var htmlLoaderLoaded:Boolean;
 		
 		/**
 		 * Set xml object node with the given value
@@ -148,19 +149,17 @@ package com.flexcapacitor.utils
 			return outputValue;
 		}
 		
-		public static var validationError:Error;
-		public static var validationErrorMessage:String;
-		
 		/**
 		 * Checks whether the specified string is valid and well formed XML. Uses the Flash Player
-		 * XML parser. Use the Validate method to return more information than true and false. 
+		 * XML parser. Use the ValidateXML method to return more information
+		 * and check the validationError and validationErrorMessage properties.  
 		 *
 		 * @param data The string that is being checked to see if it is valid XML.
 		 *
 		 * @return A Boolean value indicating whether the specified string is
 		 * valid XML.
 		 *
-		 * @see validate
+		 * @see #Validate
 		 */
 		public static function isValidXML(value:String):Boolean {
 			var xml:XML;
@@ -168,7 +167,8 @@ package com.flexcapacitor.utils
 			try {
 				xml = new XML(value);
 			}
-			catch (error:Error) { // TypeError
+			catch (error:Error) {
+				// Usually: TypeError - Error #1088: The markup in the document following the root element must be well-formed.
 				validationError = error;
 				validationErrorMessage = error.message;
 				return false;
@@ -180,6 +180,109 @@ package com.flexcapacitor.utils
 			}
 			
 			return true;
+		}
+		
+		/**
+		 * Checks whether the specified string is valid and well formed XML. Uses the Flash Player
+		 * XML parser.  
+		 *
+		 * @param data The string that is being checked to see if it is valid XML.
+		 *
+		 * @return A Boolean value indicating whether the specified string is
+		 * valid XML.
+		 *
+		 * @see #Validate
+		 */
+		public static function getValidationXML(value:String):Object {
+			var xml:XML;
+			var object:Object = {};
+			object.isValid = false;
+			
+			try {
+				xml = new XML(value);
+				object.isValid = true;
+			}
+			catch (error:Error) {
+				// Usually: TypeError - Error #1088: The markup in the document following the root element must be well-formed.
+				object.error = error;
+				object.message = error.message;
+				return object;
+			}
+			
+			if (xml.nodeKind() != ELEMENT) {
+				object.message = "XML node kind is not element";
+				return object;
+			}
+			
+			return object;
+		}
+		
+		/**
+		 * Checks whether the specified string is valid HTML or XML. Uses the browser XML 
+		 * validator. You must write the JavaScript to the page before calling this method.
+		 * Call initialize() a few frames before calling this method. 
+		 * We use the browser XML validation because it gives row and column information.
+		 * We use the Flash Player XML validation because it gives verbose error messages.
+		 * 
+		 * @param value The string that is being checked to see if it is valid HTML or XML.
+		 * @return An array with the original value in the first item and any errors in the proceeding items
+		 * @see isValid
+		 */
+		public static function validateXML(value:*, useFlashParser:Boolean = true, useBrowserParser:Boolean = true):XMLValidationInfo {
+			var validationInfo:XMLValidationInfo;
+			var result:String;
+			
+			if (value==null) value = "";
+			
+			if (ExternalInterface.available) {
+				result = ExternalInterface.call("validateXML", value);
+				validationInfo = parseValidationResult(result, value);
+			}
+			else if (Capabilities.playerType == "Desktop") {
+				var isValid:Boolean;
+				var htmlText:String;
+				
+				if (htmlLoader==null) {
+					throw new Error(notInitializedMessage);
+				}
+				
+				if (htmlLoader.window && htmlLoader.window.validateXML) {
+					result = htmlLoader.window.validateXML(value);
+					validationInfo = XMLUtils.parseValidationResult(result, value);
+				}
+				
+			}
+			
+			if (validationInfo==null) {
+				validationInfo = new XMLValidationInfo();
+			}
+			
+			if (useFlashParser) {
+				isValid = isValidXML(value);
+				validationInfo.valid = isValid;
+				validationInfo.internalErrorMessage = validationErrorMessage;
+				validationInfo.error = validationError;
+			}
+			
+			return validationInfo;
+		}
+		
+		/**
+		 * Call this method at least a few frames before calling validateXML()
+		 * @see #validateXML()
+		 * @see htmlLoaderLoaded
+		 * */
+		public static function initialize():void {
+			
+			if (Capabilities.playerType == "Desktop") {
+				var htmlText:String = "<html><script>"+XMLUtils.browserXMLValidationScript+"</script><body></body></html>";
+				htmlLoader = HTMLUtils.createLoaderInstance();
+				htmlLoader.loadString(htmlText);
+				htmlLoader.addEventListener(Event.COMPLETE, function(e:Event):void {htmlLoaderLoaded = true;});
+			}
+			else if (ExternalInterface.available) {
+				insertValidationScript();
+			}
 		}
 		
 		/**
@@ -198,16 +301,12 @@ package com.flexcapacitor.utils
 		 * @see isValid
 		 */
 		public static function validate(value:*, callbackFunction:Function = null, callbackValidation:Object = null):XMLValidationInfo {
-			(!addedXMLValidationToPage) ? insertValidationScript() : null;
 			var xml:String = value != null ? value : "";
-			var hasMarker:Boolean = hasByteOrderMarker(value);
+			var validationInfo:XMLValidationInfo;
 			var validationResult:String;
-			var validationInfo:XMLValidationInfo = new XMLValidationInfo();
 			var byteMarkerType:String;
 			var isValidMarker:Boolean;
 			var characterCount:int;
-			var isMozilla:Boolean;
-			var isChrome:Boolean;
 			var lastLine:String;
 			var isValid:Boolean;
 			var matchIndex:int;
@@ -216,6 +315,9 @@ package com.flexcapacitor.utils
 			var column:int;
 			var row:int;
 			
+			if (!addedXMLValidationToPage) {
+				throw new Error(notInitializedMessage);
+			}			
 			
 			if (ExternalInterface.available) {
 				validationResult = ExternalInterface.call("validateXML", xml);
@@ -257,82 +359,17 @@ package com.flexcapacitor.utils
 				}
 			}
 			
+			validationInfo = parseValidationResult(validationResult, value);
+			
+			var hasMarker:Boolean = hasByteOrderMarker(value);
+			
 			if (hasMarker) {
-				byteMarkerType = XMLUtils.getByteOrderMarkerType(xml);
+				byteMarkerType = XMLUtils.getByteOrderMarkerType(value);
 				validationInfo.hasMarker = true;
 				validationInfo.byteMarkerType = byteMarkerType;
 			}
 			else {
 				byteMarkerType = "";
-			}
-			
-			if (validationResult) {
-				isMozilla = (validationResult.indexOf("XML Parsing Error:") != -1);
-				isChrome = (validationResult.indexOf("This page contains the following errors:") != -1);
-			}
-			
-			// error - xml is not valid
-			if (isChrome || isMozilla) {
-				
-				// get row and column
-				if (isMozilla) {
-					results = validationResult.match(/Line\s+Number\s+(\d+),\s+Column\s+(\d+):/i);
-					row = results.length > 1 ? results[1] : 0;
-					column = results.length > 2 ? results[2] : 0;
-					validationInfo.row = row;
-					validationInfo.column = column;
-				}
-				else if (isChrome) {
-					results = validationResult.match(/line\s+(\d+)\s+at\s+column\s+(\d+):/i);
-					row = results.length > 1 ? results[1] : 0;
-					column = results.length > 2 ? results[2] : 0;
-					validationInfo.row = row;
-					validationInfo.column = column;
-				}
-				
-				
-				validationInfo.valid = false;
-				
-				validationResult = String(validationResult).replace(/Location:.*/g, "");
-				
-				validationInfo.browserErrorMessage = String(validationResult);
-				
-				lines = xml.split("\n");
-				lastLine = xml;
-				characterCount = column;
-				
-				if (row < lines.length) {
-					for (var i:int; i < row; i++) {
-						characterCount += lines[i].length - 1;
-						lastLine = lines[i];
-					}
-					
-					validationInfo.value = xml;
-					matchIndex = xml.search(lastLine);
-					//xmlTextArea.selectRange(matchIndex + column - row, xmlTextArea.text.length);
-					validationInfo.beginIndex = matchIndex + column - row;
-					validationInfo.endIndex = xml.length;
-					
-				}
-				
-				try {
-					if (xml != null) {
-						xml = new XML(xml as String);
-					}
-				}
-				catch (error:TypeError) {
-					validationInfo.errorMessage = error.message;
-				}
-				finally {
-					
-				}
-				
-			}
-			else if (validationResult && validationResult.indexOf("No errors found") != -1) {
-				validationInfo.valid = true;
-			}
-			else {
-				validationInfo.valid = false;
 			}
 			
 			if (callbackFunction!=null) {
@@ -342,6 +379,114 @@ package com.flexcapacitor.utils
 			return validationInfo;
 		}
 		
+		public static function parseValidationResult(result:String, value:String):XMLValidationInfo {
+			var validationInfo:XMLValidationInfo = new XMLValidationInfo();
+			var isMozilla:Boolean;
+			var isChrome:Boolean;
+			var characterCount:int;
+			var lastLine:String;
+			var isValid:Boolean;
+			var matchIndex:int;
+			var results:Array;
+			var lines:Array;
+			var column:int;
+			var row:int;
+			var errorLines:Array;
+			var specificError:String;
+			
+			if (result) {
+				isMozilla = (result.indexOf("XML Parsing Error:") != -1);
+				isChrome = (result.indexOf("This page contains the following errors:") != -1);
+			}
+			
+			// error - xml is not valid
+			if (isChrome || isMozilla) {
+				
+				// get row and column
+				if (isMozilla) {
+					lines = result.match(/Line\s+Number\s+(\d+),\s+Column\s+(\d+):/i);
+					row = lines.length > 1 ? lines[1] : 0;
+					column = lines.length > 2 ? lines[2] : 0;
+					validationInfo.row = row;
+					validationInfo.column = column;
+					lines = result.split(/:/);
+					if (lines.length>3) {
+						specificError = StringUtils.trim(lines.slice(2).join(":"));
+					}
+				}
+				else if (isChrome) {
+					lines = result.match(/line\s+(\d+)\s+at\s+column\s+(\d+):/i);
+					row = lines.length > 1 ? lines[1] : 0;
+					column = lines.length > 2 ? lines[2] : 0;
+					validationInfo.row = row;
+					validationInfo.column = column;
+					lines = result.split(/:/);
+					if (lines.length>3) {
+						specificError = StringUtils.trim(lines.slice(2).join(":"));
+					}
+				}
+				
+				
+				validationInfo.valid = false;
+				
+				var browserMessage:String = result.replace(/Location:.*/g, "");
+				
+				validationInfo.browserErrorMessage = browserMessage;
+				validationInfo.specificErrorMessage = specificError;
+				
+				lines = value.split("\n");
+				lastLine = value;
+				characterCount = column;
+				
+				// get index of error based on column and row
+				if (row < lines.length) {
+					for (var i:int; i < row; i++) {
+						characterCount += lines[i].length - 1;
+						lastLine = lines[i];
+					}
+					
+					validationInfo.value = value;
+					matchIndex = value.search(lastLine);
+					//xmlTextArea.selectRange(matchIndex + column - row, xmlTextArea.text.length);
+					validationInfo.beginIndex = matchIndex + column - row;
+					validationInfo.endIndex = value.length;
+					
+				}
+				
+			}
+			else if (result && result.indexOf("No errors found") != -1) {
+				validationInfo.valid = true;
+			}
+			else {
+				validationInfo.valid = false;
+			}
+			
+			return validationInfo;
+		}
+		
+		/**
+		 * Converts a XMLList to string values and places them in an array.
+		 * 
+		 * @param list XMLList of items to convert
+		 * @param toSimpleContent uses xml.toString() if true and xml.toXMLString() if false
+		 * @see XML.toString()
+		 * @see XML.toXMLString()
+		 * */
+		public static function convertXMLListToArray(list:XMLList, toSimpleContent:Boolean = false):Array {
+			var result:Array = [];
+			
+			for each (var node:XML in list) {
+				
+				if (toSimpleContent) {
+					result.push(node.toString());
+				}
+				else {
+					result.push(node.toXMLString());
+				}
+			}
+			
+			return result;
+		}
 		
 		/**
 		 * Checks for a Byte-Order-Marker or BOM at the beginning of the text. This character is invisible in many text editors.
@@ -458,11 +603,11 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Injects the browser with the javascript used to check the value
-		 * Must be called before javascript validation will work
+		 * Adds the JavaScript method in the browser web page to validate XML. 
+		 * Must be called before the JavaScript validation calls will work
 		 * */
 		public static function insertValidationScript():void {
-			ExternalInterface.addCallback("universalCallback", universalCallback);
+			//ExternalInterface.addCallback("universalCallback", universalCallback);
 			insertScript(); // may need to call later callLater()
 		}
 		
@@ -471,9 +616,12 @@ package com.flexcapacitor.utils
 			addedXMLValidationToPage = true;
 		}
 		
+		/**
+		 * Used as a callback from the browser DOM. Not used at this time. 
+		 * */
 		private static function universalCallback(... rest):void {
 			//lastResult = String(rest[0]);
-			trace("WHEN??? universalCallback = " + rest[0]);
+			//trace("WHEN??? universalCallback = " + rest[0]);
 		}
 		
 		/**
@@ -559,5 +707,6 @@ package com.flexcapacitor.utils
 					document.location = JSON.stringify({event:"result", method:"result","result":result});
 				}
 				]]></root>
+	
 	}
 }

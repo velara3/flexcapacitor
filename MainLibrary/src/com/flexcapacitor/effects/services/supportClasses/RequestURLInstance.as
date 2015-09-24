@@ -140,7 +140,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			}
 			
 			if (action.hasEventListener(IOErrorEvent.IO_ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			///////////////////////////////////////////////////////////
@@ -171,7 +171,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			}
 			
 			if (action.hasEventListener(SecurityErrorEvent.SECURITY_ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			///////////////////////////////////////////////////////////
@@ -206,7 +206,7 @@ package com.flexcapacitor.effects.services.supportClasses {
 			}
 			
 			if (action.hasEventListener(Event.COMPLETE)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			///////////////////////////////////////////////////////////

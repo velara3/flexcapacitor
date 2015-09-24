@@ -1,114 +1,84 @@
 
 package com.flexcapacitor.utils.supportClasses {
 	
+	/**
+	 * Describes XML after it has been validated by a XMLUtils.validate call. 
+	 * */
 	public class XMLValidationInfo {
-		//--------------------------------------------------------------------------
-		//
-		//  Constructor
-		//
-		//--------------------------------------------------------------------------
-		
+
 		/**
-		 *  @private
+		 *  
 		 */
 		public function XMLValidationInfo () {
 			super();
-			
 		}
-		
-		//--------------------------------------------------------------------------
-		//
-		//  Properties
-		//
-		//--------------------------------------------------------------------------
-		
-		//----------------------------------
-		//  hasMarker
-		//----------------------------------
-		
+
 		/**
-		 *  @private
+		 * If true has a byte marker as the first character. 
+		 * XML cannot have any charcter before the first XML declaration
+		 * or root node. Byte order markers are invisible characters
+		 * that provide information about how information is stored in a
+		 * file.  
 		 */
 		public var hasMarker:Boolean;
 		
-		//----------------------------------
-		//  byteMarkerType
-		//----------------------------------
-		
 		/**
-		 *  @private
+		 *  Type of byte marker found
 		 */
 		public var byteMarkerType:String;
 		
-		//----------------------------------
-		//  row
-		//----------------------------------
-		
 		/**
-		 *  @private
+		 *  Row where error begins
 		 */
 		public var row:int;
-		
-		//----------------------------------
-		//  column
-		//----------------------------------
-		
+
 		/**
-		 *  @private
+		 *  Column where error begins
 		 */
 		public var column:int;
 		
-		//----------------------------------
-		//  valid
-		//----------------------------------
-		
 		/**
-		 *  @private
+		 *  If true indicates if XML is valid
 		 */
 		public var valid:Boolean;
 		
-		//----------------------------------
-		//  browser error message
-		//----------------------------------
-		
 		/**
-		 *  @private
+		 *  browser error message
 		 */
 		public var browserErrorMessage:String;
 		
-		//----------------------------------
-		//  Flash Player parsing error message
-		//----------------------------------
+		/**
+		 *  Flash Player error message from Flash Player try catch of new XML(value)
+		 */
+		public var internalErrorMessage:String;
 		
 		/**
-		 *  @private
+		 * Trims the first line of text from the error message
+		 * */
+		public var specificErrorMessage:String;
+		
+		/**
+		 *  Error message from Flash Player try catch of new XML(value)
 		 */
 		public var errorMessage:String;
 		
-		//----------------------------------
-		//  value
-		//----------------------------------
+		/**
+		 *  Error from Flash Player try catch of new XML(value)
+		 */
+		public var error:Error;
 		
 		/**
-		 *  @private
+		 *  Value used in the test
 		 */
 		public var value:String;
 		
-		//----------------------------------
-		//  error begin index
-		//----------------------------------
-		
 		/**
-		 *  @private
+		 *  Beginning index of the error
 		 */
 		public var beginIndex:int;
 		
-		//----------------------------------
-		//  error end index
-		//----------------------------------
-		
 		/**
-		 *  @private
+		 *  Ending index of the error
 		 */
 		public var endIndex:int;
 	}

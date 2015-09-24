@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<update xmlns="http://ns.adobe.com/air/framework/update/description/2.5"> 
+	<versionNumber>1.1.0</versionNumber>
+	<url>http://localhost:8888/updates/MyApplication_1.1.0.air</url> 
+	<description><![CDATA[List the changes in this version here]]> 
+	</description> 
+</update>

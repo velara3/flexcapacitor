@@ -4,6 +4,7 @@
 
 controls|BorderContainer {
 	skinClass: ClassReference("com.flexcapacitor.skins.BorderContainerSkin");
+	borderSides: "left top right bottom";
 }
 
 controls|ImageButton {
@@ -69,4 +70,8 @@ controls|Hyperlink:over {
 
 controls|ItemRendererButton {
 	gap:6;
+}
+
+controls|ClearButton {
+	skinClass: ClassReference("com.flexcapacitor.skins.ClearButton");
 }

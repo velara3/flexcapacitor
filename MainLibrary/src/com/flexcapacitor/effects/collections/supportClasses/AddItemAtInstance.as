@@ -104,7 +104,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 					}
 					
 					if (action.hasEventListener(AddItemAt.DATA_NOT_SET)) {
-						action.dispatchEvent(new Event(AddItemAt.DATA_NOT_SET));
+						dispatchActionEvent(new Event(AddItemAt.DATA_NOT_SET));
 					}
 				}
 				
@@ -118,7 +118,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				}
 				
 				if (action.hasEventListener(AddItemAt.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(AddItemAt.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(AddItemAt.COLLECTION_NOT_SET));
 				}
 			}
 			

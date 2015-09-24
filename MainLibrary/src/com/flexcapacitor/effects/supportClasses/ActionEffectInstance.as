@@ -28,10 +28,16 @@ package com.flexcapacitor.effects.supportClasses {
 	 * Call finish() at the end of the play method to end the effect immediately.
 	 * Call waitForHandlers() to wait until some actions have finished. 
 	 * When the actions have finished then call finish(). Usually you call this method 
-	 * in event handlers you've added. 
+	 * in event handlers you've added. <br/><br/>
+	 * Cancel() should be deprecated. <br/>
 	 * Call cancel() to end the effects and end the parent effect if part of one. 
 	 * By default cancel will end all parent effects up the chain. If you don't
-	 * want to cancel out of all ancestor effects set cancelAncestorEffects to false.
+	 * want to cancel out of all ancestor effects set cancelAncestorEffects to false.<br/><br/>
+	 * 
+	 * Instead of cancel() check for error, success or failure scenarios and play effects for each of those
+	 * Define error effects, success effects and failure effects and events in your ActionEffect.
+	 * Throw errors when the action does not have enough information from the developer
+	 * and dispatch events or play effects for any other scenarios. 
 	 * */
 	public class ActionEffectInstance extends TweenEffectInstance {
 		
@@ -65,6 +71,7 @@ package com.flexcapacitor.effects.supportClasses {
 		//--------------------------------------------------------------------------
 		
 		/**
+		 * This should be deprecated. 
 		 * We cache the source for the event "eventName" to remove
 		 * the listener for it when the effect ends.
 		 *  
@@ -76,6 +83,7 @@ package com.flexcapacitor.effects.supportClasses {
 		private var eventSource:IEventDispatcher;
 		
 		/**
+		 * This should be deprecated. 
 		 * If we have added an event listener 
 		 * then we need to wait until that event is dispatched before
 		 * ending the effect and continuing on to the next effect. 
@@ -84,6 +92,7 @@ package com.flexcapacitor.effects.supportClasses {
 		 * By default there is no timeout set. 
 		 * If no event listeners are specified then this property has no
 		 * function.
+		 * This should be deprecated. 
 		 * */
 		public var timeout:int;
 		
@@ -116,16 +125,23 @@ package com.flexcapacitor.effects.supportClasses {
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public var eventName:String
+		public var eventName:String;
+		
+		/**
+		 * When set to true events are traced to the console
+		 * */
+		public var traceEvents:Boolean;
 		
 		/**
 		 * Effect to play when a timeout occurs.
+		 * This should be deprecated. 
 		 * */
 		public var timeoutEffect:ActionEffect;
 		
 		/**
 		 * Effect to play when an effect is canceled. 
 		 * Can be called by calling the cancel method. 
+		 * This should be deprecated. 
 		 * */
 		public var cancelEffect:ActionEffect;
 		
@@ -134,11 +150,13 @@ package com.flexcapacitor.effects.supportClasses {
 		 * parent composite effects 
 		 * Can be called by calling the cancel method. 
 		 * In the Cancel effect the property is called cancelAncestorEffects
+		 * This should be deprecated. 
 		 * */
 		public var recursiveCancel:Boolean;
 		
 		/**
-		 * The effect is disabled or removed after it has played once
+		 * The effect is disabled or removed after it has played once. 
+		 * This is hacky but there are cases where it is useful. 
 		 * */
 		public var removeOncePlayed:Boolean;
 		
@@ -175,6 +193,7 @@ package com.flexcapacitor.effects.supportClasses {
 		
 		/**
 		 * Timeout used when duration is 0 or -1 (recheck)
+		 * This should be deprecated. Effect authors should add their own timeout if they need it. 
 		 * */
 		private var delayTimeout:uint;
 		
@@ -183,8 +202,6 @@ package com.flexcapacitor.effects.supportClasses {
 		//  Overridden methods
 		//
 		//--------------------------------------------------------------------------
-		
-
 		
 		/**
 		 * Enables runtime validation on the effect. 
@@ -214,6 +231,7 @@ package com.flexcapacitor.effects.supportClasses {
 			// UPDATE: this can and should all be refactored...
 			
 			// if we listen for an event then we don't want to end the effect right away
+			// This should be deprecated
 			if (eventName && target is IEventDispatcher) {
 				eventSource = IEventDispatcher(target);
 				eventSource.addEventListener(eventName, eventHandler);
@@ -296,6 +314,8 @@ package com.flexcapacitor.effects.supportClasses {
 		/**
 		 * This function is called by the target if the named event
 		 * is dispatched before the duration expires.
+		 * This is deprecated and could be removed. It is no longer used since
+		 * EventHandler class was made. 
 		 *  
 		 *  @langversion 3.0
 		 *  @playerversion Flash 9
@@ -311,31 +331,45 @@ package com.flexcapacitor.effects.supportClasses {
 			}
 			
 			// We didn't start a tween, so finish the effect manually
-			if (eventSource)
+			if (eventSource) {
 				eventSource.removeEventListener(eventName, eventHandler);
+			}
+			
 			finishRepeat();
 		}
 		
 		/**
 		 * Override this function so that we can remove the listener for the
 		 * event named in the <code>eventName</code> attribute, if it exists
+		 * This is deprecated and could be removed. It is no longer used since
+		 * EventHandler class was made. 
 		 * 
 		 * @private
 		 */
 		override public function onTweenEnd(value:Object):void  {
-			if (eventSource)
+			if (eventSource) {
 				eventSource.removeEventListener(eventName, eventHandler);
+			}
 			super.onTweenEnd(value);
 		}
 		
 		/**
 		 * Cancels the effect and calls stop. No further effects in the sequence after this effect 
-		 * are called.
+		 * are called. This is deprecated. 
+		 * Instead check for error, success or failure scenarios and play effects for each of those
+		 * Define error effects, success effects and failure effects and events in your ActionEffect.
+		 * Throw errors when the action does not have enough information from the developer
+		 * and dispatch events or play effects for any other scenarios. 
 		 */
 		public function cancel(message:String=""):void {
 			cancelAll(false, message);
 		}
 		
+		/**
+		 * Cancels all the effects by calling stop. No further effects in the sequence after this effect 
+		 * are called. This is deprecated. Effects themselves should play effects on success and failure.
+		 * See notes on #cancel().
+		 * */
 		private function cancelAll(fromTimeout:Boolean = false, message:String=""):void {
 			var parentInstance:EffectInstance;
 			
@@ -414,64 +448,14 @@ package com.flexcapacitor.effects.supportClasses {
 			}
 			
 			
-			
-			// NEED to check the above
-			// the above methods call stop and I believe that calls end()
-			// looks like we end here
-			
-			
-			
-			
-			/////////////////////////////////////////////
-			// code from effectInstance.stop()
-			/////////////////////////////////////////////
-			/*if (mx_internal::delayTimer)
-				mx_internal::delayTimer.reset();
-			mx_internal::stopRepeat = true;
-			
-			// Dispatch STOP event in case listeners need to handle this situation
-			// The Effect class may hinge setting final state values on whether
-			// the effect was stopped or ended.
-			if (hasEventListener(EffectEvent.EFFECT_STOP))
-				dispatchEvent(new EffectEvent(EffectEvent.EFFECT_STOP, false, false, this));
-			
-			if (target && (target is IEventDispatcher) && IEventDispatcher(target).hasEventListener(EffectEvent.EFFECT_STOP))
-				target.dispatchEvent(new EffectEvent(EffectEvent.EFFECT_STOP, false, false, this));
-			
-			
-			/////////////////////////////////////////////
-			// code from effectInstance.finishEffect()
-			/////////////////////////////////////////////
-			playCount = 0;
-			
-			if (hasEventListener(EffectEvent.EFFECT_END))
-				dispatchEvent(new EffectEvent(EffectEvent.EFFECT_END, false, false, this));
-			
-			if (target && (target is IEventDispatcher) && IEventDispatcher(target).hasEventListener(EffectEvent.EFFECT_END))
-				target.dispatchEvent(new EffectEvent(EffectEvent.EFFECT_END, false, false, this));
-			
-			if (target is UIComponent) {
-				UIComponent(target).effectFinished(this);
-			}
-			
-			EffectManager.mx_internal::effectFinished(this);
-			
-			
-			/////////////////////////////////////////////
-			// code from tweenEffectInstance.stop();
-			/////////////////////////////////////////////
-			if (tween)
-				tween.stop();*/
-			
 		}
 		
 		/**
 		 * Call this to wait for internal handlers before continuing. 
-		 * It set's duration to -1. This is how the Spark Pause effect works. 
-		 * If this effect is in a sequence you must call finish() in your handler
-		 * to move to the next effect or call cancel() to prevent the next effect
-		 * from playing and cancel out of a parent sequence.
-		 * Note: Remember to remove the listeners in the event handlers.
+		 * It sets the duration to -1. This causes the effect to pause. 
+		 * This is how the Spark Pause effect works. 
+		 * If this effect is in a sequence you must call finish() at some point 
+		 * to move to the next effect. 
 		 * */
 		public function waitForHandlers():void {
 			if (duration!=-1) {
@@ -616,11 +600,21 @@ package com.flexcapacitor.effects.supportClasses {
 		
 		/**
 		 * Utility method to dispatch an event on the effect not on the instance. 
-		 * 
+		 * If traceEvents is true then the event name and values are traced to the console
+		 * in the format:<br/>
+<pre>
+[Event (type=value bubbles=value cancelable=value)]
+</pre>
 		 * Usage: <br/>
-		 * dispatchActionEvent(new Event(Action.EVENT_NAME));
+<pre>
+dispatchActionEvent(event);
+dispatchActionEvent(new Event(Action.EVENT_NAME));
+</pre>
 		 * */
 		public function dispatchActionEvent(event:Event):void {
+			if (traceEvents) {
+				traceMessage(event.toString());
+			}
 			effect.dispatchEvent(event);
 		}
 		
@@ -683,7 +677,6 @@ package com.flexcapacitor.effects.supportClasses {
 		public function get index():int {
 			return getEffectIndex(effect);
 		}
-
 		
 		/**
 		 * Dispatches an Error event. 

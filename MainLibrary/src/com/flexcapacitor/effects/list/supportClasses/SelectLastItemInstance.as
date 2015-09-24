@@ -97,7 +97,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 			if (list.dataProvider==null || list.dataProvider.length==0) { 
 				
 				if (action.hasEventListener(SelectLastItem.NO_ITEMS)) {
-					action.dispatchEvent(new Event(SelectLastItem.NO_ITEMS));
+					dispatchActionEvent(new Event(SelectLastItem.NO_ITEMS));
 				}
 				
 				if (action.noItemsEffect) { 
@@ -111,7 +111,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 				action.dataIndex = list.selectedIndex;
 				
 				if (action.hasEventListener(SelectFirstItem.ITEM_SELECTED)) {
-					action.dispatchEvent(new Event(SelectFirstItem.ITEM_SELECTED));
+					dispatchActionEvent(new Event(SelectFirstItem.ITEM_SELECTED));
 				}
 				
 				if (action.itemSelectedEffect) { 

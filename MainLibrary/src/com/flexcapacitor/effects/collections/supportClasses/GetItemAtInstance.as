@@ -94,7 +94,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				else {
 					
 					if (action.hasEventListener(GetItemAt.OUT_OF_BOUNDS)) {
-						action.dispatchEvent(new Event(GetItemAt.OUT_OF_BOUNDS));
+						dispatchActionEvent(new Event(GetItemAt.OUT_OF_BOUNDS));
 					}
 					
 					// item is out of bounds
@@ -108,7 +108,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 			else {
 				
 				if (action.hasEventListener(GetItemAt.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(GetItemAt.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(GetItemAt.COLLECTION_NOT_SET));
 				}
 				
 				// collection is not set

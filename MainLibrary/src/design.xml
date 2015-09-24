@@ -1,0 +1,6 @@
+<?xml version="1.0" ?>
+<design>
+    <namespaces>
+        <namespace prefix="fc" uri="http://www.flexcapacitor.com/flex/2015" />
+    </namespaces>
+</design>

@@ -73,7 +73,7 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			if (!CameraRoll.supportsAddBitmapData) { 
 				
 				if (action.hasEventListener(SaveToCameraRoll.CAMERA_ROLL_NOT_SUPPORTED)) {
-					action.dispatchEvent(new Event(SaveToCameraRoll.CAMERA_ROLL_NOT_SUPPORTED));
+					dispatchActionEvent(new Event(SaveToCameraRoll.CAMERA_ROLL_NOT_SUPPORTED));
 				}
 				
 				if (action.cameraRollNotSupportedEffect) { 
@@ -132,7 +132,7 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			}
 			
 			if (action.hasEventListener(SaveToCameraRoll.COMPLETE)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			removeCameraRollListeners();
@@ -166,7 +166,7 @@ package com.flexcapacitor.effects.camera.supportClasses {
 			}
 			
 			if (action.hasEventListener(SaveToCameraRoll.ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			removeCameraRollListeners();

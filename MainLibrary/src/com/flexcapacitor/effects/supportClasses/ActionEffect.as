@@ -201,6 +201,11 @@ package com.flexcapacitor.effects.supportClasses {
 		public var stepInto:Boolean;
 		
 		/**
+		 * When set to true events are traced to the console
+		 * */
+		public var traceEvents:Boolean;
+		
+		/**
 		 * Gets the performance data. 
 		 * No profile data is available if the profile property is false.
 		 * */
@@ -249,6 +254,9 @@ package com.flexcapacitor.effects.supportClasses {
 			
 			actionInstance.eventName = continueAfterEvent;
 			actionInstance.stepInto = stepInto;
+			actionInstance.traceEvents = traceEvents;
+			//actionInstance.traceFunction = traceFunction;
+			//actionInstance.errorFunction = errorFunction;
 		}
 		
 		/**

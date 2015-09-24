@@ -23,10 +23,46 @@ package com.flexcapacitor.effects.core {
 	[Event(name="propertyNotSet", type="flash.events.Event")]
 	
 	/**
-	 * Checks if a property on the target is set. 
+	 * Checks if a property on the target is set to a value or is an empty string or null. 
 	 * If the property is null then the propertyNotSetEffect is played.
 	 * If the property is not null then the propertySetEffect is played.
-	 * 
+<pre>
+&lt;handlers:EventHandler eventName="click" target="{exportLabel}">
+	
+	&lt;core:IsPropertySet target="{myTextInput}" targetPropertyName="text" emptyStringsAreNull="true">
+		&lt;core:propertySetEffect>
+			&lt;status:ShowStatusMessage message="There is data!" />
+		&lt;/core:propertySetEffect>
+		&lt;core:propertyNotSetEffect>
+			&lt;status:ShowStatusMessage message="There is no data" />
+		&lt;/core:propertyNotSetEffect>
+	&lt;/core:IsPropertySet>
+	
+&lt;/handlers:EventHandler>
+</pre>
+ * 
+ * Here is an example of checking that an item is selected in a list and that the property on the item 
+ * is not null or an empty string. Sometimes the list may not have a selected item
+ * so we set the targetPropertyValueMayBeNull to true to prevent an error being thrown. 
+<pre>
+&lt;handlers:EventHandler eventName="click" target="{exportLabel}">
+	
+	&lt;core:IsPropertySet target="{myList}" 
+				targetPropertyName="selectedItem"
+				targetSubPropertyName="name"
+				targetPropertyValueMayBeNull="true"
+				emptyStringsAreNull="true">
+		&lt;core:propertySetEffect>
+			&lt;status:ShowStatusMessage message="The name is set!" />
+		&lt;/core:propertySetEffect>
+		&lt;core:propertyNotSetEffect>
+			&lt;status:ShowStatusMessage message="The name is not set!" />
+		&lt;/core:propertyNotSetEffect>
+	&lt;/core:IsPropertySet>
+	
+&lt;/handlers:EventHandler>
+</pre>
+
 	 * @see IsPropertySetToValue
 	 * */
 	public class IsPropertySet extends ActionEffect {

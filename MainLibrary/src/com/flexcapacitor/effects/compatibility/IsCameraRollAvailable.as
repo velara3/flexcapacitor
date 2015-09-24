@@ -4,10 +4,8 @@ package com.flexcapacitor.effects.compatibility {
 	
 	import com.flexcapacitor.effects.compatibility.supportClasses.IsCameraRollAvailableInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
-	import com.flexcapacitor.events.EffectEvent;
 	
 	import mx.effects.Effect;
-	import mx.managers.SystemManager;
 	
 	
 	/**

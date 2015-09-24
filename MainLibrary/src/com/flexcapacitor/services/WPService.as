@@ -138,7 +138,7 @@ if ( !empty($values["custom"]) ) {
 
 		public var createCategoryURL:String = "categories/create_category";
 		
-		public var getPostsByCategoryURL:String = "posts/get_posts_by_category";
+		public var getPostsByCategoryURL:String = "core/get_category_posts"; //"posts/get_posts_by_category";
 
 		public var createTokenURL:String = "core/get_nonce?controller=posts&method=create_post";
 		

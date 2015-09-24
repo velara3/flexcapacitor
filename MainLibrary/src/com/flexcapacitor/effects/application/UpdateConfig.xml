@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<configuration xmlns="http://ns.adobe.com/air/framework/update/configuration/2.5"> 
+	<url>http://localhost:8888/updates/UpdateDescriptor.xml</url> 
+	<delay>1</delay> 
+</configuration>

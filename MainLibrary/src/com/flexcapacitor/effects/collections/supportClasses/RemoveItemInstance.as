@@ -100,7 +100,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 						}
 						
 						if (action.hasEventListener(RemoveItem.ITEM_NOT_FOUND)) {
-							action.dispatchEvent(new Event(RemoveItem.ITEM_NOT_FOUND));
+							dispatchActionEvent(new Event(RemoveItem.ITEM_NOT_FOUND));
 						}
 					}
 					else {
@@ -113,7 +113,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 						}
 						
 						if (action.hasEventListener(RemoveItem.REMOVED)) {
-							action.dispatchEvent(new Event(RemoveItem.REMOVED));
+							dispatchActionEvent(new Event(RemoveItem.REMOVED));
 						}
 					}
 				}
@@ -127,7 +127,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				}
 				
 				if (action.hasEventListener(RemoveItem.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(RemoveItem.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(RemoveItem.COLLECTION_NOT_SET));
 				}
 			}
 			

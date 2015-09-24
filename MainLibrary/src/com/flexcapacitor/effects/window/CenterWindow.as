@@ -9,9 +9,11 @@ package com.flexcapacitor.effects.window {
 	/**
 	 * Centers a window or native window in the middle of the screen. 
 	 * 
-	 * <pre>
-	&lt;window:CenterWindow window="{this}" offsetY="-30" />	
-	 * </pre>
+<pre>
+&lt;handlers:EventHandler eventName="initialize" >
+	&lt;window:CenterWindow target="{this}" offsetY="-30" />
+&lt;/handlers:EventHandler>
+</pre>
 	 * */
 	public class CenterWindow extends ActionEffect {
 		

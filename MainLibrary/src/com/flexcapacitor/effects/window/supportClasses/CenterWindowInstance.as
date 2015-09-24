@@ -76,7 +76,7 @@ package com.flexcapacitor.effects.window.supportClasses {
 				}
 				
 				if (!("width" in window) && !("height" in window)) {
-					dispatchErrorEvent("The window does not have the required width and height properties. Make sure the target or window property is set.");
+					dispatchErrorEvent("The window property is not set or the target does not have the width and height properties. Make sure the target or window property is set.");
 				}
 				
 				// if you get the following error the size of the component may not have been set yet. Try running at a later event.

@@ -92,7 +92,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 			
 			if (length==0) {
 				if (action.hasEventListener(CollectionEmpty.EMPTY)) {
-					action.dispatchEvent(new Event(CollectionEmpty.EMPTY));
+					dispatchActionEvent(new Event(CollectionEmpty.EMPTY));
 				}
 				
 				if (action.emptyEffect) {
@@ -102,7 +102,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 			else {
 				
 				if (action.hasEventListener(CollectionEmpty.NOT_EMPTY)) {
-					action.dispatchEvent(new Event(CollectionEmpty.NOT_EMPTY));
+					dispatchActionEvent(new Event(CollectionEmpty.NOT_EMPTY));
 				}
 				
 				if (action.notEmptyEffect) {

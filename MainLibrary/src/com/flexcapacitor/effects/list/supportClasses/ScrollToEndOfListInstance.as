@@ -76,7 +76,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 			if (!list.dataProvider || list.dataProvider.length==0) { 
 				
 				if (action.hasEventListener(ScrollToEndOfList.NO_ITEMS)) {
-					action.dispatchEvent(new Event(ScrollToEndOfList.NO_ITEMS));
+					dispatchActionEvent(new Event(ScrollToEndOfList.NO_ITEMS));
 				}
 				
 				if (action.noItemsEffect) { 

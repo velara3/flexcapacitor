@@ -152,7 +152,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			}
 			
 			if (action.hasEventListener(ShowPopupAnchor.MOUSE_OUT)) {
-				action.dispatchEvent(new Event(ShowPopupAnchor.MOUSE_OUT));
+				dispatchActionEvent(new Event(ShowPopupAnchor.MOUSE_OUT));
 			}
 			
 			if (action.mouseOutEffect) { 

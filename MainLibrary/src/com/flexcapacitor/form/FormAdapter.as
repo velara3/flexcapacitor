@@ -29,74 +29,79 @@ package com.flexcapacitor.form {
 	/**
 	 * The Form Adapter class helps you add, remove, update and submit
 	 * data in your forms. It helps you map the client side value object
-	 * with the client side components and server side request objects.
+	 * with the client side components and server side request objects.<br/><br/>
 	 * 
-	 * Use with the Form Manager.
+	 * Use with the Form Manager.<br/><br/>
 	 * 
-	 * It helps you in the following: 
-	 *  - submit the form items to the server
-	 *  - set the names of the elements submitted to the server
-	 *  - validate the values before submitting to the server
-	 *  - display errors when values are invalid
-	 *  - display errors when values are required
-	 *  - display errors when server form is not submitted
-	 *  - reset and clear form items to default values
-	 *  - set form items to the values in a client side object
-	 *  - edit values in a client side object
-	 *  - remove a client side object from a client side array or list it is part of
+	 * It helps you in the following: <br/>
+	 *  - submit the form items to the server<br/>
+	 *  - set the names of the elements submitted to the server<br/>
+	 *  - validate the values before submitting to the server<br/>
+	 *  - display errors when values are invalid<br/>
+	 *  - display errors when values are required<br/>
+	 *  - display errors when server form is not submitted<br/>
+	 *  - reset and clear form items to default values<br/>
+	 *  - set form items to the values in a client side object<br/>
+	 *  - edit values in a client side object<br/>
+	 *  - remove a client side object from a client side array or list it is part of<br/><br/>
 	 * 
-	 * Usage:
+	 * Usage:<br/><br/>
 	 * 
-	 * If submitting a form to the server you would set the following:
-	 * - target component - id of UI Component, such as TextInput
-	 * - target component property - property on target component that contains the property value, such as "text"
-	 * - request name - name of property to send to the server, such as firstName
-	 * - default value, default index, default selected - default value if any of target UI component
-	 * CALL SUBMIT FORM ITEMS TO SERVER
+	 * If submitting a form to the server you would set the following:<br/>
+	 * - target component - id of UI Component, such as TextInput<br/>
+	 * - target component property - property on target component that contains the property value, such as "text"<br/>
+	 * - request name - name of property to send to the server, such as firstName<br/>
+	 * - default value, default index, default selected - default value if any of target UI component<br/>
+	 * CALL SUBMIT FORM ITEMS TO SERVER METHOD<br/>
 	 * 
-	 * If setting the form components to data object
-	 * Add form adapter
-	 * Add form items 
-	 * In the form items set
-	 * - target component - id of UI Component, such as myTextInput
-	 * - target component property - property on target component that contains the property value, such as "text"
-	 * - data - is the variable that has the object that will be edited (set in form adapter)
-	 * - data property - name of property on the data object that the target component gets the value from and sets its own value to 
-	 * - default value, default index, default selected - default value if any of target UI component
-	 * CALL SET FORM ITEMS TO DATA
+	 * If setting the form components to data object<br/><br/>
+	 * Add form adapter<br/>
+	 * Add form items <br/>
+	 * In the form items set<br/>
+	 * - target component - id of UI Component, such as myTextInput<br/>
+	 * - target component property - property on target component that contains the property value, such as "text"<br/>
+	 * - data - is the variable that has the object that will be edited (set in form adapter)<br/>
+	 * - data property - name of property on the data object that the target component gets the value from and sets its own value to<br/> 
+	 * - default value, default index, default selected - default value if any of target UI component<br/>
+	 * CALL SET FORM ITEMS TO DATA METHOD<br/><br/>
 	 * 
-	 * If setting a data object to form components values
-	 * - target component - id of UI Component, such as TextInput
-	 * - target component property - property on target component that contains the property value, such as "text"
-	 * - data - is the variable that has the object that will be edited (set in form adapter)
-	 * - data property - name of property on the data object that the target component gets the value from and sets its own value to 
-	 * - default value, default index, default selected - default value if any of target UI component
-	 * CALL SET DATA TO FORM ITEMS
+	 * If setting a data object to form components values<br/>
+	 * - target component - id of UI Component, such as TextInput<br/>
+	 * - target component property - property on target component that contains the property value, such as "text"<br/>
+	 * - data - is the variable that has the object that will be edited (set in form adapter)<br/>
+	 * - data property - name of property on the data object that the target component gets the value from and sets its own value to<br/> 
+	 * - default value, default index, default selected - default value if any of target UI component<br/>
+	 * CALL SET DATA TO FORM ITEMS METHOD<br/><br/>
 	 * 
-	 * If setting the data to server data
-	 * - result data - (set in form adapter) object that has the data from the server. usually the service.lastResult property
-	 * - result data property - property on server data that contains the value to place in the data property
-	 * - data - (set in form adapter) is the variable that has the object that will be edited (set in form adapter)
-	 * - data property - name of property on the data object that the target component gets the value from and sets its own value to 
-	 * - default value, default index, default selected - default value if any of target UI component
-	 * CALL SET DATA TO SERVER DATA
+	 * If setting the data to server data<br/>
+	 * - result data - (set in form adapter) object that has the data from the server. usually the service.lastResult property<br/>
+	 * - result data property - property on server data that contains the value to place in the data property<br/>
+	 * - data - (set in form adapter) is the variable that has the object that will be edited (set in form adapter)<br/>
+	 * - data property - name of property on the data object that the target component gets the value from and sets its own value to<br/> 
+	 * - default value, default index, default selected - default value if any of target UI component<br/>
+	 * CALL SET DATA TO SERVER DATA METHOD<br/><br/>
 	 * 
-	 * If validating target component value
-	 * - validator - set to id of a validator declared in declarations
-	 * CALL VALIDATE FORM
+	 * If validating target component value<br/>
+	 * - validator - set to id of a validator declared in declarations<br/>
+	 * CALL VALIDATE FORM METHOD<br/>
 	 * 
-	 * If formatting target component value
-	 * - formatter - (not set in Form Element) set target component to a formatter declared in declaration 
+	 * If formatting target component value<br/>
+	 * - formatter - (not set in Form Element) set target component to a formatter declared in declaration<br/><br/> 
 	 * 
-	 * If displaying validation error
-	 * - error component - set to id of component to display when validation error occurs
-	 * - error component property - set to property of component that contains the error message
-	 * CALL VALIDATE FORM
+	 * If displaying validation error<br/>
+	 * - error component - set to id of component to display when validation error occurs<br/>
+	 * - error component property - set to property of component that contains the error message<br/>
+	 * CALL VALIDATE FORM METHOD<br/><br/>
 	 * 
-	 * If data needs CDATA tags
-	 * - is complex XML - set to true
+	 * If data needs CDATA tags<br/>
+	 * - is complex XML - set to true<br/>
 	 * */
 	public class FormAdapter extends EventDispatcher {
+		
+		public function FormAdapter(target:IEventDispatcher=null) {
+			super(target);
+			
+		}
 		
 		public static const CREATE_MODE:String = "create";
 		public static const EDIT_MODE:String = "edit";
@@ -308,11 +313,6 @@ package com.flexcapacitor.form {
 		 * */
 		public function get mode():String {
 			return _mode;
-		}
-		
-		public function FormAdapter(target:IEventDispatcher=null) {
-			super(target);
-			
 		}
 	}
 }

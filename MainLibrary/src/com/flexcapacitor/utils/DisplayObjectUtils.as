@@ -14,21 +14,31 @@ package com.flexcapacitor.utils {
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Matrix3D;
+	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.system.ApplicationDomain;
+	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
+	import flash.utils.getTimer;
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.BitmapAsset;
 	import mx.core.FlexGlobals;
+	import mx.core.IUIComponent;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
+	import mx.core.UIComponent;
+	import mx.graphics.codec.JPEGEncoder;
+	import mx.graphics.codec.PNGEncoder;
 	import mx.managers.ISystemManager;
+	import mx.utils.Base64Encoder;
 	
 	import spark.components.supportClasses.GroupBase;
 	import spark.components.supportClasses.Skin;
 	import spark.components.supportClasses.SkinnableComponent;
 	import spark.core.SpriteVisualElement;
 	import spark.skins.IHighlightBitmapCaptureClient;
+	import spark.utils.BitmapUtil;
 	
 	/**
 	 * Utils used to manipulate the component tree and display list tree.
@@ -45,6 +55,15 @@ package com.flexcapacitor.utils {
 	 * */
 	public class DisplayObjectUtils {
 		
+		public function DisplayObjectUtils() {
+			
+		}
+		
+		//1172: Definition flash.display:JPEGEncoderOptions could not be found.
+		//import flash.display.JPEGXREncoderOptions; 
+		//import flash.display.JPEGEncoderOptions; 
+		//import flash.display.PNGEncoderOptions;
+		
 		public static const HEXIDECIMAL_HASH_COLOR_TYPE:String = "hexidecimalHash";
 		public static const HEXIDECIMAL_COLOR_TYPE:String = "hexidecimal";
 		public static const STRING_UINT_COLOR_TYPE:String = "stringUint";
@@ -52,9 +71,26 @@ package com.flexcapacitor.utils {
 		public static const UINT_COLOR_TYPE:String = "uint";
 		public static const INT_COLOR_TYPE:String = "int";
 		
-		public function DisplayObjectUtils() {
-			
-		}
+		
+		/**
+		 * Used to encode images
+		 * */
+		public static var base64Encoder:Base64Encoder;
+		
+		/**
+		 * Used to create PNG images
+		 * */
+		public static var pngEncoder:PNGEncoder;
+		
+		/**
+		 * Used to create JPEG images
+		 * */
+		public static var jpegEncoder:JPEGEncoder;
+		
+		/**
+		 * References to previously encoded bitmaps
+		 * */
+		public static var base64BitmapCache:Dictionary = new Dictionary(true);
 		
 		/**
 		 * Keep a reference to groups that have mouse enabled where transparent 
@@ -1384,9 +1420,13 @@ package com.flexcapacitor.utils {
 		 * Group ignores mouse events by default since it has no background or border. 
 		 * */
 		public static function addGroupMouseSupport(group:GroupBase, groupsDictionary:Dictionary = null):void {
+			//trace("adding group mouse support" + ClassUtils.getIdentifierNameOrClass(group));
 			if (!groupsDictionary) groupsDictionary = applicationGroups;
 			groupsDictionary[group] = new GroupOptions(group.mouseEnabledWhereTransparent);
-			group.addEventListener(MouseEvent.MOUSE_OUT, enableGroupMouseHandler, false, 0, true);
+			// there's got to be a better way to do this
+			//if (!group.hasEventListener(MouseEvent.MOUSE_OUT)) {
+				group.addEventListener(MouseEvent.MOUSE_OUT, enableGroupMouseHandler, false, 0, true);
+			//}
 			group.mouseEnabledWhereTransparent = true;
 		}
 		
@@ -1398,7 +1438,10 @@ package com.flexcapacitor.utils {
 			//TypeError: Error #1010: A term is undefined and has no properties. (applicationGroups)
 			if (group in groupsDictionary) {
 				group.mouseEnabledWhereTransparent = groupsDictionary[group].mouseEnabledWhereTransparent;
+				
+				// if mouse is enabled don't we need to keep the mouse handler on it?
 				group.removeEventListener(MouseEvent.MOUSE_OUT, enableGroupMouseHandler);
+				//trace("mouse handler removed on " + ClassUtils.getIdentifierNameOrClass(group));
 				groupsDictionary[group] = null;
 				delete groupsDictionary[group];
 			}
@@ -1411,6 +1454,7 @@ package com.flexcapacitor.utils {
 		public static function enableGroupMouseHandler(event:MouseEvent):void
 		{
 			// this is used to enable mouse events where transparent 
+			//trace("display object utils. mouse over group");
 		}
 		
 		
@@ -1470,8 +1514,28 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Get color value in RGB.
+		 * rgb(255, 0, 0); 
+		 * rgba(255, 0, 0, 0.3);
+		 **/
+		public static function getColorInRGB(color:uint, alpha:Number = NaN):String {
+			var red:uint = extractRed(color);
+			var green:uint = extractGreen(color);
+			var blue:uint = extractBlue(color);
+			var value:String = "";
+			
+			if (isNaN(alpha)) {
+				value = "rgb("+red+","+green+","+blue+")";
+			}
+			else {
+				value = "rgba("+red+","+green+","+blue+","+alpha+")";
+			}
+			
+			return value;
+		}
+		
+		/**
 		 * Gets the color as type from uint. 
-		 * 
 		 * */
 		public static function getColorAsType(color:uint, type:String):Object {
 			
@@ -1532,6 +1596,287 @@ package com.flexcapacitor.utils {
 			return eyeDropperColorValue;
 			
 		}
+		
+		/**
+		 * Gets the perceptually expected bounds and position of a UIComponent. 
+		 * If container is passed in then the position is relative to the container. 
+		 * */
+		public static function getRectangleBounds(item:UIComponent, container:* = null):Rectangle {
+		
+	        if (item && item.parent) { 
+	            var w:Number = item.getLayoutBoundsWidth(true);
+	            var h:Number = item.getLayoutBoundsHeight(true);
+	            
+	            var position:Point = new Point();
+	            position.x = item.getLayoutBoundsX(true);
+	            position.y = item.getLayoutBoundsY(true);
+	            position = item.parent.localToGlobal(position);
+				
+				var rectangle:Rectangle = new Rectangle();
+				
+				if (container && container is DisplayObjectContainer) {
+					var anotherPoint:Point = DisplayObjectContainer(container).globalToLocal(position);
+					rectangle.x = anotherPoint.x;
+					rectangle.y = anotherPoint.y;
+				}
+				else {
+					rectangle.x = position.x;
+					rectangle.y = position.y;
+				}
+	            
+				rectangle.width = w;
+				rectangle.height = h;
+				
+				return rectangle;
+	       }
+			
+			return null;
+		}
 	
+		/**
+		 * Gets the elements by type
+		 * */
+		public static function getElementsByType(container:IVisualElementContainer, type:Class, elements:Array = null):Array {
+			if (elements==null) elements = [];
+			
+			for (var i:int;i<container.numElements;i++) {
+				var element:IVisualElement = container.getElementAt(i);
+				
+				if (element is type) {
+					elements.push(element);
+				}
+				if (element is IVisualElementContainer) {
+					getElementsByType(element as IVisualElementContainer, type, elements);
+				}
+			}
+			
+			return elements;
+		}
+		
+		
+		/**
+		 * Get data URI from object. 
+		 * 
+		 * Returns a string "data:image/png;base64,..." where ... is the image data. 
+		 * @see getBase64ImageDataString
+		 * */
+		public static function getBase64ImageDataString(target:Object, type:String = "png", encoderOptions:Object = null, ignoreErrors:Boolean = false):String {
+			var hasJPEGEncoderOptions:Boolean = ApplicationDomain.currentDomain.hasDefinition("flash.display.JPEGEncoderOptions");
+			var hasPNGEncoderOptions:Boolean = ApplicationDomain.currentDomain.hasDefinition("flash.display.PNGEncoderOptions");
+			var output:String;
+			
+			if (!encoderOptions && !hasJPEGEncoderOptions && !hasPNGEncoderOptions && ignoreErrors==false) {
+				var message:String = "Your project must include a reference to the flash.display.JPEGEncoderOptions or ";
+				message += "flash.display.PNGEncoderOptions in your project for this call to work. ";
+				message += "You may also need an newer version of Flash Player or AIR or set -swf-version equal to 16 or greater. ";
+				throw new Error(message);
+			}
+			
+			if (type.toLowerCase()=="jpg") {
+				type = "jpeg";
+			}
+			
+			if (hasJPEGEncoderOptions || hasPNGEncoderOptions) {
+				//trace("encoder found");
+				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions);
+			}
+			else {
+				output = "data:image/" + type + ";base64," + "";
+			}
+			
+			
+			return output;
+		}
+		
+		
+		/**
+		 * Returns base64 image string.
+		 * 
+		 * Encoding to JPG took 2000ms in some cases where PNG took 200ms.
+		 * I have not extensively tested this but it seems to be 10x faster
+		 * than JPG. 
+		 * 
+		 * Performance: 
+		 * get snapshot. time=14
+		 * encode to png. time=336 // encode to jpg. time=2000
+		 * encode to base 64. time=35
+		 * 
+		 * Don't trust these numbers. Test it yourself. First runs are always longer than previous. 
+		 * 
+		 * This function gets called multiple times sometimes. We may be encoding more than we have too.
+		 * But is probably a bug somewhere.  
+		 * */
+		public static function getBase64ImageData(target:Object, type:String = "png", encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80):String {
+			var component:IUIComponent = target as IUIComponent;
+			var bitmapData:BitmapData;
+			var byteArray:ByteArray;
+			var useEncoder:Boolean;
+			var rectangle:Rectangle;
+			var fastCompression:Boolean = true;
+			var timeEvents:Boolean = true;
+			var altBase64:Boolean = false;
+			var base64Data:String;
+			
+			
+			if (base64BitmapCache[target] && checkCache) {
+				return base64BitmapCache[target];
+			}
+			
+			if (timeEvents) {
+				var time:int = getTimer();
+			}
+			
+			if (component) {
+				bitmapData = BitmapUtil.getSnapshot(component);
+			}
+			else if (target is DisplayObject) {
+				bitmapData = getBitmapDataSnapshot2(target as DisplayObject);
+			}
+			else if (target is BitmapData) {
+				bitmapData = target as BitmapData;
+			}
+			else {
+				throw Error("Target is null. Target must be a display object.");
+			}
+			
+			if (timeEvents) {
+				trace ("get snapshot. time=" + (getTimer()-time));
+				time = getTimer();
+			}
+			
+			byteArray = getBitmapByteArray(bitmapData, null, useEncoder, type, fastCompression, quality);
+			
+			if (timeEvents) {
+				trace ("encode to " + type + ". time=" + (getTimer()-time));
+				time = getTimer();
+			}
+			
+			base64Data = getBase64FromByteArray(byteArray, altBase64);
+			//trace(base64.toString());
+			
+			if (timeEvents) {
+				trace ("encode to base 64. time=" + (getTimer()-time));
+			}
+			
+			base64BitmapCache[target] = base64Data;
+			
+			return base64Data;
+		}
+		
+		/**
+		 * Alternative base 64 encoder based on Base64. You must set this to the class for it to be used.
+		 * */
+		public static var Base64Encoder2:Object;
+		
+		/**
+		 * PNG Encoder options
+		 * */
+		public static var pngEncoderOptions:Object; // PNGEncoderOptions;
+		
+		/**
+		 * JPEG Encoder options
+		 * */
+		public static var jpegEncoderOptions:Object; // JPEGEncoderOptions;
+		
+		/**
+		 * JPEG XR Encoder options
+		 * */
+		public static var jpegXREncoderOptions:Object; // JPEGXREncoderOptions;
+		
+		/**
+		 * Returns a byte array from bitmap data
+		 * */
+		public static function getBase64FromByteArray(byteArray:ByteArray, alternativeEncoder:Boolean):String {
+			var results:String;
+			
+			if (!alternativeEncoder) {
+				if (!base64Encoder) {
+					base64Encoder = new Base64Encoder();
+				}
+				
+				base64Encoder.encodeBytes(byteArray);
+				
+				results = base64Encoder.toString();
+			}
+			else {
+				if (Base64Encoder2==null) {
+					throw new Error("Set the static alternative base encoder before calling this method");
+				}
+				// Base64.encode(data:ByteArray);
+				results = Base64Encoder2.encode(byteArray);
+			}
+			
+			return results;
+		}
+		
+		
+		/**
+		 * Returns a byte array from bitmap data
+		 * */
+		public static function getBitmapByteArray(bitmapData:BitmapData, rectangle:Rectangle, useEncoder:Boolean = false, type:String = "png", fastCompression:Boolean = true, quality:int = 80, encoderOptions:Object = null):ByteArray {
+			var hasJPEGEncoderOptions:Boolean = ApplicationDomain.currentDomain.hasDefinition("flash.display.JPEGEncoderOptions");
+			var hasPNGEncoderOptions:Boolean = ApplicationDomain.currentDomain.hasDefinition("flash.display.PNGEncoderOptions");
+			var byteArray:ByteArray;
+			
+			if (rectangle==null) {
+				rectangle = new Rectangle(0, 0, bitmapData.width, bitmapData.height);
+			}
+			
+			if (!useEncoder && !("encode" in bitmapData)) {
+				throw new Error("BitmapData.encode is not available. You must be using a Flash Player 11.3 or AIR 3.3 to call this method");
+			}
+			
+			if (encoderOptions) {
+				byteArray = Object(bitmapData).encode(rectangle, pngEncoderOptions);
+				return byteArray;
+			}
+			
+			// encode to PNG
+			if (type.toLowerCase()=="png") {
+				
+				if (useEncoder) {
+					if (!pngEncoder) {
+						pngEncoder = new PNGEncoder();
+					}
+					
+					byteArray = pngEncoder.encode(bitmapData);
+				}
+				else {
+					
+					if (!pngEncoderOptions) {
+						var PNGEncoderOptionsClass:Object = ApplicationDomain.currentDomain.getDefinition("flash.display.PNGEncoderOptions");
+						// be sure to include this class in your project or library or else use the other encoder
+						pngEncoderOptions = new PNGEncoderOptionsClass(fastCompression);
+					}
+					
+					byteArray = Object(bitmapData).encode(rectangle, pngEncoderOptions);
+				}
+			}
+			else if (type.toLowerCase()=="jpg" || type.toLowerCase()=="jpeg") {
+				
+				if (useEncoder) {
+					if (!jpegEncoder) {
+						jpegEncoder = new JPEGEncoder();
+					}
+					
+					byteArray = jpegEncoder.encode(bitmapData);
+				}
+				else {
+					if (!jpegEncoderOptions) {
+						var JPEGEncoderOptionsClass:Object = ApplicationDomain.currentDomain.getDefinition("flash.display.JPEGEncoderOptions");
+						jpegEncoderOptions = new JPEGEncoderOptionsClass(quality);
+					}
+					
+					byteArray = Object(bitmapData).encode(rectangle, jpegEncoderOptions);
+				}
+			}
+			else {
+				// raw bitmap image data
+				byteArray = bitmapData.getPixels(rectangle);
+			}
+			
+			return byteArray;
+		}
+		
 	}
 }

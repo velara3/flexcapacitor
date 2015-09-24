@@ -74,6 +74,17 @@ package com.flexcapacitor.effects.file.supportClasses {
 					dispatchErrorEvent("The file reference or file reference list is not set");
 				}
 				
+				if (file) {
+					// in some cases the file was never selected so we have a file object with no file selected
+					try {
+						var test:String = file.name;
+					}
+					catch(test:Error) {
+						dispatchErrorEvent("A valid file was never selected");
+					}
+					
+				}
+				
 				// Check at least one file is selected
 				//if (!file.creationDate) {
 				//	dispatchErrorEvent("No file is selected");
@@ -91,8 +102,30 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// load in files
 			if (file) {
-				addFileListeners(file);
-				file.load();
+				
+				try {
+					addFileListeners(file);
+					file.load();
+				}
+				catch (error:Error) {
+					removeFileListeners(file);
+				   // trace("Failed:", error.message);
+				   // traceMessage("BrowseForFile:" + error.message);
+					
+					action.error = error;
+					
+					// dispatch events and run effects
+					if (action.hasEventListener(LoadFile.ERROR)) {
+						dispatchActionEvent(new Event(LoadFile.ERROR));
+					}
+					
+					if (action.errorEffect) {
+						playEffect(action.errorEffect);
+					}
+					
+					finish();
+					return;
+				}
 			}
 			else if (files) {
 				//addFileListeners(files);
@@ -148,6 +181,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 				action.currentFile = file;
 				action.data = file.data;
 				action.type = file.type;
+				action.dataAsString = file.data.readUTFBytes(file.data.length);
 				
 				if (loadBytesWithLoader) {
 					loader = new Loader();
@@ -172,7 +206,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.data = file.data;
 			
 			if (action.hasEventListener(LoadFile.COMPLETE)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.completeEffect) {
@@ -209,7 +243,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			removeFileListeners(file);
 			
 			if (action.hasEventListener(LoadFile.IO_ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.ioErrorEffect) {
@@ -233,7 +267,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.currentFile = file;
 			
 			if (action.hasEventListener(Event.OPEN)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.openEffect) {
@@ -253,7 +287,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.currentProgressEvent = event; 
 			
 			if (action.hasEventListener(LoadFile.PROGRESS)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.progressEffect) {
@@ -280,7 +314,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			removeLoaderListeners(loaderInfo);
 			
 			if (action.hasEventListener(LoadFile.ASYNC_ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.asyncErrorEffect) {
@@ -324,7 +358,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// NOTE: there is a complete event and loader complete event
 			if (action.hasEventListener(LoadFile.LOADER_COMPLETE)) {
 				completeEvent = new Event(LoadFile.LOADER_COMPLETE);
-				action.dispatchEvent(completeEvent);
+				dispatchActionEvent(completeEvent);
 			}
 			
 			if (action.loaderCompleteEffect) {
@@ -349,7 +383,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			
 			if (action.hasEventListener(LoadFile.INIT)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.initEffect) {
@@ -373,7 +407,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// NOTE: there is a io error event and loader io error event
 			if (action.hasEventListener(LoadFile.LOADER_IO_ERROR)) {
 				ioErrorEvent = new IOErrorEvent(LoadFile.LOADER_IO_ERROR, false, false, event.text, event.errorID);
-				action.dispatchEvent(ioErrorEvent);
+				dispatchActionEvent(ioErrorEvent);
 			}
 			
 			if (action.ioErrorEffect) {
@@ -401,7 +435,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// NOTE: there is a open event and loader open event
 			if (action.hasEventListener(LoadFile.LOADER_OPEN)) {
 				openEvent = new Event(LoadFile.LOADER_OPEN);
-				action.dispatchEvent(openEvent);
+				dispatchActionEvent(openEvent);
 			}
 			
 			if (action.openEffect) {
@@ -425,7 +459,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			if (action.hasEventListener(LoadFile.LOADER_PROGRESS)) {
 				progressEvent = new ProgressEvent(LoadFile.LOADER_PROGRESS, false, false, event.bytesLoaded, event.bytesTotal);
 				
-				action.dispatchEvent(progressEvent);
+				dispatchActionEvent(progressEvent);
 			}
 			
 			if (action.progressEffect) {
@@ -446,7 +480,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			removeLoaderListeners(loaderInfo);
 			
 			if (action.hasEventListener(LoadFile.SECURITY_ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.securityErrorEffect) {
@@ -473,7 +507,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			removeLoaderListeners(loaderInfo);
 			
 			if (action.hasEventListener(LoadFile.UNLOAD)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.unloadEffect) {

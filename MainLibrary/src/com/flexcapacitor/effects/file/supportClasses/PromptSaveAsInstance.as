@@ -123,7 +123,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * */
 		public function buttonHandler(event:MouseEvent):void {
 			var action:PromptSaveAs = PromptSaveAs(effect);
-			var data:Object = action.data;
+			var data:* = action.data;
 			var fileName:String = action.fileName==null ? "" : action.fileName;
 			fileName = fileName.indexOf(".")==-1 && action.fileExtension ? fileName + "." + action.fileExtension : fileName;
 			
@@ -139,6 +139,22 @@ package com.flexcapacitor.effects.file.supportClasses {
 				dispatchErrorEvent("The browse for file event handler was not previously removed.");
 				return;
 			}
+			if (action.data==null && action.throwErrorOnNoData) {
+				
+				// this means... the event listener was not removed
+				dispatchErrorEvent("There is no data to save.");
+				return;
+			}
+			
+			// if we call fileReference.save(null, fileName) then the following error occurs:
+			// ArgumentError: data
+			//	at flash.net::FileReference/save()
+			if (action.data==null) {
+				data = "";
+			}
+			else {
+				data = action.data;
+			}
 			
 			// reset browse dialog flag
 			action.invokeSaveAsDialog = false;
@@ -149,7 +165,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.fileReference = new FileReference();
 			addFileListeners(action.fileReference);
 			
-			action.fileReference.save(action.data, fileName);
+			action.fileReference.save(data, fileName);
 			
 			///////////////////////////////////////////////////////////
 			// Wait for handlers
@@ -177,7 +193,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// dispatch events and run effects
 			if (action.hasEventListener(PromptSaveAs.SAVE)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.saveEffect) {
@@ -208,7 +224,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			removeFileListeners(action.fileReference);
 			
 			if (action.hasEventListener(PromptSaveAs.CANCEL)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.cancelEffect) {

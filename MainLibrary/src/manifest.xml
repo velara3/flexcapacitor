@@ -1,5 +1,22 @@
 <?xml version="1.0"?>
 <componentPackage>
+<!-- 
+
+OUR CLASSES ARE NOT SHOWING UP 
+in our namespace unless they are copied here so removing compiler arguments and manifest 
+until I can add them in manually.
+
+
+Namespace URL: 
+http://www.flexcapacitor.com/flex/2015
+
+Manifest file:
+manifest.xml
+
+Compiler Argument:
+-include-namespaces http://www.flexcapacitor.com/flex/2015
+
+-->
 	<component id="AlphaLabelButton" class="com.flexcapacitor.controls.AlphaLabelButton"/>
 	<component id="BeveledImageButton" class="com.flexcapacitor.controls.BeveledImageButton"/>
 	<component id="BlinkingImageButton" class="com.flexcapacitor.controls.BlinkingImageButton"/>
@@ -29,8 +46,6 @@
 	<component id="KeyboardEventHandler" class="com.flexcapacitor.handlers.KeyboardEventHandler"/>
 	
 	<component id="HTMLFormatterTLF" class="com.flexcapacitor.formatters.HTMLFormatterTLF"/>
-	
-	<component id="XMLUtils" class="com.flexcapacitor.utils."/>
 	
 	<component id="SQLColumn" class="com.flexcapacitor.data.database.SQLColumn"/>
 	<component id="SQLColumnData" class="com.flexcapacitor.data.database.SQLColumnData"/>

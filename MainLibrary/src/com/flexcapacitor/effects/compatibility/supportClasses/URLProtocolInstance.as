@@ -138,7 +138,7 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 			if (!protocolFound) {
 				
 				if (action.hasEventListener(URLProtocol.PROTOCOL_NOT_FOUND)) {
-					action.dispatchEvent(new Event(URLProtocol.PROTOCOL_NOT_FOUND));
+					dispatchActionEvent(new Event(URLProtocol.PROTOCOL_NOT_FOUND));
 				}
 				
 				if (action.protocolNotFoundEffect) { 

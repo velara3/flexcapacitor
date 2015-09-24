@@ -59,8 +59,23 @@ package com.flexcapacitor.effects.file {
 	 * 
 	 * If it is part of an event handler it must be called within the call stack of a click event.
 	 * Set the targetAncestor property to a parent of the button that triggers this event.
-	 * Must not have any effects before it that have any duration. 
+	 * Must not have any effects before it that have any duration. <br/><br/>
 	 * 
+	 * <b>Errors:</b> <br/>
+	 * Error #2037: Functions called in incorrect sequence, or earlier call was unsuccessful.<br/>
+	 * Cause: A file was never selected by the user and we tried to call a method like load().<br/><br/>
+	 * For example, the events should be:
+	 * <pre>
+	 * 1. file = new FileReference();
+	 * 2. file.browse(); // user selects a file
+	 * 3. file.load()
+	 * </pre>
+	 * An error occurs when we do this: 
+	 * <pre>
+	 * 1. file = new FileReference();
+	 * 2. file.browse(); // user cancels and does not select a file
+	 * 3. file.load(); // error here
+	 * </pre>
 	 * 
 	 * @see FileExists
 	 * @see GetFile
@@ -256,6 +271,18 @@ package com.flexcapacitor.effects.file {
 		 * */
 		[Bindable]
 		public var file:Object;
+		
+		/**
+		 * File URL. Not available in the browser. 
+		 * */
+		[Bindable]
+		public var fileURL:String;
+		
+		/**
+		 * File native path. Not available in the browser. 
+		 * */
+		[Bindable]
+		public var fileNativePath:String;
 		
 		/**
 		 * Title for browse window dialog. Not supported in the browser.

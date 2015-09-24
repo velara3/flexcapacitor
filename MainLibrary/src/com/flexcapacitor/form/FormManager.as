@@ -7,10 +7,13 @@ package com.flexcapacitor.form {
 	import com.flexcapacitor.form.vo.FormElement;
 	
 	import flash.events.Event;
+	import flash.events.MouseEvent;
 	
 	import mx.collections.IList;
+	import mx.core.IUIComponent;
 	import mx.core.UIComponent;
 	import mx.events.ValidationResultEvent;
+	import mx.managers.ToolTipManager;
 	import mx.validators.IValidator;
 	import mx.validators.Validator;
 
@@ -399,7 +402,7 @@ package com.flexcapacitor.form {
 		/**
 		 * Updates the target item with the values from the form
 		 * */
-		public function validate(form:FormAdapter, showHideErrors:Boolean = true):Boolean {
+		public function validate(form:FormAdapter, showHideErrors:Boolean = true, showErrorToolTip:Boolean = true):Boolean {
 			var items:Vector.<FormElement> = form.items;
 			var length:int = items ? items.length : 0;
 			var item:FormElement;
@@ -409,6 +412,7 @@ package com.flexcapacitor.form {
 			var valid:Boolean;
 			var formValid:Boolean;
 			var errorComponents:Array = [];
+			//pt = UIComponent(target.parent).contentToGlobal(pt);
 			
 			// validate each item with a validator 
 			// display or hide error messages
@@ -432,12 +436,23 @@ package com.flexcapacitor.form {
 					}
 					
 					// used to show or hide errors
-					if (showHideErrors && errorComponents.indexOf(item.errorComponent)) {
-						displayErrorMessages(valid, item, resultEvent);
+					if (showHideErrors) {
 						
-						// do not overwrite previous error messages
-						if (!valid && item.errorComponent) {
-							errorComponents.push(item.errorComponent);
+						// show error tool tip
+						if (showErrorToolTip) {
+							showErrorImmediately(item.targetComponent as UIComponent);
+						}
+						
+						// show errors in alternative component like a label
+						// note: changing the next line to the next line after bc incorrect?
+						// if (errorComponents.indexOf(item.errorComponent)) {
+						if (item.errorComponent && errorComponents.indexOf(item.errorComponent)==-1) {
+							displayErrorMessages(valid, item, resultEvent);
+							
+							// do not overwrite previous error messages
+							if (!valid && item.errorComponent) {
+								errorComponents.push(item.errorComponent);
+							}
 						}
 					}
 					
@@ -469,7 +484,7 @@ package com.flexcapacitor.form {
 		}
 		
 		/**
-		 * Used to display or hide error messages.
+		 * Used to display or hide error messages in a display object
 		 * */
 		public function displayErrorMessages(valid:Boolean, item:FormElement, resultEvent:ValidationResultEvent):void {
 			var message:String = !valid ? item.errorMessage || resultEvent.message : null;
@@ -480,11 +495,37 @@ package com.flexcapacitor.form {
 				
 				errorComponent[errorComponentProperty] = message;
 				
-				if (errorComponent is UIComponent) {
+				if (errorComponent is IUIComponent) {
 					errorComponent.includeInLayout = valid ? false : true;
 					errorComponent.visible = valid ? false : true;
 				}
 			}
+		}
+		
+		/**
+		 * http://stackoverflow.com/a/1878602/441016
+		 * */
+		public function showErrorImmediately(target:UIComponent):void {
+			
+			// we have to callLater this to avoid other fields that send events
+			// that reset the timers and prevent the errorTip ever showing up.
+			if (target) {
+				target.callLater(showDeferred, [target]);
+			}
+		}
+		
+		private function showDeferred(target:UIComponent):void {
+			var oldShowDelay:Number = ToolTipManager.showDelay;
+			ToolTipManager.showDelay = 0;
+			
+			if (target.visible) {
+				// try popping the resulting error flag via the hack 
+				// courtesy Adobe bug tracking system
+				target.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_OUT));
+				target.dispatchEvent(new MouseEvent(MouseEvent.MOUSE_OVER));
+			}
+			
+			ToolTipManager.showDelay = oldShowDelay;
 		}
 		
 		/**

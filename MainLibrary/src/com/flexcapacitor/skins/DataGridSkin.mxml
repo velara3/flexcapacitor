@@ -42,8 +42,9 @@ Works with the com.flexcapacitor.controls.DataGrid class.
 
 
 
-
-
+On mobile theme on desktop: 
+ReferenceError: Error #1056: Cannot create property dropIndicator on com.flexcapacitor.controls.DataGrid.
+Possible fix: Made all projects use the same SDK. Made all merged into code?
 
 The default skin class for a Spark DataGrid component.  
 

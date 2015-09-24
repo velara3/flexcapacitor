@@ -170,7 +170,7 @@ package com.flexcapacitor.effects.form.supportClasses {
 			}
 			
 			if (action.hasEventListener(IOErrorEvent.IO_ERROR)) 
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			
 			cancel("IO Error "+ event.errorID);
 		}
@@ -184,7 +184,7 @@ package com.flexcapacitor.effects.form.supportClasses {
 			}
 			
 			if (action.hasEventListener(SecurityErrorEvent.SECURITY_ERROR)) 
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			
 			cancel("Security error "+event.errorID);
 		}
@@ -194,7 +194,7 @@ package com.flexcapacitor.effects.form.supportClasses {
 			action.loader.removeEventListener(Event.COMPLETE, loaderComplete);
 			
 			if (action.hasEventListener(Event.COMPLETE)) 
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			
 			finishEffect();
 		}

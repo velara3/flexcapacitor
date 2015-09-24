@@ -4,23 +4,42 @@
 		alpha=".45" 
 		width="100%">
 	
-	<!-- Horizontal indented line
-	
-	Usage: 
-	<s:HorizontalLine width="100%" strokeColor="#9a9a9a" shadowColor="#FFFFFF" alpha="1" angle="90"/>
-	-->
+	<fx:Script>
+		<![CDATA[
+/**
+ * The Line class is a graphic element that draws a line between two points.
+ * 
+ * <p>The default stroke for a Spark Line is undefined; therefore, if you do not specify
+ * the stroke, the line is invisible. This class defines a stroke and provides properties 
+ * to set the style and color.</p>
+ * 
+ * TODO: Convert to using styles and make this an AS3 class. Also, should probably draw a second line for 
+ * the shadow rather than use a filter.
+ * 
+ * Usage: 
+<pre>
+ &lt;s:HorizontalLine width="100%" strokeColor="#9a9a9a" alpha="1" height="1"/>
+ &lt;s:HorizontalLine width="100%" strokeColor="#9a9a9a" shadowColor="#FFFFFF" alpha="1" angle="90"/>
+</pre>
+* */
+		]]>
+	</fx:Script>
+
 	<fx:Declarations>
 		<fx:Number id="strokeColor">#9a9a9a</fx:Number>
 		<fx:Number id="shadowColor">#FFFFFF</fx:Number>
+		<fx:Number id="strokeWeight">1</fx:Number>
+		<fx:String id="joints">miter</fx:String>
+		<fx:int id="miterLimit">4</fx:int>
 		<fx:int id="angle">0</fx:int>
 	</fx:Declarations>
 	
 	<s:stroke>
 		<s:SolidColorStroke caps="round" 
 							color="{strokeColor}" 
-							joints="miter" 
-							miterLimit="4"
-							weight="1"/>
+							joints="{joints}" 
+							miterLimit="{miterLimit}"
+							weight="{strokeWeight}"/>
 	</s:stroke>
 	<s:filters>
 		<s:DropShadowFilter alpha="1" 

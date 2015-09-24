@@ -93,7 +93,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				
 				// step through 
 				if (action.hasEventListener("error")) {
-					action.dispatchEvent(new Event("error"));
+					dispatchActionEvent(new Event("error"));
 				}
 				
 				if (action.errorEffect) {
@@ -108,7 +108,7 @@ package com.flexcapacitor.effects.settings.supportClasses {
 				trace("shared object could not be created. is null");
 				
 				if (action.hasEventListener("error")) {
-					action.dispatchEvent(new Event("error"));
+					dispatchActionEvent(new Event("error"));
 				}
 				
 				if (action.errorEffect) {

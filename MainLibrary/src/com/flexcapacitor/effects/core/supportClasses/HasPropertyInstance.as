@@ -100,7 +100,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// property is NOT set 
 				if (action.hasEventListener(HasProperty.NO_PROPERTY)) {
-					action.dispatchEvent(new Event(HasProperty.HAS_PROPERTY));
+					dispatchActionEvent(new Event(HasProperty.HAS_PROPERTY));
 				}
 				
 				if (action.noPropertyEffect) { 
@@ -116,7 +116,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// property IS set
 				if (action.hasEventListener(HasProperty.HAS_PROPERTY)) {
-					action.dispatchEvent(new Event(HasProperty.HAS_PROPERTY));
+					dispatchActionEvent(new Event(HasProperty.HAS_PROPERTY));
 				}
 				
 				if (action.hasPropertyEffect) { 

@@ -174,7 +174,9 @@ package com.flexcapacitor.effects.database.supportClasses {
 			if (backupPath) {
 				var backupIsNewer:Boolean;
 				backupDatabaseFile = File.applicationDirectory.resolvePath(backupPath);
-				backupModifiedDate = new Date(backupDatabaseFile.modificationDate);
+				if (backupDatabaseFile.exists) {
+					backupModifiedDate = new Date(backupDatabaseFile.modificationDate);
+				}
 				
 				if (traceFilePaths) {
 					traceMessage("");
@@ -183,11 +185,11 @@ package com.flexcapacitor.effects.database.supportClasses {
 					traceMessage(" Backup File URL: " + backupDatabaseFile.url);
 					traceMessage(" Backup Native File Path: " + backupDatabaseFile.nativePath);
 					traceMessage(" Backup File Space Available: " + formatSize(backupDatabaseFile.spaceAvailable) + "GB");
-					traceMessage(" Backup Modified Date: " + backupModifiedDate);
+					if (backupDatabaseFile.exists) traceMessage(" Backup Modified Date: " + backupModifiedDate);
 				}
 				
-				if (fileExists && 
-					backupDatabaseFile.exists && backupDatabaseFile.modificationDate>databaseFile.modificationDate) {
+				if (fileExists && backupDatabaseFile.exists && 
+					backupDatabaseFile.modificationDate > databaseFile.modificationDate) {
 					backupIsNewer = true;
 					
 					if (traceFilePaths) {

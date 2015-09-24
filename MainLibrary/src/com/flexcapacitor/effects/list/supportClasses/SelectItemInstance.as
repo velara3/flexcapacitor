@@ -106,7 +106,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 				
 				// item is null
 				if (action.hasEventListener(SelectItem.ITEM_NOT_SET)) {
-					action.dispatchEvent(new Event(SelectItem.ITEM_NOT_SET));
+					dispatchActionEvent(new Event(SelectItem.ITEM_NOT_SET));
 				}
 				
 				if (action.itemNotSetEffect) { 
@@ -118,7 +118,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 				
 				// data provider is null
 				if (action.hasEventListener(SelectItem.DATAPROVIDER_NOT_SET)) {
-					action.dispatchEvent(new Event(SelectItem.DATAPROVIDER_NOT_SET));
+					dispatchActionEvent(new Event(SelectItem.DATAPROVIDER_NOT_SET));
 				}
 				
 				if (action.dataProviderNotSetEffect) { 
@@ -176,7 +176,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 						
 						// item found
 						if (action.hasEventListener(SelectItem.ITEM_FOUND)) {
-							action.dispatchEvent(new Event(SelectItem.ITEM_FOUND));
+							dispatchActionEvent(new Event(SelectItem.ITEM_FOUND));
 						}
 						
 						if (action.itemFoundEffect) { 
@@ -188,7 +188,7 @@ package com.flexcapacitor.effects.list.supportClasses {
 						
 						// item is not found
 						if (action.hasEventListener(SelectItem.ITEM_NOT_FOUND)) {
-							action.dispatchEvent(new Event(SelectItem.ITEM_NOT_FOUND));
+							dispatchActionEvent(new Event(SelectItem.ITEM_NOT_FOUND));
 						}
 						
 						if (action.itemNotFoundEffect) { 

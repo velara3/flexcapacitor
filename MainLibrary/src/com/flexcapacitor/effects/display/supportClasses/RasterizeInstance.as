@@ -118,6 +118,8 @@ package com.flexcapacitor.effects.display.supportClasses {
 			}
 			else {
 				
+				// TODO: LOOK AT DISPLAYOBJECTUTILS class and LAYOUTDEBUGHELPER CLASS FOR 
+				// CORRECT EXPECTED SIZE AND POSITION INFORMATION
 				try {
 					if (absoluteBounds) {
 						//action.bitmapData = getAbsoluteSnapshot(source, transparentFill, action.scaleX, action.scaleY, horizontalPadding, verticalPadding, fillColor, smoothing);

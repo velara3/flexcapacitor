@@ -18,6 +18,7 @@ package com.flexcapacitor.utils {
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.system.ApplicationDomain;
 	import flash.text.Font;
 	import flash.text.TextFormat;
 	import flash.ui.Keyboard;
@@ -29,6 +30,7 @@ package com.flexcapacitor.utils {
 	
 	import mx.collections.ArrayList;
 	import mx.controls.ToolTip;
+	import mx.core.ClassFactory;
 	import mx.core.EventPriority;
 	import mx.core.FlexGlobals;
 	import mx.core.FlexSprite;
@@ -65,9 +67,11 @@ package com.flexcapacitor.utils {
 	
 	import spark.components.Application;
 	import spark.components.Group;
+	import spark.components.HGroup;
 	import spark.components.Image;
 	import spark.components.Label;
 	import spark.components.TextInput;
+	import spark.components.VGroup;
 	import spark.components.WindowedApplication;
 	import spark.primitives.Rect;
 	
@@ -138,6 +142,37 @@ package com.flexcapacitor.utils {
 	 * the property or style value, type the new value in the second text field and press enter. 
 	 * You can type in colors using a color name or hexidecimal value such as, "red", "#FF0000" or "0xFF0000".
 	 * You can also set the value to null or undefined. Just type in the word "undefined" without the quotes. 
+	 * You can also output the values you update to the console. Then after you've adjusted the 
+	 * component to your liking, you can go back to the console and get the list of values you've
+	 * updated. 
+*  <pre>
+ *  &lt;s:MiniInspector
+ *    <strong>Properties</strong>
+ *    isOnServer="<i>Set in constructor</i>"
+ *    showGlobalStyles="false"
+ *    showUniversalStyles="false"
+ *    showStyleInheritanceInformation="false"
+ *    showEmbeddedFontInformation="false"
+ *    showDeviceFontInformation="false"
+ *    includeEmbeddedFontDetails="true"
+ *    showAllStyleDeclarations="false"
+ *    showColorUnderMouse="false"
+ *    outputUpdatedPropertiesAndStyles="true"
+ *    showRuler="false"
+ *    showRulerValuesInConsole="fals"
+ *    showDisplayObjectInformation="true"
+ *    showDisplayObjectOutlines="true"
+ *    rulerColor="#000000"
+ *    showDocument="true"
+ *    showParentDocument="true"
+ *    showSearchPattern="true"
+ *    showHeirarchy="true"
+ *    showHeirarchyAscending="true"
+ *    enableBackgroundCrossFade="true"
+ *    logTarget="TraceTarget"
+ *    debug="true"
+ *  /&gt;
+ *  </pre>
 	 *
 	 * <b>To use find in files:<b><br/><br/>
 	 * • COMMAND+CLICK or COMMAND+SHIFT+CLICK on an visual element (UIComponent) at runtime. This writes a RegEx pattern to the console. 
@@ -275,6 +310,11 @@ package com.flexcapacitor.utils {
 		 * Shows color under the mouse
 		 * */
 		public var showColorUnderMouse:Boolean;
+		
+		/**
+		 * Output properties and styles change to the console
+		 * */
+		public var outputUpdatedPropertiesAndStyles:Boolean = true;
 		
 		/**
 		 * Shows a ruler when dragging. Set this value to true 
@@ -466,6 +506,11 @@ package com.flexcapacitor.utils {
 		public var documentID:String;
 		
 		/**
+		 * Reference to the first declared instance of this class
+		 * */
+		private static var _instance:MiniInspector;
+		
+		/**
 		 * Flags used to set the "dot all" property to on for multiline support in Eclipse.
 		 * Default value is "(?s)".
 		 * */
@@ -498,6 +543,8 @@ package com.flexcapacitor.utils {
 		 *
 		 **/
 		public function MiniInspector() {
+			if (_instance==null) _instance = this;
+			
 			var rootDisplay:DisplayObject = SystemManager.getSWFRoot(this);
 			
 			isOnServer = rootDisplay.loaderInfo.url.indexOf("http")==0 ? true : false;
@@ -945,20 +992,29 @@ package com.flexcapacitor.utils {
 			// through the IDE while debugging
 			if (property) {
 				
+				
+				// TODO use set property and set style method
 				try {
 					currentValue = selectedTarget[property];
 					
 					selectedTarget[property] = value;
 					
 					currentValue = selectedTarget[property];
+					
+					if (outputUpdatedPropertiesAndStyles) {
+						logger.log(LogEventLevel.INFO, "* Setting \"" + property + "\" to \"" + value + "\"");
+						logger.log(LogEventLevel.INFO, "* Property now equals " + ObjectUtil.toString(currentValue));
+					}
+					
 				}
 				catch (error:Error) {
-					logger.log(LogEventLevel.ERROR, "Error setting property:" + error.message);
+					logger.log(LogEventLevel.ERROR, "* Error setting property:" + error.message);
 				}
 				
 			}
 			else if (style) {
 				
+				// TODO use set style and set property method
 				try {
 					currentValue = selectedTarget.getStyle(style);
 					
@@ -966,15 +1022,23 @@ package com.flexcapacitor.utils {
 					// to support
 					if (value!="undefined") {
 						selectedTarget.setStyle(style, value);
+						if (outputUpdatedPropertiesAndStyles) {
+							logger.log(LogEventLevel.INFO, "* Set \"" + style + "\" to \"" + value + "\"");
+							logger.log(LogEventLevel.INFO, "* Style now equals " + ObjectUtil.toString(selectedTarget.getStyle(style)));
+						}
 					}
 					else if (clearStyle) {
 						selectedTarget.setStyle(style, undefined);
+						if (outputUpdatedPropertiesAndStyles) {
+							logger.log(LogEventLevel.INFO, "* Setting \"" + style + "\" to undefined");
+							logger.log(LogEventLevel.INFO, "* Style now equals " + ObjectUtil.toString(selectedTarget.getStyle(style)));
+						}
 					}
 					
 					currentValue = selectedTarget.getStyle(style);
 				}
 				catch (error:Error) {
-					logger.log(LogEventLevel.ERROR, "Error setting style:" + error.message);
+					logger.log(LogEventLevel.ERROR, "* Error setting style:" + error.message);
 				}
 			}
 			else if (findElementByID) {
@@ -1340,6 +1404,17 @@ package com.flexcapacitor.utils {
 			return hs;
 		}
 		
+		/**
+		 * Get commponent item from current target
+		 * */
+		public function getComponentItem(target:DisplayObject):ComponentItem {
+			if (target==null) return null;
+			var rootComponent:ComponentItem = document ? createComponentTreeFromElement(document) : createComponentTreeFromElement(FlexGlobals.topLevelApplication);
+			var rootSystemManagerTree:ComponentItem = createComponentTreeFromElement(FlexGlobals.topLevelApplication.systemManager);
+			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(target), rootComponent);
+			return componentItem;
+		}
+		
 		public var pupUpDisplayTime:int = 3000;
 		public var popUpTimeout:int;
 		public var popUpDisplayGroup:Group;
@@ -1390,7 +1465,7 @@ package com.flexcapacitor.utils {
 				popUpBorder = new Rect();
 				popUpBorder.percentWidth = 100;
 				popUpBorder.percentHeight = 100;
-				popUpBorder.stroke = new SolidColorStroke(0xFF0000, 1, 1, false, "normal", JointStyle.MITER);
+				popUpBorder.stroke = new SolidColorStroke(outlineBorderColor, 1, 1, false, "normal", JointStyle.MITER);
 				
 				if (popUpBackgroundTransparentGrid) {
 					popUpBackground = new Rect();
@@ -1410,41 +1485,42 @@ package com.flexcapacitor.utils {
 					BitmapFill(popUpBackground.fill).fillMode = BitmapFillMode.REPEAT;
 				}
 				
-				moveUpLabel = new Label();
 				popUpLabel = new Label();
 				popUpLabel.setStyle("backgroundColor", 0xFF0000);
 				popUpLabel.setStyle("color", 0xFFFFFF);
 				popUpLabel.setStyle("fontWeight", "bold");
 				popUpLabel.setStyle("fontSize", 12);
 				popUpLabel.setStyle("paddingTop", 3);
-				popUpLabel.setStyle("paddingBottom", 1);
+				popUpLabel.setStyle("paddingBottom", 3);
 				popUpLabel.setStyle("paddingLeft", 6);
 				popUpLabel.setStyle("paddingRight", 4);
 				popUpLabel.useHandCursor = true;
 				popUpLabel.buttonMode = true;
-				//popUpLabel.addEventListener(MouseEvent.CLICK, labelClickHandler, false, 0, true);
 				
+				moveUpLabel = new Label();
+				moveUpLabel.styleName = popUpLabel;
 				moveUpLabel.useHandCursor = true;
 				moveUpLabel.buttonMode = true;
-				moveUpLabel.text = "^";
-				moveUpLabel.styleName = popUpLabel;
-				moveUpLabel.setStyle("fontSize", 16);
-				moveUpLabel.width = 14;
-				//moveUpLabel.setStyle("backgroundColor", "red");
+				moveUpLabel.text = "up";
+				moveUpLabel.setStyle("fontSize", 12);
+				moveUpLabel.setStyle("fontWeight", "bold");
+				moveUpLabel.minWidth = 1;
+				//moveUpLabel.width = 20;
+				//moveUpLabel.setStyle("backgroundColor", "#0000FF");
 				//moveUpLabel.setStyle("backgroundAlpha", 1);
-				moveUpLabel.setStyle("paddingLeft", 2);
-				moveUpLabel.setStyle("paddingRight", 0);
+				//moveUpLabel.setStyle("paddingLeft", 2);
+				//moveUpLabel.setStyle("paddingRight", 0);
 				
 				popUpPropertyInput = new TextInput();
 				popUpValueInput = new TextInput();
 				
 				popUpPropertyInput.width = 100;
-				popUpValueInput.width = 100;
+				popUpValueInput.width = 200;
 				
-				popUpPropertyInput.alpha = .75;
-				popUpValueInput.alpha = .75;
+				popUpPropertyInput.alpha = .85;
+				popUpValueInput.alpha = .85;
 				popUpPropertyInput.x = 0;
-				popUpValueInput.x = popUpPropertyInput.x + popUpPropertyInput.width + 5;
+				//popUpValueInput.x = popUpPropertyInput.x + popUpPropertyInput.width + 5;
 				popUpPropertyInput.prompt = "Property";
 				popUpValueInput.prompt = "Value";
 				popUpPropertyInput.setStyle("prompt", "Property");
@@ -1457,26 +1533,50 @@ package com.flexcapacitor.utils {
 				popUpPropertyInput.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, propertyInputEnterHandler, false, 0, true);
 				popUpValueInput.addEventListener(KeyboardEvent.KEY_UP, valueInputEnterHandler, false, 0, true);
 				
+				var hgroup:HGroup = new HGroup();
+				var hgroup2:HGroup = new HGroup();
+				var vgroup:VGroup = new VGroup();
+				vgroup.gap = 0;
+				hgroup.gap = 1;
+				hgroup2.gap = 0;
+				vgroup.x = vgroup.y = 1;
+				
 				popUpDisplayGroup.addElement(popUpBackground);
 				popUpDisplayGroup.addElement(popUpDisplayImage);
 				popUpDisplayGroup.addElement(popUpBorder);
-				popUpDisplayGroup.addElement(moveUpLabel);
-				popUpDisplayGroup.addElement(popUpLabel);
-				popUpDisplayGroup.addElement(popUpPropertyInput);
-				popUpDisplayGroup.addElement(popUpValueInput);
+				
+				hgroup.addElement(moveUpLabel);
+				hgroup.addElement(popUpLabel);
+				hgroup2.addElement(popUpPropertyInput);
+				hgroup2.addElement(popUpValueInput);
+				vgroup.addElement(hgroup);
+				vgroup.addElement(hgroup2);
+				vgroup.id = "popUpLabelGroup";
+				popUpDisplayGroup.addElement(vgroup);
 			}
 			
+			if (displayTarget==systemManagerObject && isApplication(lastTarget)) {
+				closePopUp(displayTarget);
+				return null;
+			}
 			
 			if (isApplication(displayTarget) && getNextParent) {
 				isApp = true;
-				closePopUp(displayTarget);
-				return null;
 			}
 			
 			// refactor the following to updateDisplayGroup()
 			currentPopUpTarget = displayTarget;
 			
-			container = rasterize(displayTarget);
+			if (displayTarget is UIComponent) {
+				container = rasterizeComponent(displayTarget as UIComponent);
+			}
+			else {
+				container = rasterize2(displayTarget);
+			}
+			if (isApp) {
+				container.height = 28;
+			}
+			
 			var name:String = displayTarget.toString();
 			name = name.split(".").length ? name.split(".")[name.split(".").length-1] : name;
 			
@@ -1484,10 +1584,11 @@ package com.flexcapacitor.utils {
 			popUpLabel.text = name + " - " + container.width + "x" + container.height + " ";
 			
 			if (displayTarget is UIComponent) {
-				popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ")";
+				//popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ")";
+				lastComponentItem = getComponentItem(displayTarget);
 			}
-			
-			popUpLabel.text += " at " + container.x + "x" + container.y + " ";
+			popUpDisplayGroup.minHeight = moveUpLabel.height;
+			popUpLabel.text += "at " + container.x + "x" + container.y + " ";
 			popUpDisplayImage.width = container.width;
 			popUpDisplayImage.height = container.height;
 			popUpDisplayGroup.width = container.width;
@@ -1498,14 +1599,28 @@ package com.flexcapacitor.utils {
 			if (isApp) {
 				popUpDisplayGroup.x = 0;
 				popUpDisplayGroup.y = 0;
+				popUpLabel.parent.parent.y = 0;
 			}
 			else {
 				targetX = displayTarget.localToGlobal(new Point()).x * scale;
 				targetY = displayTarget.localToGlobal(new Point()).y * scale;
 				popUpDisplayGroup.x = targetX;
 				popUpDisplayGroup.y = targetY;
+				
+				var minLabelPosition:int = 18;
+				
+				if (container.height<=100 && targetY>minLabelPosition) {
+					var popUpY:Number = -(popUpLabel.getStyle("fontSize") * Number(parseInt(popUpLabel.getStyle("lineHeight"))/100));
+					popUpY = -(popUpLabel.height);
+					popUpLabel.parent.parent.y = Math.min(popUpY,-minLabelPosition);
+					//popUpLabel.parent.parent.x = Math.min(popUpDisplayImage.width,40);
+				}
+				else {
+					popUpLabel.parent.parent.x = 0;
+					popUpLabel.parent.parent.y = 0;
+				}
 			}
-			
+			/*
 			if (popUpLabel.height==0) { 
 				popUpLabel.y = popUpDisplayGroup.y>=15 ? -15 : 0;
 				moveUpLabel.y = popUpLabel.y;
@@ -1513,10 +1628,10 @@ package com.flexcapacitor.utils {
 			else { 
 				popUpLabel.y = popUpDisplayGroup.y>=15 ? -popUpLabel.height : 0;
 				moveUpLabel.y = popUpLabel.y;
-			}
+			}*/
 			
-			popUpLabel.x = 10;
-			moveUpLabel.height = 16;
+			//popUpLabel.x = 10;
+			//moveUpLabel.height = 16;
 			
 			
 			//container.x = inspector.target.localToGlobal(new Point()).x;
@@ -1640,10 +1755,33 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Get string value of an object if value is not simple. For primitives they value is not changed. 
+		 * For class objects, "[class ClassName]" is returned. 
+		 * For objects, "[object ClassName]" is returned.
+		 * */
+		public static function getStringValue(value:*):* {
+			if (ObjectUtil.isSimple(value)) {
+				return value;
+			}
+			else if (value is Class) {
+				return "[class " + getQualifiedClassName(value) + "]";
+			}
+			
+			return "[object " + getQualifiedClassName(value) + "]";
+		}
+		
+		/**
 		 * Get the value of the property or style on the target
 		 * */
 		protected function getPropertyOrStyle(target:Object, property:String):* {
 			var currentValue:*;
+			var propNameCased:String = getCaseSensitiveProperty(target, property);
+			var cased:Boolean;
+			
+			if (propNameCased!=null && propNameCased!=property) {
+				property = propNameCased;
+				cased = true;
+			}
 			
 			if (target && property in target) {
 				
@@ -1651,7 +1789,7 @@ package com.flexcapacitor.utils {
 					currentValue = target[property];
 					
 					if (popUpValueInput) {
-						popUpValueInput.text = currentValue;
+						popUpValueInput.text = getStringValue(currentValue);
 					}
 				}
 				catch (error:Error) {
@@ -1665,12 +1803,16 @@ package com.flexcapacitor.utils {
 					currentValue = target.getStyle(property);
 					
 					if (popUpValueInput) {
-						popUpValueInput.text = currentValue;
+						popUpValueInput.text = getStringValue(currentValue);
 					}
 				}
 				catch (error:Error) {
 					logger.log(LogEventLevel.ERROR, "Error getting style:" + error.message);
 				}
+			}
+			
+			if (cased) {
+				popUpPropertyInput.text = property;
 			}
 			
 			return currentValue;
@@ -1681,6 +1823,7 @@ package com.flexcapacitor.utils {
 		 * */
 		public function setPropertyOrStyle(target:Object, property:String, value:String):void {
 			var currentValue:*;
+			var style:String = property;
 			
 			if (target && property in target) {
 				
@@ -1697,27 +1840,32 @@ package com.flexcapacitor.utils {
 						postDisplayObject(DisplayObject(target), true, false, false);
 						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [DisplayObject(target), true, false, false]);
 					}
+					
+					if (outputUpdatedPropertiesAndStyles) {
+						logger.log(LogEventLevel.INFO, "* Setting \"" + property + "\" to \"" + value + "\"");
+						logger.log(LogEventLevel.INFO, "* Property now equals " + ObjectUtil.toString(currentValue));
+					}
 				}
 				catch (error:Error) {
-					logger.log(LogEventLevel.ERROR, "Error setting property:" + error.message);
+					logger.log(LogEventLevel.ERROR, "* Error setting property:" + error.message);
 				}
 				
 			}
-			else if (target && property!="" && target is IStyleClient) {
+			else if (target && style!="" && target is IStyleClient) {
 				
 				try {
-					currentValue = target.getStyle(property);
+					currentValue = target.getStyle(style);
 					
 					// need to call clear style or allow setting undefined
 					// to support
 					if (value!="undefined") {
-						setValue(target, property, value);
+						setValue(target, style, value);
 					}
 					else if (value=="undefined") {
-						target.setStyle(property, undefined);
+						target.setStyle(style, undefined);
 					}
 					
-					currentValue = target.getStyle(property);
+					currentValue = target.getStyle(style);
 					
 					if (popUpValueInput) {
 						popUpValueInput.text = currentValue;
@@ -1725,13 +1873,83 @@ package com.flexcapacitor.utils {
 						postDisplayObject(DisplayObject(target), true, false, false);
 						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [DisplayObject(target), true, false, false]);
 					}
+					
+					if (outputUpdatedPropertiesAndStyles) {
+						logger.log(LogEventLevel.INFO, "* Setting \"" + style + "\" to \"" + value + "\"");
+						logger.log(LogEventLevel.INFO, "* Style now equals " + ObjectUtil.toString(target.getStyle(style)));
+					}
 				}
 				catch (error:Error) {
-					logger.log(LogEventLevel.ERROR, "Error setting style:" + error.message);
+					logger.log(LogEventLevel.ERROR, "* Error setting style:" + error.message);
 				}
 			}
 		}
 		
+		/**
+		 * Gets an instance of this class. Since this is an MXML class it 
+		 * returns the first declared instance of this class. 
+		 * */
+		public static function getInstance():MiniInspector {
+			return _instance;
+		}
+		
+		/**
+		 * Gets the correct case of an objects property. For example, 
+		 * "percentwidth" returns "percentWidth". Does not support style names at this time. 
+		 * */
+		public static function getCaseSensitiveProperty(target:Object, property:String, options:Object = null):String {
+			var classInfo:Object = target ? ObjectUtil.getClassInfo(target, null, options) : property;
+			var properties:Array = classInfo ? classInfo.properties : [];
+			
+			for each (var info:QName in properties) {
+				if (info.localName.toLowerCase() == property.toLowerCase()) {
+					return info.localName;
+				}
+			}
+			
+			return property;
+		}
+		
+		/**
+		 * Get object from string if possible. Otherwise returns null. 
+		 * String must be formatted, "[class com.something.myClass]"
+		 * In time array and object may be added. 
+		 * or for an array, "[val,val,val]" or ["val","val"]
+		 * or for generic object, "{name:value,name:value}";
+		 * */
+		public static function toObject(value:*):Object {
+			var expression:RegExp = /^\[(class|object)\s([\w|\.|:]+)\]$/i;
+			
+			if (value && value is String) {
+				var match:Object = value.match(expression);
+				if (match && match.length==3) {
+					var className:String = match[2];
+					var hasClass:Boolean = ApplicationDomain.currentDomain.hasDefinition(className);
+					if (hasClass) {
+						var object:Object = ApplicationDomain.currentDomain.getDefinition(className);
+						
+						if (String(match[1]).toLowerCase()=="class") {
+							return object;
+						}
+						
+						var factory:ClassFactory = new ClassFactory();
+						factory.generator = object as Class;
+						//factory.properties = JSON.parse(value); // don't know how to handle this now
+						var instance:Object = factory.newInstance();
+						
+						return instance;
+					}
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Sets the properties when looking up property names with getClassInfo()
+		 * */
+		public static var defaultPropertyNameOptions:Object = {includeReadOnly:true, includeTransient:true, uris:["~~"]}
+			
 		/**
 		 * Sets <code>property</code> to the value specified by 
 		 * <code>value</code>. This is done by setting the property
@@ -1749,6 +1967,8 @@ package com.flexcapacitor.utils {
 			var propName:String = property;
 			var val:Object = value;
 			var currentValue:Object;
+			var propNameCased:String = getCaseSensitiveProperty(target, property, defaultPropertyNameOptions);
+			var toObject:Object = toObject(value);
 			
 			// Handle special case of width/height values being set in terms
 			// of percentages. These are handled through the percentWidth/Height
@@ -1757,6 +1977,13 @@ package com.flexcapacitor.utils {
 				if (value is String && value.indexOf("%") >= 0) {
 					propName = property == "width" ? "percentWidth" : "percentHeight";
 					val = val.slice(0, val.indexOf("%"));
+				}
+			}
+			else if (property == "skinClass" ) {
+				var skinClass:Object;
+				// try and resolve to a skin class
+				if (value && value is String && toObject) {
+					val = toObject;
 				}
 			}
 			else {
@@ -1903,6 +2130,9 @@ package com.flexcapacitor.utils {
 				else if (event.target == moveUpLabel) {
 					clearTimeout(popUpTimeout);
 					getNextOrClosePopUp(currentPopUpTarget as DisplayObject, true, true, false);
+					if (popUpIsDisplaying && lastComponentItem) {
+						trace("Selected " + getComponentLabel(lastComponentItem));
+					}
 					showInputControls(false);
 				}
 				else {
@@ -1916,11 +2146,128 @@ package com.flexcapacitor.utils {
 		/**
 		 * Creates a snapshot of the display object passed to it
 		 **/
+		public function rasterize2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
+			//var bounds:Rectangle = target.getBounds(target);
+			var bounds:Rectangle = target.getBounds(target);
+			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
+			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
+			var bitmapData:BitmapData = new BitmapData((targetWidth + horizontalPadding) * scaleX, (targetHeight + verticalPadding) * scaleY, transparentFill, fillColor);
+			var matrix:Matrix = new Matrix();
+			var container:Sprite = new Sprite();
+			var bitmap:Bitmap;
+			
+			matrix.translate(-bounds.left+horizontalPadding/2, -bounds.top+verticalPadding/2);
+			matrix.scale(scaleX, scaleY);
+			
+			try {
+				drawBitmapData(bitmapData, target, matrix);
+			}
+			catch (e:Error) {
+				//trace( "Can't get display object preview. " + e.message);
+				// show something here
+				// If capture fails, substitute with a Rect
+                var fillRect:Rectangle
+				var skin:DisplayObject = "skin" in target ? Object(target).skin : null;
+				
+                if (skin)
+                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
+                else
+                    fillRect = new Rectangle(target.x, target.y, target.width, target.height);
+                
+                bitmapData.fillRect(fillRect, 0);
+			}
+			
+			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
+			bitmap.x = bounds.left;
+			bitmap.y = bounds.top;
+			
+			container.cacheAsBitmap = true;
+			container.transform.matrix = target.transform.matrix;
+			container.addChild(bitmap);
+			
+			targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);
+			
+			//var bitmapAsset:BitmapAsset = new BitmapAsset(bitmapData2, PixelSnapping.ALWAYS);
+			
+			//return bitmapAsset;
+			return container;
+		}
+		
+		/**
+		 * Creates a snapshot of the display object passed to it
+		 **/
+		public function rasterizeComponent(target:UIComponent, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
+			var targetWidth:Number = target.width==0 || isNaN(target.width) ? 1 : target.width;
+			var targetHeight:Number = target.height==0 || isNaN(target.height) ? 1 : target.height;
+			var expectedBounds:Rectangle = getRectangleBounds(target as UIComponent);
+			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
+			var matrix:Matrix = new Matrix();
+			var container:Sprite = new Sprite();
+			var bitmap:Bitmap;
+            var fillRect:Rectangle;
+			var skin:DisplayObject;
+			
+			targetWidth = expectedBounds.width;
+			targetHeight = expectedBounds.height;
+			
+			
+			try {
+				drawBitmapData(bitmapData, target, matrix);
+			}
+			catch (e:Error) {
+				logger.log(LogEventLevel.ERROR, "Can't get display object outline. " + e.message);
+				
+				skin = "skin" in target ? Object(target).skin : null;
+				
+                if (skin) {
+                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
+				}
+                else {
+                    fillRect = new Rectangle(expectedBounds.x, expectedBounds.y, targetWidth, targetHeight);
+				}
+                
+                bitmapData.fillRect(fillRect, 0);
+			}
+			
+			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
+			//bitmap.x = expectedBounds.left;
+			//bitmap.y = expectedBounds.top;
+			
+			container.cacheAsBitmap = true;
+			container.transform.matrix = target.transform.matrix;
+			container.addChild(bitmap);
+			
+			// added to fix some clipping issues
+			targetWidth = container.getBounds(container).size.x;
+			targetHeight = container.getBounds(container).size.y;
+			
+			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
+			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
+			
+			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
+			
+			drawBitmapData(bitmapData2, container, matrix);
+			
+			return container;
+		}
+		
+		/**
+		 * Creates a snapshot of the display object passed to it
+		 **/
 		public function rasterize(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
 			//var bounds:Rectangle = target.getBounds(target);
 			var bounds:Rectangle = target.getRect(target);
 			var targetWidth:Number = target.width==0 ? 1 : target.width;
-			var targetHeight:Number = target.height==0 ? 1 : target.height;/*
+			var targetHeight:Number = target.height==0 ? 1 : target.height;
+			/*
 			var bounds:Rectangle = target.getBounds(target);
 			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
 			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;*/
@@ -1937,6 +2284,15 @@ package com.flexcapacitor.utils {
 			}
 			catch (e:Error) {
 				logger.log(LogEventLevel.ERROR, "Can't get display object outline. " + e.message);
+                var fillRect:Rectangle
+				var skin:DisplayObject = "skin" in target ? Object(target).skin : null;
+				
+                if (skin)
+                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
+                else
+                    fillRect = new Rectangle(target.x, target.y, target.width, target.height);
+                
+                bitmapData.fillRect(fillRect, 0);
 			}
 			
 			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
@@ -1959,6 +2315,42 @@ package com.flexcapacitor.utils {
 			drawBitmapData(bitmapData2, container, matrix);
 			
 			return container;
+		}
+		
+		/**
+		 * Gets the perceptually expected bounds and position of a UIComponent. 
+		 * If container is passed in then the position is relative to the container. 
+		 * */
+		public static function getRectangleBounds(item:UIComponent, container:* = null):Rectangle {
+		
+	        if (item && item.parent) { 
+	            var w:Number = item.getLayoutBoundsWidth(true);
+	            var h:Number = item.getLayoutBoundsHeight(true);
+	            
+	            var position:Point = new Point();
+	            position.x = item.getLayoutBoundsX(true);
+	            position.y = item.getLayoutBoundsY(true);
+	            position = item.parent.localToGlobal(position);
+				
+				var rectangle:Rectangle = new Rectangle();
+				
+				if (container && container is DisplayObjectContainer) {
+					var anotherPoint:Point = DisplayObjectContainer(container).globalToLocal(position);
+					rectangle.x = anotherPoint.x;
+					rectangle.y = anotherPoint.y;
+				}
+				else {
+					rectangle.x = position.x;
+					rectangle.y = position.y;
+				}
+	            
+				rectangle.width = w;
+				rectangle.height = h;
+				
+				return rectangle;
+	       }
+			
+			return null;
 		}
 		
 		/**
@@ -2493,6 +2885,15 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Gets basic component id and type
+		 * */
+		public function getComponentLabel(item:ComponentItem):String {
+			var out:String = item.unqualifiedClassName;
+			out = item.id ? out + "#" + item.id : out;
+			return out;
+		}
+		
+		/**
 		 * Gets the path up the component display list tree
 		 Usage:
 		 var string:String = getComponentPath(componentItem); // componentItem.instance is Button
@@ -2868,18 +3269,57 @@ package com.flexcapacitor.utils {
 		/**
 		 * The target for the logger.
 		 * */
-        protected var logTarget:TraceTarget;
+        public var logTarget:TraceTarget;
 
+		/**
+		 * Logger name when using Log.getLogger();
+		 * */
+		public var loggerName:String = "MiniInspector";
+		
 		/**
 		 * The class logger.
 		 * */
-        protected var logger:ILogger = Log.getLogger("WebView");
+        public var logger:ILogger = Log.getLogger(loggerName);
 		
 		/**
-		 * Displays a JavaScript alert and issues an WebViewEvent.Result event with 
-		 * the response from a JavaScript call. 
+		 * Default logger LogEventLevel. Default is ALL.
 		 * */
-        public var runTestScript:Boolean;
+        public var logTargetLevel:int = LogEventLevel.ALL;
+		
+		/**
+		 * Default logger field separator. Default is " ".
+		 * */
+        public var logTargetFieldSeparator:String = " ";
+		
+		/**
+		 * Set to true to include the category in the default logger. Default is false.
+		 * */
+        public var logTargetIncludeCategory:Boolean;
+		
+		/**
+		 * Set to true to include the date in default logger. Default is false.
+		 * */
+        public var logTargetIncludeDate:Boolean;
+		
+		/**
+		 * Set to true to include the time in the default logger. Default is false. 
+		 * */
+        public var logTargetIncludeTime:Boolean;
+		
+		/**
+		 * Set to true to include the level in the default logger. Default is false.
+		 * */
+        public var logTargetIncludeLevel:Boolean;
+		
+		/**
+		 * Filters to set on the default log target.
+		 * */
+        public var logTargetFilters:Array = [loggerName];
+		
+		/**
+		 * Color of the outline surrounding display object
+		 * */
+        public var outlineBorderColor:uint = 0x2da6e9;
 		
 		/**
 		 * Get the state of the debug mode.
@@ -2902,11 +3342,17 @@ package com.flexcapacitor.utils {
             {
                 if (!logTarget)
                 {
-                    logTarget = new TraceTarget();
-                    logTarget.includeLevel = true;
-                    logTarget.includeTime = true;
-                    logTarget.level = LogEventLevel.ALL;
-                    logTarget.filters = ["WebView"];
+                    logTarget					= new TraceTarget();
+                    logTarget.includeLevel 		= logTargetIncludeLevel;
+                    logTarget.includeTime 		= logTargetIncludeTime;
+                    logTarget.includeDate 		= logTargetIncludeDate;
+                    logTarget.includeCategory 	= logTargetIncludeCategory;
+                    logTarget.fieldSeparator 	= logTargetFieldSeparator;
+                    logTarget.level 			= logTargetLevel;
+					
+					if (logTargetFilters) {
+                    	logTarget.filters = logTargetFilters;
+					}
                 }
 				
                 logTarget.addLogger(logger);

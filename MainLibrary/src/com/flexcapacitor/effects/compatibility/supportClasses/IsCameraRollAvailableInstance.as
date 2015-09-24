@@ -110,7 +110,7 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 				
 				// browse supported
 				if (action.hasEventListener(IsCameraRollAvailable.SUPPORTS_BROWSE)) {
-					action.dispatchEvent(new Event(IsCameraRollAvailable.SUPPORTS_BROWSE));
+					dispatchActionEvent(new Event(IsCameraRollAvailable.SUPPORTS_BROWSE));
 				}
 				
 				if (action.supportsBrowseForImageEffect) { 
@@ -120,7 +120,7 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 			else {
 				
 				if (action.hasEventListener(IsCameraRollAvailable.BROWSE_NOT_SUPPORTED)) {
-					action.dispatchEvent(new Event(IsCameraRollAvailable.BROWSE_NOT_SUPPORTED));
+					dispatchActionEvent(new Event(IsCameraRollAvailable.BROWSE_NOT_SUPPORTED));
 				}
 				
 				if (action.browseForImageNotSupportedEffect) { 
@@ -137,7 +137,7 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 				
 				// add bitmap data supported
 				if (action.hasEventListener(IsCameraRollAvailable.SUPPORTS_ADD_BITMAP_DATA)) {
-					action.dispatchEvent(new Event(IsCameraRollAvailable.SUPPORTS_ADD_BITMAP_DATA));
+					dispatchActionEvent(new Event(IsCameraRollAvailable.SUPPORTS_ADD_BITMAP_DATA));
 				}
 				
 				if (action.supportsAddBitmapDataEffect) { 
@@ -147,7 +147,7 @@ package com.flexcapacitor.effects.compatibility.supportClasses {
 			else {
 				
 				if (action.hasEventListener(IsCameraRollAvailable.ADD_BITMAP_DATA_NOT_SUPPORTED)) {
-					action.dispatchEvent(new Event(IsCameraRollAvailable.ADD_BITMAP_DATA_NOT_SUPPORTED));
+					dispatchActionEvent(new Event(IsCameraRollAvailable.ADD_BITMAP_DATA_NOT_SUPPORTED));
 				}
 				
 				if (action.addBitmapDataNotSupportedEffect) { 

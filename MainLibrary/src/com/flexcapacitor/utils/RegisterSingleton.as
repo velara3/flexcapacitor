@@ -31,28 +31,36 @@ package com.flexcapacitor.utils
 	 * <br/><br/>
 	 * 
 	 * Overview of how to use:<br/>
-	 * 1. Create instance of this class on MXML Application<br/>
+	 * 1. Declare an instance of the RegisterSingleton class in your MXML Application<br/>
 	 * 2. Declare an instance of the class that you want to be a singleton on that MXML Application as well. <br/>
-	 * 3. Set or bind the target singleton instance to the target property of this class.<br/>
-	 * 4. Provide a name to the name property that can be used to retrieve the target singleton class later. Optional. <br/><br/>
+	 * 3. Bind the instance of the class to the target property of RegisterSingleton class.<br/>
+	 * 4. Optionally, define a name to retrieve the target singleton class later by that name or type. <br/><br/>
 	 * 
 	 * Register a class with a name:<br/><br/>
-	 * In MyApplication.mxml,<br/>
+	 * In MyApplication.mxml:<br/>
+	<pre>
+	&lt;fx:Declarations>
+		&lt;utils:RegisterSingleton target="{myClass}" alreadyRegistered="trace('already regiesterd')"/>
+		&lt;managers:MySingleton id="myClass"/>
+	&lt;/fx:Declarations>
+	 * 
+	 * Register a class with a name:<br/><br/>
+	 * In MyApplication.mxml:<br/>
 	<pre>
 	&lt;fx:Declarations>
 		&lt;utils:RegisterSingleton target="{myClass}" name="myCustomSingleton"/>
 		&lt;managers:MySingleton id="myClass"/>
 	&lt;/fx:Declarations>
 	</pre>
-	 * Registering your Application:<br/><br/>
-	 * In MyApplication.mxml,<br/>
+	 * You can even register your Application:<br/><br/>
+	 * In MyApplication.mxml:<br/>
 	<pre>
 	&lt;fx:Declarations>
 		&lt;utils:RegisterSingleton target="{this}"/>
 	&lt;/fx:Declarations>
 	</pre>
 	 * Registering a class without a name:<br/><br/>
-	 * In MyApplication.mxml,<br/>
+	 * In MyApplication.mxml:<br/>
 	<pre>
 	&lt;fx:Declarations>
 		&lt;utils:RegisterSingleton target="{this}"/>
@@ -62,28 +70,33 @@ package com.flexcapacitor.utils
 	 * 
 	 * The example shows registering the current class, "this", as a singleton and the ApplicationManager class as a singleton.
 	 * Neither specify a name but rather are stored by type. You can later retrieve that instance by it's type. 
-	 * If specified a name then that instance will be stored under that name and it can be retrieved by that name. 
+	 * If a name is specified then that instance will be stored under that name and it can be retrieved later by that same name. 
 	 * 
 	 * Next, you will want to retrive the singleton. You use the GetSingleton or SingletonEnforcer class in MXML 
 	 * to set the local instance to the singleton instance:<br/><br/>
 	 * 
 	 * Overview of how to use:<br/>
-	 * 1. Create instance of GetSingleton class in your MXML component.<br/>
-	 * 2. Declare an instance of the target class (this can be a base class or interface).<br/><br/>
+	 * 1. Declare an instance of the GetSingleton class in your MXML component.<br/>
+	 * 2. Declare an instance of the class that you want to be a singleton (this can be a base class or interface).<br/>
+	 * 3. In the GetSingleton class type the id or bind the target to the instance of the class you want to be a singleton.<br/><br/>
+	 * 
 	 * 
 	 * Retrieving a class by name:<br/><br/>
-	 * In MyComponent.mxml,<br/>
+	 * In MyComponent.mxml:<br/>
 	 * <pre>
 	&lt;fx:Declarations>
 		&lt;utils:GetSingleton name="myCustomSingleton" target="mySingleton" />
+		&lt;utils:GetSingleton name="myCustomSingleton" target="{mySingleton}" /><!-- id or binding -->
 		&lt;managers:MySingleton id="mySingleton"/>
 	&lt;/fx:Declarations>
 		</pre>
 	 * Retrieving a class by type:<br/><br/>
-	 * In MyComponent.mxml,<br/>
+	 * In MyComponent.mxml:<br/>
 	 * <pre>
 	&lt;fx:Declarations>
-		&lt;utils:GetSingleton name="{ApplicationManager}" target="manager" />
+		&lt;utils:GetSingleton name="{ApplicationManager}" target="manager" /><!-- target is a string -->
+		&lt;utils:GetSingleton name="{ApplicationManager}" target="{manager}" /><!-- target is a binding -->
+		&lt;utils:GetSingleton target="{manager}" /><!-- class is infered by target -->
 		&lt;managers:ApplicationManager id="manager"/>
 	&lt;/fx:Declarations>
 		</pre>
@@ -95,20 +108,19 @@ package com.flexcapacitor.utils
 		&lt;managers:MySingletonBase id="mySingleton"/>
 	&lt;/fx:Declarations>
 		</pre>
-		 * 
-		 * In the last example in the code above the MySingletonBase is replaced by the actual class instance 
-		 * that's been registered. This allows you to assign different implementations typically based on 
-		 * different deployment targets. For example, if you have mobile application and a desktop application
-		 * then you may want to register a class with mobile specific functionality in your mobile application 
-		 * and register an class with desktop specific functionality. If MobileSingleton and DesktopSingleton 
-		 * share a common base or interface then you declare the base or interface and the GetSingleton class 
-		 * will get and set the base or interface to the class you registered in your desktop or 
-		 * mobile application.<br/><br/>
-		 * 
-		 *  
-	 * Sometimes you need to get an instance of a class in ActionScript. In that case you need to aad 
+	 * 
+	 * In the last example in the code above the MySingletonBase is replaced by the actual class instance 
+	 * that's been registered. This allows you to assign different implementations typically based on 
+	 * different deployment targets. For example, if you have mobile application and a desktop application
+	 * then you may want to register a class with mobile specific functionality in your mobile application 
+	 * and register a class with desktop specific functionality. If MobileSingleton and DesktopSingleton 
+	 * share a common base or interface, MySingletonBase, then you declare the base or interface and the 
+	 * GetSingleton class will get and set the base or interface to the class you registered in your desktop 
+	 * or mobile application. Thus you can register subclasses and declare base classes.<br/><br/>
+	 *  
+	 * Sometimes you will need to get an instance of a class in ActionScript. In that case you need to aad 
 	 * a getInstance() method in your class. In that case the following code will mimic a typical getInstance()
-	 * call. Add this to code to your class:<br/><br/>
+	 * call. Add this to code to the class that you want to be a singleton:<br/><br/>
 	 * 
 	 * <pre>
 		public static function getInstance():ApplicationManager {
@@ -117,7 +129,8 @@ package com.flexcapacitor.utils
 		</pre> 
 	 * 
 	 * For the getInstance() call to work as usual you must have the class registered early on,
-	 * for example, registered in the Application, or the value may return null.<br/>
+	 * for example, make sure it is registered in the Application on creation complete, 
+	 * or the value may return null.<br/>
 	 * */
 	public class RegisterSingleton extends EventDispatcher implements IMXMLObject {
 		
@@ -164,7 +177,7 @@ package com.flexcapacitor.utils
 			var qualifiedClassName:String = flash.utils.getQualifiedClassName(this);
 			var localInstance:Class = Singleton.getClass(qualifiedClassName);
 			
-			// register ourselves so get singleton instances can listen for events from us
+			// register ourselves so GetSingleton instances can listen for events from us
 			if (!localInstance) {
 				_instance = this;
 				Singleton.registerClass(qualifiedClassName, RegisterSingleton);
@@ -193,7 +206,7 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * 
+		 * Adds an instance to the dictionary map of singleton instances
 		 **/
 		public function registerInstance():void {
 			var itemInstance:* = instanceMap[name];
@@ -208,8 +221,10 @@ package com.flexcapacitor.utils
 				itemInstance = instanceMap[name];
 			}
 			
+			// check if it exists
 			if (!itemInstance) {
 				
+				// store it
 				if (target is String) {
 					item = document[target];
 				}
@@ -227,16 +242,15 @@ package com.flexcapacitor.utils
 					throw new Error(ALREADY_REGISTERED_MESSAGE);
 				}
 			}
-			
 		}
 		
 		/**
-		 * 
+		 * Reference to RegisterSingleton instance
 		 **/
 		private static var _instance:RegisterSingleton;
 		
 		/**
-		 * 
+		 * @private
 		 **/
 		private var _target:Object;
 		

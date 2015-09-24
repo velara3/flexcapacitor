@@ -89,7 +89,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			if (subPropertyName) {
 				value = target[propertyName];// "data" is the default property
 				
-				// if value is set and sub property exists
+				// if value is set and sub property exists - should it be value!==undefined?
 				if (value) {
 					if (subPropertyName in value) {
 						subValue = value[subPropertyName];
@@ -153,7 +153,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				// property is NOT set 
 				
 				if (action.hasEventListener(IsPropertySet.PROPERTY_NOT_SET)) {
-					action.dispatchEvent(new Event(IsPropertySet.PROPERTY_NOT_SET));
+					dispatchActionEvent(new Event(IsPropertySet.PROPERTY_NOT_SET));
 				}
 				
 				if (action.propertyNotSetEffect) { 
@@ -166,7 +166,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// property IS set
 				if (action.hasEventListener(IsPropertySet.PROPERTY_SET)) {
-					action.dispatchEvent(new Event(IsPropertySet.PROPERTY_SET));
+					dispatchActionEvent(new Event(IsPropertySet.PROPERTY_SET));
 				}
 				
 				if (action.propertySetEffect) { 

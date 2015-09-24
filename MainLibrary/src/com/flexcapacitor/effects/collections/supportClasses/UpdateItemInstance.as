@@ -99,7 +99,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 						}
 						
 						if (action.hasEventListener(UpdateItem.ITEM_NOT_FOUND)) {
-							action.dispatchEvent(new Event(UpdateItem.ITEM_NOT_FOUND));
+							dispatchActionEvent(new Event(UpdateItem.ITEM_NOT_FOUND));
 						}
 					}
 					else {
@@ -112,7 +112,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 						}
 						
 						if (action.hasEventListener(UpdateItem.UPDATED)) {
-							action.dispatchEvent(new Event(UpdateItem.UPDATED));
+							dispatchActionEvent(new Event(UpdateItem.UPDATED));
 						}
 					}
 				}
@@ -131,7 +131,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 						}
 						
 						if (action.hasEventListener(UpdateItem.OUT_OF_BOUNDS)) {
-							action.dispatchEvent(new Event(UpdateItem.OUT_OF_BOUNDS));
+							dispatchActionEvent(new Event(UpdateItem.OUT_OF_BOUNDS));
 						}
 					}
 					
@@ -146,7 +146,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				}
 				
 				if (action.hasEventListener(UpdateItem.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(UpdateItem.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(UpdateItem.COLLECTION_NOT_SET));
 				}
 			}
 			

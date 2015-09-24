@@ -84,7 +84,7 @@ package com.flexcapacitor.effects.camera.supportClasses {
 				//trace("this device does not support access to the Gallery");
 				
 				if (action.hasEventListener(galleryUnsupport)) {
-					action.dispatchEvent(new Event(galleryUnsupport));
+					dispatchActionEvent(new Event(galleryUnsupport));
 				}
 				
 				if (action.cameraRollNotSupportedEffect) { 

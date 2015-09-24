@@ -123,7 +123,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				// property is NOT true 
 				
 				if (action.hasEventListener(IsTrue.NOT_TRUE)) {
-					action.dispatchEvent(new Event(IsTrue.NOT_TRUE));
+					dispatchActionEvent(new Event(IsTrue.NOT_TRUE));
 				}
 				
 				if (action.notTrueEffect) { 
@@ -136,7 +136,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// property IS true
 				if (action.hasEventListener(IsTrue.TRUE)) {
-					action.dispatchEvent(new Event(IsTrue.TRUE));
+					dispatchActionEvent(new Event(IsTrue.TRUE));
 				}
 				
 				if (action.trueEffect) { 

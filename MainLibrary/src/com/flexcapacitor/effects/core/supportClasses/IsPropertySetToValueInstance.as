@@ -88,7 +88,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// property is NOT set to value
 				if (action.hasEventListener(IsPropertySetToValue.PROPERTY_SET)) {
-					action.dispatchEvent(new Event(IsPropertySetToValue.PROPERTY_SET));
+					dispatchActionEvent(new Event(IsPropertySetToValue.PROPERTY_SET));
 				}
 				
 				if (action.propertyNotSetEffect) { 
@@ -104,7 +104,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// property IS set to value
 				if (action.hasEventListener(IsPropertySetToValue.PROPERTY_SET)) {
-					action.dispatchEvent(new Event(IsPropertySetToValue.PROPERTY_SET));
+					dispatchActionEvent(new Event(IsPropertySetToValue.PROPERTY_SET));
 				}
 				
 				if (action.propertySetEffect) { 

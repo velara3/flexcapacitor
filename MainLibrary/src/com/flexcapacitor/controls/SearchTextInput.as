@@ -2,7 +2,6 @@ package com.flexcapacitor.controls
 {
 	import com.flexcapacitor.skins.SearchTextInputSkin;
 	
-	import flash.display.DisplayObject;
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	

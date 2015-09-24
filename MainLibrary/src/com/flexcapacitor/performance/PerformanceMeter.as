@@ -6,20 +6,46 @@ package com.flexcapacitor.performance {
 	
 	
 	/**
-	 
-	 Usage: 
+	 Track the performance of your code by timing your code. 
+	 * You can track the time a block of code runs by calling start 
+	 * and stop. When you call stop the time that has elapsed is 
+	 * traced to the console. 
+	 * 
+	 Usage:
+<pre>
 	 PerformanceMeter.start("test");
 	 // do something
-	 PerformanceMeter.stop("test"); // outputs to console
-	 
+	 PerformanceMeter.stop("test"); // outputs to console 10ms
+</pre>
+	 * You can use the mark method to track the time that has elapsed since the 
+	 * last call to mark. 
+<pre>
 	 Usage:
-	 PerformanceMeter.mark("before bitmap resampling", true);
-	 // code
-	 PerformanceMeter.mark("after bitmap resampling");
-	 // more code
-	 PerformanceMeter.mark("after another block of code");
+	 PerformanceMeter.mark("before bitmap resampling", true); // setting true resets the running timer
+	 // code that runs for 10 milliseconds
+	 PerformanceMeter.mark("after bitmap resampling"); // traces "before bitmap resampling: 10ms"
+	 // more code that takes 5 milliseconds
+	 PerformanceMeter.mark("after more code"); // traces "after bitmap resampling: 5ms"
 	 // more code 
-	 PerformanceMeter.mark("end of method");
+	 PerformanceMeter.mark("end of method"); // traces "after more code: 5ms"
+</pre>
+	 * 
+	 Usage:
+<pre>
+PerformanceMeter.timestampPoolCount = 1000;
+PerformanceMeter.traceMessages = false;
+var length:int = 1000;
+for (var i:int;i<length;i++) {
+	PerformanceMeter.start("test", true);
+	// do something
+	PerformanceMeter.stop("test");
+}
+var testData:ProfileTest = PerformanceMeter.getTest("test");
+trace("Average duration: " + testData.average);
+trace("Normalized duration: " + testData.normalize);
+trace("Fastest time: " + testData.minimum);
+trace("Slowest time: " + testData.maximum);
+</pre>
 	 */
 	public class PerformanceMeter {
 		
@@ -47,8 +73,43 @@ package com.flexcapacitor.performance {
 		private static var supportMultitest:Boolean;
 		private static var _poolTimestamps:Vector.<Timestamp>;
 		private static var privateTimestamp:Timestamp;
-		private static var timestampPoolCount:int = 100;
+		/**
+		 * Number of timestamps to create before hand for multiple test
+		 * */
+		public static var timestampPoolCount:int = 1000;
+		
+		/**
+		 * Include time info. Default is false. If true the output resembles the following:<br/><br/>
+		 * 
+		 * Performance Test   setTargetTest             : 1172421:1172553 132ms<br/><br/>
+		 * 
+		 * Otherwise it looks similiar to this:<br/><br/>
+		 * 
+		 * Performance Test   setTargetTest             : 132ms
+		 * */
+		public static var includeTimeInfo:Boolean = false;
+		
 		private static var multicallInitialized:Boolean;
+		
+
+		public static function get bufferOutput():Boolean {
+			return _bufferOutput;
+		}
+
+		/**
+		 * When set to true then whatever was going to be traced to the console
+		 * is instead added to the bufferedData array.
+		 * If you set this to false the bufferedData array is erased.
+		 * */
+		public static function set bufferOutput(value:Boolean):void {
+			_bufferOutput = value;
+			if (!value) {
+				bufferedData = [];
+			}
+		}
+		
+		private static var _bufferOutput:Boolean;
+
 		
 		/**
 		 * The first test is usually 2 to 4 times longer than subsequent tests.
@@ -96,7 +157,9 @@ package com.flexcapacitor.performance {
 		public static var initialized:Boolean;
 		
 		/**
-		 * Trace to console
+		 * Trace to console. If set to false nothing will be traced to the console
+		 * Check the timestamps property
+		 * @see timestamps
 		 * */
 		public static var traceMessages:Boolean = true;
 		
@@ -108,7 +171,7 @@ package com.flexcapacitor.performance {
 		/**
 		 * Sets the minimum number of characters in for the test name in the trace console. Used for the alignment of values in the console window.  
 		 * */
-		public static var markNameMaxWidth:int = 16;
+		public static var markNameMaxWidth:int = 26;
 		
 		/**
 		 * Text to display in the console before a performance mark test result.
@@ -117,16 +180,24 @@ package com.flexcapacitor.performance {
 		
 		public static var performanceTestText:String = "Performance Test   ";
 		
+		/**
+		 * If buffer output is set to true then whatever was going to be traced to the console
+		 * is instead added to this buffered array.
+		 * If you set bufferOutput to false this array is erased.
+		 * @see bufferOutput
+		 * */
+		public static var bufferedData:Array = [];
+		
 		
 		/**
 		 * Creates a pool of Test and Timestamps and initializes instance variables
 		 * Automatically called the first time start is called if not initialized before
 		 * then. 
 		 * */
-		public static function initialize(poolCount:int=NaN, supportMulttest:Boolean=false):void {
+		public static function initialize(poolCount:int=NaN, multitest:Boolean=false):void {
 			if (initialized) return;
 			if (!isNaN(poolCount)) poolCount = poolCount;
-			if (supportMulttest) supportMulttest = true;
+			if (multitest) supportMultitest = true;
 			
 			createPool();
 			createDictionary();
@@ -162,17 +233,33 @@ package com.flexcapacitor.performance {
 		 * the test is created it creates a timestamp in the test's timestamps array
 		 * each time a call start is called on the test with the same name
 		 * */
-		public static function start(name:String, multicall:Boolean=true):void {
+		public static function start(name:String, multicall:Boolean=true, bufferOutput:Boolean = false):void {
 			if (!initialized) initialize();
-			if (!multicallInitialized) initializeMulticall();
+			if (multicall && !multicallInitialized) initializeMulticall();
 			var test:ProfileTest = dictionary[name];
 			
 			// if test exists
 			if (!test) {
-				test = dictionary[name] = getAvailableTest(name, multicall);
+				test = dictionary[name] = getAvailableTest(name, multicall, bufferOutput);
 			}
 			
 			test.start();
+		}
+		
+		/**
+		 * Clears all data from a profile test
+		 * */
+		public static function clear(name:String):void {
+			var test:ProfileTest = dictionary[name];
+			
+			// if test exists
+			if (test) {
+				test.clear();
+			}
+			else {
+				throw new Error("Test cannot be cleared because it is not found.");
+			}
+			
 		}
 		
 		private static function initializeMulticall():void {
@@ -186,9 +273,13 @@ package com.flexcapacitor.performance {
 		}
 		
 		/**
-		 * Returns the duration from the start call to the stop call
+		 * Returns the duration from the start call to the stop call.
+		 * If trace messages is true and the test is not set to buffer 
+		 * then traces a message to the console. The test can be set to
+		 * buffer by setting a parameter when you called start().
 		 * */
-		public static function stop(name:String):uint {
+		public static function stop(name:String, traceBufferedOut:Boolean = false):uint {
+			var string:String;
 			
 			// check if item is in dictionary
 			if (dictionary && name in dictionary) {
@@ -205,8 +296,18 @@ package com.flexcapacitor.performance {
 				selectedTest.timestamps.push(getAvailableTimestamp(selectedTest.startTime, selectedTest.endTime));
 			}
 			
-			if (traceMessages) {
-				trace(performanceTestText + padString(name, markNameMaxWidth) + ": " + selectedTest.startTime + ":"+ selectedTest.endTime + " "  + selectedTest.duration + "ms");
+			if (((traceMessages || bufferOutput) && !selectedTest.buffer)
+				|| traceBufferedOut) {
+				var timeInfo:String = includeTimeInfo ? selectedTest.startTime + ":"+ selectedTest.endTime + " " : "";
+				string = performanceTestText + padString(name, markNameMaxWidth) + ": " + timeInfo + selectedTest.duration + "ms";
+			}
+			
+			if (traceMessages && traceBufferedOut && !selectedTest.buffer) {
+				trace(string);
+			}
+			
+			if (bufferOutput && !selectedTest.buffer) {
+				bufferedData.push(string);
 			}
 			
 			return selectedTest.duration;
@@ -215,7 +316,7 @@ package com.flexcapacitor.performance {
 		/**
 		 * Get's a pre created Test instance
 		 * */
-		private static function getAvailableTest(name:String, multicall:Boolean):ProfileTest {
+		private static function getAvailableTest(name:String, multicall:Boolean, buffer:Boolean):ProfileTest {
 			
 			if (pool.length) {
 				privateTest = pool.pop();
@@ -230,6 +331,7 @@ package com.flexcapacitor.performance {
 			}
 			
 			privateTest.multitest = multicall;
+			privateTest.buffer = buffer;
 			privateTest.name = name;
 			privateTest.startTime = getTimer();
 			
@@ -276,8 +378,29 @@ package com.flexcapacitor.performance {
 				lastMarkText = performanceMarkText + padString(name, markNameMaxWidth) + ": " + getTimer() + "ms"; 
 				lastMarkText += lastMark==0 || resetRunningTimer ? "" : " " + "+" + lastMarkDifference;
 				lastMark = getTimer();
-				trace(lastMarkText);
+				if (traceMessages) {
+					trace(lastMarkText);
+				}
+				
+				if (bufferOutput) {
+					bufferedData.push(lastMarkText);
+				}
 			}
+		}
+		
+		/**
+		 * Traces out buffered output
+		 * */
+		public static function traceBufferedOutput():void {
+			trace(bufferedData.join("\n"));
+		}
+		
+		/**
+		 * Trace multitest data
+		 * */
+		public static function traceMultitest(name:String):void {
+			var test:ProfileTest = getTest(name);
+			trace(test.toStringAll());
 		}
 		
 		/**

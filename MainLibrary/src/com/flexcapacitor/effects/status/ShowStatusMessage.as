@@ -30,9 +30,33 @@ package com.flexcapacitor.effects.status {
 	 * <b>Usage</b>:<br/> 
 	 * How to show data object which is converted to a readable string,
 	 * <pre>
-&lt;status:ShowStatusMessage message="Your email has been sent" data="{errorMessage}" textAlignment="left" duration="3000"/>
+&lt;status:ShowStatusMessage message="Your email has been sent" 
+			data="{errorMessage}"
+			textAlignment="left" 
+			duration="3000"/>
 	 * </pre>
 	 * 
+	 * <b>Usage</b>:<br/> 
+	 * How to show a message for as long as it takes to read it,
+	 * <pre>
+&lt;status:ShowStatusMessage message="Your email has been sent" 
+			data="{errorMessage}" 
+			matchDurationToTextContent="true"
+			moveToNextEffectImmediately="false"/>
+	 * </pre>
+	 * 
+	 * <b>Usage</b>:<br/> 
+	 * How to show a message until someone clicks it,
+	 * <pre>
+&lt;status:ShowStatusMessage message="Your email has been sent" 
+			doNotClose="true"
+			moveToNextEffectImmediately="false"/>
+	 * </pre>
+	 * 
+	 * The suggested duration for displaying messages is 250-500 milliseconds per word. If you 
+	 * have a message containing ten words and you expect slow readers then set the duration to
+	 * 5000 since 10words * 500milliseconds = 5000milliseconds. You can also set the 
+	 * matchDurationToTextContent to true and 
 	 * 
 	 * @see HideStatusMessage
 	 * */
@@ -156,7 +180,7 @@ package com.flexcapacitor.effects.status {
 		/**
 		 * If set to true and if part of a sequence then moves the next effect 
 		 * right away. If set to false then the next effect is played 
-		 * after the status message is faded out. 
+		 * after the status message is faded out. Default is true. 
 		 * */
 		public var moveToNextEffectImmediately:Boolean = true;
 		
@@ -177,5 +201,39 @@ package com.flexcapacitor.effects.status {
 		 * Fade in duration
 		 * */
 		 public var fadeInDuration:int = 250;
+		 
+		 /**
+		  * If set to true uses ObjectUtil.toString(data). 
+		  * Otherwise it uses data + ""
+		  * */
+		 public var useObjectUtilToString:Boolean;
+		 
+		 /**
+		  * Sets the duration to match the text content.
+		  * @see durationPerWord 
+		  * */
+		 public var matchDurationToTextContent:Boolean;
+		 
+		 /**
+		  * When matchDurationToTextContent is set to true this 
+		  * sets the duration of time for each word. 
+		  * Reading speed for fast readers is 250ms per word.
+		  * Reading speed for normal to slow is 350ms-450ms per word.
+		  * Default is 350 milliseconds. 
+		  * @see matchDurationToTextContent
+		  * */
+		 public var durationPerWord:int = 350;
+		 
+		 /**
+		  * Minimum duration when using matchDurationToTextContent.
+		  * Default is two and a half seconds or 2500. 
+		  * */
+		 public var minimumDuration:int = 2500;
+		 
+		 /**
+		  * Maximum duration when using matchDurationToTextContent.
+		  * Default is ten seconds which or 10000. 
+		  * */
+		 public var maximumDuration:int = 10000;
 	}
 }

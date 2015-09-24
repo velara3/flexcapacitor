@@ -321,7 +321,7 @@ MyOtherComponent.mxml,<br/>
 		/**
 		 * When set to true traces a message to the console
 		 * */
-		public var traceHandler:String;
+		public var traceHandler:Boolean;
 		
 		/**
 		 * If the sequence property is not set by the developer than one 
@@ -1436,11 +1436,12 @@ MyOtherComponent.mxml,<br/>
 			}
 			
 			if (debugHandlers || traceHandler) {
-				trace("Event Handler: " + eventName + " from " + (currentEvent.currentTarget));
+				var output:String = Object(currentEvent.currentTarget).toString().split(".").reverse();
+				trace("Event Handler: " + eventName + " from " + ((currentEvent.currentTarget).toString().split(".").reverse()));
 			}
 			
 			if (EventHandler.enterDebuggerOnEvent) {
-				enterDebugger();
+				enterDebugger(); // hello, step through here
 			}
 			
 			// store event

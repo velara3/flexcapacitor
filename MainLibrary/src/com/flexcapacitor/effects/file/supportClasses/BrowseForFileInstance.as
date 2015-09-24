@@ -86,14 +86,14 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			if (validate) {
-				// if we are in the browser we must set a trigger button.
+				// if we are in the browser (not AIR app) we must set a trigger button.
 				// a button event must be called for the file reference class to open 
 				// a browse window
-				if (!action.targetAncestor) {
-					dispatchErrorEvent("The trigger button must be set to a parent display object of the target(s). You could probably set it to '{this}' and it would work.");
+				if (!action.targetAncestor && !fileClassFound) {
+					dispatchErrorEvent("The target ancestor property must be set to a parent display object of the target(s). You could probably set it to '{this}' and it would work.");
 				}
-				else if (!(action.targetAncestor is DisplayObjectContainer)) {
-					dispatchErrorEvent("The trigger button must be a Display Object Container");
+				else if (!(action.targetAncestor is DisplayObjectContainer) && !fileClassFound) {
+					dispatchErrorEvent("The target ancestor property must be a Display Object Container");
 				}
 				
 				if (browseForFolder) {
@@ -101,7 +101,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 						dispatchErrorEvent("Browse for folder is not supported on this device.");
 					}
 					else if (action.useFileReferences && !action.ignoreBrowseForFolderError) {
-						dispatchErrorEvent("Browse for folder is not supported when use file reference is enabled.");
+						dispatchErrorEvent("Browse for folder is not supported when use file references property is enabled.");
 					}
 				}
 			}
@@ -211,7 +211,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 					
 					// dispatch events and run effects
 					if (action.hasEventListener(BrowseForFile.ERROR)) {
-						action.dispatchEvent(new Event(BrowseForFile.ERROR));
+						dispatchActionEvent(new Event(BrowseForFile.ERROR));
 					}
 					
 					if (action.errorEffect) {
@@ -249,7 +249,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 					
 					// dispatch events and run effects
 					if (action.hasEventListener(BrowseForFile.ERROR)) {
-						action.dispatchEvent(new Event(BrowseForFile.ERROR));
+						dispatchActionEvent(new Event(BrowseForFile.ERROR));
 					}
 					
 					if (action.errorEffect) {
@@ -350,6 +350,12 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.fileList = multipleSelection ? fileList : [fileReference];
 			action.fileCount = multipleSelection ? fileCount : 1;
 			
+			if ("url" in fileReference) {
+				action.fileURL = Object(fileReference).url;
+			}
+			if ("nativePath" in fileReference) {
+				action.fileNativePath = Object(fileReference).nativePath;
+			}
 			
 			// file paths are not available in the fileReference class
 			// need to check if on the desktop and add support
@@ -364,7 +370,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// dispatch events and run effects
 			if (action.hasEventListener(BrowseForFile.SELECT)) {
-				action.dispatchEvent(new Event(BrowseForFile.SELECT));
+				dispatchActionEvent(new Event(BrowseForFile.SELECT));
 			}
 			
 			if (multipleSelection) {
@@ -384,8 +390,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// Finish the effect
 			///////////////////////////////////////////////////////////
 			
-			// we only want to select the file. We don't make an assumption
-			// that we are loading, uploading, downloading or saving
+			// we only want to select the file or folder. We don't make an assumption
+			// of what we are doing with that file. 
+			// whether it is loading, uploading, downloading or saving
 			finish();
 			
 			// USE THE LOAD FILE ACTION TO LOAD THE FILE
@@ -413,7 +420,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// dispatch events and run effects
 			if (action.hasEventListener(BrowseForFile.ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.errorEffect) {
@@ -441,7 +448,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// dispatch events and run effects
 			if (action.hasEventListener(BrowseForFile.ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.errorEffect) {
@@ -469,7 +476,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// dispatch events and run effects
 			if (action.hasEventListener(BrowseForFile.ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.errorEffect) {
@@ -496,7 +503,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			if (action.hasEventListener(BrowseForFile.CANCEL)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.cancelEffect) {

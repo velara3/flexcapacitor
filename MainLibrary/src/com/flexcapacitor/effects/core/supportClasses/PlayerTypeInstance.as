@@ -69,7 +69,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			if (playerType==PlayerType.ACTIVEX) { 
 				
 				if (action.hasEventListener(PlayerType.ACTIVEX)) {
-					action.dispatchEvent(new Event(PlayerType.ACTIVEX));
+					dispatchActionEvent(new Event(PlayerType.ACTIVEX));
 				}
 				
 				if (action.activeXPlayerTypeEffect) { 
@@ -81,7 +81,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				// this is also device
 				if (action.hasEventListener(PlayerType.DESKTOP)) {
-					action.dispatchEvent(new Event(PlayerType.DESKTOP));
+					dispatchActionEvent(new Event(PlayerType.DESKTOP));
 				}
 				
 				if (action.desktopPlayerTypeEffect) { 
@@ -92,7 +92,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			else if (playerType==PlayerType.EXTERNAL) { 
 				
 				if (action.hasEventListener(PlayerType.EXTERNAL)) {
-					action.dispatchEvent(new Event(PlayerType.EXTERNAL));
+					dispatchActionEvent(new Event(PlayerType.EXTERNAL));
 				}
 				
 				if (action.externalPlayerTypeEffect) { 
@@ -103,7 +103,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			else if (playerType==PlayerType.PLUGIN) { 
 				
 				if (action.hasEventListener(PlayerType.PLUGIN)) {
-					action.dispatchEvent(new Event(PlayerType.PLUGIN));
+					dispatchActionEvent(new Event(PlayerType.PLUGIN));
 				}
 				
 				if (action.plugInPlayerTypeEffect) { 
@@ -114,7 +114,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 			else if (playerType==PlayerType.STANDALONE) { 
 				
 				if (action.hasEventListener(PlayerType.STANDALONE)) {
-					action.dispatchEvent(new Event(PlayerType.STANDALONE));
+					dispatchActionEvent(new Event(PlayerType.STANDALONE));
 				}
 				
 				if (action.standAlonePlayerTypeEffect) { 

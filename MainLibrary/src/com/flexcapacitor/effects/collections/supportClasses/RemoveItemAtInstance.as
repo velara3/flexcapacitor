@@ -99,7 +99,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 						}
 						
 						if (action.hasEventListener(RemoveItemAt.OUT_OF_BOUNDS)) {
-							action.dispatchEvent(new Event(RemoveItemAt.OUT_OF_BOUNDS));
+							dispatchActionEvent(new Event(RemoveItemAt.OUT_OF_BOUNDS));
 						}
 					}
 					
@@ -114,7 +114,7 @@ package com.flexcapacitor.effects.collections.supportClasses {
 				}
 				
 				if (action.hasEventListener(RemoveItemAt.COLLECTION_NOT_SET)) {
-					action.dispatchEvent(new Event(RemoveItemAt.COLLECTION_NOT_SET));
+					dispatchActionEvent(new Event(RemoveItemAt.COLLECTION_NOT_SET));
 				}
 			}
 			

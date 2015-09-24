@@ -227,7 +227,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 			action.ioErrorEvent = event;
 			
 			if (action.hasEventListener(GetBitmapData.IOERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.ioErrorEffect) {
@@ -260,7 +260,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 			action.securityErrorEvent = event;
 			
 			if (action.hasEventListener(GetBitmapData.SECURITY_ERROR)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.securityErrorEffect) {
@@ -281,7 +281,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 			var action:GetBitmapData = GetBitmapData(effect);
 			
 			if (action.hasEventListener(GetBitmapData.HTTP_STATUS)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.httpStatusEffect) {
@@ -303,7 +303,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 			action.progressEvent = event;
 			
 			if (action.hasEventListener(GetBitmapData.PROGRESS)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.progressEffect) {
@@ -322,7 +322,7 @@ package com.flexcapacitor.effects.bitmap.supportClasses {
 			_ready = true;
 			
 			if (action.hasEventListener(GetBitmapData.READY)) {
-				action.dispatchEvent(event);
+				dispatchActionEvent(event);
 			}
 			
 			if (action.progressEffect) {

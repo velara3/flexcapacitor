@@ -38,7 +38,9 @@ package com.flexcapacitor.effects.file {
 	[Event(name="fileNotFound", type="flash.events.Event")]
 	
 	/**
-	 * Get the file. AIR ONLY
+	 * Gets a reference to the file at the specified path. AIR ONLY <br/>
+	 * For Flash Player compatible effect you can use in the browser 
+	 * use BrowseForFile and LoadFile.
 	 * @see BrowseForFile
 	 * @see FileExists
 	 * @see LoadFile

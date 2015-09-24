@@ -133,7 +133,7 @@ package com.flexcapacitor.effects.core.supportClasses {
 				
 				
 				if (action.hasEventListener(Event.CHANGE)) {
-					action.dispatchEvent(new Event(Event.CHANGE));
+					dispatchActionEvent(new Event(Event.CHANGE));
 				}
 			}
 			else {

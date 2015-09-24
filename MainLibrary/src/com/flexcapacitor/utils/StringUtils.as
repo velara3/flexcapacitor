@@ -142,7 +142,7 @@ package com.flexcapacitor.utils {
 		 * Changes camel case to a human readable format. So helloWorld, hello-world and hello_world becomes "Hello World". 
 		 * */
 		public static function prettifyCamelCase(value:String=""):String {
-			var value:String = 'helloWorld';
+			var value:String = '';
 		    var output:String = "";
 			var len:int = value.length;
 			var char:String;
@@ -163,6 +163,16 @@ package com.flexcapacitor.utils {
 		            output += char;
 		        }
 		    }
+			
+			return output;
+		}
+		
+		/**
+		 * Trims white space from before and after a string 
+		 * */
+		public static function trim(value:String=""):String {
+			if (value==null) return "";
+		    var output:String = value.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
 			
 			return output;
 		}

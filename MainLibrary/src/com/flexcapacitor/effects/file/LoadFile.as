@@ -96,6 +96,20 @@ package com.flexcapacitor.effects.file {
 	 * Set the targetAncestor property to the parent of the button that will trigger this event.
 	 * Must not have any effects before it that have any duration.<br/><br/>
 	 * 
+	 * 
+	 * <pre>
+	 &lt;file:BrowseForFile id="browseForFile"
+							fileTypes="png,jpg,jpeg,gif"
+							targetAncestor="{this}"
+							allowMultipleSelection="false">
+			&lt;file:selectionEffect>
+				&lt;file:LoadFile id="loadFile"  
+							   loadIntoLoader="true"
+							   fileReference="{browseForFile.fileReference}"
+							   complete="{browseForFile.data}"/>
+			&lt;/file:selectionEffect>
+		 &lt;/file:BrowseForFile>
+	 * </pre>
 	 * To do:
 	 * Add overall progress support. 
 	 * 
@@ -113,6 +127,8 @@ package com.flexcapacitor.effects.file {
 		public static const IO_ERROR:String 		= "ioError";
 		public static const OPEN:String 			= "open";
 		public static const PROGRESS:String 		= "progress";
+		public static const ERROR:String			= "error";
+		
 		
 		
 		// loader event names
@@ -148,9 +164,19 @@ package com.flexcapacitor.effects.file {
 		 * The data of the file.
 		 * @copy flash.net.FileReference.data
 		 * @see loaderData
+		 * @see dataAsString
 		 * */
 		[Bindable]
 		public var data:ByteArray;
+		
+		/**
+		 * The data of the file converted to a string
+		 * @copy flash.net.FileReference.data
+		 * @see data
+		 * @see loaderData
+		 * */
+		[Bindable]
+		public var dataAsString:String;
 		
 		/**
 		 * @copy flash.net.FileReference.type
@@ -336,6 +362,11 @@ package com.flexcapacitor.effects.file {
 		public var unloadEffect:IEffect;
 		
 		/**
+		 * Effect played when an error occurs when file load
+		 * */
+		public var errorEffect:IEffect;
+		
+		/**
 		 * Reference to the current file 
 		 * */
 		public var currentFile:FileReference;
@@ -350,6 +381,10 @@ package com.flexcapacitor.effects.file {
 		 * */
 		public var currentProgressEvent:ProgressEvent;
 		
+		/**
+		 * Error event that may occur when trying to load a file
+		 * */
+		public var error:Error;
 		
 		/**
 		 * Remove references

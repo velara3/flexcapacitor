@@ -5,6 +5,7 @@ package com.flexcapacitor.utils.supportClasses {
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.ClassFactory;
+	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
 	
@@ -70,6 +71,19 @@ package com.flexcapacitor.utils.supportClasses {
 		public var instance:Object;
 		
 		/**
+		 * Is IVisualElementContainer
+		 * */
+		public function get isVisualElementContainer():Boolean {
+			if (instance) {
+				return instance is IVisualElementContainer;
+			}
+			
+			// we may need to find a way to check this from the class type
+			// if instance is not set
+			return false;
+		}
+		
+		/**
 		 * Children. Optional. 
 		 * Used for display in heiarchy view such as Tree.
 		 * */
@@ -123,6 +137,31 @@ package com.flexcapacitor.utils.supportClasses {
 		 * Cursors
 		 * */
 		public var cursors:Dictionary;
+		
+		/**
+		 * XML representation of the current instance markup
+		 * */
+		public var markupData:String;
+		
+		/**
+		 * XML representation of the export markup after preprocessors have run
+		 * */
+		public var processedMarkupData:String;
+		
+		/**
+		 * XML representation of the current instance styles
+		 * */
+		public var stylesData:String;
+		
+		/**
+		 * XML representation of the export styles after preprocessors have run
+		 * */
+		public var processedStylesData:String;
+		
+		/**
+		 * List of preprocessors to run on export
+		 * */
+		public var preprocessors:Array = [];
 		
 		/**
 		 * Gets an instance of the inspector class or null if the definition is not found.
@@ -179,6 +218,33 @@ package com.flexcapacitor.utils.supportClasses {
 			item.properties = properties;
 			
 			return item;
+		}
+		
+		
+		/**
+		 * Get an array of properties used by this instance
+		 * */
+		public function get propertyNames():Array {
+			var _propertyNames:Array = [];
+			
+			for (var name:String in properties)  {
+				_propertyNames.push(name);
+			}
+			
+			return _propertyNames;
+		}
+		
+		/**
+		 * Get an array of styles used by this instance
+		 * */
+		public function get styleNames():Array {
+			var _styleNames:Array = [];
+			
+			for (var name:String in styles)  {
+				_styleNames.push(name);
+			}
+			
+			return _styleNames;
 		}
 	}
 }

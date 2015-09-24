@@ -1,0 +1,74 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0014)about:internet -->
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"> 
+    <head>
+        <title>Ace Editor</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+        
+        <!-- Include CSS to eliminate any default margins/padding and set the height of the html element and 
+             the body element to 100%, because Firefox, or any Gecko based browser, interprets percentage as 
+             the percentage of the height of its parent container, which has to be set explicitly.  Fix for
+             Firefox 3.6 focus border issues.
+        -->
+        
+        <style type="text/css" media="screen"> 
+            html, body  {
+            	height:100%;
+            }
+            body {
+            	margin:0;
+            	padding:0;
+            	overflow:auto;
+            	text-align:left; 
+                background-color: transparent;
+            }   
+            object:focus {
+            	outline:none;
+            }
+            #editor {
+            	position: absolute;
+                top: 0;
+                right: 0;
+                bottom: 0;
+                left: 0;
+            }
+        </style>
+        
+
+<!--         <script src="src-min-noconflict/emmet.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-emmet.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-searchbox.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-elastic_tabstops_lite.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-spellcheck.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-modelist.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-linking.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-themelist.js" type="text/javascript" charset="utf-8"></script> -->
+<!--         <script src="src-min-noconflict/ext-whitespace.js" type="text/javascript" charset="utf-8"></script> -->
+        
+    </head>
+    
+    <body>
+        <div id='editor'></div>
+        
+        <!-- ACE editor -->
+        <script src="src-min-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+        <script src="src-min-noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+        <script src="src-min-noconflict/ext-beautify.js" type="text/javascript" charset="utf-8"></script>
+   </body>
+</html>
