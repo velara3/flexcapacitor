@@ -65,5 +65,8 @@ package com.flexcapacitor.effects.window {
 		 * */
 		public var offsetY:int;
 		
+		public var includeTitleBar:Boolean = true;
+		public var titleBarHeight:Number = 32;
+		
 	}
 }

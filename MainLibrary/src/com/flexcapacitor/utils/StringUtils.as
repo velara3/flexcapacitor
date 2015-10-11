@@ -56,6 +56,22 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Adds a minimumn amount of spaces to a String if they don't have them.
+		 * */
+		public static function padString(value:String, length:int):String {
+			length = length - value.length;
+			
+			for (var i:int;i<length;i++) {
+				value += " ";
+			}
+			
+			if (length<0) {
+				value = value.substr(0, length);
+			}
+			return value;
+		}
+		
+		/**
 		 * Repeats the character the specified number of time.
 		 * */
 		public static function repeatCharacter(character:String = "", count:int = 0):String {

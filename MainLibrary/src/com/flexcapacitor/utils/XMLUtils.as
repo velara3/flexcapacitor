@@ -125,6 +125,9 @@ package com.flexcapacitor.utils
 		 * Encodes values that are not allowed in attribute quotes. 
 		 * Replaces double quote, ampersand, less than sign and greater than sign. 
 		 * For example, replaces double quote with "&quot;"
+		 * Use decodeAttributeString() when reading values. 
+		 * 
+		 * @see #decodeAttributeString()
 		 * */
 		public static function getAttributeSafeString(value:String = ""):String {
 			var outputValue:String = value;
@@ -140,6 +143,9 @@ package com.flexcapacitor.utils
 		 * Replaces double quote, ampersand, less than sign and greater than sign. 
 		 * 
 		 * For example, replaces "&quot;" with double quote.
+		 * Use getAttributeSafeString() when writing values. 
+		 * 
+		 * @see #getAttributeSafeString()
 		 * */
 		public static function decodeAttributeString(value:String = ""):String {
 			var outputValue:String = value.replace(/&quot;/g, '"');
@@ -489,6 +495,113 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Get list of childnode names from a node
+		 * Local allows you to get the local value or full value. 
+		 * For example, with the XML:  
+		 * 
+ * <pre>
+ * &lt;s:HGroup xmlns:s="library://ns.adobe.com/flex/spark">
+ * </pre>
+		 * Returns "HGroup" when local is true or
+		 * "library://ns.adobe.com/flex/spark::HGroup" when local is false. 
+		 * 
+		 * @param node XML item
+		 * @param local indicates to return the local name or full name
+		 * */
+		public static function getChildNodeNames(node:XML, local:Boolean = true):Array {
+			var result:Array = [];
+			var name:String;
+			
+			for each (var childNode:XML in node.children()) {
+				
+				if (!local) {
+					name = childNode.name().toString();
+				}
+				else {
+					name = childNode.localName();
+				}
+				
+				result.push(name);
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * Get list of attribute names from a node
+		 * 
+		 * @param node XML item
+		 * */
+		public static function getAttributeNames(node:XML):Array {
+			var result:Array = [];
+			var attributeName:String;
+			
+			for each (var attribute:XML in node.attributes()) {
+				attributeName = attribute.name().toString();
+				
+				result.push(attributeName);
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * Get name value pair from attributes from a node
+		 * 
+		 * @param node XML item
+		 * */
+		public static function getAttributesValueObject(node:XML):Object {
+			var result:Object = {};
+			var attributeName:String;
+			
+			for each (var attribute:XML in node.attributes()) {
+				attributeName = attribute.name().toString();
+				
+				result[attributeName] = decodeAttributeString(attribute.toString());
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * Get name value pair from child nodes
+		 * 
+		 * Returns a string representation of the XML object. The rules for this conversion depend 
+		 * on whether the XML object has simple content or complex content: <br><br>
+		 * 
+		 * If the XML object has simple content, toString() returns the String contents of the XML object 
+		 * with the following stripped out: the start tag, attributes, namespace declarations, and end tag.<br><br>
+		 * 
+		 * If the XML object has complex content, toString() returns an XML encoded String representing 
+		 * the entire XML object, including the start tag, attributes, namespace declarations, and end tag.<br><br>
+		 * 
+		 * @param node XML item
+		 * */
+		public static function getChildNodesValueObject(node:XML, local:Boolean = true, toSimpleString:Boolean = true):Object {
+			var result:Array = [];
+			var nodeName:String;
+			
+			for each (var childNode:XML in node.children()) {
+				
+				if (!local) {
+					nodeName = childNode.name().toString();
+				}
+				else {
+					nodeName = childNode.localName();
+				}
+				
+				if (toSimpleString) {
+					result[nodeName] = childNode.toString();
+				}
+				else {
+					result[nodeName] = childNode.toXMLString();
+				}
+			}
+			
+			return result;
+		}
+		
+		/**
 		 * Checks for a Byte-Order-Marker or BOM at the beginning of the text. This character is invisible in many text editors.
 		 * This will break many XML parsers since no characters are allowed before the XML declaration. Some editors, such as 
 		 * Windows Notepad, automatically insert a byte order marker in UTF-8 files. 
@@ -625,7 +738,7 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Javascript Validation Code - source W3C Validator
+		 * Javascript XML Validation Code - source W3C Validator
 		 * This is written to the HTML page on load
 		 * Note: wherever we have linebreaks we have to escape them - \n -> \\n
 		 * */
@@ -687,6 +800,16 @@ package com.flexcapacitor.utils
 					else if (document.implementation.createDocument) {
 						var parser = new DOMParser();
 						var text = txt;
+						// can also use "application/xml", image/svg+xml, text/html
+						//- https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
+						// enum SupportedType {
+						//    "text/html",
+						//    "text/xml",
+						//    "application/xml",
+						//    "application/xhtml+xml",
+						//    "image/svg+xml"
+						//}
+						//- https://w3c.github.io/DOM-Parsing/
 						var xmlDoc = parser.parseFromString(text, "text/xml");
 					
 						if (xmlDoc.getElementsByTagName("parsererror").length > 0) {

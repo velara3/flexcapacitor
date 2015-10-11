@@ -7,6 +7,18 @@ controls|BorderContainer {
 	borderSides: "left top right bottom";
 }
 
+controls|SolidFillButton {
+	skinClass: ClassReference("com.flexcapacitor.skins.SolidFillButtonSkin");
+}
+
+controls|SolidFillToggleButton {
+	skinClass: ClassReference("com.flexcapacitor.skins.SolidFillToggleButtonSkin");
+}
+
+controls|SolidFillButtonBar {
+	skinClass: ClassReference("com.flexcapacitor.skins.SolidFillButtonBarSkin");
+}
+ 
 controls|ImageButton {
 	icon: not_nothing; /* used to fix padding bug in SparkButtonSkin */
 	paddingLeft: 10;
@@ -74,4 +86,9 @@ controls|ItemRendererButton {
 
 controls|ClearButton {
 	skinClass: ClassReference("com.flexcapacitor.skins.ClearButton");
+}
+
+controls|SearchTextInput {
+	skinClass: ClassReference("com.flexcapacitor.skins.SearchTextInputSkin");
+	borderColorMobile: #CCCCCC;
 }

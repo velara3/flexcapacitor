@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.file.supportClasses {
 	import com.flexcapacitor.effects.file.PromptSaveAs;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
+	import com.flexcapacitor.utils.ClassUtils;
 	
 	import flash.display.DisplayObjectContainer;
 	import flash.display.Loader;
@@ -162,7 +163,14 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			// FOR SAVING A FILE (save as) WE MAY NOT NEED ALL THE LISTENERS WE ARE ADDING
 			// add listeners
-			action.fileReference = new FileReference();
+			if (ClassUtils.hasDefinition("flash.filesystem.File")) {
+				var FileObject:Object = ClassUtils.getDefinition("flash.filesystem.File");
+				action.fileReference = new FileObject();
+			}
+			else {
+				action.fileReference = new FileReference();
+			}
+			
 			addFileListeners(action.fileReference);
 			
 			action.fileReference.save(data, fileName);

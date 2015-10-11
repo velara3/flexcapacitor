@@ -74,6 +74,7 @@ package com.flexcapacitor.utils {
 	import spark.components.VGroup;
 	import spark.components.WindowedApplication;
 	import spark.primitives.Rect;
+	import spark.skins.spark.TextInputSkin;
 	
 	/**
 	 * Dispatched when pressing the ALT key. Use to get the target under the mouse or the lastComponentItem.
@@ -86,7 +87,7 @@ package com.flexcapacitor.utils {
 	 *  
 	 * • You can also manually fade in and out a bitmap image for comparing a mockup image 
 	 * with the runtime layout.<br/>
-	 * • You can also get the CSS heirarchy and style information of a visual element <br/>
+	 * • You can also get the CSS hierarchy and style information of a visual element <br/>
 	 * • You can get the font family, font embedding and font device information. <br/>
 	 * • You can get the color under the mouse.<br/>
 	 * • You can show a ruler at runtime and get size and angle information with it. <br/><br/>
@@ -101,7 +102,7 @@ package com.flexcapacitor.utils {
 	 * Click on the component again to stop from moving to the next object in the heirarchy. 
 	 * You can click on the area to the left of the outline label to stop the automatic selection of the next object
 	 * in the hierarchy. Note: When moving to the next object no information will be written to 
-	 * the console like the first object you clicked on.  
+	 * the console like the first object you clicked on.<br/><br/>
 	 * 
 	 * The information output to the console includes a way to find the object in Eclipse.
 	 * It will create a search pattern using a regular expression that will locate instance and 
@@ -1513,6 +1514,8 @@ package com.flexcapacitor.utils {
 				
 				popUpPropertyInput = new TextInput();
 				popUpValueInput = new TextInput();
+				popUpPropertyInput.setStyle("skinClass", TextInputSkin);
+				popUpValueInput.setStyle("skinClass", TextInputSkin);
 				
 				popUpPropertyInput.width = 100;
 				popUpValueInput.width = 200;

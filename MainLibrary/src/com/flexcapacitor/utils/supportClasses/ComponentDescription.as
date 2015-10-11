@@ -85,12 +85,13 @@ package com.flexcapacitor.utils.supportClasses {
 		
 		/**
 		 * Children. Optional. 
-		 * Used for display in heiarchy view such as Tree.
+		 * Used for display in hierarchy view such as Tree.
 		 * */
 		public var children:ArrayCollection;
 		
 		/**
-		 * Parent
+		 * Parent in the component hierarchy. This is different than the 
+		 * display list hierarchy.
 		 * */ 
 		public var parent:ComponentDescription;
 		
@@ -216,6 +217,15 @@ package com.flexcapacitor.utils.supportClasses {
 			item.styles = styles;
 			item.skin = skin;
 			item.properties = properties;
+			item.locked = locked;
+			item.preprocessors = preprocessors;
+			item.processedMarkupData = processedMarkupData;
+			item.processedStylesData = processedStylesData;
+			item.stylesData = stylesData;
+			//item.propertyNames = propertyNames; read only
+			//item.styleNames = styleNames;
+			item.markupData = markupData;
+			//item.styleData = styleData;
 			
 			return item;
 		}

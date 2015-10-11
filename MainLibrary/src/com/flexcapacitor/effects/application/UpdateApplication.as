@@ -4,7 +4,9 @@ package com.flexcapacitor.effects.application {
 	
 	import com.flexcapacitor.effects.application.supportClasses.UpdateApplicationInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
+	import com.flexcapacitor.utils.ClassUtils;
 	
+	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 	
 	import mx.effects.Effect;
@@ -98,7 +100,8 @@ package com.flexcapacitor.effects.application {
 	
 	/**
 	 * Checks for updates and then optionally starts the update wizard to update the application
-	 * from the web. Also, lets you know if an app has run for the first time. <br/><br/>
+	 * from the web. Also, lets you know if an app has run for the first time. You can get the 
+	 * app version from the currentVersion property at any time.<br/><br/>
 	 *
 	 * Instructions when using an updateConfig.xml file:<br/><br/>
 	 * 
@@ -188,7 +191,7 @@ package com.flexcapacitor.effects.application {
 		&lt;local:errorEffect>
 			&lt;status:ShowStatusMessage showBusyIcon="false" 
 									  data="{updateApplication.errorEvent}"
-									  matchDurationToTextContent="true" 
+									  matchDurationToTextContent="true" duration="6000"
 									  textAlignment="left"
 									  useObjectUtilToString="true"/>
 		&lt;/local:errorEffect>
@@ -197,7 +200,7 @@ package com.flexcapacitor.effects.application {
 </pre>
  * Another example setting the update descriptor path, using UI and tracing all events in the console:
 <pre>
-&lt;handlers:EventHandler eventName="initialize">
+&lt;handlers:EventHandler eventName="applicationComplete">
 	&lt;local:UpdateApplication id="updateApplication"
 							 traceEvents="true" 
 							 useUI="true"
@@ -217,7 +220,7 @@ package com.flexcapacitor.effects.application {
 		&lt;local:errorEffect>
 			&lt;status:ShowStatusMessage showBusyIcon="false" 
 									  data="{updateApplication.errorEvent}"
-									  matchDurationToTextContent="true" 
+									  matchDurationToTextContent="true" duration="6000"
 									  textAlignment="left"
 									  useObjectUtilToString="true"/>
 		&lt;/local:errorEffect>
@@ -402,12 +405,35 @@ public function customFunction (currentVersion:String, updateVersion:String):Boo
 		 * */
 		public var versionCompareFunction:Function;
 		
+		private var _currentVersion:String;
+
+		[Bindable]
 		/**
 		 * Contains the current version of your application. 
 		 * You do not set this it is set when this effect is run
 		 * */
-		[Bindable]
-		public var currentVersion:String;
+		public function get currentVersion():String {
+			if (!_currentVersion) {
+				var definition:Object = ClassUtils.getDefinition("flash.desktop.NativeApplication");
+				
+				if (definition) {
+			    	var appXML:XML = definition.nativeApplication.applicationDescriptor;
+			    	var ns:Namespace = appXML.namespace();
+			    	var version:String = appXML.versionNumber;
+			    	_currentVersion = appXML.ns::versionNumber;
+				}
+			}
+			
+			return _currentVersion;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set currentVersion(value:String):void {
+			_currentVersion = value;
+		}
+
 		
 		/**
 		 * The previous version of the application. This property is set during a call 

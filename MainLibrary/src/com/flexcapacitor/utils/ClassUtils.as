@@ -7,18 +7,22 @@ package com.flexcapacitor.utils {
 	import com.flexcapacitor.model.AccessorMetaData;
 	import com.flexcapacitor.model.StyleMetaData;
 	
+	import flash.system.ApplicationDomain;
 	import flash.utils.describeType;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getQualifiedSuperclassName;
 	
+	import mx.core.UIComponent;
 	import mx.utils.ArrayUtil;
 	import mx.utils.DescribeTypeCacheRecord;
 	import mx.utils.NameUtil;
 	import mx.utils.ObjectUtil;
-	import mx.utils.XMLUtil;
 
 	/**
-	 * Helper class for class utilities
+	 * Helper class for class utilities.
+	 * 
+	 * TODO: 
+	 * We could cache the value of many of these calls including getPropertyNames, getPropertyMetaData, etc.
 	 * */
 	public class ClassUtils {
 
@@ -37,6 +41,31 @@ package com.flexcapacitor.utils {
 		public static function getClassName(element:Object):String {
 			var name:String = NameUtil.getUnqualifiedClassName(element);
 			return name;
+		}
+		
+		/**
+		 * Get unqualified class name of the document of the target object
+		 * returns null if element is not a UIComponent
+		 * */
+		public static function getDocumentName(element:Object):String {
+			var name:String;
+			if (element is UIComponent) {
+				name = NameUtil.getUnqualifiedClassName(UIComponent(element).document);
+			}
+			return name;
+		}
+		
+		/**
+		 * Get parent document name
+		 * 
+		 * @return null if target is not a UIComponent
+		 */
+		public static function getParentDocumentName(target:Object):String {
+			var className:String;
+			if (target is UIComponent) {
+				className = getClassName(target.parentDocument);
+			}
+			return className;
 		}
 		
 		/**
@@ -177,7 +206,20 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Get metadata from an object by finding members by their type  
+		 * Get metadata from an object by finding members by their type
+<pre>
+var object:XMLList = ClassUtils.getMemberDataByType(myButton, mx.styles.CSSStyleDeclaration);
+
+trace(object);
+
+// finds the "myButton.styleDeclaration" since it is of type CSSStyleDeclaration
+
+&lt;accessor name="styleDeclaration" access="readwrite" type="mx.styles::CSSStyleDeclaration" declaredBy="mx.core::UIComponent">
+  &lt;metadata name="Inspectable">
+    &lt;arg key="environment" value="none"/>
+  &lt;/metadata>
+&lt;/accessor>
+</pre>
 		 * */
 		public static function getMemberDataByType(object:Object, type:Object):Object {
 			if (type==null) return null;
@@ -188,7 +230,7 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Get metadata from an object by it's name. Lower case compare doesn't work. 
+		 * Get metadata from an object by it's name.
 		 * */
 		public static function getMemberDataByName(object:Object, propertyName:String, caseSensitive:Boolean = false):Object {
 			if (propertyName==null) return null;
@@ -265,7 +307,6 @@ package com.flexcapacitor.utils {
 			
 			return describedTypeRecord.typeDescription;
 		}
-		
 		
 		
 		/**
@@ -508,7 +549,7 @@ package com.flexcapacitor.utils {
 		 * adds all that information and so on until it gets to Object. <br/><br/>
 		 * 
 		 * Usage:<br/><pre>
-		 * var allStyles:XMLList = getMetaDataList(myButton, "Style");
+		 * var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * </pre>
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param metaType The name of the data in the item name property. Either Style or Event
@@ -624,6 +665,11 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Get StyleMetaData data for the given style. 
+
+		 * Usage:<br/>
+ <pre>
+ var styleMetaData:StyleMetaData = getStylesFromArray(myButton, "color");
+ </pre>
 		 * */
 		public static function getMetaDataOfStyle(target:Object, style:String, type:String = null, stopAt:String = null):StyleMetaData {
 			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord;
@@ -690,10 +736,10 @@ package com.flexcapacitor.utils {
 		 * Gets an array of the styles from an array of names<br/><br/>
 		 * 
 		 * Usage:<br/>
-		 <pre>
-		 * // returns ["backgroundAlpha", "fontFamily"]
-		 var styles:Array = getStylesFromArray(myButton, ["chicken","potatoe","backgroundAlpha","swisscheese","fontFamily"]);
-		 </pre>
+ <pre>
+ // returns ["backgroundAlpha", "fontFamily"]
+ var styles:Array = getStylesFromArray(myButton, ["chicken","potatoe","backgroundAlpha","swisscheese","fontFamily"]);
+ </pre>
 		 * 
 		 * @param object The object to use. Either string, object or class.
 		 * @param possibleStyles An existing list of styles
@@ -724,10 +770,10 @@ package com.flexcapacitor.utils {
 		 * Gets an array of the properties from an array of names<br/><br/>
 		 * 
 		 * Usage:<br/>
-		 <pre>
-		 * // returns ["width", "x"]
-		 var styles:Array = getStylesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x"]);
-		 </pre>
+ <pre>
+ // returns ["width", "x"]
+ var styles:Array = getStylesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x"]);
+ </pre>
 		 * 
 		 * @param object The object to use. Either string, object or class.
 		 * @param possibleStyles An list of possible properties
@@ -775,6 +821,48 @@ package com.flexcapacitor.utils {
 			var styleNames:Array = XMLUtils.convertXMLListToArray(stylesList.@name);
 			
 			return styleNames;
+		}
+		
+		/**
+		 * Checks if the application has the definition. Returns true if it does. 
+		 * */
+		public static function hasDefinition(definition:String, domain:ApplicationDomain = null):Boolean {
+			var isDefined:Boolean;
+			
+			if (domain) {
+				isDefined = domain.hasDefinition(definition);
+				return isDefined;
+			}
+			
+			isDefined = ApplicationDomain.currentDomain.hasDefinition(definition);
+			return isDefined;
+		}
+		
+		/**
+		 * Gets the definition if defined. If not defined returns null. 
+		 * */
+		public static function getDefinition(definition:String, domain:ApplicationDomain = null):Object {
+			var isDefined:Boolean;
+			var definedClass:Object;
+			domain = domain ? domain : ApplicationDomain.currentDomain;
+			
+			isDefined = domain.hasDefinition(definition);
+			
+			if (isDefined) {
+				definedClass = domain.getDefinition(definition);
+			}
+			
+			return definedClass;
+		}
+		
+		/**
+		 * Checks if the object is empty, if it has no properties. 
+		 * Uses describeType to get the metadata on the object and 
+		 * checks the number of properties.
+		 * */
+		public static function isEmptyObject(object:Object):Boolean {
+			var propertiesArray:Array = getPropertyNames(object);
+			return propertiesArray==null || propertiesArray.length==0;
 		}
 	}
 }

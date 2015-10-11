@@ -1,0 +1,272 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+ 
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+-->
+
+<!--- The Spark skin class for the tabs of the MX TabNavigator container. 
+
+How to use: 
+
+With a specific TabNavigator:  
+
+.myTabNavigator {
+	tabStyleName: "myTabs";
+}
+
+.myTabs {
+	skin:ClassReference("mySkins.MyTabSkin");
+}
+
+Applied to all Tabs in all TabNavigators:  
+
+mx|Tab {
+	skin:ClassReference("com.flexcapacitor.skins.SolidFillTabNavigatorButtonSkin");
+	fillAlpha:1;
+	borderAlpha:1;
+	cornerRadius:0;
+	/*color:#FF0000;
+	chromeColor: #00FF00;
+	textRollOverColor: #0000FF;
+	textSelectedColor: #00FF00;*/
+	textFieldClass: ClassReference("mx.core.UIFTETextField"); /* default is mx.core.UITextField*/
+}
+
+@see mx.containers.TabNavigator
+
+@langversion 3.0
+@playerversion Flash 10
+@playerversion AIR 1.5
+@productversion Flex 4
+-->
+<s:SparkSkin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark" 
+			 minWidth="21" minHeight="21"
+			 alpha.disabledStates="0.5">
+	
+	<fx:Script>
+	<![CDATA[
+		import mx.controls.Button;
+		import mx.core.IUITextField;
+		import mx.core.mx_internal;
+			
+		use namespace mx_internal;
+		
+		private var cornerRadius:Number = 0;
+			
+		/**
+		 * @private
+		 */
+		override protected function initializationComplete():void
+		{
+			useChromeColor = true;
+			super.initializationComplete();
+		}
+		
+		/**
+		 * COPIED FROM TabBarButtonSkin.mxml
+		 *  @private
+		 *  The cornerRadius style is specified by the TabBar, not the button itself.   
+		 * 
+		 *  Rather than bind the corner radius properties of the s:Rect's in the markup 
+		 *  below to hostComponent.owner.getStyle("cornerRadius"), we reset them here, 
+		 *  each time a change in the value of the style is detected.  Note that each 
+		 *  corner radius property is explicitly initialized to the default value of 
+		 *  the style; the initial value of the private cornerRadius property.
+		 */
+		private function updateCornerRadius():void
+		{
+			var cr:Number = getStyle("cornerRadius");
+			if (cornerRadius != cr)
+			{
+				cornerRadius = cr;
+				fill.topLeftRadiusX = cornerRadius;
+				fill.topRightRadiusX = cornerRadius;
+			}
+		}
+		
+		/**
+		 * COPIED FROM TabBarButtonSkin.mxml
+		 *  @private
+		 *  This function creates the path data used by borderTop and selectedHighlight.
+		 */
+		private function createPathData(isBorder:Boolean):String
+		{
+			var left:Number = 0;
+			var right:Number = width;
+			var top:Number = 0.5;
+			var bottom:Number = height;
+			
+			var a:Number = cornerRadius * 0.292893218813453;
+			var s:Number = cornerRadius * 0.585786437626905;
+			
+			// If the path is for the highlight,
+			// Draw the vertical part of the selected tab highlight that's rendered 
+			// with alpha=0.07.  The s:Path is configured to include only the left and 
+			// right edges of an s:Rect, along with the top left,right rounded corners. 
+			// Otherwise, we draw a full path.
+			var path:String = "";
+			path +=  "M " + left + " " + bottom;
+			path += " L " + left + " " + (top + cornerRadius);
+			path += " Q " + left + " " + (top + s) + " " + (left + a) + " " + (top + a);
+			path += " Q " + (left + s) + " " + top + " " + (left + cornerRadius) + " " + top;
+			
+			if (isBorder)
+				path += " L " + (right - cornerRadius) + " " + top;
+			else
+				path += " M " + (right - cornerRadius) + " " + top;
+			
+			path += " Q " + (right - s) + " " + top + " " + (right - a) + " " + (top + a);
+			path += " Q " + right + " " + (top + s) + " " + right + " " + (top + cornerRadius);
+			path += " L " + right + " " + bottom;
+			
+			return path;
+		}
+		
+		/**
+		 * COPIED FROM TabBarButtonSkin.mxml
+		 *  @private
+		 *  The borderTop s:Path is just a s:Rect with the bottom edge left out.
+		 *  Given the rounded corners per the cornerRadius style, the result is 
+		 *  roughly an inverted U with the specified width, height, and cornerRadius.
+		 * 
+		 *  Circular arcs are drawn with two curves per flash.display.Graphics.GraphicsUtil.
+		 */        
+		private function updateBorderTop(width:Number, height:Number):void
+		{
+			// Generate path data and lay it out. The path is not being layout by the default BasicLayout of this skin
+			// since we excluded it from the layout.
+			var path:String = createPathData(true);
+			borderTop.data = path;
+			borderTop.setLayoutBoundsSize(width, height, false);
+			borderTop.setLayoutBoundsPosition(0, 0, false);
+		}
+		
+		/**
+		 * @private
+		 */
+		override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number) : void
+		{
+			updateCornerRadius();
+			updateBorderTop(unscaledWidth, unscaledHeight);
+			
+			var button:Button = owner as Button;// is the Button
+			var textField:IUITextField = button.getTextField();
+			var label:String = button.label;
+			
+			// if you want to use your own text field hide the other one here
+			if (textField) {
+				//textField.includeInLayout = false;
+				textField.visible = false;
+			}
+			
+			if (labelDisplay) {
+				labelDisplay.text = label;
+			}
+			
+			var borderAlpha:Number = button.getStyle("borderAlpha");
+			if (!isNaN(borderAlpha)) {
+				borderTop.alpha = borderAlpha;
+				if (lineAlongTheBottom) {
+					lineAlongTheBottom.alpha = borderAlpha;
+				}
+			}
+			
+			var fillAlpha:Number = button.getStyle("fillAlpha");
+			if (!isNaN(fillAlpha)) {
+				fillColor.alpha = fillAlpha;
+			}
+			
+			var fillColorValue:Number = button.getStyle("fillColor");
+			if (!isNaN(fillColorValue)) {
+				//fillColor.color = fillColorValue;
+			}
+			
+			super.updateDisplayList(unscaledWidth, unscaledHeight);
+			
+		}
+		]]>
+	</fx:Script>
+	
+	<!-- states -->
+	<s:states>
+		<s:State name="up" />
+		<s:State name="over" />
+		<s:State name="down" />
+		<s:State name="disabled" stateGroups="disabledStates"/>
+		<s:State name="selectedUp" stateGroups="selectedStates" />
+		<s:State name="selectedOver" stateGroups="selectedStates" />
+		<s:State name="selectedDown" stateGroups="selectedStates" />
+		<s:State name="selectedDisabled" stateGroups="disabledStates, selectedStates" />
+	</s:states>
+	
+	<!-- layer 1: fill -->
+	<s:Rect id="fill" left="1" right="1" top="1" bottom="0" >
+		<s:fill>
+			<s:SolidColor id="fillColor" 
+						  color="0xFFFFFF" 
+						  color.selectedStates="0xECEEEE"
+						  color.over="0xECEEEE" 
+						  alpha="1" />
+<!--			<s:LinearGradient rotation="90">
+				<s:GradientEntry color="0xE4E4E4" color.over="0xCACACA"
+								 color.selectedStates="0xFFFFFF"
+								 alpha="1" />
+				<s:GradientEntry color="0xA1A1A1" color.over="0x878787"
+								 color.selectedStates="0xE4E4E4" 
+								 alpha="1" />
+			</s:LinearGradient>-->
+		</s:fill>
+	</s:Rect>
+	
+	
+	<!-- layer 4: border - unselected only -->
+	<s:Line id="lineAlongTheBottom" left="0" right="0" bottom="0" excludeFrom="selectedStates" >
+		<s:stroke>
+			<s:SolidColorStroke color="0x696969" alpha="1" />
+		</s:stroke>
+	</s:Line>
+	
+	<!--- Set includeInLayout="false" as we regenerate the path data and lay out the path in
+	the updateDisplayList() override and we don't want it to affect measurement. @private
+	-->
+	<s:Path id="borderTop" left="0" right="0" top="0" bottom="0" includeInLayout="false">
+		<s:stroke>
+			<s:LinearGradientStroke rotation="90" weight="1">
+				<s:GradientEntry color="0x000000" 
+								 alpha="0.5625"
+								 alpha.down="0.6375"
+								 alpha.selectedStates="0.6375" />
+				<s:GradientEntry color="0x000000" 
+								 alpha="0.75" 
+								 alpha.down="0.85"
+								 alpha.selectedStates="0.85" />
+			</s:LinearGradientStroke>
+		</s:stroke>
+	</s:Path>
+	
+	<!-- layer 8: text -->
+	<!--- @copy spark.components.supportClasses.ButtonBase#labelDisplay -->
+	<s:Label id="labelDisplay"
+			 visible="true"
+			 textAlign="center"
+			 verticalAlign="middle"
+			 maxDisplayedLines="1" 
+			 horizontalCenter="0" verticalCenter="2"
+			 left="10" right="10" top="2" bottom="2">
+	</s:Label>
+</s:SparkSkin>

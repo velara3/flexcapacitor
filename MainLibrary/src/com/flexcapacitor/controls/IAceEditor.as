@@ -1,12 +1,7 @@
 package com.flexcapacitor.controls
 {
-	import flash.events.IEventDispatcher;
-	
 	import mx.core.IDeferredInstantiationUIComponent;
-	import mx.core.IFlexDisplayObject;
 	import mx.core.IInvalidating;
-	import mx.core.ILayoutDirectionElement;
-	import mx.core.ILayoutElement;
 	import mx.core.IUIComponent;
 	import mx.core.IVisualElement;
 	import mx.managers.ILayoutManagerClient;
@@ -26,6 +21,10 @@ package com.flexcapacitor.controls
 		function set showGutter(value:Boolean):void;
 		function get margin():String;
 		function set margin(value:String):void;
+		function get useWordWrap():Boolean;
+		function set useWordWrap(value:Boolean):void;
+		function get scrollSpeed():Number;
+		function set scrollSpeed(value:Number):void;
 		
 	}
 }

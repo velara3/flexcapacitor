@@ -398,6 +398,17 @@
     <classEntry path="com.flexcapacitor.controls.IAceEditor"/>
     <classEntry path="com.flexcapacitor.utils.FontUtils"/>
     <classEntry path="com.flexcapacitor.utils.PersistentStorage"/>
+    <classEntry path="com.flexcapacitor.utils.StateUtils"/>
+    <classEntry path="com.flexcapacitor.skins.solidFillButtonBarClasses.MiddleButtonSkin"/>
+    <classEntry path="com.flexcapacitor.skins.solidFillButtonBarClasses.LastButtonSkin"/>
+    <classEntry path="com.flexcapacitor.skins.SolidFillButtonBarSkin"/>
+    <classEntry path="com.flexcapacitor.skins.solidFillButtonBarClasses.FirstButtonSkin"/>
+    <classEntry path="com.flexcapacitor.controls.SolidFillButtonBar"/>
+    <classEntry path="com.flexcapacitor.skins.SolidFillButtonSkin"/>
+    <classEntry path="com.flexcapacitor.skins.SolidFillToggleButtonSkin"/>
+    <classEntry path="com.flexcapacitor.states.AddItems"/>
+    <classEntry path="com.flexcapacitor.utils.FileUtils"/>
+    <classEntry path="com.flexcapacitor.model.EmbeddedFile"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>

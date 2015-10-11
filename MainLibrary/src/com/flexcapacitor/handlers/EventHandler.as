@@ -836,6 +836,12 @@ MyOtherComponent.mxml,<br/>
 				_eventNames[0] = value;
 			}
 			
+			// sometimes an event is assigned after databinding occurs on target
+			// so reassigning target to add handlers
+			if (_targets.length && waitingForEvents) {
+				waitingForEvents = false;
+				targets = _targets;
+			}
 		}
 		
 		//----------------------------------
@@ -879,6 +885,13 @@ MyOtherComponent.mxml,<br/>
 			}
 			
 			_eventNames = value;
+			
+			// sometimes this is assigned after databinding occurs on target
+			// so reassigning target to add handlers
+			if (_targets.length && waitingForEvents) {
+				waitingForEvents = false;
+				targets = _targets;
+			}
 		}
 		
 		//----------------------------------
@@ -1219,6 +1232,8 @@ MyOtherComponent.mxml,<br/>
 		//
 		//--------------------------------------------------------------------------
 		
+		public var waitingForEvents:Boolean;
+		
 		/**
 		 * Adds event listeners to the target component including keyboard listeners if specified.
 		 * Adds keyboard listeners to the target and the stage. This doesn't always seem to catch 
@@ -1231,7 +1246,7 @@ MyOtherComponent.mxml,<br/>
 		private function addHandlers(targetObject:IEventDispatcher):void {
 			var keyboardEventLength:int = keyboardEventNames ? keyboardEventNames.length : 0;
 			var events:Array = _eventNames ? _eventNames : [eventName];
-			var length:int = events.length;
+			var numOfEvents:int = events.length;
 			var systemManager:DisplayObject;
 			var eventName:String;
 			var i:int;
@@ -1239,6 +1254,10 @@ MyOtherComponent.mxml,<br/>
 			// check for required properties
 			if (keyCodes.length>0 && keyboardEventLength==0) {
 				throw new Error("Keycodes are assigned but no keyboard events are specified.");
+			}
+			
+			if (numOfEvents==0 && waitingForEvents==false) {
+				waitingForEvents = true;
 			}
 			
 			// NOTE: DO WE NEED TO SUPPORT MULTIPLE TARGETS???
@@ -1251,7 +1270,7 @@ MyOtherComponent.mxml,<br/>
 				//if (targets.length>1) throw new Error("add support"); // we maybe want to remove this?
 				
 				// add event listeners for each event specified
-				for (i=0;i<length;i++) {
+				for (i=0;i<numOfEvents;i++) {
 					eventName = eventNames[i];
 					
 					// double click will not work without this property enabled

@@ -82,6 +82,12 @@
 			import mx.core.UIComponentGlobals;
 			
 			/**
+			 * If set to true prevents links from doing anything. Used for design mode or 
+			 * to disable links without making them looked disabled.
+			 * */
+			public var preventLaunching:Boolean;
+			
+			/**
 			 * URLLoader to communicate with the server
 			 * */
 			public var loader:URLLoader;
@@ -140,7 +146,7 @@
 			 * */
 			protected function clickHandler(event:MouseEvent):void {
 				
-				if (UIComponentGlobals.designMode) {
+				if (UIComponentGlobals.designMode || preventLaunching) {
 					return;
 				}
 				

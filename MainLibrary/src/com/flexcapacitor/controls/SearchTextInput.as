@@ -56,10 +56,7 @@ package com.flexcapacitor.controls
 		public static const CLEAR_TEXT:String = "clearText";
 		
 		public function SearchTextInput():void {
-			super();
 			
-			setStyle("skinClass", com.flexcapacitor.skins.SearchTextInputSkin);
-			setStyle("borderColorMobile", 0xCCCCCC);
 		}
 		
 		/**

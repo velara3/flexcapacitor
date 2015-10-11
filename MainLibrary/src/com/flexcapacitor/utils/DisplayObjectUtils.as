@@ -1,5 +1,6 @@
 
 package com.flexcapacitor.utils {
+	import com.flexcapacitor.effects.application.FitApplicationToScreen;
 	import com.flexcapacitor.utils.supportClasses.ComponentDescription;
 	import com.flexcapacitor.utils.supportClasses.GroupOptions;
 	
@@ -17,6 +18,7 @@ package com.flexcapacitor.utils {
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
 	import flash.system.ApplicationDomain;
+	import flash.system.Capabilities;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
@@ -668,16 +670,22 @@ package com.flexcapacitor.utils {
 				}
 				else {
 					parentItem = new ComponentDescription(element);
-					parentItem.children = new ArrayCollection();
 				}
 				
-				return getComponentDisplayList2(element, parentItem);
+				// reset the children bc could be different
+				parentItem.children = new ArrayCollection();
+				
+				return getComponentDisplayList2(element, parentItem, depth++, dictionary);
 			}
 			
 			
 			if (element is IVisualElementContainer) {
 				var visualContainer:IVisualElementContainer = IVisualElementContainer(element);
 				var length:int = visualContainer.numElements;
+				
+				if (parentItem.children) {
+					//parentItem.children.removeAll(); // reseting above
+				}
 				
 				for (var i:int;i<length;i++) {
 					childElement = visualContainer.getElementAt(i);
@@ -687,15 +695,21 @@ package com.flexcapacitor.utils {
 					}
 					else {
 						item = new ComponentDescription(childElement);
-						item.parent = parentItem;
 					}
+					
+					if (item.children) {
+						item.children.removeAll(); // removing old references
+					}
+					
+					// parent may be new - set parent here
+					item.parent = parentItem;
 					
 					parentItem.children.addItem(item);
 					
 					// check for IVisualElement
 					if (childElement is IVisualElementContainer && IVisualElementContainer(childElement).numElements>0) {
 						!item.children ? item.children = new ArrayCollection() : void;
-						getComponentDisplayList2(childElement, item, depth + 1);
+						getComponentDisplayList2(childElement, item, depth++, dictionary);
 					}
 					
 					
@@ -1072,10 +1086,13 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Find the greatest visibility state of a visual element
+		 * Find the greatest visibility state of a visual element. It tells you 
+		 * if the display object is visible, at least programmatically. <br><br>
 		 * 
 		 * Usage:
-		 * var visibility:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(item.instance)); 
+<pre>
+var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(item.instance));
+</pre> 
 		 * */
 		public static function getGreatestVisibilityDisplayList(element:IVisualElement):Boolean {
 			var componentDescription:ComponentDescription;
@@ -1878,5 +1895,20 @@ package com.flexcapacitor.utils {
 			return byteArray;
 		}
 		
+			
+		/**
+		 * Center the application or native window
+		 * */
+		public static function centerWindow(application:Object, offsetHeight:Number = 0, offsetWidth:Number = 0):void {
+			
+			if ("nativeWindow" in application) {
+				application.nativeWindow.x = (Capabilities.screenResolutionX - application.width) / 2 - offsetHeight;
+				application.nativeWindow.y = (Capabilities.screenResolutionY - application.height) / 2 - offsetHeight;
+			}
+			else {
+				application.x = (Capabilities.screenResolutionX - application.width) / 2 - offsetHeight;
+				application.y = (Capabilities.screenResolutionY - application.height) / 2 - offsetHeight;
+			}
+		}
 	}
 }

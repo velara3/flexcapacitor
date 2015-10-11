@@ -1,4 +1,21 @@
+/**
+ 
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
 
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+
+* */
 package com.flexcapacitor.controls {
 
 	import com.flexcapacitor.controls.IAceEditor;
@@ -10,6 +27,7 @@ package com.flexcapacitor.controls {
 	import mx.controls.HTML;
 	import mx.events.FlexEvent;
 	
+	import spark.core.IDisplayText;
 	import spark.events.TextOperationEvent;
 	
 	import flashx.textLayout.operations.FlowOperation;
@@ -92,20 +110,20 @@ package com.flexcapacitor.controls {
 	 * Ace editor for AIR apps. You must include the source files with this component. 
 	 * You need to copy the ace source code (src-min-noconflict) and ace.html page into your project.  
 	 * The ace.html page is included in this library and the ace source is available at 
-	 * http://ace.c9.io/ or on github.
+	 * http://ace.c9.io/ or on github.<br/><br/>
 	 * 
 	 * The editor automatically loads unless you set loadOnCreationComplete to false.
-	 * If it is false then call initializeEditor() when you want to load the editor. 
+	 * If it is false then call initializeEditor() when you want to load the editor. <br/><br/>
 	 * 
 	 * Only about 3/4ths of the API is supported at this time but you have references to the 
-	 * objects so you can add access additional API and events through them.
+	 * objects so you can add access additional API and events through them.<br/><br/>
 	 * 
-	 * Use the editor.on() method to add listeners and editor.off() to remove them. 
+	 * Use the editor.on() method to add listeners and editor.off() to remove them. <br/><br/>
 	 * 
-	 * Listening and dispatching events duration: Average:4ms with debug build.  
-	 * Not listening or dispatching events duration: Average:1ms with debug build.
+	 * Listening and dispatching events duration: Average:4ms with debug build.<br>
+	 * Not listening or dispatching events duration: Average:1ms with debug build.<br/><br/>
 	 * 
-	 * To Use in MXML:  
+	 * To use in MXML:<br/>
 	<pre>
 	&lt;local:AceEditor id="ace" height="100%" width="100%"
 			top="60" left="0" right="0" bottom="30" 
@@ -115,7 +133,7 @@ package com.flexcapacitor.controls {
 			mouseMoveOverEditor="ace_mouseMoveOverChangeHandler(event)"
 			pathToTemplate="app:/ace.html"/>
 			
-	<s:TextInput id="searchInput" prompt="Search" 
+	&lt;s:TextInput id="searchInput" prompt="Search" 
 			change="searchInput_clickHandler(event)"
 			enter="searchInput_clickHandler(event)"/>
 	
@@ -162,13 +180,41 @@ package com.flexcapacitor.controls {
 		
 		lastSearchValue = searchText;
 	}
+	
+	protected function searchInput_changeHandler(event:Event):void {
+		var searchText:String = searchInput.text;
+		
+		// enter key pressed
+		if (lastSearchValue==searchText) {
+			
+			if (searchText!="") {
+				if (!shiftDown) {
+					lastFocusedEditor.findNext(null);
+				}
+				else {
+					lastFocusedEditor.findPrevious(null);
+				}
+			}
+		}
+		
+		// change event
+		else {
+			var options:Object = {};
+			options.skipCurrent = false;
+			var result:Object = lastFocusedEditor.find(searchInput.text, options);
+		}
+		
+		lastSearchValue = searchText;
+	}
 	</pre>
 	 * 
-	 * http://ace.c9.io/
+	 * Ace Editor Website - http://ace.c9.io/<br>
+	 * Ace Editor Source Code - https://github.com/ajaxorg/ace/blob/master/lib/ace/editor.js<br>
 	 * 
+	 * @see https://github.com/ajaxorg/ace/blob/master/lib/ace/editor.js
 	 * @see http://ace.c9.io/#nav=howto
 	 * */	
-	public class AceEditor extends HTML implements IAceEditor {
+	public class AceEditor extends HTML implements IAceEditor, IDisplayText {
 		
 		public function AceEditor() {
 			super();
@@ -357,16 +403,16 @@ package com.flexcapacitor.controls {
 			invalidateProperties();
 		}
 		
-		private var _scrollSpeed:int = 1;
+		private var _scrollSpeed:Number = 2;
 		
 		/**
-		 * Sets scroll speed. Default is 1.
+		 * Sets scroll speed. Default is 2.
 		 * */
-		public function get scrollSpeed():int {
+		public function get scrollSpeed():Number {
 			return _scrollSpeed;
 		}
 
-		public function set scrollSpeed(value:int):void {
+		public function set scrollSpeed(value:Number):void {
 			if (_scrollSpeed!=value) scrollSpeedChanged = true;
 			_scrollSpeed = value;
 			invalidateProperties();
@@ -429,11 +475,43 @@ package com.flexcapacitor.controls {
 		}
 		private var _showGutter:Boolean = true;
 		
+		/**
+		 * Shows line numbers if true
+		 * Default is true.
+		 * */
+		public function get showLineNumbers():Boolean {
+			return _showLineNumbers;
+		}
+		
+		/**
+		 * @private
+		 */
+		public function set showLineNumbers(value:Boolean):void {
+			if (_showLineNumbers!=value) showLineNumbersChanged = true;
+			_showLineNumbers = value;
+			invalidateProperties();
+		}
+		private var _showLineNumbers:Boolean = true;
+		
+
+		public function get showCursor():Boolean
+		{
+			return _showCursor;
+		}
+
+		public function set showCursor(value:Boolean):void {
+			if (_showCursor!=value) showCursorChanged = true;
+			_showCursor = value;
+			invalidateProperties();
+		}
+		private var _showCursor:Boolean = true;
+
+		
 		private var _useWordWrap:Boolean;
 		
 		/**
 		 * Uses word wrap if true
-		 * Default is true.
+		 * Default is false.
 		 * */
 		public function get useWordWrap():Boolean {
 			return _useWordWrap;
@@ -712,21 +790,112 @@ package com.flexcapacitor.controls {
 			editor.jumpToMatching(select);
 		}
 		
-		public function modifyNumber():void{};
-		public function moveLinesDown():void{};
-		public function moveLinesUp():void{};
-		public function moveText():void{};
-		public function navigateDown():void{};
-		public function navigateFileEnd():void{};
-		public function navigateFileStart():void{};
-		public function navigateLeft():void{};
-		public function navigateLineEnd():void{};
-		public function navigateLineStart():void{};
-		public function navigateRight():void{};
-		public function navigateTo():void{};
-		public function navigateUp():void{};
-		public function navigateWordLeft():void{};
-		public function navigateWordRight():void{};
+		/**
+		 * If the character before the cursor is a number, this functions changes its value by `amount`.
+		 * */
+		public function modifyNumber(amount:int):void {
+			editor.modifyNumber(amount);
+		}
+		
+		/**
+		 * Shifts all the selected lines down one row.
+		 * */
+		public function moveLinesDown():void { 
+			editor.moveLinesDown();
+		}
+		
+		/**
+		 * Shifts all the selected lines up one row.
+		 * */
+		public function moveLinesUp():void { 
+			editor.moveLinesUp();
+		}
+		
+		/**
+		 * Moves a range of text from the specified range to the specified position. 
+		 * */
+		public function moveText(range:Object, toPosition:Object, copy:Boolean = false):void { 
+			editor.moveText(range, toPosition, copy);
+		}
+		
+		/**
+		 * Moves the cursor down a specified number of times.
+		 * */
+		public function navigateDown(count:int):void {
+			editor.navigateDown(count);
+		}
+		
+		/**
+		 * Moves the cursor to the end of the current file. 
+		 * This deselects the current selection.
+		 * */
+		public function navigateFileEnd():void {
+			editor.navigateFileEnd();
+		}
+		
+		/**
+		 * Moves the cursor to the start of the current file. 
+		 * This deselects the current selection.
+		 * */
+		public function navigateFileStart():void {
+			editor.navigateFileStart();
+		}
+		
+		/**
+		 * Moves the cursor left a specified number of times. 
+		 * */
+		public function navigateLeft(count:int):void {
+			editor.navigateLeft(count);
+		}
+		
+		/**
+		 * 
+		 * */
+		public function navigateLineEnd():void {
+			editor.navigateLineEnd();
+		}
+		
+		/**
+		 * 
+		 * */
+		public function navigateLineStart():void {
+			editor.navigateLineStart();
+		}
+		
+		/**
+		 * Moves the cursor right a specified number of times. 
+		 * */
+		public function navigateRight(count:int):void {
+			editor.navigateRight(count);
+		}
+		
+		/**
+		 * Moves the cursor to the specified row and column.
+		 * */
+		public function navigateTo(row:int, column:int):void {
+			editor.navigateTo(row, column);
+		}
+		
+		/**
+		 * Moves the cursor up a specified number of times. 
+		 * */
+		public function navigateUp(count:int):void {
+			editor.navigateUp(count);
+		}
+		
+		/**
+		 * 
+		 * */
+		public function navigateWordLeft():void {
+			editor.navigateWordLeft();
+		}
+		
+		/**
+		 * 
+		 * */
+		public function navigateWordRight():void {
+			editor.navigateWordRight();
+		}
 		
 		/**
 		 * Removes event listener to the editor
@@ -1032,6 +1201,17 @@ package com.flexcapacitor.controls {
 				showGutterChanged = false;
 			}
 			
+			if (showLineNumbersChanged) {
+				editor.renderer.setOption("showLineNumbers", showLineNumbers);
+				showLineNumbersChanged = false;
+			}
+			
+			if (showCursorChanged) {
+				var cursorDisplay:String = showCursor ? "visible" : "none";
+				editor.renderer.$cursorLayer.element.style.display = cursorDisplay;
+				showCursorChanged = false;
+			}
+			
 			if (useWordWrapChanged) {
 				editor.getSession().setUseWrapMode(useWordWrap);
 				useWordWrapChanged = false;
@@ -1108,8 +1288,8 @@ package com.flexcapacitor.controls {
 			}
 			
 			if (tabSizeChanged || useSoftTabsChanged) {
-				editor.getSession().setUseSoftTabs(useSoftTabs);
-				editor.getSession().setTabSize(tabSize);
+				session.setUseSoftTabs(useSoftTabs);
+				session.setTabSize(tabSize);
 				tabSizeChanged = false;
 				useSoftTabsChanged = false;
 			}
@@ -1206,6 +1386,13 @@ package com.flexcapacitor.controls {
 		}
 		
 		/**
+		 * Inserts a block of text and the indicated position.
+		 * */
+		public function appendText(text:String):void {
+			session.insert({row: session.getLength(), column: 0}, "\n" + text);
+		}
+		
+		/**
 		 * Set the selection range
 		 * */
 		public function setSelectionRange(range:Object, reverse:Boolean = false):void {
@@ -1262,7 +1449,7 @@ package com.flexcapacitor.controls {
 		}
 		
 		/**
-		 * Gets the cursor
+		 * Gets the total lines
 		 * */
 		public function getTotalLines():int {
 			return editor.session.getLength();
@@ -1339,6 +1526,13 @@ package com.flexcapacitor.controls {
 			invalidateProperties();
 		}
 		public var _text:String = "";
+		
+		/**
+		 * Method to satisfy IDisplayText. Returns false.
+		 * */
+		public function get isTruncated():Boolean {
+			return false;
+		}
 		
 		private var _margin:String;
 		
@@ -1555,6 +1749,8 @@ package com.flexcapacitor.controls {
 		private var showFoldWidgetsChanged:Boolean;
 		private var showPrintMarginsChanged:Boolean;
 		private var showGutterChanged:Boolean;
+		private var showLineNumbersChanged:Boolean;
+		private var showCursorChanged:Boolean;
 		private var useWordWrapChanged:Boolean;
 		private var isReadOnlyChanged:Boolean;
 		private var enableFindChanged:Boolean;
@@ -1614,6 +1810,10 @@ package com.flexcapacitor.controls {
 		 * and there is no console in the AIR HTML component dom window
 		 * however you can create your own and assign it to the console property. 
 		 * Add at least log and error methods.
+		 * 
+<pre>
+editor.console = {log:trace, error:trace};
+</pre>
 		 */
 		public var console:Object;
 		
@@ -1837,28 +2037,31 @@ package com.flexcapacitor.controls {
 		 * Performs a search for the word specified.<br/><br/>
 		 * 
 		 * To perform a find: 
-		 <pre>
-		 ace.find("needle",{
-		 backwards: false,
-		 wrap: false,
-		 caseSensitive: false,
-		 wholeWord: false,
-		 regExp: false,
-		 start: {row:"0",column:"0"}
-		 });
-		 ace.findNext();
-		 ace.findPrevious();
-		 </pre>
-		 * To perform a replace: 
-		 <pre>
-		 ace.find("needle");
-		 ace.replace('bar');
-		 </pre>
-		 * To perform a search from the current selection: 
-		 <pre>
-		 var position:Object = ace.getSelectionAnchor();
-		 ace.find("needle", {row:position.row,column:position.column});
-		 </pre>a
+ <pre>
+	 ace.find("needle",{
+	 backwards: false,
+	 wrap: false,
+	 caseSensitive: false,
+	 wholeWord: false,
+	 regExp: false,
+	 start: {row:"0",column:"0"}
+	 });
+	 ace.findNext();
+	 ace.findPrevious();
+ </pre>
+ To perform a replace: 
+ <pre>
+	 ace.find("needle");
+	 ace.replace('bar');
+ </pre>
+ To perform a search from the current selection: 
+ <pre>
+	 var position:Object = ace.getSelectionAnchor();
+	 ace.find("needle", {row:position.row,column:position.column});
+	 // or
+	 var options:Object = {skipCurrent:false};
+	 ace.find("needle", options);
+ </pre>
 		 * @param needle: The string or regular expression you're looking for
 		 * @param backwards: Whether to search backwards from where cursor currently is. Defaults to false.
 		 * @param wrap: Whether to wrap the search back to the beginning when it hits the end. Defaults to false.
