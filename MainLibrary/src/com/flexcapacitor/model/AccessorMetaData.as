@@ -23,11 +23,14 @@ package com.flexcapacitor.model {
 		
 		
 		/**
-		 * Import metadata XML Style node into this instance
+		 * Import metadata XML property node into this instance
+		 * We may need to update the skin values
 		 * */
 		override public function unmarshall(item:XML, target:* = null, getValue:Boolean = true):void {
 			super.unmarshall(item, target, getValue);
+			
 			if (item==null) return;
+			
 			var metadata:XMLList = item.metadata;
 			var args:XMLList;
 			var keyName:String;
@@ -148,16 +151,41 @@ package com.flexcapacitor.model {
 			
 			}
 			
+			
 			if (access!="writeonly") {
-				value = target && name in target ? target[name] : undefined;
-				
-				textValue = value===undefined || value==null ? "": "" + value;
-				
-				if (!getValue) value = undefined;
+				updateValues(target, getValue);
 			}
 			
 			raw = item.toXMLString();
 			
+		}
+		
+		/**
+		 * @inheritDoc
+		 * */
+		override public function updateValues(target:Object, getValue:Boolean = true):void {
+			
+			if (getValue) {
+				if (access!="writeonly") {
+					value = target && name in target ? target[name] : undefined;
+					
+					textValue = value===undefined || value==null ? "": "" + value;
+				}
+			}
+			else {
+				value = undefined;
+			}
+			
+			return;
+			
+			// if skins change we may need to update the skin values
+			var xml:XML = new XML(raw);
+			if (xml.metadata.@dataname=="SkinPart") {
+				//if (keyName=="") {
+				//	if (skinPart==null) skinPart = [];
+				//	skinPart.push(keyValue);
+				//}
+			}
 		}
 			
 	}

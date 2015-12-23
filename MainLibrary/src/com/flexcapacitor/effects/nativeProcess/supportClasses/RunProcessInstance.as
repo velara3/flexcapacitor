@@ -85,6 +85,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			// update for bindings
 			action.errorData = null;
 			action.outputData = null;
+			action.errorMessage = "";
 			action.errorDataArray = [];
 			action.outputDataArray = [];
 			
@@ -121,6 +122,15 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			
 			// check if the NativeProcess class is found
 			if (!NativeProcess.isSupported) {
+				action.errorMessage = "Native Process is not supported. You may need to add extendedDesktop option to your application profile.";
+				
+				if (action.hasEventListener(RunProcess.ERROR)) {
+					dispatchActionEvent(new Event(RunProcess.ERROR));
+				}
+				
+				if (action.errorEffect) { 
+					playEffect(action.errorEffect);
+				}
 				
 				if (action.hasEventListener(RunProcess.NOT_SUPPORTED)) {
 					dispatchActionEvent(new Event(RunProcess.NOT_SUPPORTED));
@@ -141,22 +151,56 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			// if script is required check file path
 			if (action.executablePath) {
 				executableFile = File.applicationDirectory.resolvePath(action.executablePath);
-				nativeProcessStartupInfo.executable = executableFile;
+				
+				if (executableFile.exists && !executableFile.isDirectory) {
+					nativeProcessStartupInfo.executable = executableFile;
+				}
+				else {
+					if (executableFile.exists && executableFile.isDirectory) {
+						var message:String = "The path you are supplying resolves to " + executableFile.nativePath;
+						action.errorMessage = "The file executable path refers to a directory. Check that the path to the executable file is correct. " + message;
+					}
+					else {
+						action.errorMessage = "The file executable path refers to does not exist. Check the path is correct. You may need something like './mycommand'.";
+					}
+					isError = true;
+				}
 			}
 			else if (action.scriptOrigin) {
 				// used to run sh and scpt files
 				runScriptFile = File.applicationDirectory.resolvePath(action.scriptOrigin);
-				nativeProcessStartupInfo.executable = runScriptFile;
+				
+				if (runScriptFile.exists) {
+					nativeProcessStartupInfo.executable = runScriptFile;
+				}
+				else {
+					action.errorMessage = "The file scriptOrigin refers to does not exist. Check the path is correct. You may need something like './mycommand'.";
+					isError = true;
+				}
 			}
 			else if (action.commands) {
 				runScriptFile = File.applicationDirectory.resolvePath(action.scriptOrigin);
-				nativeProcessStartupInfo.executable = runScriptFile;
+				
+				if (runScriptFile.exists) {
+					nativeProcessStartupInfo.executable = runScriptFile;
+				}
+				else {
+					action.errorMessage = "The file scriptOrigin refers to does not exist. Check the path is correct. You may need something like './scriptorigin'.";
+					isError = true;
+				}
 			}
 			
 			// get working directory
 			if (action.workingDirectory) {
 				workingDirectory = File.applicationDirectory.resolvePath(action.workingDirectory);
-				nativeProcessStartupInfo.workingDirectory = workingDirectory;
+				
+				if (workingDirectory.exists) {
+					nativeProcessStartupInfo.workingDirectory = workingDirectory;
+				}
+				else {
+					action.errorMessage = "The file workingDirectory refers to does not exist. Check the path is correct. You may need something like './myworkingdirectory'.";
+					isError = true;
+				}
 			}
 			else {
 				nativeProcessStartupInfo.workingDirectory = File.applicationDirectory;
@@ -164,7 +208,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			
 			// get arguments
 			var processArguments:Array = action.arguments;
-			var length:int = processArguments ? processArguments.length : 0;
+			var numberOfArguments:int = processArguments ? processArguments.length : 0;
 			
 			// this is not returning a value
 			if (action.commands) {
@@ -173,7 +217,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 				processArgs.push( 'end tell' );
 			}
 			else {
-				for (var i:int;i<length;i++) {
+				for (var i:int;i<numberOfArguments;i++) {
 					processArgs[i] = processArguments[i];
 				}
 			}
@@ -183,11 +227,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			process = new NativeProcess();
 				
 			// add event listeners
-			process.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, onOutputData, false, 0, true);
-			process.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, onErrorData, false, 0, true);
-			process.addEventListener(IOErrorEvent.STANDARD_OUTPUT_IO_ERROR, onStandardOutputIOError, false, 0, true);
-			process.addEventListener(IOErrorEvent.STANDARD_ERROR_IO_ERROR, onStandardOutputIOError, false, 0, true);
-			process.addEventListener(NativeProcessExitEvent.EXIT, onExit, false, 0, true);
+			addEventListeners(process);
 			
 			action.process = process;
 			
@@ -197,12 +237,21 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			}
 			catch (error:Error) {
 				isError = true;
+				action.errorEvent = error;
 			}
 			
 			
 			// ArgumentError: Error #3214: NativeProcessStartupInfo.executable does not specify a valid executable file.
 			// "usr/bin/osascript" 
 			if (isError) {
+				if (action.hasEventListener(RunProcess.ERROR)) {
+					dispatchActionEvent(new Event(RunProcess.ERROR));
+				}
+				
+				if (action.errorEffect) { 
+					playEffect(action.errorEffect);
+				}
+				
 				if (action.hasEventListener(RunProcess.PROCESS_NOT_FOUND)) {
 					dispatchActionEvent(new Event(RunProcess.PROCESS_NOT_FOUND));
 				}
@@ -211,6 +260,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 					playEffect(action.processNotFoundEffect);
 				}
 				
+				removeEventListeners(process);
 			}
 			else {
 				
@@ -231,6 +281,23 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			///////////////////////////////////////////////////////////
 			finish();
 			
+		}
+		
+		public function addEventListeners(process:NativeProcess):void
+		{
+			process.addEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, onOutputData, false, 0, true);
+			process.addEventListener(ProgressEvent.STANDARD_ERROR_DATA, onErrorData, false, 0, true);
+			process.addEventListener(IOErrorEvent.STANDARD_OUTPUT_IO_ERROR, onStandardOutputIOError, false, 0, true);
+			process.addEventListener(IOErrorEvent.STANDARD_ERROR_IO_ERROR, onStandardOutputIOError, false, 0, true);
+			process.addEventListener(NativeProcessExitEvent.EXIT, onExit, false, 0, true);
+		}
+		public function removeEventListeners(process:NativeProcess):void
+		{
+			process.removeEventListener(ProgressEvent.STANDARD_OUTPUT_DATA, onOutputData, false);
+			process.removeEventListener(ProgressEvent.STANDARD_ERROR_DATA, onErrorData, false);
+			process.removeEventListener(IOErrorEvent.STANDARD_OUTPUT_IO_ERROR, onStandardOutputIOError, false);
+			process.removeEventListener(IOErrorEvent.STANDARD_ERROR_IO_ERROR, onStandardOutputIOError, false);
+			process.removeEventListener(NativeProcessExitEvent.EXIT, onExit, false);
 		}
 		
 		/**

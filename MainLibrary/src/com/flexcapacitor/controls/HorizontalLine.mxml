@@ -19,7 +19,7 @@
  * Usage: 
 <pre>
  &lt;s:HorizontalLine width="100%" strokeColor="#9a9a9a" alpha="1" height="1"/>
- &lt;s:HorizontalLine width="100%" strokeColor="#9a9a9a" shadowColor="#FFFFFF" alpha="1" angle="90"/>
+ &lt;s:HorizontalLine width="100%" strokeColor="#9a9a9a" shadowColor="#FFFFFF" alpha="1" shadowAngle="90"/>
 </pre>
 * */
 		]]>
@@ -31,7 +31,9 @@
 		<fx:Number id="strokeWeight">1</fx:Number>
 		<fx:String id="joints">miter</fx:String>
 		<fx:int id="miterLimit">4</fx:int>
-		<fx:int id="angle">0</fx:int>
+		<fx:int id="shadowAngle">90</fx:int>
+		<fx:int id="shadowAlpha">1</fx:int>
+		<fx:Boolean id="pixelHinting">true</fx:Boolean>
 	</fx:Declarations>
 	
 	<s:stroke>
@@ -39,11 +41,12 @@
 							color="{strokeColor}" 
 							joints="{joints}" 
 							miterLimit="{miterLimit}"
-							weight="{strokeWeight}"/>
+							weight="{strokeWeight}"
+							pixelHinting="{pixelHinting}"/>
 	</s:stroke>
 	<s:filters>
 		<s:DropShadowFilter alpha="1" 
-							angle="{angle}" 
+							angle="{shadowAngle}" 
 							blurX="0" blurY="0" 
 							color="{shadowColor}"
 							distance="1" 

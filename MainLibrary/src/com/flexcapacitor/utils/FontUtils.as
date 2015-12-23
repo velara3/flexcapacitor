@@ -8,7 +8,7 @@ package com.flexcapacitor.utils {
 	import mx.managers.ISystemManager;
 	
 	/**
-	 * Makes working with fonts easier.
+	 * Makes working with fonts easier. 
 	 * */
 	public class FontUtils {
 		
@@ -16,6 +16,7 @@ package com.flexcapacitor.utils {
 			
 		}
 		
+		public static var cachedFontList:Object;
 		public static var matchFontStyles:RegExp = /\sbold\sitalic|\sbold|\sitalic|\sregular/gi;
 		
 		/**
@@ -44,13 +45,13 @@ package com.flexcapacitor.utils {
 			var systemManager:ISystemManager = component ? component.systemManager : null;
 			var dictionary:Dictionary = new Dictionary(true);
 			var fontList:Array = Font.enumerateFonts(showDeviceFontInformation);
-			var length:int = fontList.length;
+			var numberOfFonts:int = fontList.length;
 			var output:String = "";
+			var filtered:Array = [];
 			var fontObject:Object;
 			var paddedName:String;
 			var name:String;
 			var font:Font;
-			var filtered:Array = [];
 			
 			
 			if (systemManager==null && FlexGlobals.topLevelApplication.systemManager) {
@@ -62,13 +63,15 @@ package com.flexcapacitor.utils {
 				return [];
 			}
 			
-			for (var i:int;i<length;i++) {
+			for (var i:int;i<numberOfFonts;i++) {
 				font = Font(fontList[i]);
 				name = font.fontName;
+				
 				if (dictionary[name]==1) {// there are duplicates
 					//fontList.pop();
 					continue;
 				}
+				
 				dictionary[name] = 1;
 				
 				filtered.push(font);
@@ -90,13 +93,13 @@ package com.flexcapacitor.utils {
 					else {
 						output+= "Embedded: ";
 					}
+					
 					output += fontObject.embedded.join(", ");
 				}
 				
 				output += "\n";
 				
 			}
-			
 			
 			return filtered;
 		}

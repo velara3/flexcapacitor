@@ -236,5 +236,50 @@ trace(person); // returns [person1, person1]; since we set "findAll" to true it 
 				}
 			}
 		}
+		
+		/**
+		 * Joins multiple arrays into a single new array.
+		 * 
+<pre>
+var array:Array = [1,2,3];
+var array2:Array = [4,5,6];
+
+var newArray:Array = ArrayUtils.join(array, array2, [7,8,9]); 
+</pre>
+		 * */
+		public static function join(...Arguments):Array {
+			var newArray:Array = [];
+			var numberOfArguments:int = Arguments.length;
+			
+			for (var i:int;i<numberOfArguments;i++) {
+				if (Arguments[i]) {
+					newArray = newArray.concat(Arguments[i]);
+				}
+			}
+			
+			return newArray;
+		}
+		
+		/**
+		 * Add additional arrays to first array and return a new array.
+		 * 
+<pre>
+var array:Array = [1,2,3];
+var array2:Array = [4,5,6];
+
+var newArray:Array = ArrayUtils.add([0], array, array2, [7,8,9]); 
+</pre>
+		 * */
+		public static function add(original:Array, ...Arguments):Array {
+			var numberOfArguments:int = Arguments ? Arguments.length : 0;
+			
+			for (var i:int;i<numberOfArguments;i++) {
+				if (Arguments[i]) {
+					original = original.concat(Arguments[i]);
+				}
+			}
+			
+			return original;
+		}
 	}
 }

@@ -54,7 +54,7 @@
             @see spark.skins.spark.ButtonBarFirstButtonSkin
         -->
         <fx:Component id="firstButton">
-            <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillButtonBarClasses.FirstButtonSkin" />
+            <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillSupportClasses.FirstButtonSkin" />
         </fx:Component>
 
         <!--- 
@@ -63,7 +63,7 @@
             @see spark.skins.spark.ButtonBarMiddleButtonSkin
         -->
         <fx:Component id="middleButton" >
-            <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillButtonBarClasses.MiddleButtonSkin" />
+            <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillSupportClasses.MiddleButtonSkin" />
         </fx:Component>
 
         <!--- 
@@ -72,7 +72,7 @@
             @see spark.skins.spark.ButtonBarLastButtonSkin
         -->
         <fx:Component id="lastButton" >
-            <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillButtonBarClasses.LastButtonSkin" />
+            <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillSupportClasses.LastButtonSkin" />
         </fx:Component>
 
     </fx:Declarations>

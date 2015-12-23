@@ -12,6 +12,7 @@ package com.flexcapacitor.effects.status.supportClasses {
 	import mx.core.ClassFactory;
 	import mx.core.FlexGlobals;
 	import mx.core.IFlexDisplayObject;
+	import mx.core.UIComponentGlobals;
 	import mx.managers.ISystemManager;
 	import mx.managers.PopUpManager;
 	import mx.utils.ObjectUtil;
@@ -169,6 +170,9 @@ package com.flexcapacitor.effects.status.supportClasses {
 			
 			PopUpManager.addPopUp(IFlexDisplayObject(messageBox), parent, action.modal);
 			PopUpManager.centerPopUp(IFlexDisplayObject(messageBox));
+			
+			// call center after a bit because of resize at startup
+			FlexGlobals.topLevelApplication.callLater(PopUpManager.centerPopUp, [IFlexDisplayObject(messageBox)]);
 			
 			IFlexDisplayObject(messageBox).y = parent.height*position - IFlexDisplayObject(messageBox).height/2;
 			

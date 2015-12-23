@@ -1,5 +1,9 @@
 
 package com.flexcapacitor.utils {
+	import com.flexcapacitor.model.ChartItemData;
+	import com.flexcapacitor.model.ChartItemData4;
+	import com.flexcapacitor.model.ChartItemData5;
+	import com.flexcapacitor.model.ChartItemData6;
 	
 	/**
 	 * A class for generating random data
@@ -9,7 +13,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Class type used in generating chart data
 		 * */
-		public var ChartItem:Class = Item;
+		public var ChartItem:Class = ChartItemData;
 		
 		/**
 		 * Letters used in generating random letter
@@ -90,9 +94,9 @@ package com.flexcapacitor.utils {
 		/**
 		 * Generates data for the data grid
 		 * */
-        public function generateDataGridData(count:int = 10):Array {
+        public function generateDataGridData(count:int = 10, rows:int = 6):Array {
             var newData:Array = [];
-			var X:int, Y:int, Z:int;
+			var X:int, Y:int, Z:int, A:int, B:int, C:int;
             var xMin:int = Math.random()*10000;
             var yMin:int = Math.random()*10000;
             var zMin:int = Math.random()*10000;
@@ -105,8 +109,22 @@ package com.flexcapacitor.utils {
 				X = Math.floor(Math.random() * (xMax - xMin + 1)) + xMin;
                 Y = Math.floor(Math.random() * (yMax - yMin + 1)) + yMin;
                 Z = Math.floor(Math.random() * (zMax - zMin + 1)) + zMin;
+				C = Math.floor(Math.random() * (xMax - xMin + 1)) + xMin;
+				B = Math.floor(Math.random() * (xMax - xMin + 1)) + xMin;
+				A = Math.floor(Math.random() * (xMax - xMin + 1)) + xMin;
 				
-                newData.push(new ChartItem(X,Y,Z));
+				if (rows>5) {
+	                newData.push(new ChartItemData6(X,Y,Z,A,B,C));
+				}
+				else if (rows>4) {
+	                newData.push(new ChartItemData5(X,Y,Z,A,B));
+				}
+				else if (rows>3) {
+					newData.push(new ChartItemData4(X,Y,Z,A));
+				}
+				else {
+	                newData.push(new ChartItem(X,Y,Z));
+				}
             }
 			
 			return newData;
@@ -126,22 +144,3 @@ package com.flexcapacitor.utils {
 }
 
 
-
-/**
- * Holds chart data
- * */
-internal class Item {
-	
-	public function Item(x:Number=0, y:Number=0, v:Number=0)
-	{
-		this.x = x;
-		this.y = y;
-		this.v = v;
-	}
-	
-	public var x:Number;
-	
-	public var y:Number;
-	
-	public var v:Number;
-}

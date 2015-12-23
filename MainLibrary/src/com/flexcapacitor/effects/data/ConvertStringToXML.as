@@ -13,12 +13,18 @@ package com.flexcapacitor.effects.data {
 	[Event(name="invalidValue", type="flash.events.Event")]
 	
 	/**
+	 * Event dispatched when XML is valid.
+	 * */
+	[Event(name="validValue", type="flash.events.Event")]
+	
+	/**
 	 * Converts an XML string to XML instance. 
 	 * Places the resulting XML instance into the data property.
 	 * */
 	public class ConvertStringToXML extends ActionEffect {
 		
 		public static const INVALID_VALUE:String = "invalidValue";
+		public static const VALID_VALUE:String = "validValue";
 		
 		/**
 		 *  Constructor.
@@ -62,6 +68,11 @@ package com.flexcapacitor.effects.data {
 		 * Effect that is played when the XML string cannot be converted into XML
 		 * */
 		public var invalidXMLEffect:IEffect;
+		
+		/**
+		 * Effect that is played when the XML string can be converted into XML
+		 * */
+		public var validXMLEffect:IEffect;
 		
 		/**
 		 * Returns the first child

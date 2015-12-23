@@ -61,26 +61,46 @@ package com.flexcapacitor.effects.file.supportClasses {
 			super.play();// Dispatch an effectStart event
 			
 			var action:LoadFile = LoadFile(effect);
-			var files:FileReferenceList = action.fileReferenceList;
-			var file:FileReference = action.fileReference;
-			var filesList:Array;
+			var fileReferenceList:FileReferenceList = action.fileReferenceList;
+			var fileReference:FileReference = action.fileReference;
+			var filesArray:Array = action.filesArray;
 
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
 			///////////////////////////////////////////////////////////
 			if (validate) {
-				if (file==null && files==null) {
-					dispatchErrorEvent("The file reference or file reference list is not set");
+				if (fileReference==null && fileReferenceList==null && filesArray==null) {
+					dispatchErrorEvent("The file reference, file reference list or filesArray is not set to any files");
 				}
 				
-				if (file) {
+				if (fileReference) {
 					// in some cases the file was never selected so we have a file object with no file selected
+					// in other words the user was shown a list of files and selected one but then clicked 
+					// cancel on the browse for file dialog window
+					// we should handle this better but it could also be handled in the browse for file effect
+					// by using the file was selected event or effect
 					try {
-						var test:String = file.name;
+						var test:String = fileReference.name;
 					}
 					catch(test:Error) {
-						dispatchErrorEvent("A valid file was never selected");
+						//dispatchErrorEvent("A valid file was never selected");
+						// trace("Failed:", error.message);
+						// traceMessage("BrowseForFile:" + error.message);
+						
+						action.error = test;
+						
+						// dispatch events and run effects
+						if (action.hasEventListener(LoadFile.ERROR)) {
+							dispatchActionEvent(new Event(LoadFile.ERROR));
+						}
+						
+						if (action.errorEffect) {
+							playEffect(action.errorEffect);
+						}
+						
+						finish();
+						return;
 					}
 					
 				}
@@ -97,18 +117,19 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			// remove previous variables
-			action.currentLoaderInfo = null;
-			action.currentFile = null;
+			action.removeReferences(false);
 			
 			// load in files
-			if (file) {
+			if (fileReference) {
 				
 				try {
-					addFileListeners(file);
-					file.load();
+					addFileListeners(fileReference);
+					
+					action.numOfFiles = 1;
+					fileReference.load();
 				}
 				catch (error:Error) {
-					removeFileListeners(file);
+					removeFileListeners(fileReference);
 				   // trace("Failed:", error.message);
 				   // traceMessage("BrowseForFile:" + error.message);
 					
@@ -127,13 +148,17 @@ package com.flexcapacitor.effects.file.supportClasses {
 					return;
 				}
 			}
-			else if (files) {
-				//addFileListeners(files);
-				filesList = files.fileList;
+			else if (fileReferenceList || (filesArray && filesArray.length>0)) {
+
+				if (fileReferenceList) {
+					filesArray = fileReferenceList.fileList;
+				}
 				
-				for each (file in filesList) {
-					addFileListeners(file);
-					file.load();
+				action.numOfFiles = filesArray ? filesArray.length : 0;
+				
+				for each (fileReference in filesArray) {
+					addFileListeners(fileReference);
+					fileReference.load();
 				}
 			}
 			
@@ -163,47 +188,54 @@ package com.flexcapacitor.effects.file.supportClasses {
 		private function completeHandler(event:Event):void {
 			var action:LoadFile = LoadFile(effect);
 			var loadBytesWithLoader:Boolean = action.loadIntoLoader;
-			var files:FileReferenceList;
-			var file:FileReference;
+			var fileReferenceList:FileReferenceList;
+			var fileReference:FileReference;
 			var loader:Loader;
 			
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action
 			///////////////////////////////////////////////////////////
-			file = event.target as FileReference;
-			files = event.target as FileReferenceList;
-			action.removeReferences();
+			fileReference = event.target as FileReference;
+			fileReferenceList = event.target as FileReferenceList;
 			
-			if (file) {
-				removeFileListeners(file);
-				action.fileReference = file;
-				action.currentFile = file;
-				action.data = file.data;
-				action.type = file.type;
-				action.dataAsString = file.data.readUTFBytes(file.data.length);
+			action.totalFilesProcessed++;
+			
+			if (fileReference) {
 				
-				if (loadBytesWithLoader) {
-					loader = new Loader();
-					addLoaderListeners(loader.contentLoaderInfo);
-					//loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderComplete, false, 0, true);
-					loader.loadBytes(file.data);
-				}
 			}
-			else if (files) {
+			else if (fileReferenceList) {
+				/*
 				// not sure if multi file support is correct here
-				removeFileListeners(file);
-				action.fileReferenceList = files;
+				removeFileListeners(fileReference);
+				
+				if (action.currentFileReferenceList != fileReferenceList) {
+					action.currentFileReferenceList = fileReferenceList;
+				}
+				
+				action.data = fileReference.data;
+				action.type = fileReference.type;
+				action.dataAsString = fileReference.data.readUTFBytes(fileReference.data.length);
 				
 				if (loadBytesWithLoader) {
 					loader = new Loader();
 					addLoaderListeners(loader.contentLoaderInfo);
 					//loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderComplete, false, 0, true);
-					loader.loadBytes(file.data);
+					loader.loadBytes(fileReference.data);
 				}
+				*/
 			}
 			
-			action.data = file.data;
+			removeFileListeners(fileReference);
+			updateCurrentFile(fileReference);
+			
+			if (loadBytesWithLoader) {
+				loader = new Loader();
+				action.filesDictionary[loader] = fileReference;
+				addLoaderListeners(loader.contentLoaderInfo);
+				//loader.contentLoaderInfo.addEventListener(Event.COMPLETE, loaderComplete, false, 0, true);
+				loader.loadBytes(fileReference.data);
+			}
 			
 			if (action.hasEventListener(LoadFile.COMPLETE)) {
 				dispatchActionEvent(event);
@@ -225,9 +257,27 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// Finish the effect
 			///////////////////////////////////////////////////////////
 			if (!loadBytesWithLoader) {
-				finish();
+				//finish();
 			}
 			
+			
+			if (action.numOfFiles==action.totalFilesProcessed) {
+				if (action.removeReferencesOnComplete && !action.loadIntoLoader) {
+					action.removeReferences();
+				}
+				
+				
+				if (action.hasEventListener(LoadFile.TOTAL_COMPLETE)) {
+					dispatchActionEvent(new Event(LoadFile.TOTAL_COMPLETE));
+				}
+				
+				if (action.totalCompleteEffect) {
+					playEffect(action.totalCompleteEffect);
+				}
+				
+				
+				finish();
+			}
 			
 		}
 		
@@ -236,11 +286,13 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * */
 		private function ioErrorHandler(event:Event):void {
 			var action:LoadFile = LoadFile(effect);
-			var file:FileReference = FileReference(event.target);
+			var fileReference:FileReference = FileReference(event.target);
+			var loadBytesWithLoader:Boolean = action.loadIntoLoader;
 			
-			action.currentFile = file;
+			updateCurrentFile(fileReference);
+			action.totalFilesProcessed++;
 			
-			removeFileListeners(file);
+			removeFileListeners(fileReference);
 			
 			if (action.hasEventListener(LoadFile.IO_ERROR)) {
 				dispatchActionEvent(event);
@@ -250,11 +302,25 @@ package com.flexcapacitor.effects.file.supportClasses {
 				playEffect(action.ioErrorEffect);
 			}
 			
-			
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			finish();
+			
+			// remove references if done loading
+			if (action.numOfFiles==action.totalFilesProcessed) {
+				
+				// we are not done yet if we need to load into loader
+				if (action.removeReferencesOnComplete && !action.loadIntoLoader) {
+					action.removeReferences();
+				}
+				
+				finish();
+			}
+			
+			
+			if (!loadBytesWithLoader) {
+				
+			}
 		}
 		
 		/**
@@ -262,9 +328,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * */
 		private function openHandler(event:Event):void {
 			var action:LoadFile = LoadFile(effect);
-			var file:FileReference = FileReference(event.target);
+			var fileReference:FileReference = FileReference(event.target);
 			
-			action.currentFile = file;
+			updateCurrentFile(fileReference);
 			
 			if (action.hasEventListener(Event.OPEN)) {
 				dispatchActionEvent(event);
@@ -281,9 +347,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * */
 		private function progressHandler(event:ProgressEvent):void {
 			var action:LoadFile = LoadFile(effect);
-			var file:FileReference = FileReference(event.target);
+			var fileReference:FileReference = FileReference(event.target);
 			
-			action.currentFile = file;
+			updateCurrentFile(fileReference);
 			action.currentProgressEvent = event; 
 			
 			if (action.hasEventListener(LoadFile.PROGRESS)) {
@@ -309,7 +375,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var action:LoadFile = LoadFile(effect);
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
+			action.totalLoadersProcessed++;
 			
 			removeLoaderListeners(loaderInfo);
 			
@@ -325,7 +393,14 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			finish();
+			
+			if (action.numOfFiles==action.totalLoadersProcessed) {
+				if (action.removeReferencesOnComplete) {
+					action.removeReferences();
+				}
+				
+				finish();
+			}
 			
 		}
 		
@@ -342,7 +417,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			// Continue with action
 			///////////////////////////////////////////////////////////
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
+			action.totalLoadersProcessed++;
 			
 			removeLoaderListeners(loaderInfo);
 			
@@ -369,7 +446,23 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			finish();
+			
+			if (action.numOfFiles==action.totalLoadersProcessed) {
+				if (action.removeReferencesOnComplete) {
+					action.removeReferences();
+				}
+				
+				if (action.hasEventListener(LoadFile.LOADER_TOTAL_COMPLETE)) {
+					var allCompleteEvent:Event = new Event(LoadFile.LOADER_TOTAL_COMPLETE);
+					dispatchActionEvent(allCompleteEvent);
+				}
+				
+				if (action.loaderTotalCompleteEffect) {
+					playEffect(action.loaderTotalCompleteEffect);
+				}
+				
+				finish();
+			}
 		}
 		
 		/**
@@ -379,8 +472,8 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var action:LoadFile = LoadFile(effect);
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
-			
 			
 			if (action.hasEventListener(LoadFile.INIT)) {
 				dispatchActionEvent(event);
@@ -400,7 +493,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			var ioErrorEvent:IOErrorEvent;
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
+			action.totalLoadersProcessed++;
 			
 			removeLoaderListeners(loaderInfo);
 			
@@ -418,7 +513,13 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			finish();
+			if (action.numOfFiles==action.totalLoadersProcessed) {
+				if (action.removeReferencesOnComplete) {
+					action.removeReferences();
+				}
+				
+				finish();
+			}
 		}
 		
 		/**
@@ -429,6 +530,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			var openEvent:Event;
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
 			
 			
@@ -452,6 +554,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			var progressEvent:Event;
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
 			
 			
@@ -475,6 +578,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var action:LoadFile = LoadFile(effect);
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
 			
 			removeLoaderListeners(loaderInfo);
@@ -491,8 +595,14 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			// Finish the effect
 			///////////////////////////////////////////////////////////
-			finish();
 			
+			if (action.numOfFiles==action.totalLoadersProcessed) {
+				if (action.removeReferencesOnComplete) {
+					action.removeReferences();
+				}
+				
+				finish();
+			}
 		}
 		
 		/**
@@ -502,6 +612,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var action:LoadFile = LoadFile(effect);
 			var loaderInfo:LoaderInfo = LoaderInfo(event.currentTarget);
 			
+			updateCurrentFile(getFileFromLoader(loaderInfo.loader));
 			action.currentLoaderInfo = loaderInfo;
 			
 			removeLoaderListeners(loaderInfo);
@@ -574,5 +685,35 @@ package com.flexcapacitor.effects.file.supportClasses {
 			loader.removeEventListener(Event.UNLOAD,		 				loaderUnloadHandler);
 		}
 		
+		/**
+		 * Get file reference from loader
+		 * */
+		public function getFileFromLoader(loader:Loader):FileReference {
+			var action:LoadFile = LoadFile(effect);
+			return action.filesDictionary[loader];
+		}
+		
+		/**
+		 * Updates the current file property in the action class
+		 * */
+		public function updateCurrentFile(fileReference:FileReference):void {
+			var action:LoadFile = LoadFile(effect);
+			action.currentFileReference = fileReference;
+			action.data = fileReference.data;
+			action.type = fileReference.type;
+			
+			// prevent converting the whole byte array into string each time
+			// we update the current file
+			if (!action.fileStringDictionary[fileReference] && fileReference.data) {
+				if (fileReference.data!=null) {
+					action.fileStringDictionary[fileReference] = fileReference.data.readUTFBytes(fileReference.data.length);
+				}
+				else {
+					action.fileStringDictionary[fileReference] = null;
+				}
+			}
+			
+			action.dataAsString = action.fileStringDictionary[fileReference];
+		}
 	}
 }

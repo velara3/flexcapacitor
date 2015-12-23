@@ -7,11 +7,137 @@ package com.flexcapacitor.services {
 	import flash.net.URLVariables;
 	
 	/**
-	 * An adapter class and service to get and save data to WordPress. <br/><br/>
+	 * An adapter class and service to get and save data to WordPress. You need to add the updates below. Read in full. <br/><br/>
 	 * 
-	 * This class works with the JSON API for WordPress. <br/><br/>
+	 * This class works with the JSON API for WordPress here, https://wordpress.org/plugins/json-api/. <br/><br/>
 	 * 
-	 * Notes:<br/><br/>
+	 * How to update or create a new post: 
+	 * 
+<pre>
+var wpSaveService:WPService = new WPService();
+wpSaveService.host = "http://www.example.com/blog";
+wpSaveService.addEventListener(WPServiceBase.RESULT, saveResultsHandler, false, 0, true);
+wpSaveService.addEventListener(WPServiceBase.FAULT, saveFaultHandler, false, 0, true);
+
+var object:URLVariables = new URLVariables();
+
+// (optional) all fields are optional. if they are included they are updated 
+object.title = "My Day at the Beach";
+object.content = "Today started like any other day...";
+object.categories = "document";
+object.status = WPService.STATUS_PUBLISH;
+
+// (optional) adding metadata in the custom fields 
+object["custom[myCustomField]"] = "1234";
+object["custom[myOtherCustomField]"] = "some value";
+
+// if you don't supply an ID a new document 
+// is created on the server for the user that is logged in
+// otherwise the document with the matching id is updated
+if (id) {
+   object.id = id;
+}
+
+wpSaveService.save(object); 
+
+
+// Results from save
+public function saveResultsHandler(event:IWPServiceEvent):void {
+	var data:Object = event.data;
+	var post:Object;
+	var saveSuccessful:Boolean;
+	
+	var call:String = event.call;
+	var data:Object  = event.data;
+	var message:String = event.message;
+	var text:String = event.text;
+	
+	if (data && data.post) {
+		post = data.post;
+		var postID:int = post.id;
+		
+		saveSuccessful = true;
+		//trace("Document saved: "+ name);
+	}
+	else {
+		saveSuccessful = false;
+		//trace("Document not saved: "+ message);
+	}
+	
+}
+
+// Result from save fault
+public function saveFaultHandler(event:IServiceEvent):void {
+	trace("Error when trying to save document.");
+}
+</pre>
+	 * 
+	 * How to delete a post: 
+<pre>
+var wpDeleteService:WPService = new WPService();
+wpDeleteService.host = "http://www.example.com/blog";
+wpDeleteService.addEventListener(WPServiceBase.RESULT, saveResultsHandler, false, 0, true);
+wpDeleteService.addEventListener(WPServiceBase.FAULT, saveFaultHandler, false, 0, true);
+
+// deletes post 100
+wpDeleteService.id = 100;
+wpDeleteService.delete();
+</pre>
+	 * How to login: 
+<pre>
+public var loginService:WPService;
+public function login(username:String, password:String):void {
+	
+	// we need to create service
+	if (loginService==null) {
+		loginService = new WPService();
+		loginService.addEventListener(WPService.RESULT, loginResultsHandler, false, 0, true);
+		loginService.addEventListener(WPService.FAULT, loginFaultHandler, false, 0, true);
+	}
+	
+	loginService.host = "http://www.example.com/blog";
+	
+	loginService.loginUser(username, password);
+	
+}
+</pre>
+	 * 
+	 * You can test the URL in the browser by going to HOST + "?json=" + CALL_PATH. <br/>
+	 * You can check the services.url property after you make the call. For example, 
+	 * services.logout(); trace(services.url); // full path to call. 
+	 * When you check the url it will be something like, "https://www.example.com/" + "?json=" + "user/logout".
+	 * All the controller paths are properties on this class. For example, 
+<pre>
+var service:WPService = new WPService();
+trace(service.loginUserURL); // traces "user/login";
+</pre>
+ * 
+	 * When you set the service.url property it concatenates the service.host and 
+	 * call method. So if the service.host is "http://www.example.com/blog" and you set
+	 * the service.url to service.loginUserURL, the service.url property will be something like: 
+<pre>
+https://www.example.com/?json=user/logout
+</pre>
+ * 
+If usePermalinks is set to true then the URL will be something like: <br/>
+<pre>
+https://www.example.com/api/user/logout
+</pre>
+	 * 
+	 * To test this you use the sendURL() method: <br/>
+	 * 
+<pre>
+var testService:WPService = new WPService();
+testService.addEventListener(WPService.RESULT, loginResultsHandler, false, 0, true);
+testService.addEventListener(WPService.FAULT, loginFaultHandler, false, 0, true);
+
+var url:String = "http://www.example.com/blog/?json=user/login";
+var data:Object = {log:"user",pwd:"1234"};
+
+testService.sendURL(url, "POST", data);
+	
+}
+</pre>
 	 * 
 	 * Be sure WordPress auto formatting is off - this automatically adds Paragraph tags around your content. This is called wpautop. <br/>
 	 * Also be sure fancy quotes is off - it automatically adds curly quotes when it encounters them in your content.<br/>
@@ -25,14 +151,14 @@ package com.flexcapacitor.services {
 	 * logged in with Editor or Author permissions
 	 * and check if the Posts option is enabled in the JSON-API settings page. <br/><br/>
 	 * 
-	 * Updates to JSON-API<br/><br/>
+	 * There are updates to JSON-API here, https://github.com/monkeypunch3/JSON-API-Plus<br/><br/>
 	 * 
-	 * Add these to the controllers folder: <br/>
+	 * Add the files in the repository to the controllers folder: <br/>
 	 * controllers/attachments.php<br/>
 	 * controllers/user.php<br/>
 	 * controllers/projects.php<br/><br/>
 	 * 
-	 * And in models/post.php after this code:<br/><br/>
+	 * And in the preexisting models/post.php page find this code:<br/><br/>
 	 * 
 <pre>
 if (isset($wp_values['ID'])) {
@@ -41,7 +167,7 @@ if (isset($wp_values['ID'])) {
 	$this->id = wp_insert_post($wp_values);
 }
 </pre>
-add:
+and add this after it:
  
 <pre>
 // add custom fields  
@@ -71,6 +197,7 @@ if ( !empty($values["custom"]) ) {
 		 * */
 		public static const RESULT:String = "result";
 		public static const FAULT:String = "fault";
+		public static const STATUS_NONE:String = "none"; // basically it's null or not set
 		public static const STATUS_ALL:String = "all";
 		public static const STATUS_ANY:String = "any";
 		public static const STATUS_PUBLISH:String = "publish";
@@ -78,6 +205,7 @@ if ( !empty($values["custom"]) ) {
 		public static const STATUS_TRASH:String = "trash";
 
 		public var getAPIInfoURL:String = "core/info";
+		public var getBlogInfoURL:String = "user/blog_info";
 		
 		/**
 		 * Attachments URL
@@ -89,6 +217,8 @@ if ( !empty($values["custom"]) ) {
 		 * Delete attachment URL
 		 * */
 		public var deleteAttachmentURL:String = "attachments/delete_attachment";
+		
+		public var getPageURL:String = "core/get_page";
 		
 		public var getPostURL:String = "core/get_post";
 		
@@ -121,6 +251,10 @@ if ( !empty($values["custom"]) ) {
 		public var isMainsiteURL:String = "user/is_mainsite";
 		
 		public var getCurrentSiteURL:String = "user/get_current_site";
+		
+		public var setProjectHomePageURL:String = "projects/set_project_home_page";
+		
+		public var getProjectHomePageURL:String = "projects/get_project_home_page";			
 		
 		public var getProjectsURL:String = "projects/get_projects";
 		
@@ -202,51 +336,6 @@ if ( !empty($values["custom"]) ) {
 			request.method = URLRequestMethod.POST;
 			request.data = parameters;
 			request.url = url;
-			load(request);
-		}
-		
-		/**
-		 * Get create token
-		 * */
-		public function getCreateToken():void {
-			//trace("Get creation token");
-			url = createTokenURL;
-			call = WPServiceEvent.GET_CREATE_POST_TOKEN;
-			request.method = URLRequestMethod.GET;
-			request.data = null;
-			load(request);
-		}
-	
-		/**
-		 * Get update token
-		 * */
-		public function getUpdateToken():void {
-			url = updateTokenURL;
-			call = WPServiceEvent.GET_UPDATE_POST_TOKEN;
-			request.method = URLRequestMethod.GET;
-			request.data = null;
-			load(request);
-		}
-	
-		/**
-		 * Get upload token (same url as update token)
-		 * */
-		public function getUploadToken():void {
-			url = uploadTokenURL;
-			call = WPServiceEvent.GET_UPLOAD_POST_TOKEN;
-			request.method = URLRequestMethod.GET;
-			request.data = null;
-			load(request);
-		}
-		
-		/**
-		 * Get delete token
-		 * */
-		public function getDeleteToken():void {
-			url = deleteTokenURL;
-			call = WPServiceEvent.GET_DELETE_POST_TOKEN;
-			request.method = URLRequestMethod.GET;
-			request.data = null;
 			load(request);
 		}
 		
@@ -346,10 +435,26 @@ if ( !empty($values["custom"]) ) {
 		}
 		
 		/**
+		 * Get page by ID
+		 * */
+		public function getPageById(id:String, count:int = 10):void {
+			url = getPageURL + "&id=" + id;
+			call = WPServiceEvent.GET_PAGE;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
 		 * Get post by ID
 		 * */
-		public function open(id:String):void {
-			getPostById(id);
+		public function open(id:String, isPage:Boolean = false):void {
+			if (isPage) {
+				getPageById(id);
+			}
+			else {
+				getPostById(id);
+			}
 		}
 		
 		/**
@@ -471,6 +576,42 @@ if ( !empty($values["custom"]) ) {
 			var category:String = "project";
 			url = getProjectByIdURL + "&id=" + id + "&count=" + count + "&category=" + category + "&status=" + publishStatus + "&subPosts=" + includeSubPosts;
 			call = WPServiceEvent.GET_PROJECT_BY_ID;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Set project home page by post id
+		 * */
+		public function setProjectHomePage(id:int):void {
+			var category:String = "project";
+			url = setProjectHomePageURL + "&id=" + id;
+			call = WPServiceEvent.SET_PROJECT_HOME_PAGE;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Set project home page by post id
+		 * */
+		public function clearProjectHomePage():void {
+			var category:String = "project";
+			url = setProjectHomePageURL + "&id=0";
+			call = WPServiceEvent.SET_PROJECT_HOME_PAGE;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get project home page id
+		 * */
+		public function getProjectHomePage():void {
+			var category:String = "project";
+			url = getProjectHomePageURL + "&id=" + id;
+			call = WPServiceEvent.GET_PROJECT_HOME_PAGE;
 			request.method = URLRequestMethod.GET;
 			request.data = null;
 			load(request);
@@ -648,5 +789,67 @@ if ( !empty($values["custom"]) ) {
 			load(request);
 		}
 		
+		/**
+		 * Get blog info
+		 * */
+		public function getBlogInfo():void {
+			url = getBlogInfoURL;
+			call = WPServiceEvent.GET_BLOG_INFO;
+			request.data = null;
+			request.method = URLRequestMethod.GET;
+			load(request);
+		}
+		
+		/****************************************
+		 * 
+		 * TOKEN METHODS
+		 * 
+		 * *************************************/
+		
+		
+		/**
+		 * Get create token
+		 * */
+		public function getCreateToken():void {
+			//trace("Get creation token");
+			url = createTokenURL;
+			call = WPServiceEvent.GET_CREATE_POST_TOKEN;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get update token
+		 * */
+		public function getUpdateToken():void {
+			url = updateTokenURL;
+			call = WPServiceEvent.GET_UPDATE_POST_TOKEN;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get upload token (same url as update token)
+		 * */
+		public function getUploadToken():void {
+			url = uploadTokenURL;
+			call = WPServiceEvent.GET_UPLOAD_POST_TOKEN;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Get delete token
+		 * */
+		public function getDeleteToken():void {
+			url = deleteTokenURL;
+			call = WPServiceEvent.GET_DELETE_POST_TOKEN;
+			request.method = URLRequestMethod.GET;
+			request.data = null;
+			load(request);
+		}
 	}
 }

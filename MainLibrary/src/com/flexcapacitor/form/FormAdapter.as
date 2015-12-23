@@ -247,8 +247,10 @@ package com.flexcapacitor.form {
 		
 		/**
 		 * Current object that will be updated when update method is called
-		 * and object that is used to set the values of the form elements 
+		 * and object that is used to set the values of the form elements.
+		 * Bindable is not working for some reason. 
 		 * */
+		[Bindable]
 		public function set data(value:Object):void {
 			_data = value;
 		}

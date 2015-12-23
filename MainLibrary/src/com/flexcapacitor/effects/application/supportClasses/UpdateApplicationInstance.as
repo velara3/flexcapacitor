@@ -210,29 +210,6 @@ package com.flexcapacitor.effects.application.supportClasses {
 		//
 		//--------------------------------------------------------------------------
 		
-		/**
-		 * Add event listeners to the update framework instance
-		 * */
-		public function addEventListeners(updater:IEventDispatcher):void {
-			var isWeakReference:Boolean = false;
-			updater.addEventListener(UpdateEvent.BEFORE_INSTALL, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(UpdateEvent.CHECK_FOR_UPDATE, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(UpdateEvent.DOWNLOAD_COMPLETE, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(UpdateEvent.DOWNLOAD_START, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(UpdateEvent.INITIALIZED, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(StatusUpdateEvent.UPDATE_STATUS, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(StatusUpdateErrorEvent.UPDATE_ERROR, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(DownloadErrorEvent.DOWNLOAD_ERROR, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(StatusFileUpdateEvent.FILE_UPDATE_STATUS, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(StatusFileUpdateErrorEvent.FILE_UPDATE_ERROR, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(ProgressEvent.PROGRESS, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(ErrorEvent.ERROR, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(UpdateApplication.INITIALIZE, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(EVENT_CHECK_FILE, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(EVENT_CHECK_URL, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(EVENT_INITIALIZE, eventListener, false, 0, isWeakReference);
-			updater.addEventListener(ENTER, eventListener, false, 0, isWeakReference);
-		}
 		
 		/**
 		 * Handles events from the update framework instance
@@ -350,12 +327,18 @@ package com.flexcapacitor.effects.application.supportClasses {
 				case StatusUpdateErrorEvent.UPDATE_ERROR: {
 					var statusError:StatusUpdateErrorEvent = event as StatusUpdateErrorEvent;
 					
-					action.errorEvent = statusError;
-					action.errorID = statusError.errorID;
-					action.errorText = statusError.text;
+					action.errorEvent 	= statusError;
+					action.errorID 		= statusError.errorID;
+					action.errorText 	= statusError.text;
 			
 					if (action.hasEventListener(eventName)) {
 						dispatchActionEvent(event as Event);
+					}
+					
+					if (action.hasEventListener(ErrorEvent.ERROR)) {
+						// this was causing an error to display and was not caught by uncaughtExceptionHandler
+						// dispatchActionEvent(event as Event); 
+						dispatchActionEvent(new Event(ErrorEvent.ERROR));
 					}
 					
 					if (action.errorEffect) {
@@ -370,12 +353,16 @@ package com.flexcapacitor.effects.application.supportClasses {
 				case StatusFileUpdateErrorEvent.FILE_UPDATE_ERROR: {
 					var statusFileError:StatusFileUpdateErrorEvent = event as StatusFileUpdateErrorEvent;
 					
-					action.errorEvent = statusFileError;
-					action.errorID = statusFileError.errorID;
-					action.errorText = statusFileError.text;
+					action.errorEvent 	= statusFileError;
+					action.errorID 		= statusFileError.errorID;
+					action.errorText 	= statusFileError.text;
 			
 					if (action.hasEventListener(eventName)) {
 						dispatchActionEvent(event as Event);
+					}
+					
+					if (action.hasEventListener(ErrorEvent.ERROR)) {
+						dispatchActionEvent(new Event(ErrorEvent.ERROR));
 					}
 					
 					if (action.errorEffect) {
@@ -390,12 +377,16 @@ package com.flexcapacitor.effects.application.supportClasses {
 				case DownloadErrorEvent.DOWNLOAD_ERROR: {
 					var downloadErrorEvent:DownloadErrorEvent = event as DownloadErrorEvent;
 					
-					action.errorEvent = downloadErrorEvent;
-					action.errorID = downloadErrorEvent.errorID;
-					action.errorText = downloadErrorEvent.text;
+					action.errorEvent 	= downloadErrorEvent;
+					action.errorID 		= downloadErrorEvent.errorID;
+					action.errorText 	= downloadErrorEvent.text;
 
 					if (action.hasEventListener(eventName)) {
 						dispatchActionEvent(event as Event);
+					}
+					
+					if (action.hasEventListener(ErrorEvent.ERROR)) {
+						dispatchActionEvent(new Event(ErrorEvent.ERROR));
 					}
 					
 					if (action.errorEffect) {
@@ -411,9 +402,9 @@ package com.flexcapacitor.effects.application.supportClasses {
 				case ErrorEvent.ERROR: {
 					var errorEvent:ErrorEvent = event as ErrorEvent;
 					
-					action.errorEvent = errorEvent;
-					action.errorID = errorEvent.errorID;
-					action.errorText = errorEvent.text;
+					action.errorEvent 	= errorEvent;
+					action.errorID		= errorEvent.errorID;
+					action.errorText 	= errorEvent.text;
 					
 					if (action.hasEventListener(eventName)) {
 						dispatchActionEvent(event as Event);
@@ -448,6 +439,30 @@ package com.flexcapacitor.effects.application.supportClasses {
 		}
 		
 		/**
+		 * Add event listeners to the update framework instance
+		 * */
+		public function addEventListeners(updater:IEventDispatcher):void {
+			var isWeakReference:Boolean = false;
+			updater.addEventListener(UpdateEvent.BEFORE_INSTALL, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(UpdateEvent.CHECK_FOR_UPDATE, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(UpdateEvent.DOWNLOAD_COMPLETE, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(UpdateEvent.DOWNLOAD_START, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(UpdateEvent.INITIALIZED, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(StatusUpdateEvent.UPDATE_STATUS, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(StatusUpdateErrorEvent.UPDATE_ERROR, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(DownloadErrorEvent.DOWNLOAD_ERROR, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(StatusFileUpdateEvent.FILE_UPDATE_STATUS, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(StatusFileUpdateErrorEvent.FILE_UPDATE_ERROR, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(ProgressEvent.PROGRESS, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(ErrorEvent.ERROR, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(UpdateApplication.INITIALIZE, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(EVENT_CHECK_FILE, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(EVENT_CHECK_URL, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(EVENT_INITIALIZE, eventListener, false, 0, isWeakReference);
+			updater.addEventListener(ENTER, eventListener, false, 0, isWeakReference);
+		}
+		
+		/**
 		 * Remove event listeners from update framework instance
 		 * */
 		public function removeEventListeners(updater:IEventDispatcher):void {
@@ -463,8 +478,11 @@ package com.flexcapacitor.effects.application.supportClasses {
 			updater.removeEventListener(DownloadErrorEvent.DOWNLOAD_ERROR, eventListener);
 			updater.removeEventListener(ProgressEvent.PROGRESS, eventListener);
 			updater.removeEventListener(ErrorEvent.ERROR, eventListener);
+			updater.removeEventListener(UpdateApplication.INITIALIZE, eventListener);
+			updater.removeEventListener(EVENT_CHECK_FILE, eventListener);
+			updater.removeEventListener(EVENT_CHECK_URL, eventListener);
+			updater.removeEventListener(EVENT_INITIALIZE, eventListener);
+			updater.removeEventListener(ENTER, eventListener);
 		}
-		
-		
 	}
 }

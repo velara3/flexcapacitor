@@ -1,13 +1,12 @@
 package com.flexcapacitor.utils {
 	
 	import flash.debugger.enterDebugger;
-	import flash.display.Bitmap;
 	import flash.display.BitmapData;
 	import flash.display.BlendMode;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
+	import flash.display.InteractiveObject;
 	import flash.display.JointStyle;
-	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
@@ -17,7 +16,6 @@ package com.flexcapacitor.utils {
 	import flash.events.MouseEvent;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
-	import flash.geom.Rectangle;
 	import flash.system.ApplicationDomain;
 	import flash.text.Font;
 	import flash.text.TextFormat;
@@ -73,6 +71,9 @@ package com.flexcapacitor.utils {
 	import spark.components.TextInput;
 	import spark.components.VGroup;
 	import spark.components.WindowedApplication;
+	import spark.core.IGraphicElement;
+	import spark.core.SpriteVisualElement;
+	import spark.primitives.BitmapImage;
 	import spark.primitives.Rect;
 	import spark.skins.spark.TextInputSkin;
 	
@@ -80,6 +81,11 @@ package com.flexcapacitor.utils {
 	 * Dispatched when pressing the ALT key. Use to get the target under the mouse or the lastComponentItem.
 	 * */
 	[Event(name="click", type="flash.events.MouseEvent")]
+	
+	/**
+	 * Dispatched when selecting an object with the mouse. Check relatableObject. If null check target property.
+	 * */
+	[Event(name="change", type="flash.events.MouseEvent")]
 	
 	/**
 	 * This class allows you to display information about the visual element you click on 
@@ -922,6 +928,13 @@ package com.flexcapacitor.utils {
 			
 			target = selectedTarget;
 			
+			if (hasEventListener("change")) {
+				var changeEvent:MouseEvent = new MouseEvent("change");
+				// if null check the target property
+				changeEvent.relatedObject = target as InteractiveObject;
+				dispatchEvent(changeEvent);
+			}
+			
 			// show target information
 			if (showDisplayObjectInformation) {
 				if (event.shiftKey) {
@@ -966,7 +979,7 @@ package com.flexcapacitor.utils {
 				//if (message!="") message += "\n";
 				//message += postDisplayObject(selectedTarget as DisplayObject);
 				addMouseHandler(false);
-				postDisplayObject(selectedTarget as DisplayObject);
+				postDisplayObject(selectedTarget);
 			}
 			
 			logger.log(LogEventLevel.INFO, message);
@@ -1408,11 +1421,11 @@ package com.flexcapacitor.utils {
 		/**
 		 * Get commponent item from current target
 		 * */
-		public function getComponentItem(target:DisplayObject):ComponentItem {
+		public function getComponentItem(target:Object):ComponentItem {
 			if (target==null) return null;
 			var rootComponent:ComponentItem = document ? createComponentTreeFromElement(document) : createComponentTreeFromElement(FlexGlobals.topLevelApplication);
 			var rootSystemManagerTree:ComponentItem = createComponentTreeFromElement(FlexGlobals.topLevelApplication.systemManager);
-			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(DisplayObject(target), rootComponent);
+			var componentItem:ComponentItem = getFirstParentComponentItemFromComponentTreeByDisplayObject(target, rootComponent);
 			return componentItem;
 		}
 		
@@ -1424,6 +1437,8 @@ package com.flexcapacitor.utils {
 		public var popUpBorder:Rect;
 		public var popUpLabel:Label;
 		public var moveUpLabel:Label;
+		public var moveLeftLabel:Label;
+		public var moveRightLabel:Label;
 		public var popUpPropertyInput:TextInput;
 		public var popUpValueInput:TextInput;
 		public var popUpIsDisplaying:Boolean;
@@ -1432,14 +1447,14 @@ package com.flexcapacitor.utils {
 		/**
 		 * Displays an outline of the display object recursively up the component display list. 
 		 **/
-		public function postDisplayObject(displayTarget:DisplayObject, isOutlineDisplayed:Boolean = false, getNextParent:Boolean = true, moveToNextParentAutomatically:Boolean = true):Object {
+		public function postDisplayObject(displayTarget:Object, isOutlineDisplayed:Boolean = false, getNextParent:Boolean = true, moveToNextParentAutomatically:Boolean = true):Object {
 			var systemManagerObject:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 			var scale:Number = FlexGlobals.topLevelApplication.applicationDPI / FlexGlobals.topLevelApplication.runtimeDPI;
-			var lastTarget:DisplayObject;
+			var lastTarget:Object;
 			var isApp:Boolean;
 			var targetX:Number;
 			var targetY:Number;
-			var container:Sprite;
+			var spriteVisualElement:SpriteVisualElement;
 			
 			popUpIsDisplaying = true;
 			
@@ -1502,10 +1517,28 @@ package com.flexcapacitor.utils {
 				moveUpLabel.styleName = popUpLabel;
 				moveUpLabel.useHandCursor = true;
 				moveUpLabel.buttonMode = true;
-				moveUpLabel.text = "up";
+				moveUpLabel.text = "UP";
 				moveUpLabel.setStyle("fontSize", 12);
 				moveUpLabel.setStyle("fontWeight", "bold");
 				moveUpLabel.minWidth = 1;
+				
+				moveLeftLabel = new Label();
+				moveLeftLabel.styleName = popUpLabel;
+				moveLeftLabel.useHandCursor = true;
+				moveLeftLabel.buttonMode = true;
+				moveLeftLabel.text = "L";
+				moveLeftLabel.setStyle("fontSize", 12);
+				moveLeftLabel.setStyle("fontWeight", "bold");
+				moveLeftLabel.minWidth = 1;
+				
+				moveRightLabel = new Label();
+				moveRightLabel.styleName = popUpLabel;
+				moveRightLabel.useHandCursor = true;
+				moveRightLabel.buttonMode = true;
+				moveRightLabel.text = "R";
+				moveRightLabel.setStyle("fontSize", 12);
+				moveRightLabel.setStyle("fontWeight", "bold");
+				moveRightLabel.minWidth = 1;
 				//moveUpLabel.width = 20;
 				//moveUpLabel.setStyle("backgroundColor", "#0000FF");
 				//moveUpLabel.setStyle("backgroundAlpha", 1);
@@ -1549,6 +1582,8 @@ package com.flexcapacitor.utils {
 				popUpDisplayGroup.addElement(popUpBorder);
 				
 				hgroup.addElement(moveUpLabel);
+				hgroup.addElement(moveLeftLabel);
+				hgroup.addElement(moveRightLabel);
 				hgroup.addElement(popUpLabel);
 				hgroup2.addElement(popUpPropertyInput);
 				hgroup2.addElement(popUpValueInput);
@@ -1571,32 +1606,59 @@ package com.flexcapacitor.utils {
 			currentPopUpTarget = displayTarget;
 			
 			if (displayTarget is UIComponent) {
-				container = rasterizeComponent(displayTarget as UIComponent);
+				spriteVisualElement = DisplayObjectUtils.getUIComponentSnapshot(displayTarget as UIComponent) as SpriteVisualElement;
 			}
 			else {
-				container = rasterize2(displayTarget);
+				var test:Boolean;
+				if (displayTarget is DisplayObject) {
+					spriteVisualElement = DisplayObjectUtils.rasterize2(displayTarget as DisplayObject);
+				}
+				else if (displayTarget is BitmapImage) {
+					spriteVisualElement = DisplayObjectUtils.rasterizeBitmapImage(BitmapImage(displayTarget));
+				}
+				else if (displayTarget is IGraphicElement) {
+					spriteVisualElement = DisplayObjectUtils.rasterize2(IGraphicElement(displayTarget).displayObject);
+				}
+				else if (displayTarget is BitmapData) {
+					spriteVisualElement = DisplayObjectUtils.rasterizeBitmapData(BitmapData(displayTarget));
+				}
+				else {
+					spriteVisualElement = DisplayObjectUtils.drawSubstituteRectangle(displayTarget);
+				}
+				
+				/*
+				if ("left" in spriteVisualElement) {
+					var leftPosition:Number = spriteVisualElement.left;
+				}
+				*/
 			}
 			if (isApp) {
-				container.height = 28;
+				spriteVisualElement.height = 28;
 			}
 			
-			var name:String = displayTarget.toString();
-			name = name.split(".").length ? name.split(".")[name.split(".").length-1] : name;
+			var name:String;
+			if (displayTarget is UIComponent) {
+				name = displayTarget.toString();
+				name = name.split(".").length ? name.split(".")[name.split(".").length-1] : name;
+			}
+			else {
+				name = ClassUtils.getClassNameOrID(displayTarget, true, "#");
+			}
 			
-			//container.graphics.endFill();
-			popUpLabel.text = name + " - " + container.width + "x" + container.height + " ";
 			
 			if (displayTarget is UIComponent) {
 				//popUpLabel.text += " (measured:" + UIComponent(displayTarget).measuredWidth+ "x" + UIComponent(displayTarget).measuredHeight + ")";
 				lastComponentItem = getComponentItem(displayTarget);
 			}
 			popUpDisplayGroup.minHeight = moveUpLabel.height;
-			popUpLabel.text += "at " + container.x + "x" + container.y + " ";
-			popUpDisplayImage.width = container.width;
-			popUpDisplayImage.height = container.height;
-			popUpDisplayGroup.width = container.width;
-			popUpDisplayGroup.height = container.height;
-			popUpDisplayImage.source = container;
+			//container.graphics.endFill();
+			popUpLabel.text = name + " - " + "Position: " + spriteVisualElement.x + "x" + spriteVisualElement.y + " - Size: ";
+			popUpLabel.text += spriteVisualElement.width + "x" + spriteVisualElement.height + " ";
+			popUpDisplayImage.width = spriteVisualElement.width;
+			popUpDisplayImage.height = spriteVisualElement.height;
+			popUpDisplayGroup.width = spriteVisualElement.width;
+			popUpDisplayGroup.height = spriteVisualElement.height;
+			popUpDisplayImage.source = spriteVisualElement;
 			//popUpDisplayImage.blendMode = BlendMode.ERASE;
 			
 			if (isApp) {
@@ -1612,7 +1674,7 @@ package com.flexcapacitor.utils {
 				
 				var minLabelPosition:int = 18;
 				
-				if (container.height<=100 && targetY>minLabelPosition) {
+				if (spriteVisualElement.height<=100 && targetY>minLabelPosition) {
 					var popUpY:Number = -(popUpLabel.getStyle("fontSize") * Number(parseInt(popUpLabel.getStyle("lineHeight"))/100));
 					popUpY = -(popUpLabel.height);
 					popUpLabel.parent.parent.y = Math.min(popUpY,-minLabelPosition);
@@ -1734,8 +1796,12 @@ package com.flexcapacitor.utils {
 		 * */
 		protected function propertyInputEnterHandler(event:Event):void {
 			if (event is KeyboardEvent) {
-				if (KeyboardEvent(event).keyCode==Keyboard.ENTER) {
-					getPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text);
+				if (KeyboardEvent(event).shiftKey && KeyboardEvent(event).keyCode==Keyboard.ENTER) {
+					var currentTarget:Object = currentPopUpTarget;
+					enterDebugger();
+				}
+				else if (KeyboardEvent(event).keyCode==Keyboard.ENTER) {
+					getPropertyOrStyleValueForTextInput(currentPopUpTarget, popUpPropertyInput.text);
 					popUpValueInput.setFocus();
 					popUpValueInput.selectAll();
 				}
@@ -1776,17 +1842,32 @@ package com.flexcapacitor.utils {
 		/**
 		 * Get the value of the property or style on the target
 		 * */
-		protected function getPropertyOrStyle(target:Object, property:String):* {
-			var currentValue:*;
-			var propNameCased:String = getCaseSensitiveProperty(target, property);
+		protected function getPropertyOrStyleValueForTextInput(target:Object, property:String):* {
+			if (!target || property==null || property=="") return null;
+			var isProperty:Boolean;
+			var properlyCasedName:String;			
 			var cased:Boolean;
+			var found:Boolean;
+			var currentValue:*;
+
+			// check styles first because properties have style facades we don't want - ie top, left, bottom, right, etc
+			properlyCasedName = ClassUtils.getCaseSensitiveStyleName(target, property);
 			
-			if (propNameCased!=null && propNameCased!=property) {
-				property = propNameCased;
+			if (properlyCasedName==null) {
+				properlyCasedName = ClassUtils.getCaseSensitivePropertyName(target, property);
+				if (properlyCasedName) {
+					isProperty = true;
+				}
+			}
+			
+			// properlyCasedName will either be null or properly cased if it's not already 
+			if (properlyCasedName!=null && properlyCasedName!=property) {
+				property = properlyCasedName;
 				cased = true;
 			}
 			
-			if (target && property in target) {
+			if (isProperty) {
+				found = true;
 				
 				try {
 					currentValue = target[property];
@@ -1800,7 +1881,8 @@ package com.flexcapacitor.utils {
 				}
 				
 			}
-			else if (target && property!="" && target is IStyleClient) {
+			else if (target is IStyleClient) {
+				found = true;
 				
 				try {
 					currentValue = target.getStyle(property);
@@ -1814,8 +1896,13 @@ package com.flexcapacitor.utils {
 				}
 			}
 			
-			if (cased) {
+			if (cased || property==properlyCasedName) {
 				popUpPropertyInput.text = property;
+			}
+			
+			if (!found) {
+				popUpValueInput.prompt = "Not found";
+				popUpValueInput.text = "";
 			}
 			
 			return currentValue;
@@ -1840,8 +1927,8 @@ package com.flexcapacitor.utils {
 					if (popUpValueInput) {
 						popUpValueInput.text = currentValue;
 						if ("validateNow" in target) target.validateNow();
-						postDisplayObject(DisplayObject(target), true, false, false);
-						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [DisplayObject(target), true, false, false]);
+						postDisplayObject(target, true, false, false);
+						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [target, true, false, false]);
 					}
 					
 					if (outputUpdatedPropertiesAndStyles) {
@@ -1874,7 +1961,7 @@ package com.flexcapacitor.utils {
 						popUpValueInput.text = currentValue;
 						if ("validateNow" in target) target.validateNow();
 						postDisplayObject(DisplayObject(target), true, false, false);
-						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [DisplayObject(target), true, false, false]);
+						FlexGlobals.topLevelApplication.callLater(postDisplayObject, [target, true, false, false]);
 					}
 					
 					if (outputUpdatedPropertiesAndStyles) {
@@ -2088,13 +2175,79 @@ package com.flexcapacitor.utils {
 		/**
 		 * Get next parent or owner of the target or close the popup if no parent
 		 **/
-		public function getNextOrClosePopUp(target:DisplayObject, displayed:Boolean = false, getNextParent:Boolean = true, automaticallyMoveToNextParent:Boolean = true):Object {
+		public function getNextOrClosePopUp(target:Object, displayed:Boolean = false, getNextParent:Boolean = true, automaticallyMoveToNextParent:Boolean = true):Object {
 			if (target.parent && !(target is SystemManager)) {
-				return postDisplayObject(DisplayObject(target), displayed, getNextParent, automaticallyMoveToNextParent);
+				return postDisplayObject(target, displayed, getNextParent, automaticallyMoveToNextParent);
 			}
 			else {
-				closePopUp(DisplayObject(popUpDisplayGroup));
+				closePopUp(popUpDisplayGroup);
 				clearTimeout(popUpTimeout);
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get previous sibling element in a container
+		 **/
+		public function getPreviousElement(target:Object, displayed:Boolean = false, getNextParent:Boolean = false, automaticallyMoveToNextParent:Boolean = false):Object {
+			var container:DisplayObjectContainer = target.parent as DisplayObjectContainer;
+			var elementContainer:IVisualElementContainer = target.parent as IVisualElementContainer;
+			var elementIndex:int;
+			var childIndex:int;
+			
+			if (target.parent && !(target is SystemManager)) {
+				
+				
+				if (elementContainer && target is IVisualElement) {
+					elementIndex = elementContainer.getElementIndex(target as IVisualElement) - 1;
+					
+					if (elementIndex>-1 && elementIndex<elementContainer.numElements) {
+						target = elementContainer.getElementAt(elementIndex);
+					}
+				}
+				else if (container && target is DisplayObject) {
+					childIndex = container.getChildIndex(target as DisplayObject) - 1;
+					
+					if (childIndex>-1 && childIndex<container.numChildren) {
+						target = container.getChildAt(childIndex);
+					}
+				}
+				
+				if (target) {
+					return postDisplayObject(target, displayed, getNextParent, automaticallyMoveToNextParent);
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get next sibling element in a container
+		 **/
+		public function getNextElement(target:Object, displayed:Boolean = false, getNextParent:Boolean = false, automaticallyMoveToNextParent:Boolean = false):Object {
+			var container:DisplayObjectContainer = target.parent as DisplayObjectContainer;
+			var elementContainer:IVisualElementContainer = target.parent as IVisualElementContainer;
+			var elementIndex:int;
+			var childIndex:int;
+			
+			if (target.parent && !(target is SystemManager)) {
+				
+				if (elementContainer && target is IVisualElement) {
+					elementIndex = elementContainer.getElementIndex(target as IVisualElement) + 1;
+					
+					if (elementIndex>-1 && elementIndex<elementContainer.numElements) {
+						target = elementContainer.getElementAt(elementIndex);
+					}
+				}
+				else if (container && target is DisplayObject) {
+					childIndex = container.getChildIndex(target as DisplayObject) + 1;
+					
+					if (childIndex>-1 && childIndex<container.numChildren) {
+						target = container.getChildAt(childIndex);
+					}
+				}
+				return postDisplayObject(target, displayed, getNextParent, automaticallyMoveToNextParent);
 			}
 			
 			return null;
@@ -2104,7 +2257,7 @@ package com.flexcapacitor.utils {
 		 * Dismisses boundries pop up outline
 		 **/
 		public function mouseDownOutsidePopUpHandler(event:MouseEvent):void {
-			closePopUp(DisplayObject(popUpDisplayGroup));
+			closePopUp(popUpDisplayGroup);
 		}
 		
 		/**
@@ -2132,7 +2285,23 @@ package com.flexcapacitor.utils {
 				}
 				else if (event.target == moveUpLabel) {
 					clearTimeout(popUpTimeout);
-					getNextOrClosePopUp(currentPopUpTarget as DisplayObject, true, true, false);
+					getNextOrClosePopUp(currentPopUpTarget, true, true, false);
+					if (popUpIsDisplaying && lastComponentItem) {
+						trace("Selected " + getComponentLabel(lastComponentItem));
+					}
+					showInputControls(false);
+				}
+				else if (event.target == moveLeftLabel) {
+					clearTimeout(popUpTimeout);
+					getPreviousElement(currentPopUpTarget, true, false, false);
+					if (popUpIsDisplaying && lastComponentItem) {
+						trace("Selected " + getComponentLabel(lastComponentItem));
+					}
+					showInputControls(false);
+				}
+				else if (event.target == moveRightLabel) {
+					clearTimeout(popUpTimeout);
+					getNextElement(currentPopUpTarget, true, false, false);
 					if (popUpIsDisplaying && lastComponentItem) {
 						trace("Selected " + getComponentLabel(lastComponentItem));
 					}
@@ -2147,219 +2316,9 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Creates a snapshot of the display object passed to it
-		 **/
-		public function rasterize2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
-			//var bounds:Rectangle = target.getBounds(target);
-			var bounds:Rectangle = target.getBounds(target);
-			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
-			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
-			var bitmapData:BitmapData = new BitmapData((targetWidth + horizontalPadding) * scaleX, (targetHeight + verticalPadding) * scaleY, transparentFill, fillColor);
-			var matrix:Matrix = new Matrix();
-			var container:Sprite = new Sprite();
-			var bitmap:Bitmap;
-			
-			matrix.translate(-bounds.left+horizontalPadding/2, -bounds.top+verticalPadding/2);
-			matrix.scale(scaleX, scaleY);
-			
-			try {
-				drawBitmapData(bitmapData, target, matrix);
-			}
-			catch (e:Error) {
-				//trace( "Can't get display object preview. " + e.message);
-				// show something here
-				// If capture fails, substitute with a Rect
-                var fillRect:Rectangle
-				var skin:DisplayObject = "skin" in target ? Object(target).skin : null;
-				
-                if (skin)
-                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
-                else
-                    fillRect = new Rectangle(target.x, target.y, target.width, target.height);
-                
-                bitmapData.fillRect(fillRect, 0);
-			}
-			
-			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
-			bitmap.x = bounds.left;
-			bitmap.y = bounds.top;
-			
-			container.cacheAsBitmap = true;
-			container.transform.matrix = target.transform.matrix;
-			container.addChild(bitmap);
-			
-			targetWidth = container.getBounds(container).size.x;
-			targetHeight = container.getBounds(container).size.y;
-			
-			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
-			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
-			
-			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
-			
-			drawBitmapData(bitmapData2, container, matrix);
-			
-			//var bitmapAsset:BitmapAsset = new BitmapAsset(bitmapData2, PixelSnapping.ALWAYS);
-			
-			//return bitmapAsset;
-			return container;
-		}
-		
-		/**
-		 * Creates a snapshot of the display object passed to it
-		 **/
-		public function rasterizeComponent(target:UIComponent, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
-			var targetWidth:Number = target.width==0 || isNaN(target.width) ? 1 : target.width;
-			var targetHeight:Number = target.height==0 || isNaN(target.height) ? 1 : target.height;
-			var expectedBounds:Rectangle = getRectangleBounds(target as UIComponent);
-			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
-			var matrix:Matrix = new Matrix();
-			var container:Sprite = new Sprite();
-			var bitmap:Bitmap;
-            var fillRect:Rectangle;
-			var skin:DisplayObject;
-			
-			targetWidth = expectedBounds.width;
-			targetHeight = expectedBounds.height;
-			
-			
-			try {
-				drawBitmapData(bitmapData, target, matrix);
-			}
-			catch (e:Error) {
-				logger.log(LogEventLevel.ERROR, "Can't get display object outline. " + e.message);
-				
-				skin = "skin" in target ? Object(target).skin : null;
-				
-                if (skin) {
-                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
-				}
-                else {
-                    fillRect = new Rectangle(expectedBounds.x, expectedBounds.y, targetWidth, targetHeight);
-				}
-                
-                bitmapData.fillRect(fillRect, 0);
-			}
-			
-			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
-			//bitmap.x = expectedBounds.left;
-			//bitmap.y = expectedBounds.top;
-			
-			container.cacheAsBitmap = true;
-			container.transform.matrix = target.transform.matrix;
-			container.addChild(bitmap);
-			
-			// added to fix some clipping issues
-			targetWidth = container.getBounds(container).size.x;
-			targetHeight = container.getBounds(container).size.y;
-			
-			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
-			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
-			
-			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
-			
-			drawBitmapData(bitmapData2, container, matrix);
-			
-			return container;
-		}
-		
-		/**
-		 * Creates a snapshot of the display object passed to it
-		 **/
-		public function rasterize(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):Sprite {
-			//var bounds:Rectangle = target.getBounds(target);
-			var bounds:Rectangle = target.getRect(target);
-			var targetWidth:Number = target.width==0 ? 1 : target.width;
-			var targetHeight:Number = target.height==0 ? 1 : target.height;
-			/*
-			var bounds:Rectangle = target.getBounds(target);
-			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
-			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;*/
-			var bitmapData:BitmapData = new BitmapData(targetWidth * scaleX, targetHeight * scaleY, transparentFill, fillColor);
-			var matrix:Matrix = new Matrix();
-			var container:Sprite = new Sprite();
-			var bitmap:Bitmap;
-			
-			matrix.translate(-bounds.left, -bounds.top);
-			matrix.scale(scaleX, scaleY);
-			
-			try {
-				drawBitmapData(bitmapData, target, matrix);
-			}
-			catch (e:Error) {
-				logger.log(LogEventLevel.ERROR, "Can't get display object outline. " + e.message);
-                var fillRect:Rectangle
-				var skin:DisplayObject = "skin" in target ? Object(target).skin : null;
-				
-                if (skin)
-                    fillRect = new Rectangle(skin.x, skin.y, skin.width, skin.height);
-                else
-                    fillRect = new Rectangle(target.x, target.y, target.width, target.height);
-                
-                bitmapData.fillRect(fillRect, 0);
-			}
-			
-			bitmap = new Bitmap(bitmapData, PixelSnapping.AUTO, true);
-			bitmap.x = bounds.left;
-			bitmap.y = bounds.top;
-			
-			container.cacheAsBitmap = true;
-			container.transform.matrix = target.transform.matrix;
-			container.addChild(bitmap);
-			
-			// added to fix some clipping issues
-			targetWidth = container.getBounds(container).size.x;
-			targetHeight = container.getBounds(container).size.y;
-			
-			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
-			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
-			
-			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
-			
-			drawBitmapData(bitmapData2, container, matrix);
-			
-			return container;
-		}
-		
-		/**
-		 * Gets the perceptually expected bounds and position of a UIComponent. 
-		 * If container is passed in then the position is relative to the container. 
-		 * */
-		public static function getRectangleBounds(item:UIComponent, container:* = null):Rectangle {
-		
-	        if (item && item.parent) { 
-	            var w:Number = item.getLayoutBoundsWidth(true);
-	            var h:Number = item.getLayoutBoundsHeight(true);
-	            
-	            var position:Point = new Point();
-	            position.x = item.getLayoutBoundsX(true);
-	            position.y = item.getLayoutBoundsY(true);
-	            position = item.parent.localToGlobal(position);
-				
-				var rectangle:Rectangle = new Rectangle();
-				
-				if (container && container is DisplayObjectContainer) {
-					var anotherPoint:Point = DisplayObjectContainer(container).globalToLocal(position);
-					rectangle.x = anotherPoint.x;
-					rectangle.y = anotherPoint.y;
-				}
-				else {
-					rectangle.x = position.x;
-					rectangle.y = position.y;
-				}
-	            
-				rectangle.width = w;
-				rectangle.height = h;
-				
-				return rectangle;
-	       }
-			
-			return null;
-		}
-		
-		/**
 		 * Dismisses boundries pop up outline
 		 **/
-		public function closePopUp(target:DisplayObject):void {
+		public function closePopUp(target:Object):void {
 			addMouseHandler();
 			popUpIsDisplaying = false;
 			clearTimeout(popUpTimeout);
@@ -3142,7 +3101,7 @@ package com.flexcapacitor.utils {
 		 * If it does not find the owner of the display object it will keep a reference to it in the
 		 * target property on the access path instance.
 		 * */
-		public function getFirstParentComponentItemFromComponentTreeByDisplayObject(displayObject:DisplayObject, componentTree:ComponentItem):ComponentItem {
+		public function getFirstParentComponentItemFromComponentTreeByDisplayObject(displayObject:Object, componentTree:ComponentItem):ComponentItem {
 			var componentItem:ComponentItem;
 			var displayPath:Array = [];
 			var item:ComponentItem;

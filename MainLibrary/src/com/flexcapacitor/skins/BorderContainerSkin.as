@@ -1,14 +1,4 @@
 
-////////////////////////////////////////////////////////////////////////////////
-//
-//  ADOBE SYSTEMS INCORPORATED
-//  Copyright 2008 Adobe Systems Incorporated
-//  All Rights Reserved.
-//
-//  NOTICE: Adobe permits you to use, modify, and distribute this file
-//  in accordance with the terms of the license agreement accompanying it.
-//
-////////////////////////////////////////////////////////////////////////////////
 
 package com.flexcapacitor.skins
 {
@@ -33,15 +23,16 @@ package com.flexcapacitor.skins
 	import spark.primitives.Path;
 	import spark.primitives.Rect;
 	
+	
 	/** 
 	 * @copy spark.skins.spark.ApplicationSkin#hostComponent
 	 */
-	[HostComponent("spark.components.BorderContainer")]
+	[HostComponent("com.flexcapacitor.controls.BorderContainer")]
 	
 	[States("normal", "disabled")]
 	
 	/**
-	 *  The default skin class for a Spark BorderContainer component.
+	 *  A border container with sides property.
 	 * 
 	 *  @see spark.components.BorderContainer
 	 * 

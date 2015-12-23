@@ -3,7 +3,7 @@
 package com.flexcapacitor.effects.view {
 	
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
-	import com.flexcapacitor.effects.view.supportClasses.RemoveViewInstance;
+	import com.flexcapacitor.effects.view.supportClasses.CloseViewInstance;
 	
 	import spark.transitions.ViewTransitionBase;
 
@@ -13,7 +13,7 @@ package com.flexcapacitor.effects.view {
 	 * Set the destruction policy on it to never to preserve it.
 	 *  @copy spark.components.ViewNavigator#popView()
 	 * */
-	public class RemoveView extends ActionEffect {
+	public class CloseView extends ActionEffect {
 		
 		
 		/**
@@ -26,7 +26,7 @@ package com.flexcapacitor.effects.view {
 		 *  @playerversion AIR 1.5
 		 *  @productversion Flex 4
 		 */
-		public function RemoveView(target:Object = null) {
+		public function CloseView(target:Object = null) {
 			// Effect requires non-null targets, so if they didn't give us one
 			// we will create a dummy object to serve in its place. If the effect
 			// is being used to listen to events, then they will supply a real
@@ -38,7 +38,7 @@ package com.flexcapacitor.effects.view {
 			super(target);
 			
 
-			instanceClass = RemoveViewInstance;
+			instanceClass = CloseViewInstance;
 			
 		}
 		

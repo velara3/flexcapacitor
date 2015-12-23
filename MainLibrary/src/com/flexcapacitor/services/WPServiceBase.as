@@ -13,6 +13,7 @@ package com.flexcapacitor.services {
 	import flash.net.URLRequest;
 	import flash.net.URLRequestMethod;
 	import flash.net.URLVariables;
+	import flash.net.navigateToURL;
 	import flash.utils.getTimer;
 	
 	
@@ -103,6 +104,18 @@ package com.flexcapacitor.services {
 		public var loader:URLLoader;
 		
 		/**
+		 * Use navigateToURL instead of URLLoader. Opens in a new window.
+		 * @see #windowName
+		 * */
+		public var useNavigateToURL:Boolean;
+		
+		/**
+		 * Name of window when using navigateToURL option
+		 * @see #useNavigateToURL
+		 * */
+		public var windowName:String;
+		
+		/**
 		 * URLRequest to communicate with the server
 		 * */
 		public var request:URLRequest;
@@ -168,6 +181,13 @@ package com.flexcapacitor.services {
 		 * URL to call. Prepends the host to the value passed in. 
 		 * Also sets the request.data to null so we don't have
 		 * to do this on every call. 
+		 * 
+		 * If you set usePermalinks to true the syntax will be "api/controller/method" 
+		 * versus "?json=controller/method" in the URL. 
+		 * 
+		 * For example, when enabled the URL would be something like,
+		 * "http://www.mysite.com/blog/api/user/get_logged_in". When set to false the URL 
+		 * would be something like, "http://www.mysite.com/blog/?json=user/get_logged_in". 
 		 * @see sendURL
 		 * */
 		public function get url():String {
@@ -308,9 +328,17 @@ package com.flexcapacitor.services {
 		 * */
 		public function load(request:URLRequest = null):void {
 			
-			// close call if open
+			// launch in a new window - not a common use case 
+			if (useNavigateToURL) {
+				navigateToURL(request, windowName);
+				return;
+			}
+			
 			try {
-				loader.close();
+				// close call if open
+				if (loader) {
+					loader.close();
+				}
 			}
 			catch (e:Error) {
 				// we don't care

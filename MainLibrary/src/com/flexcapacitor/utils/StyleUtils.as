@@ -96,7 +96,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Get's style details about the target such as font family, font weight, etc
 		 * */
-		public function getStyleDetails(target:Object, indicateEmbeddedFonts:Boolean = true):String {
+		public function getStyleDetails(target:Object, indicateEmbeddedFonts:Boolean = true, reverseOrder:Boolean = false):String {
 			var styleItem:CSSStyleDeclarationItem;
 			var component:UIComponent = target as UIComponent;
 			var systemManager:ISystemManager = component ? component.systemManager : null;
@@ -190,7 +190,8 @@ package com.flexcapacitor.utils {
 						// check for skin classes
 					else if (name && value && actualValue is Class) {
 						var className:String = value ? ClassUtils.getQualifiedClassName(actualValue) : "";
-						output += prespace + paddedName + "" + StringUtils.padString(value, minimumStyleNamePadding) + className;
+						//output += prespace + paddedName + "" + StringUtils.padString(value, minimumStyleNamePadding) + className;
+						output += prespace + paddedName + "" + className;
 					}
 					else {
 						if (actualValue===undefined) {
@@ -211,6 +212,19 @@ package com.flexcapacitor.utils {
 			
 			return output;
 		}
+		/**
+		 * Returns if style is inherited or declared inline or set in actionscript with setStyle();
+		 * */
+		public static function isStyleDeclaredInline(styleClient:IStyleClient, styleName:String):Boolean {
+			if (styleClient && 
+				styleClient.styleDeclaration && 
+				styleName in styleClient.styleDeclaration.overrides) {
+				return true;
+			}
+			
+			return false;
+		}
+		
 		
 		/**
 		 * Get's the style inheritance
@@ -238,18 +252,19 @@ package com.flexcapacitor.utils {
 			var hasPseudoCondition:Boolean = styleManager.hasPseudoCondition("normalWithPrompt");
 			var hasAdvancedSelectors:Object = component.styleManager.hasAdvancedSelectors();
 			
+			var numberOfDeclarations:int;
 			
 			// get style declarations
 			classDeclarations = styleClient.getClassStyleDeclarations();
 			
-			var length:int = classDeclarations.length;
+			numberOfDeclarations = classDeclarations.length;
 			
 			
 			// add pseudo selectors
 			// experimental method to get TextInput / TextArea pseudo conditions
 			// TextInput:normalWithPrompt etc
 			// the ordering is still under development
-			for (var ii:int=0;ii<length;ii++) {
+			for (var ii:int=0;ii<numberOfDeclarations;ii++) {
 				declaration = classDeclarations[ii];
 				var subjects:Object = styleManager.getStyleDeclarations(declaration.subject);
 				
@@ -303,9 +318,9 @@ package com.flexcapacitor.utils {
 			// ie universal class selectors (or ID selectors?)
 			var allSelectors:Array = styleManager.selectors;
 			var styleClientMatches:Boolean;
-			length = allSelectors.length;
+			numberOfDeclarations = allSelectors.length;
 			
-			for (var aa:int;aa<length;aa++) {
+			for (var aa:int;aa<numberOfDeclarations;aa++) {
 				var selector:String = allSelectors[aa];
 				declaration = styleManager.getStyleDeclaration(selector);
 				
@@ -460,7 +475,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Log
 		 **/
-		public function log(value:String):void {
+		public static function log(value:String):void {
 			if (true) {
 				trace(value);
 			}
@@ -469,7 +484,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Get array of name value pair of all properties and values on an object
 		 **/
-		protected function getArrayFromObject(object:Object):Array {
+		public static function getArrayFromObject(object:Object):Array {
 			var array:Array = [];
 			
 			for (var property:String in object) {

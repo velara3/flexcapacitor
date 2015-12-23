@@ -101,13 +101,13 @@ package com.flexcapacitor.effects.core.supportClasses {
 				// by default the source property name is "data" 
 				// you may need to set the subproperty name
 				else if (sourcePropertyName && !(sourcePropertyName in sourceEffect)) {
-					dispatchErrorEvent("The '" + sourcePropertyName + "' property is not on the source effect");
+					dispatchErrorEvent("The '" + sourcePropertyName + "' property is not on the source effect, " + sourceEffect.className);
 				}
 				
 				// check target property name is set
 				// check if target property exists on target
 				else if (targetPropertyName && !(targetPropertyName in targetEffect)) {
-					dispatchErrorEvent("The '" + targetPropertyName + "' property is not on the target effect..");
+					dispatchErrorEvent("The '" + targetPropertyName + "' property is not on the target effect, " + targetEffect.className);
 				}
 			}
 			

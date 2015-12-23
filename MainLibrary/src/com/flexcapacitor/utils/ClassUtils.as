@@ -5,15 +5,22 @@
 package com.flexcapacitor.utils {
 	
 	import com.flexcapacitor.model.AccessorMetaData;
+	import com.flexcapacitor.model.MetaData;
 	import com.flexcapacitor.model.StyleMetaData;
 	
 	import flash.system.ApplicationDomain;
 	import flash.utils.describeType;
+	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getQualifiedSuperclassName;
 	
+	import mx.core.IFlexModuleFactory;
 	import mx.core.UIComponent;
+	import mx.styles.IStyleClient;
+	import mx.styles.IStyleManager2;
+	import mx.styles.StyleManager;
 	import mx.utils.ArrayUtil;
+	import mx.utils.DescribeTypeCache;
 	import mx.utils.DescribeTypeCacheRecord;
 	import mx.utils.NameUtil;
 	import mx.utils.ObjectUtil;
@@ -28,7 +35,6 @@ package com.flexcapacitor.utils {
 
 
 		public function ClassUtils() {
-
 
 		}
 		
@@ -79,7 +85,7 @@ package com.flexcapacitor.utils {
 			var name:String = NameUtil.getUnqualifiedClassName(element);
 			var id:String = element && "id" in element ? element.id : null;
 			
-			return !id ? name : includeClassName ? name + "." + id : id;
+			return !id ? name : includeClassName ? name + delimiter + id : id;
 		}
 		
 		/**
@@ -168,9 +174,9 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Get parent document name
+		 * Get the class name and package. 
 		 * 
-		 * @return
+		 * @returns an Array with className at index 0 and the package name as index 1 
 		 */
 		public static function getClassNameAndPackage(target:Object):Array {
 			var className:String;
@@ -206,7 +212,9 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Get metadata from an object by finding members by their type
+		 * Get metadata from an object by finding members by their type.
+		 * It loops through all the properties on the object and if 
+		 * it is of the type you passed in then it returns the metadata on it.
 <pre>
 var object:XMLList = ClassUtils.getMemberDataByType(myButton, mx.styles.CSSStyleDeclaration);
 
@@ -231,6 +239,16 @@ trace(object);
 		
 		/**
 		 * Get metadata from an object by it's name.
+		 * 
+<pre>
+var object:XMLList = ClassUtils.getMemberDataByName(myButton, "width");
+trace(object);
+
+// finds metadata for "myButton.width" 
+
+&lt;accessor name="width" access="readwrite" type="String" declaredBy="mx.core::UIComponent">
+&lt;/accessor>
+</pre>
 		 * */
 		public static function getMemberDataByName(object:Object, propertyName:String, caseSensitive:Boolean = false):Object {
 			if (propertyName==null) return null;
@@ -249,6 +267,14 @@ trace(object);
 
 		/**
 		 * Checks if the source object is the same type as the target object. 
+<pre>
+var sameType:Boolean = isSameClassType(myButton, yourButton);
+trace(sameType); // true
+
+var sameType:Boolean = isSameClassType(myButton, myCheckbox);
+trace(sameType); // false
+
+</pre>
 		 * */
 		public static function isSameClassType(source:Object, target:Object):Boolean {
 			if (source==null && target!=null) {
@@ -268,6 +294,19 @@ trace(object);
 		/**
 		 * Gets the ID of the object or name or if name is not available gets the class name or null. 
 		 * 
+<pre>
+var name:String = getIdentifierOrName(myButton);
+trace(name); // Button
+
+myButton.name = "Button100"
+var name:String = getIdentifierOrName(myButton);
+trace(name); // "Button100"
+ 
+myButton.id = "myButton";
+var name:String = getIdentifierOrName(myButton);
+trace(name); // "mySuperButton" 
+
+</pre>
 		 * @param name if id is not available then return name
 		 * @param className if id and name are not available get class name
 		 * 
@@ -299,13 +338,19 @@ trace(object);
 		}
 		
 		/**
-		 * Get describeType data for the given class. 
-		 * Can take string, instance or class. 
+		 * Get DescribeTypeCacheRecord.typeDescription for the given class. 
+		 * Can take string, instance or class.
+		 * 
+		 * If class can't be found returns null 
 		 * */
 		public static function getDescribeType(object:Object):XML {
 			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
 			
-			return describedTypeRecord.typeDescription;
+			if (describedTypeRecord) {
+				return describedTypeRecord.typeDescription;
+			}
+			
+			return null
 		}
 		
 		
@@ -318,9 +363,9 @@ trace(object);
 		 * properties for it and all the properties on the super classes.<br/><br/>
 		 * 
 		 * Usage:<br/>
-		 <pre>
-		 var allProperties:Array = getProperties(myButton);
-		 </pre>
+ <pre>
+ var allProperties:Array = getObjectPropertyNames(myButton);
+ </pre>
 		 * 
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param sort Sorts the properties in the array
@@ -344,9 +389,194 @@ trace(object);
 				properties.push(propertyName);
 			}
 			
+			if (describedTypeRecord.typeName=="Object" && itemsLength==0) {
+				for (propertyName in object) {
+					properties.push(propertyName);
+				}
+			}
+			
 			if (sort) properties.sort();
 			
 			return properties;
+		}
+		
+		
+		/**
+		 * Returns true if the object has the property specified. <br/><br/>
+		 * 
+		 * If useFlashAPI is true then uses Flash internal methods
+<pre> 
+"property" in object and object.hasOwnProperty(propertyName);
+</pre>
+		 * <br/>
+		 * 
+		 * Otherwise it uses describeType. It includes accessors and variables and checks 
+		 * super classes.<br/><br/>
+		 * 
+		 * For example:<br/>
+<pre>
+var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "label"); // true
+var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "spagetti"); // false
+var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
+</pre>
+		 * 
+		 * @param object The object to check property for
+		 * @param propertyName Name of property to check for
+		 * @param useFlashAPI Uses Flash internal methods
+		 * */
+		public static function hasProperty(object:Object, propertyName:String, useFlashAPI:Boolean = false):Boolean {
+			if (object==null || object=="" || propertyName==null || propertyName=="") return false;
+			
+			if (useFlashAPI) {
+				var found:Boolean;
+				found = propertyName in object;
+				
+				if (!found) {
+					found = object.hasOwnProperty(propertyName);
+				}
+				
+				return found;
+			}
+			
+			var properties:Array = getPropertyNames(object);
+			
+			if (properties.indexOf(propertyName)!=-1) {
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Returns true if the object has the style specified. <br/><br/>
+		 * 
+		 * If useOtherMethod is true then we check inherited and noninherited objects
+		 * to see if they have the style listed. Not sure if this is correct.
+ <pre> 
+ var hasStyle:Boolean = style in styleClient.inheritingStyles || styleName in styleClient.nonInheritingStyles;
+ </pre>
+		 * <br/>
+		 * 
+		 * Otherwise it uses describeType. We check not only the object but the super classes.<br/><br/>
+		 * 
+		 * For example:<br/>
+ <pre>
+ var hasStyle:Boolean = ClassUtils.hasStyle(myButton, "color"); // true
+ var hasStyle:Boolean = ClassUtils.hasStyle(myButton, "spagetti"); // false
+ </pre>
+		 * 
+		 * @param object The object to check style exists on
+		 * @param styleName Name of style to check for
+		 * @param useOtherMethod Uses Flash internal methods
+		 * */
+		public static function hasStyle(object:Object, styleName:String, useOtherMethod:Boolean = false):Boolean {
+			var styleClient:IStyleClient = object ? object as IStyleClient : null;
+			if (styleClient==null || styleClient=="" || styleName==null || styleName=="") return false;
+			var found:Boolean;
+			
+			// not sure if this is a valid way to tell if an object has a style
+			if (useOtherMethod) {
+				if (styleName in styleClient.inheritingStyles) {
+					found = true;
+				}
+				else if (styleName in styleClient.nonInheritingStyles) {
+					found = true;
+				}
+			}
+			
+			if (useOtherMethod) {
+				return found;
+			}
+			
+			var styles:Array = getStyleNames(styleClient);
+			
+			if (styles.indexOf(styleName)!=-1) {
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Returns true if the object has the style defined somewhere in the style lookup.<br/><br/>
+		 * 
+		 * For example:<br/>
+ <pre>
+ var hasStyle:Boolean = ClassUtils.isStyleDefined(myButton, "color"); // true
+ var hasStyle:Boolean = ClassUtils.isStyleDefined(myButton, "spagetti"); // false
+ </pre>
+		 * 
+		 * @param object The object to check style exists on
+		 * @param styleName Name of style to check for
+		 * @see StyleManager.isValidStyleValue()
+		 * */
+		public static function isStyleDefined(object:Object, styleName:String):Boolean {
+			var styleManager:IStyleManager2;
+			var styleClient:IStyleClient = object ? object as IStyleClient : null;
+			
+			if (styleClient==null || styleClient=="" || styleName==null || styleName=="") return false;
+			
+			//if (object is IFlexModuleFactory) {
+				styleManager = StyleManager.getStyleManager(object as IFlexModuleFactory);
+			//}
+			
+			return styleManager.isValidStyleValue(styleClient.getStyle(styleName));
+			
+		}
+		
+		/**
+		 * Gets the correct case of an objects property. For example, 
+		 * "percentwidth" returns "percentWidth".
+		 * 
+		 * If the property is not found then it returns null.
+		 * */
+		public static function getCaseSensitivePropertyName(object:Object, propertyName:String):String {
+			var properties:Array = getPropertyNames(object);
+			var propertyLowerCased:String = propertyName.toLowerCase();
+			
+			for each (var property:String in properties) {
+				if (property.toLowerCase() == propertyLowerCased) {
+					return property;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Gets the correct case of an object's style. For example, 
+		 * "backgroundcolor" returns "backgroundColor".
+		 * 
+		 * If the style is not found then it returns null.
+		 * */
+		public static function getCaseSensitiveStyleName(object:Object, styleName:String):String {
+			var styles:Array = getStyleNames(object);
+			var styleLowerCased:String = styleName.toLowerCase();
+			
+			for each (var style:String in styles) {
+				if (style.toLowerCase() == styleLowerCased) {
+					return style;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Gets the correct case of an objects property. For example, 
+		 * "percentwidth" returns "percentWidth".  
+		 * */
+		public static function getCaseSensitivePropertyName2(target:Object, property:String, options:Object = null):String {
+			var classInfo:Object = target ? ObjectUtil.getClassInfo(target, null, options) : property;
+			var properties:Array = classInfo ? classInfo.properties : [];
+			
+			for each (var info:QName in properties) {
+				if (info.localName.toLowerCase() == property.toLowerCase()) {
+					return info.localName;
+				}
+			}
+			
+			return property;
 		}
 		
 		/**
@@ -641,9 +871,9 @@ trace(object);
 		/**
 		 * Get AccessorMetaData data for the given property. 
 		 * */
-		public static function getMetaDataOfProperty(target:Object, property:String):AccessorMetaData {
+		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
 			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(target);
-			var accessorMetaData:AccessorMetaData = new AccessorMetaData();
+			var accessorMetaData:AccessorMetaData;
 			var matches:XMLList = describedTypeRecord.typeDescription..accessor.(@name==property);
 			var matches2:XMLList = describedTypeRecord.typeDescription..variable.(@name==property);
 			var node:XML;
@@ -655,13 +885,35 @@ trace(object);
 				node = matches2[0];
 			}
 			
+			// we should not include facade properties
+			
+			var cachedMetaData:Object = DescribeTypeCacheRecord[property];
+			if (cachedMetaData is AccessorMetaData) {
+				AccessorMetaData(cachedMetaData).updateValues(target);
+				return AccessorMetaData(cachedMetaData);
+			}
+			
 			if (node) {
+				accessorMetaData = new AccessorMetaData();
 				accessorMetaData.unmarshall(node, target);
+				
+				// we want to cache property meta data
+				if (accessorMetaData) {
+					DescribeTypeCache.registerCacheHandler(property, function (record:DescribeTypeCacheRecord):Object {
+						//if (relevantPropertyFacades.indexOf(style)!=-1) {
+						return accessorMetaData;
+						//}
+					});
+				}
+				
 				return accessorMetaData;
 			}
 			
 			return null;
 		}
+		public static const relevantPropertyFacades:Array = 
+			[ "top", "left", "right", "bottom", 
+			"verticalCenter", "horizontalCenter", "baseline"];
 		
 		/**
 		 * Get StyleMetaData data for the given style. 
@@ -670,22 +922,34 @@ trace(object);
  <pre>
  var styleMetaData:StyleMetaData = getStylesFromArray(myButton, "color");
  </pre>
+		 * @returns an StyleMetaData object
+		 * @param target IStyleClient that contains the style
+		 * @param style name of style
+		 * @param type if style is not defined on target class we check super class. default null 
+		 * @param stopAt if we don't want to look all the way up to object we can set the class to stop looking at
 		 * */
 		public static function getMetaDataOfStyle(target:Object, style:String, type:String = null, stopAt:String = null):StyleMetaData {
-			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord;
+			var describedTypeRecord:DescribeTypeCacheRecord;
 			var styleMetaData:StyleMetaData;
 			var extendsClassList:XMLList;
 			var typeDescription:XML;
-			var matches:XMLList;
-			var node:XML;
+			var foundStyle:Boolean;
 			var hasFactory:Boolean;
+			var matches:XMLList;
 			var factory:Object;
+			var node:XML;
 			
 			if (type) {
-				describedTypeRecord = mx.utils.DescribeTypeCache.describeType(type);
+				describedTypeRecord = DescribeTypeCache.describeType(type);
 			}
 			else {
-				describedTypeRecord = mx.utils.DescribeTypeCache.describeType(target);
+				describedTypeRecord = DescribeTypeCache.describeType(target);
+			}
+			
+			var cachedMetaData:Object = describedTypeRecord[style];
+			if (cachedMetaData is StyleMetaData) {
+				StyleMetaData(cachedMetaData).updateValues(target);
+				return StyleMetaData(cachedMetaData);
 			}
 			
 			typeDescription = describedTypeRecord.typeDescription[0];
@@ -710,22 +974,44 @@ trace(object);
 					extendsClassList = typeDescription.extendsClass;
 				}
 				
-				var length:int = extendsClassList.length();
+				var numberOfTypes:int = extendsClassList.length();
 				
-				for (var i:int;i<length;i++) {
+				for (var i:int;i<numberOfTypes;i++) {
 					type = extendsClassList[i].@type;
 					if (type==stopAt) return null;
 					if (type=="Class") return null;
+					
 					return getMetaDataOfStyle(target, style, type);
 				}
-				
 			}
 			
 			if (matches.length()>0) {
 				node = matches[0].parent();
-				node.@declaredBy = typeDescription.typeName;
+				if ("typeName" in typeDescription) {
+					node.@declaredBy = typeDescription.typeName;
+				}
+				else if (type) {
+					node.@declaredBy = type;
+				}
+				else if (typeDescription.hasOwnProperty("name")) {
+					node.@declaredBy = typeDescription.@name;
+				}
 				styleMetaData = new StyleMetaData();
 				styleMetaData.unmarshall(node, target);
+				
+				// we want to cache style meta data
+				if (styleMetaData) {
+					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
+					//	Error$/throwError [no source]	
+					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
+						
+					DescribeTypeCache.registerCacheHandler(style, function (record:DescribeTypeCacheRecord):Object {
+						//if (relevantPropertyFacades.indexOf(style)!=-1) {
+						return styleMetaData;
+						//}
+					});
+				}
+				
 				return styleMetaData;
 			}
 			
@@ -767,12 +1053,12 @@ trace(object);
 		public static var constraints:Array = ["baseline", "left", "top", "right", "bottom", "horizontalCenter", "verticalCenter"];
 		
 		/**
-		 * Gets an array of the properties from an array of names<br/><br/>
+		 * Gets an array of valid properties from an array of possible property names<br/><br/>
 		 * 
 		 * Usage:<br/>
  <pre>
  // returns ["width", "x"]
- var styles:Array = getStylesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x"]);
+ var properties:Array = getPropertiesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x"]);
  </pre>
 		 * 
 		 * @param object The object to use. Either string, object or class.
@@ -805,6 +1091,31 @@ trace(object);
 			
 			
 			return result;
+		}
+		
+		
+		/**
+		 * Removes the constraint values from an object since the constraint properties
+		 * are a facade for the styles of the same name. 
+		 * Having an attribute defined twice in XML makes the XML invalid. So we must
+		 * remove them.
+		 * */
+		public static function removeConstraintsFromObject(object:Object):Object {
+			var propertyNames:Array = getPropertyNames(object);
+			var numberOfProperties:int = propertyNames.length;
+			var property:String;
+			
+			for (var i:int; i < numberOfProperties; i++) {
+				property = propertyNames[i];
+				
+				// found constraint then delete it from the object
+				if (constraints.indexOf(property)!=-1) { 
+					object[property] = null;
+					delete object[property];
+				}
+			}
+			
+			return object;
 		}
 		
 		/**
@@ -864,5 +1175,321 @@ trace(object);
 			var propertiesArray:Array = getPropertyNames(object);
 			return propertiesArray==null || propertiesArray.length==0;
 		}
+		
+		/**
+		 * Get a styles type 
+		 * 
+<pre>
+var type:String = getTypeOfStyle(myButton, "color");
+trace(type); // "String"
+var type:Object = getTypeOfStyle(myButton, "color", true);
+trace(type); // [Object String]
+</pre>
+		 * */
+		public static function getTypeOfStyle(elementInstance:Object, style:String, returnAsClass:Boolean = false):Object {
+			var styleMetaData:StyleMetaData = getMetaDataOfStyle(elementInstance, style);
+			var ClassObject:Object;
+			
+			if (styleMetaData) {
+				
+				if (returnAsClass) {
+					ClassObject = getDefinition(styleMetaData.type);
+					return ClassObject;
+				}
+				else {
+					return styleMetaData.type;
+				}
+			}
+			
+			return null;
+		}
+		/**
+		 * Get a properties type 
+		 * 
+<pre>
+var type:String = getTypeOfProperty(myButton, "x");
+trace(type); // "int"
+var type:Object = getTypeOfProperty(myButton, "x", true);
+trace(type); // [Object int]
+</pre>
+		 * */
+		public static function getTypeOfProperty(elementInstance:Object, property:String, returnAsClass:Boolean = false):Object {
+			var propertyMetaData:MetaData = getMetaDataOfProperty(elementInstance, property);
+			var classObject:Object;
+			
+			if (propertyMetaData) {
+				
+				if (returnAsClass) {
+					classObject = getDefinition(propertyMetaData.type);
+					return classObject;
+				}
+				else {
+					return propertyMetaData.type;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get object that has name and value pair of styles and makes sure the values are of correct type
+Usage: 
+<pre>
+var elementInstance:UIComponent = new ComboBox();
+var node = &lt;s:ComboBox height="23" x="30" y="141" width="166" dataProvider="Item 1,Item 2,Item 3" xmlns:s="library://ns.adobe.com/flex/spark" />
+var elementName:String = node.localName();
+var attributeName:String;
+var attributes:Array;
+var childNodeNames:Array;
+var propertiesOrStyles:Array;
+var properties:Array;
+var styles:Array;
+var attributesValueObject:Object;
+var childNodeValueObject:Object;
+var values:Object;
+var valuesObject:ValuesObject;
+var failedToImportStyles:Object = {};
+var failedToImportProperties:Object = {};
+
+attributes 				= XMLUtils.getAttributeNames(node);
+childNodeNames 			= XMLUtils.getChildNodeNames(node);
+propertiesOrStyles 		= attributes.concat(childNodeNames);
+properties 				= ClassUtils.getPropertiesFromArray(elementInstance, propertiesOrStyles);
+styles 					= ClassUtils.getStylesFromArray(elementInstance, propertiesOrStyles);
+
+attributesValueObject 	= XMLUtils.getAttributesValueObject(node);
+attributesValueObject	= ClassUtils.getTypedStyleValueObject(elementInstance as IStyleClient, attributesValueObject, styles, failedToImportStyles);
+attributesValueObject	= ClassUtils.getTypedPropertyValueObject(elementInstance, attributesValueObject, properties, failedToImportProperties);
+</pre>
+		 * @param target Object to set values on
+		 * @param values Object containing name value pair of styles
+		 * @param styles Optional Array of specific styles to
+		 * @param failedToImportObject Optional Object that contains any styles that failed to import and errors as the value
+		 * */
+		public static function getTypedStyleValueObject(target:Object, values:Object, styles:Array = null, getTypedObject:Boolean = false, failedToImportStyles:Object = null):Object {
+			var numberOfStyles:int = styles && styles.length ? styles.length : 0;
+			var styleType:Object;
+			var styleMetaData:StyleMetaData;
+			var style:String;
+			var value:*;
+			
+			// get specified styles
+			if (styles && numberOfStyles) {
+				for each (style in styles) {
+					styleMetaData = getMetaDataOfStyle(target, style);
+					
+					if (styleMetaData.format=="Color") {
+						styleType = "String";
+					}
+					else {
+						styleType = styleMetaData.type;
+					}
+					
+					if (styleType=="Object") {
+						
+						// ITextLayoutFormat
+						if (style=="trackingLeft" || style=="trackingRight" || style=="lineHeight") {
+							value = values[style];
+							
+							if (value && value.indexOf("%")!=-1) {
+								styleType = "String";
+							}
+							else {
+								styleType = "Number";
+							}
+						}
+						//else if (style=="baselineShift" ) {
+						//	value = values[style];
+						//	styleType = "String";
+						//}
+					}
+					
+					try {
+						values[style] = getCorrectType(values[style], styleType);
+					}
+					catch (error:Error) {
+						if (failedToImportStyles) {
+							failedToImportStyles[style] = error;
+						}
+					}
+				}
+			}
+			
+			// get all styles in values object
+			else {
+				for (style in values) {
+					styleMetaData = getMetaDataOfStyle(target, style);
+					
+					if (styleMetaData) {
+						if (styleMetaData.format=="Color") {
+							styleType = "String";
+						}
+						else {
+							styleType = styleMetaData.type;
+						}
+						
+						
+						try {
+							values[style] = getCorrectType(values[style], styleType);
+						}
+						catch (error:Error) {
+							if (failedToImportStyles) {
+								failedToImportStyles[style] = error;
+							}
+						}
+					}
+				}
+			}
+			
+			return values;
+		}
+		
+		/**
+		 * Get object that has property and value pair and makes sure the values are of correct type
+Usage: 
+<pre>
+var elementInstance:UIComponent = new ComboBox();
+var node = &lt;s:ComboBox height="23" x="30" y="141" width="166" dataProvider="Item 1,Item 2,Item 3" xmlns:s="library://ns.adobe.com/flex/spark" />
+var elementName:String = node.localName();
+var attributeName:String;
+var attributes:Array;
+var childNodeNames:Array;
+var propertiesOrStyles:Array;
+var properties:Array;
+var styles:Array;
+var attributesValueObject:Object;
+var childNodeValueObject:Object;
+var values:Object;
+var valuesObject:ValuesObject;
+var failedToImportStyles:Object = {};
+var failedToImportProperties:Object = {};
+
+attributes 				= XMLUtils.getAttributeNames(node);
+childNodeNames 			= XMLUtils.getChildNodeNames(node);
+propertiesOrStyles 		= attributes.concat(childNodeNames);
+properties 				= ClassUtils.getPropertiesFromArray(elementInstance, propertiesOrStyles);
+styles 					= ClassUtils.getStylesFromArray(elementInstance, propertiesOrStyles);
+
+attributesValueObject 	= XMLUtils.getAttributesValueObject(node);
+attributesValueObject	= ClassUtils.getTypedStyleValueObject(elementInstance as IStyleClient, attributesValueObject, styles, failedToImportStyles);
+attributesValueObject	= ClassUtils.getTypedPropertyValueObject(elementInstance, attributesValueObject, properties, failedToImportProperties);
+</pre>
+		 * 
+		 * @param target Object to set values on
+		 * @param values Object containing name value pair of properties
+		 * @param properties Optional Array of specific properties to
+		 * @param failedToImportObject Optional Object that contains any properties that failed to import and errors as values
+		 * */
+		public static function getTypedPropertyValueObject(target:Object, values:Object, properties:Array = null, failedToImportObject:Object = null):Object {
+			var numberOfProperties:int = properties && properties.length ? properties.length : 0;
+			var propertyType:Object;
+			var property:String;
+			
+			// get specific properties
+			if (properties && numberOfProperties) {
+				for each (property in properties) {
+					try {
+						propertyType = getTypeOfProperty(target, property, true);
+						values[property] = getCorrectType(values[property], propertyType);
+					}
+					catch(error:Error) {
+						if (failedToImportObject) {
+							failedToImportObject[property] = error;
+						}
+					}
+				}
+			}
+			else {
+				
+				// get all properties in values object
+				for (property in values) {
+					try {
+						propertyType = getTypeOfProperty(target, property, true);
+						values[property] = getCorrectType(values[property], propertyType);
+					}
+					catch(error:Error) {
+						if (failedToImportObject) {
+							failedToImportObject[property] = error;
+						}
+					}
+				}
+			}
+			
+			return values;
+		}
+		
+		/**
+		 * Casts the value to the correct type
+		 * NOTE: May not work for colors
+		 * Also supports casting to specific class. use ClassDefinition as type
+		 * returns instance of flash.utils.getDefinitionByName(className)
+		 * */
+		public static function getCorrectType(value:String, Type:*):* {
+			var typeString:String;
+			var ClassDefinition:Class;
+			
+			if (Type==undefined || Type==null) {
+				return value;
+			}
+			
+			if (Type && !(Type is String)) {
+				
+				if (Type==Boolean) {
+					if (value && value.toLowerCase() == "false") {
+						return false;
+					}
+					else if (value && value.toLowerCase() == "true") {
+						return true;
+					}
+					else if (!value) {
+						return false;
+					}
+				}
+				return Type(value);
+			}
+			else {
+				typeString = Type;
+				
+				if (typeString == "Boolean" && value.toLowerCase() == "false") {
+					return false;
+				}
+				else if (typeString == "Boolean" && value.toLowerCase() == "true") {
+					return true;
+				}
+				else if (typeString == "Boolean" && !value) {
+					return false;
+				}
+				else if (typeString == "Number") {
+					if (value == null || value == "") {
+						return undefined
+					};
+					return Number(value);
+				}
+				else if (typeString == "int") {
+					if (value == null || value == "") {
+						return undefined
+					};
+					return int(value);
+				}
+				else if (typeString == "String") {
+					return String(value);
+				}
+					// TODO: Return color type1
+				else if (typeString == "Color") {
+					return String(value);
+				}
+				else if (typeString == "ClassDefinition") {
+					if (value) {
+						ClassDefinition = getDefinitionByName(value) as Class;
+						return ClassDefinition(value);
+					}
+					return null;
+				}
+				else {
+					return value;
+				}
+			}
+		}
+		
 	}
 }

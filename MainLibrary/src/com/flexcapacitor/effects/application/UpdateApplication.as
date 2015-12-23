@@ -6,7 +6,6 @@ package com.flexcapacitor.effects.application {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	import com.flexcapacitor.utils.ClassUtils;
 	
-	import flash.desktop.NativeApplication;
 	import flash.events.Event;
 	
 	import mx.effects.Effect;
@@ -37,9 +36,10 @@ package com.flexcapacitor.effects.application {
 	[Event(name="downloadStart", type="air.update.events.UpdateEvent")]
 	
 	/** 
-	 * Dispatched if something goes wrong with our knowledge 
+	 * Dispatched if something goes wrong with our knowledge. 
+	 * This is a generic catch all event for all the errors this class dispatches. 
 	 ***/
-	[Event(name="error", type="flash.events.ErrorEvent")]
+	[Event(name="error", type="flash.events.Event")]
 	
 	/** 
 	 * Dispatched when an error occured while trying to parse the AIR file from installFromAIRFile call 

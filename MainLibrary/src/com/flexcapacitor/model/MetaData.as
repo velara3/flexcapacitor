@@ -138,7 +138,7 @@ package com.flexcapacitor.model {
 					continue;
 				}
 				
-				if (keyName=="enumeration") {
+				else if (keyName=="enumeration") {
 					enumeration = keyValue.split(",");
 					continue;
 				}
@@ -184,20 +184,33 @@ package com.flexcapacitor.model {
 				}
 			}
 			
-			// ReferenceError: Error #1077: Illegal read of write-only property layoutMatrix3D on spark.components.Label.
-			try {
-				value = target && name in target ? target[name] : undefined;
-			}
-			catch (e:Error) {
-				
-			}
-			
-			textValue = value===undefined ? "": "" + value;
-			
-			if (!getValue) value = undefined;
+			updateValues(target, getValue);
 			
 			raw = item.toXMLString();
 			
+		}
+		
+		/**
+		 * We cache the metadata but each target has different values
+		 * so we use this method to update them
+		 * */
+		public function updateValues(target:Object, getValue:Boolean = true):void {
+			
+			if (getValue)  {
+				// ReferenceError: Error #1077: Illegal read of write-only property layoutMatrix3D on spark.components.Label.
+				try {
+					value = target && name in target ? target[name] : undefined;
+				}
+				catch (e:Error) {
+					
+				}
+				
+				textValue = value===undefined ? "": "" + value;
+			}
+			else {
+				value = undefined;
+				textValue = "";
+			}
 		}
 	}
 }

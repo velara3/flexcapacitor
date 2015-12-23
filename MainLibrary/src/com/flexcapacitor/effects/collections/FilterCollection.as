@@ -3,6 +3,7 @@
 package com.flexcapacitor.effects.collections {
 	
 	import com.flexcapacitor.effects.collections.supportClasses.FilterCollectionInstance;
+	import com.flexcapacitor.effects.collections.supportClasses.FilterField;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	/**
@@ -39,46 +40,47 @@ package com.flexcapacitor.effects.collections {
 		/>
 </pre><br/>
 	 * Filtering on change of multiple components:<br/>
-	 * <pre>
+	 * 
+<pre>
 
-		<!-- FILTER BY NAME -->
-		&lt;handlers:EventHandler eventName="change" 
-							   targets="{[filterInput,showAllItemsOnEmpty,caseSensitive,searchAtStart]}"
-							   >
-			&lt;collections:FilterCollection target="{libraryCollection}" 
-								   source="{filterInput}" 
-								   sourcePropertyName="text"
-								   fieldName="title"
-								   showAllItemsOnEmpty="{showAllItemsOnEmpty.selected}"
-								   caseSensitive="{caseSensitive.selected}"
-								   searchAtStart="{searchAtStart.selected}"
-								   />
-		&lt;/handlers:EventHandler>
-		 * 
+<!-- FILTER BY NAME -->
+&lt;handlers:EventHandler eventName="change" 
+					   targets="{[filterInput,showAllItemsOnEmpty,caseSensitive,searchAtStart]}"
+					   >
+	&lt;collections:FilterCollection target="{libraryCollection}" 
+						   source="{filterInput}" 
+						   sourcePropertyName="text"
+						   fieldName="title"
+						   showAllItemsOnEmpty="{showAllItemsOnEmpty.selected}"
+						   caseSensitive="{caseSensitive.selected}"
+						   searchAtStart="{searchAtStart.selected}"
+						   />
+&lt;/handlers:EventHandler>
 
-		&lt;s:Group height="22" 
-				 minHeight="22"
-				 width="100%" 
-				 >
-				
-			&lt;s:TextInput id="filterInput" 
-							   left="0" right="0" top="0" 
-							   width="100%"
-							   minWidth="60" 
-							   borderAlpha="0.2" 
-							   color="#2F3030" 
-							   focusAlpha="0" 
-							   fontWeight="normal" 
-							   prompt="Search"
-							   />
-			&lt;s:HGroup width="100%" top="32" left="4" verticalAlign="baseline">
-				&lt;s:CheckBox id="showAllItemsOnEmpty" label="All" selected="true"/>
-				&lt;s:CheckBox id="caseSensitive" label="Case" selected="false"/>
-				&lt;s:CheckBox id="searchAtStart" label="At start" selected="false"/>
-				&lt;s:Spacer width="100%"/>
-				&lt;s:Label text="Results: {libraryCollection.length}"/>
-			&lt;/s:HGroup>
-		&lt;/s:Group>
+<!-- MXML -->
+&lt;s:Group height="22" 
+		 minHeight="22"
+		 width="100%" 
+		 >
+		
+	&lt;s:TextInput id="filterInput" 
+					   left="0" right="0" top="0" 
+					   width="100%"
+					   minWidth="60" 
+					   borderAlpha="0.2" 
+					   color="#2F3030" 
+					   focusAlpha="0" 
+					   fontWeight="normal" 
+					   prompt="Search"
+					   />
+	&lt;s:HGroup width="100%" top="32" left="4" verticalAlign="baseline">
+		&lt;s:CheckBox id="showAllItemsOnEmpty" label="All" selected="true"/>
+		&lt;s:CheckBox id="caseSensitive" label="Case" selected="false"/>
+		&lt;s:CheckBox id="searchAtStart" label="At start" selected="false"/>
+		&lt;s:Spacer width="100%"/>
+		&lt;s:Label text="Results: {libraryCollection.length}"/>
+	&lt;/s:HGroup>
+&lt;/s:Group>
 </pre>
 	 * */
 	public class FilterCollection extends ActionEffect {
@@ -160,6 +162,14 @@ package com.flexcapacitor.effects.collections {
 		public var showAllItemsOnEmpty:Boolean;
 		
 		/**
+		 * Additional filters to add. For example, 
+<pre>
+	&lt;Condition fieldName="name" value="john" caseInsensitive="true"/>
+</pre>
+		 * */
+		public var additionalFilters:Array;
+		
+		/**
 		 * The default filter function
 		 * ReferenceError: Error #1069: Property @title not found on String and there is no default value.
 		 * */
@@ -176,6 +186,45 @@ package com.flexcapacitor.effects.collections {
 				var error:String;
 				var currentFieldName:String;
 				var hasProperty:Boolean;
+				var numberOfAdditionalFilters:int;
+				var filterField:FilterField;
+				var filterFieldName:String;
+				
+				numberOfAdditionalFilters = additionalFilters ? additionalFilters.length : 0;
+				
+				// lets do user's additional filters first
+				for (var k:int = 0; k < numberOfAdditionalFilters; k++) {
+					filterField = additionalFilters[k];
+					filterFieldName = filterField.name;
+					
+					if (filterFieldName && filterFieldName in item) {
+						if (filterField.values!=null) {
+							// item not found in values match return false
+							if (filterField.values.indexOf(item[filterFieldName])==-1) {
+								return false;
+							}
+						}
+						// object does not equal value specified in filter field
+						if (filterField.value!=item[filterFieldName]) {
+							return false;
+						}
+					}
+					// field name is null so compare value or values
+					else if (filterFieldName==null) {
+						if (filterField.values!=null) {
+							// item not found in values match return false
+							if (filterField.values.indexOf(item)==-1) {
+								return false;
+							}
+						}
+						// if value must be set or it's undefined
+						else if (filterField.value!=item) {
+							return false;
+						}
+					}
+				}
+				
+				
 				
 				filterValue = sourcePropertyName ? source[sourcePropertyName] : String(source);
 				filterValueAsString = sourceSubPropertyName && filterValue ? filterValue[sourceSubPropertyName] : String(filterValue);

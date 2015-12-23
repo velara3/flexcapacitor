@@ -5,6 +5,10 @@ package com.flexcapacitor.effects.nativeProcess {
 	import com.flexcapacitor.effects.nativeProcess.supportClasses.RunProcessInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
+	import flash.events.Event;
+	import flash.events.MouseEvent;
+	import flash.events.ProgressEvent;
+	
 	import mx.effects.Effect;
 	
 	
@@ -49,13 +53,18 @@ package com.flexcapacitor.effects.nativeProcess {
 	[Event(name="exit", type="flash.events.NativeProcessExitEvent")]
 	
 	/**
+	 * Event dispatched when an error occurs when starting a native process .
+	 * */
+	[Event(name="error", type="flash.events.Event")]
+	
+	/**
 	 * Runs a process on the system. Runs on desktop with extendedDesktop profile.<br/><br/>
 	 * 
 	 * Be sure to add "extendedDesktop" to the supported profiles tag in the application descriptor file like so:
 	 * 
-	 * <pre>
-	 * &lt;supportedProfiles&gt;extendedDesktop desktop&lt;/supportedProfiles&gt;
-	 * </pre>
+<pre>
+&lt;supportedProfiles&gt;extendedDesktop desktop&lt;/supportedProfiles&gt;
+</pre>
 	 * 
 	 * <b>The following example runs a script that starts the screen saver:</b> 
 <pre>
@@ -79,12 +88,72 @@ package com.flexcapacitor.effects.nativeProcess {
 &lt;/nativeProcess:RunProcess>
 </pre>
  * 
- * StartScreenSaver.scpt (file is located in the application directory): 
+ * StartScreenSaver.scpt (create the file and include it in your Application directory): 
 <pre>
 tell application "System Events" 
 	start current screen saver
 end tell
 </pre>
+ * OpenDisplayPreferences.scpt (create the file and include it in your Application directory): 
+<pre>
+tell application "System Preferences"
+	set current pane to pane "com.apple.preference.displays"
+	activate
+end tell
+</pre>
+	 * <b>The following example runs the ant process. 
+	 * We've copied Ant into a folder in our application directory, "Ant/bin/ant".
+	 * And we've set permissions to execute the ant command (right click, select file properties).
+	 * The working directory is the application directory by default. 
+	 * We pass in our build.xml file in the arguments.  
+<pre>
+&lt;nativeProcess:RunProcess id="runAntProcess"
+						  startDelay="60"
+						  repeatCount="1" 
+						  repeatDelay="500"
+						  executablePath		="./Ant/bin/ant"
+						  standardOutputData	="runProcess_standardOutputDataHandler(event)"
+						  standardErrorData		="runProcess_standardErrorDataHandler(event)"
+						  standardErrorIOError	="runProcess_standardErrorIOErrorHandler(event)"
+						  standardOutputIOError	="runProcess_standardOutputIOErrorHandler(event)"
+						  exit					="runProcess_exitHandler(event)"
+						  error					="runAntProcess_errorHandler(event)">
+	
+	&lt;nativeProcess:arguments>
+		&lt;fx:Array>
+			&lt;fx:String>-f&lt;/fx:String>
+			&lt;fx:String>TestAnt.xml&lt;/fx:String>
+		&lt;/fx:Array>
+	&lt;/nativeProcess:arguments>
+&lt;/nativeProcess:RunProcess>
+
+protected function runAntButton_clickHandler(event:MouseEvent):void
+{
+	runAntProcess.play();
+}
+
+protected function runAntProcess_errorHandler(event:Event):void
+{
+	trace(runAntProcess.errorEvent);
+	trace(runAntProcess.errorMessage);
+}
+
+protected function runProcess_standardOutputDataHandler(event:ProgressEvent):void {
+	trace('StandardOutput:' + runAntProcess.outputData);
+	var output:String = runAntProcess.outputData as String;
+	
+	if (output && output.indexOf("-1")!=-1) {
+		trace("Error");
+	}
+	
+	if (output && output.indexOf("{")!=-1) {
+		//var user:Object = JSON.parse(output);
+	}
+}
+</pre>
+ * 
+ * In the previous example, if you put the file in your application directory you must give it execute permissions. 
+ * Otherwise you will get a Error #3219. <br/><br/>
 	 * 
 	 * <b>COMMON EXECUTABLES:</b><br/>
 	 * OSAScript - used for running applescript scpt scripts on Mac. Path is /usr/bin/osascript.<br/>
@@ -92,10 +161,15 @@ end tell
 	 * 
 	 * <b>ERROR</b><br/>
 	 * Error: Error #3219: The NativeProcess could not be started. 'Not supported in current profile.'<br/>
-	 * The Native Process is not supported on this platform. You may need to add extendedDesktop option to your application profile.<br/><br/>
+	 * The Native Process is not supported on this platform. You may need to add extendedDesktop option to your application profile.
+	 * If you have done that you may need set the execute bit on the file. Right click on the file and set the execute bit.<br/><br/>
 	 * 
 	 * <b>SOLUTION</b><br/>
 	 * Add <supportedProfiles>extendedDesktop desktop</supportedProfiles> to the application descriptor file<br/><br/>
+	 * 
+	 * <b>SOLUTION</b><br/>
+	 * You will get this error if the file you are attempting to execute doesn't have the execute bit set.
+	 * In Flash Builder right click on the file and choose properties. Then set the execute bit. <br/><br/>
 	 * 
 	 * <b>ERROR</b><br/>
 	 * ArgumentError: Error #3214: NativeProcessStartupInfo.executable does not specify a valid executable file.<br/><br/>
@@ -104,6 +178,11 @@ end tell
 	 * Path to executable incorrect. Script executable, "usr/bin/osascript"<br/>
 	 * */
 	public class RunProcess extends ActionEffect {
+		
+		/**
+		 * Event name constant when an error occurs at start.
+		 * */
+		public static const ERROR:String = "error";
 		
 		/**
 		 * Event name constant when a process is found.
@@ -155,7 +234,15 @@ end tell
 		
 		/**
 		 * Path to executable. For example, the path to the AppleScript executable is "/usr/bin/osascript".
+		 * If an executable is in the path you can use something like this: 
 		 * 
+<pre>
+"/myCommand"   - same directory as the application
+"./myCommand"  - same directory as the application
+"../myCommand" - a directory up from the application
+</pre>
+		 * Also, if you are including a command in your application directory make sure it is getting packaged
+		 * with your application. Check Project Properties > Flex Build Packaging > Package Contents
 		 * @see scriptOrigin 
 		 * */
 		public var executablePath:String = "";
@@ -169,6 +256,10 @@ end tell
 		 * application directory since the working directory is set to the application directory 
 		 * by default. 
 		 * 
+		 * For multiple arguments, 
+<pre>
+arguments="{['-f','myFile.xml']}"
+</pre>
 		 * @see workingDirectory
 		 * */
 		[Bindable]
@@ -274,9 +365,19 @@ end tell
 		public var exitEffect:Effect;
 		
 		/**
+		 * Effect that is played on native process error during startup. 
+		 * */
+		public var errorEffect:Effect;
+		
+		/**
 		 * Effect that is played when run process is not supported. 
 		 * */
 		public var notSupportedEffect:Effect;
+		
+		/**
+		 * Reference to the Error Event when an error occurs during startup
+		 * */
+		public var errorEvent:Error;
 		
 		/**
 		 * When true accesses the bytes from the error data and places it in the error data property.

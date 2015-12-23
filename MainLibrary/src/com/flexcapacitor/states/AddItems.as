@@ -618,10 +618,33 @@ package com.flexcapacitor.states {
 			
 			if ((propertyName == null || propertyName == "mxmlContent") && (dest is IVisualElementContainer))
 			{
-				for (i = 0; i < numAdded; i++)
-				{
-					if (IVisualElementContainer(dest).numElements > startIndex)
-						IVisualElementContainer(dest).removeElementAt(startIndex);
+				// ORIGINAL: 
+				//for (i = 0; i < numAdded; i++) {
+				//	if (IVisualElementContainer(dest).numElements > startIndex)
+				//		IVisualElementContainer(dest).removeElementAt(startIndex);
+				//}
+				// NEW OCT 12,15
+				for (i = 0; i < numAdded; i++) {
+					
+					// RangeError: Index -1 is out of range.
+					// at spark.components::Group/checkForRangeError()[E:\dev\4.y\frameworks\projects\spark\src\spark\components\Group.as:1310]
+					//	at spark.components::Group/removeElementAt()[E:\
+					if (IVisualElementContainer(dest).numElements > startIndex) {
+						// -1 means last place somewhere
+						if (startIndex<0) {
+							
+							// no elements left to remove
+							if (IVisualElementContainer(dest).numElements<1) {
+								continue; 
+							}
+							
+							//startIndex = IVisualElementContainer(dest).numElements-1//0; // get last place
+							IVisualElementContainer(dest).removeElementAt(IVisualElementContainer(dest).numElements-1);
+						}
+						else {
+							IVisualElementContainer(dest).removeElementAt(startIndex);
+						}
+					}
 				}
 			}
 			else if (propertyName == null && dest is IChildList)

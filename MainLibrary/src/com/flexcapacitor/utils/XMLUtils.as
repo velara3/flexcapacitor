@@ -135,6 +135,7 @@ package com.flexcapacitor.utils
 			outputValue = outputValue.replace(/"/g, "&quot;");
 			outputValue = outputValue.replace(/</g, "&lt;");
 			outputValue = outputValue.replace(/>/g, "&gt;");
+			outputValue = outputValue.replace(/\n/g, "&#10;");
 			return outputValue;
 		}
 		
@@ -152,6 +153,7 @@ package com.flexcapacitor.utils
 			outputValue = outputValue.replace(/&amp;/g, "&");
 			outputValue = outputValue.replace(/&lt;/g, "<");
 			outputValue = outputValue.replace(/&gt;/g, ">");
+			outputValue = outputValue.replace(/&#10;/g, "\n");
 			return outputValue;
 		}
 		
@@ -528,6 +530,19 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Returns true if node has attribute. Not handing namespaces.
+		 * 
+		 * @param node XML item
+		 * @return true if attribute exists
+		 * */
+		public static function hasAttribute(node:XML, attribute:String):Boolean {
+			var attributes:Array = node ? getAttributeNames(node) : [];
+			var exists:Boolean = (attributes.indexOf(attribute)!=-1);
+			
+			return exists;
+		}
+		
+		/**
 		 * Get list of attribute names from a node
 		 * 
 		 * @param node XML item
@@ -539,6 +554,17 @@ package com.flexcapacitor.utils
 			for each (var attribute:XML in node.attributes()) {
 				attributeName = attribute.name().toString();
 				
+				/*
+				var a:Object = attribute.namespace().prefix     //returns prefix i.e. rdf
+				var b:Object = attribute.namespace().uri        //returns uri of prefix i.e. http://www.w3.org/1999/02/22-rdf-syntax-ns#
+				
+				var c:Object = attribute.inScopeNamespaces()   //returns all inscope namespace as an associative array like above
+				
+				//returns all nodes in an xml doc that use the namespace
+				var nsElement:Namespace = new Namespace(attribute.namespace().prefix, attribute.namespace().uri);
+				
+				var usageCount:XMLList = attribute..nsElement::*;
+				*/
 				result.push(attributeName);
 			}
 			

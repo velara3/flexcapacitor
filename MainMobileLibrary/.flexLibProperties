@@ -11,10 +11,10 @@
     <classEntry path="com.flexcapacitor.effects.prompt.PromptAction"/>
     <classEntry path="com.flexcapacitor.effects.prompt.supportClasses.PromptActionInstance"/>
     <classEntry path="com.flexcapacitor.effects.view.OpenView"/>
-    <classEntry path="com.flexcapacitor.effects.view.RemoveView"/>
+    <classEntry path="com.flexcapacitor.effects.view.CloseView"/>
     <classEntry path="com.flexcapacitor.effects.view.SelectTabView"/>
     <classEntry path="com.flexcapacitor.effects.view.supportClasses.OpenViewInstance"/>
-    <classEntry path="com.flexcapacitor.effects.view.supportClasses.RemoveViewInstance"/>
+    <classEntry path="com.flexcapacitor.effects.view.supportClasses.CloseViewInstance"/>
     <classEntry path="com.flexcapacitor.effects.view.supportClasses.SelectTabViewInstance"/>
     <classEntry path="com.flexcapacitor.events.WebViewEvent"/>
     <classEntry path="com.flexcapacitor.prompt.PromptManager"/>

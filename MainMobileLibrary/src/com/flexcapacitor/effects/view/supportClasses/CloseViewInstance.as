@@ -2,7 +2,7 @@
 
 package com.flexcapacitor.effects.view.supportClasses {
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
-	import com.flexcapacitor.effects.view.RemoveView;
+	import com.flexcapacitor.effects.view.CloseView;
 	import com.flexcapacitor.transitions.FlipViewTransition;
 	import com.flexcapacitor.transitions.FlipViewTransitionMode;
 	import com.flexcapacitor.transitions.ZoomViewTransition;
@@ -27,7 +27,7 @@ package com.flexcapacitor.effects.view.supportClasses {
 	/**
 	 *  @copy spark.components.ViewNavigator#popView()
 	 * */  
-	public class RemoveViewInstance extends ActionEffectInstance {
+	public class CloseViewInstance extends ActionEffectInstance {
 		
 		//--------------------------------------------------------------------------
 		//
@@ -46,7 +46,7 @@ package com.flexcapacitor.effects.view.supportClasses {
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public function RemoveViewInstance(target:Object) {
+		public function CloseViewInstance(target:Object) {
 			super(target);
 		}
 		
@@ -75,7 +75,7 @@ package com.flexcapacitor.effects.view.supportClasses {
 		override public function play():void { 
 			super.play(); // dispatch startEffect
 			
-			var action:RemoveView = RemoveView(effect);
+			var action:CloseView = CloseView(effect);
 			var transitionType:String = action.transitionType;
 			var transitionMode:String = action.transitionMode;
 			var transitionDirection:String = action.transitionDirection;

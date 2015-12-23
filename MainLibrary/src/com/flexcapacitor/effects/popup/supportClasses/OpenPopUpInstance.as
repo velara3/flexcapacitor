@@ -1,37 +1,34 @@
 
-package com.flexcapacitor.effects.popup.supportClasses
-{
+package com.flexcapacitor.effects.popup.supportClasses {
 
-/////////////////////////////////////////////////////////////////////////
-//
-// EFFECT INSTANCE
-//
-/////////////////////////////////////////////////////////////////////////
-
-import com.flexcapacitor.effects.popup.OpenPopUp;
-import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
-
-import flash.display.BlendMode;
-import flash.display.DisplayObject;
-import flash.display.Sprite;
-import flash.events.Event;
-import flash.events.MouseEvent;
-import flash.filters.DropShadowFilter;
-
-import mx.core.ClassFactory;
-import mx.core.FlexGlobals;
-import mx.core.FlexSprite;
-import mx.core.IFlexDisplayObject;
-import mx.core.ILayoutElement;
-import mx.core.IUIComponent;
-import mx.core.UIComponent;
-import mx.core.mx_internal;
-import mx.effects.EffectManager;
-import mx.managers.PopUpManager;
-import mx.managers.SystemManager;
-import mx.styles.IStyleClient;
-
-use namespace mx_internal;
+	import com.flexcapacitor.effects.popup.OpenPopUp;
+	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
+	
+	import flash.display.BlendMode;
+	import flash.display.DisplayObject;
+	import flash.display.Sprite;
+	import flash.events.Event;
+	import flash.events.KeyboardEvent;
+	import flash.events.MouseEvent;
+	import flash.filters.DropShadowFilter;
+	import flash.ui.Keyboard;
+	
+	import mx.core.ClassFactory;
+	import mx.core.FlexGlobals;
+	import mx.core.FlexSprite;
+	import mx.core.IFlexDisplayObject;
+	import mx.core.IInvalidating;
+	import mx.core.ILayoutElement;
+	import mx.core.IUIComponent;
+	import mx.core.UIComponent;
+	import mx.core.mx_internal;
+	import mx.effects.EffectManager;
+	import mx.events.SandboxMouseEvent;
+	import mx.managers.PopUpManager;
+	import mx.managers.SystemManager;
+	import mx.styles.IStyleClient;
+	
+	use namespace mx_internal;
 	
 	/**
 	 *
@@ -109,6 +106,8 @@ use namespace mx_internal;
 			var popUp:IFlexDisplayObject = action.popUp;
 			var preventMultipleInstances:Boolean = action.preventMultipleInstances;
 			var closePreviousInstanceIfOpen:Boolean = action.closePreviousInstanceIfOpen;
+			var closeOnEscapeKey:Boolean = action.closeOnEscapeKey;
+			var fitMaxSizeToApplication:Boolean = action.fitMaxSizeToApplication;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -141,8 +140,7 @@ use namespace mx_internal;
 				//trace("Ending effect for target: " + UIComponent(popUp).endEffectsStarted());
 			}
 			
-			if (popUp && popUp.parent!=null && preventMultipleInstances &&
-				!Object(popUp).isPopUp) {
+			if (action.isOpen) {
 				
 				if (closePreviousInstanceIfOpen) {
 					PopUpManager.removePopUp(popUp);
@@ -191,6 +189,11 @@ use namespace mx_internal;
 				popUp.height = height;
 			}
 			
+			if (fitMaxSizeToApplication && "maxHeight" in popUp) {
+				Object(popUp).maxHeight = FlexGlobals.topLevelApplication.height;
+				Object(popUp).maxWidth = FlexGlobals.topLevelApplication.width;
+			}
+			
 			// add drop shadow
 			if (showDropShadow) {
 				var filters:Array = popUp.filters ? popUp.filters : [];
@@ -216,10 +219,15 @@ use namespace mx_internal;
 				IFlexDisplayObject(popUp).addEventListener(Event.REMOVED, removedHandler, false, 0, true);
 				IFlexDisplayObject(popUp).addEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler, false, 0, true);
 				IFlexDisplayObject(parent).addEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler, false, 0, true);
+				IFlexDisplayObject(parent).addEventListener(SandboxMouseEvent.MOUSE_UP_SOMEWHERE, mouseUpOutsideHandler, false, 0, true);
 			}
 			
 			if (addMouseEvents || closeOnMouseDownInside) {
 				IFlexDisplayObject(popUp).addEventListener(MouseEvent.MOUSE_UP, mouseUpInsideHandler, false, 0, true);
+			}
+			
+			if (closeOnEscapeKey) {
+				IFlexDisplayObject(popUp).addEventListener(KeyboardEvent.KEY_UP, keyUpHandler, false, 0, true);
 			}
 			
 			if (action.autoCenter) {
@@ -282,92 +290,24 @@ use namespace mx_internal;
 			waitForHandlers();
 		}
 		
-		//--------------------------------------------------------------------------
-		//
-		//  Event handlers
-		//
-		//--------------------------------------------------------------------------
-		
-		/**
-		 * Mouse up outside of parent or pop up
-		 * */
-		private function mouseUpOutsideHandler(event:Event):void {
-			var action:OpenPopUp = OpenPopUp(effect);
-			var close:Boolean;
-			var popUp:IFlexDisplayObject = action.popUp;
-			
-			if (popUp && popUp as IUIComponent && UIComponent(popUp).isEffectStarted) {
-				if (action.endEffectsPlaying && popUp && popUp as IUIComponent) {
-					EffectManager.endEffectsForTarget(popUp as IUIComponent);
-				}
+		public function keyUpHandler(event:KeyboardEvent):void {
+			if (event.keyCode==Keyboard.ESCAPE) {
+				close();
 				
-				// we exit out because if we continue we close the pop up but 
-				// when the effect ends it puts up a display object and there 
-				// is no way to close the screen shield
-				return;
+				///////////////////////////////////////////////////////////
+				// End the effect
+				///////////////////////////////////////////////////////////
+				finish();
 			}
-			
-			if (action.closeOnMouseDownOutside) {
-				PopUpManager.removePopUp(action.popUp as IFlexDisplayObject);
-				removeEventListeners();
-				close = true;
-			}
-			
-			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE)) {
-				dispatchActionEvent(new Event(OpenPopUp.MOUSE_DOWN_OUTSIDE));
-			}
-			
-			if (action.mouseDownOutsideEffect) { 
-				playEffect(action.mouseDownOutsideEffect);
-			}
-			
-			
-			///////////////////////////////////////////////////////////
-			// End the effect
-			///////////////////////////////////////////////////////////
-			close ? finish():-(0);
 		}
 		
-		/**
-		 * Mouse up inside pop up
-		 * */
-		private function mouseUpInsideHandler(event:Event):void {
-			var action:OpenPopUp = OpenPopUp(effect);
-			var close:Boolean;
+		public function close():void {
 			
-			
-			if (action.closeOnMouseDownInside) {
-				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
-				removeEventListeners();
-				close = true;
-			}
-		
-			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_INSIDE)) {
-				dispatchActionEvent(new Event(OpenPopUp.MOUSE_DOWN_INSIDE));
-			}
-			
-			if (action.mouseDownInsideEffect) { 
-				playEffect(action.mouseDownInsideEffect);
-			}
-			
-			///////////////////////////////////////////////////////////
-			// End the effect
-			///////////////////////////////////////////////////////////
-			close ? finish():-(0);
-		}
-		
-		/**
-		 * Pop up was removed from the stage
-		 * */
-		private function removedHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			var popUp:Object = action.popUp;
 			var actionProperty:String = action.actionPropertyName;
 			var continueValue:String = action.continueActionValue;
 			var cancelValue:String = action.cancelActionValue;
-			
-			// prevent bubbled up removed events from content inside the pop up
-			if (event.target != popUp) { return; }
 			
 			
 			if (!action.dispatchedCloseEvent) {
@@ -406,6 +346,102 @@ use namespace mx_internal;
 			
 			//traceMessage("Closing pop up");
 			
+		}
+		
+		//--------------------------------------------------------------------------
+		//
+		//  Event handlers
+		//
+		//--------------------------------------------------------------------------
+		
+		/**
+		 * Mouse up outside of parent or pop up
+		 * */
+		private function mouseUpOutsideHandler(event:Event):void {
+			var action:OpenPopUp = OpenPopUp(effect);
+			var close:Boolean;
+			var popUp:IFlexDisplayObject = action.popUp;
+			
+			if (popUp && popUp as IUIComponent && UIComponent(popUp).isEffectStarted) {
+				if (action.endEffectsPlaying && popUp && popUp as IUIComponent) {
+					EffectManager.endEffectsForTarget(popUp as IUIComponent);
+				}
+				
+				// we exit out because if we continue, we would close the pop up.
+				// but if we did that then when the effect ends it puts up a 
+				// display object "shield" and there would be no way to close 
+				// the display object shield since we removed the pop up 
+				// display object that has our closing event listeners 
+				return;
+			}
+			
+			if (action.closeOnMouseDownOutside) {
+				PopUpManager.removePopUp(action.popUp as IFlexDisplayObject);
+				removeEventListeners();
+				close = true;
+			}
+			
+			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE)) {
+				dispatchActionEvent(new Event(OpenPopUp.MOUSE_DOWN_OUTSIDE));
+			}
+			
+			if (action.mouseDownOutsideEffect) { 
+				playEffect(action.mouseDownOutsideEffect);
+			}
+			
+			
+			///////////////////////////////////////////////////////////
+			// End the effect
+			///////////////////////////////////////////////////////////
+			if (close) {
+				finish();
+			}
+		}
+		
+		/**
+		 * Mouse up inside pop up
+		 * */
+		private function mouseUpInsideHandler(event:Event):void {
+			var action:OpenPopUp = OpenPopUp(effect);
+			var close:Boolean;
+			
+			
+			if (action.closeOnMouseDownInside) {
+				PopUpManager.removePopUp(event.currentTarget as IFlexDisplayObject);
+				removeEventListeners();
+				close = true;
+			}
+		
+			if (action.hasEventListener(OpenPopUp.MOUSE_DOWN_INSIDE)) {
+				dispatchActionEvent(new Event(OpenPopUp.MOUSE_DOWN_INSIDE));
+			}
+			
+			if (action.mouseDownInsideEffect) { 
+				playEffect(action.mouseDownInsideEffect);
+			}
+			
+			///////////////////////////////////////////////////////////
+			// End the effect
+			///////////////////////////////////////////////////////////
+			if (close) {
+				finish();
+			}
+		}
+		
+		/**
+		 * Pop up was removed from the stage
+		 * */
+		private function removedHandler(event:Event):void {
+			var action:OpenPopUp = OpenPopUp(effect);
+			var popUp:Object = action.popUp;
+			var actionProperty:String = action.actionPropertyName;
+			var continueValue:String = action.continueActionValue;
+			var cancelValue:String = action.cancelActionValue;
+			
+			// prevent bubbled up removed events from content inside the pop up
+			if (event.target != popUp) { return; }
+			
+			close();
 			
 			///////////////////////////////////////////////////////////
 			// End the effect
@@ -419,14 +455,25 @@ use namespace mx_internal;
 		private function removeEventListeners():void {
 			var action:OpenPopUp = OpenPopUp(effect);
 			var popUp:IFlexDisplayObject = action.popUp;
-			var parent:DisplayObject = action.parent || popUp.parent;
+			var parent:DisplayObject;
 			
-			IFlexDisplayObject(popUp).removeEventListener(Event.REMOVED, removedHandler);
-			IFlexDisplayObject(popUp).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
-			IFlexDisplayObject(popUp).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+			if (popUp && popUp.parent) {
+				parent = popUp.parent;
+			}
+			else if (action.parent) {
+				parent = action.parent;
+			}
+			
+			if (popUp) {
+				IFlexDisplayObject(popUp).removeEventListener(Event.REMOVED, removedHandler);
+				IFlexDisplayObject(popUp).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
+				IFlexDisplayObject(popUp).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+				IFlexDisplayObject(popUp).removeEventListener(KeyboardEvent.KEY_UP, keyUpHandler);
+			}
 			
 			if (parent) {
 				IFlexDisplayObject(parent).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);
+				IFlexDisplayObject(parent).removeEventListener(SandboxMouseEvent.MOUSE_UP_SOMEWHERE, mouseUpOutsideHandler);
 			}
 			
 			if (action.autoCenter) {
@@ -441,6 +488,20 @@ use namespace mx_internal;
 		
 		private function resizeHandler(event:Event):void {
 			var action:OpenPopUp = OpenPopUp(effect);
+			
+			if (action.closeOnResize) {
+				close();
+				finish();
+				return;
+			}
+			
+			if (action.fitMaxSizeToApplication && "maxHeight" in action.popUp) {
+				Object(action.popUp).maxHeight = FlexGlobals.topLevelApplication.height;
+				Object(action.popUp).maxWidth = FlexGlobals.topLevelApplication.width;
+				if (action.popUp is IInvalidating) {
+					IInvalidating(action.popUp).validateNow();
+				}
+			}
 			
 			PopUpManager.centerPopUp(action.popUp as IFlexDisplayObject);
 		}

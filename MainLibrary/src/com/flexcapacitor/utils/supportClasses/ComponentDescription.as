@@ -1,4 +1,5 @@
 package com.flexcapacitor.utils.supportClasses {
+	import flash.display.Sprite;
 	import flash.system.ApplicationDomain;
 	import flash.utils.Dictionary;
 	import flash.utils.getQualifiedClassName;
@@ -8,6 +9,8 @@ package com.flexcapacitor.utils.supportClasses {
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
+	
+	import spark.core.IGraphicElement;
 	
 	/**
 	 * Contains information about components that are
@@ -55,6 +58,24 @@ package com.flexcapacitor.utils.supportClasses {
 		public var defaultStyles:Object;
 		
 		/**
+		 * User defined styles
+		 * */
+		public var userStyles:String;
+		
+		/**
+		 * Creates a snapshot of the selected component and sets it as a background to the element.
+		 * Use this to compare the background design spec with the crap you've come up with.
+		 * */
+		public var createBackgroundSnapshot:Boolean;
+		
+		
+		/**
+		 * Creates an image of the selected component and adds it in the exact place and size 
+		 * of the original component. Doesn't always work with auto layout scenarios..
+		 * */
+		public var convertElementToImage:Boolean;
+		
+		/**
 		 * Properties
 		 * */
 		public var properties:Object;
@@ -84,10 +105,43 @@ package com.flexcapacitor.utils.supportClasses {
 		}
 		
 		/**
+		 * Is IGraphicElement
+		 * */
+		public function get isGraphicElement():Boolean {
+			if (instance) {
+				return instance is IGraphicElement;
+			}
+			
+			// we may need to find a way to check this from the class type
+			// if instance is not set
+			return false;
+		}
+		
+		/**
+		 * Get invalidating sprite (display object) used by GraphicElements.
+		 * 
+		 * If not added to the stage this may be null
+		 * 
+		 * */
+		public function getInvalidatingSprite():Sprite {
+			if (isGraphicElement) {
+				return Sprite(IGraphicElement(instance).displayObject);
+			}
+			
+			return null;
+		}
+		
+		/**
 		 * Children. Optional. 
 		 * Used for display in hierarchy view such as Tree.
 		 * */
 		public var children:ArrayCollection;
+		
+		/**
+		 * If true then during export child components are exported
+		 * Default is true.
+		 * */
+		public var exportChildDescriptors:Boolean = true;
 		
 		/**
 		 * Parent in the component hierarchy. This is different than the 

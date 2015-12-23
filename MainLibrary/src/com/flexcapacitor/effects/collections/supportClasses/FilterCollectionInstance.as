@@ -134,10 +134,8 @@ package com.flexcapacitor.effects.collections.supportClasses {
 			if (filterFunction!=null) {
 				collection.filterFunction = filterFunction;
 			}
-			else {
-				if (collection.filterFunction!=defaultFilterFunction) {
-					collection.filterFunction = defaultFilterFunction;
-				}
+			else if (collection.filterFunction!=defaultFilterFunction) {
+				collection.filterFunction = defaultFilterFunction;
 			}
 			
 			if (action.refresh) {

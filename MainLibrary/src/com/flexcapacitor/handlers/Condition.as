@@ -12,9 +12,13 @@ package com.flexcapacitor.handlers {
 
 	/**
 	 * Used for setting conditions in action sequences. 
-	 * Currently not used
+	 * Currently not used. 
 	 * */
 	public class Condition extends EventDispatcher {
+		
+		public function Condition(target:IEventDispatcher = null) {
+			super(target);
+		}
 		
 		/**
 	     *  @private
@@ -108,10 +112,6 @@ package com.flexcapacitor.handlers {
 		
 		// used to provide condition reports 
 		public var debug:Boolean = false;
-    
-		public function Condition(target:IEventDispatcher = null) {
-			super(target);
-		}
 		
 		private var tokenReplace:TokenReplace = new TokenReplace();
 		

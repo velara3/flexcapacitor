@@ -10,10 +10,14 @@ package com.flexcapacitor.effects.popup {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.display.Sprite;
+	import flash.events.Event;
 	import flash.filters.DropShadowFilter;
 	
+	import mx.core.FlexGlobals;
 	import mx.core.IFlexDisplayObject;
+	import mx.core.UIComponent;
 	import mx.effects.IEffect;
+	import mx.managers.PopUpManager;
 	
 	/**
 	 * Pop up close event
@@ -41,12 +45,26 @@ package com.flexcapacitor.effects.popup {
 	[Event(name="mouseDownInside", type="flash.events.MouseEvent")]
 	
 	/**
-	 * Opens a pop up. 
-	 * Pop up is sized to the default size of the pop up type unless otherwise specified.
+	 * Opens a pop up. Call openPopUp.close() to close the pop up or set 
+	 * closeOnMouseDown to true to close when the screen is clicked on. You can also 
+	 * call openPopUp.close(). <br/><br/> 
 	 * 
-	 * To Use:<br/>
-	 * <pre>
-&lt;popup:OpenPopUp id="openExportEffect" 
+	 * Pop up is sized to the default size of the pop up type unless otherwise specified.<br/><br/>
+	 * 
+	 * Note: For some reason, when switching applications and then switching back, none of the 
+	 * mouse events work. So the window remains open. So, you may want to 
+	 * manually add a keyboard event to the stage to close it if someone presses the escape key. 
+	 * Code is below: 
+<pre>
+public function list_keyUpHandler(event:KeyboardEvent):void {
+	if (event.keyCode==Keyboard.ESCAPE) {
+		openPopUp.close();
+	}
+}
+</pre>
+	 * To use:<br/>
+<pre>
+&lt;popup:OpenPopUp id="openPopUp" 
 		 popUpType="{ExportPopUp}" 
 		 modalDuration="250"
 		 showDropShadow="true"
@@ -58,7 +76,7 @@ package com.flexcapacitor.effects.popup {
 		 data="{myData}"
 		 close="openpopup_closeHandler(event)"
 &lt;/popup:OpenPopUp>
- * 
+
 
 protected function openpopup_closeHandler(event:Event):void {
 	var code:String = ExportPopUp(openExportEffect.popUp).code;
@@ -74,7 +92,7 @@ protected function openpopup_closeHandler(event:Event):void {
 &lt;popup:ClosePopUp popUp="{this}" />
 </pre>
 	 * 
-	 * When outside of the pop up you can close the pop up with:<br/>
+	 * When outside of the pop up you can close the pop up with or calling openPopUp.close():<br/>
 <pre>
 &lt;popup:ClosePopUp popUp="{openExportToImageEffect.popUp}" />
 </pre>
@@ -245,6 +263,11 @@ protected function openpopup_closeHandler(event:Event):void {
 		public var autoCenter:Boolean = true;
 		
 		/**
+		 * Closes the pop up when the stage resizes
+		 * */
+		public var closeOnResize:Boolean;
+		
+		/**
 		 * When true only allows one instance at a time
 		 * */
 		public var preventMultipleInstances:Boolean = true;
@@ -267,6 +290,20 @@ protected function openpopup_closeHandler(event:Event):void {
 		 * */
 		[Bindable]
 		public var popUp:IFlexDisplayObject;
+		
+		/**
+		 * Returns true if pop up is currently visible
+		 * */
+		public function get isOpen():Boolean {
+			if (popUp && popUp.stage!=null) {
+				return true;
+			}
+			else if (popUp && popUp.parent!=null && !Object(popUp).isPopUp) {
+				return true;
+			}
+			
+			return false;
+		}
 		
 		/**
 		 * Name of property to check for additional action. Default is action. 
@@ -334,5 +371,52 @@ protected function openpopup_closeHandler(event:Event):void {
 		 * @see cancelEffect
 		 * */
 		public var cancelEffect:IEffect;
+		
+		/**
+		 * Close on escape key
+		 * */
+		public var closeOnEscapeKey:Boolean;
+		
+		/**
+		 * Fits the pop up to the max height and width to the height and width of the application
+		 * Listens on resize event.
+		 * autoCenter may need to be enabled to check when the app is resized.
+		 * @see autocenter
+		 * */
+		public var fitMaxSizeToApplication:Boolean;
+		
+		/**
+		 * Method to manually close the popup
+		 * */
+		public function close():void {
+			
+			// can't use popUp call later so using top level application call later
+			// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+			// 		at mx.effects::EffectManager$/http://www.adobe.com/2006/flex/mx/internal::eventHandler()[E:\dev\4.y\frameworks\projects\framework\src\mx\effects\EffectManager.as:605]
+			
+			// adding trigger event if not set otherwise we get errors if effect is still playing at 
+			// the time other code in EffectManager is called
+			// if using EventHandler the trigger event must be set on each effect playing. 
+			if (triggerEvent==null) {
+				triggerEvent = new Event(Event.REMOVED);
+			}
+			
+			if (FlexGlobals.topLevelApplication && triggerEvent) {
+				// causes flicker when effects are used in pop up because 
+				// it is removed then added back so effects can run
+				// so we wait a frame
+				//PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+				UIComponent(FlexGlobals.topLevelApplication).callLater(PopUpManager.removePopUp, [(popUp as IFlexDisplayObject)]);
+			}
+			else {
+				try {
+					PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+				}
+				catch (error:Error) {
+					// sometimes the pop up is already closed or something 
+					// or there's a bug in PopUpManager or EffectManager	
+				}
+			}
+		}
 	}
 }

@@ -4,7 +4,7 @@
 
 
 package com.flexcapacitor.utils {
-	import mx.formatters.StringFormatter;
+	
 	
 	/**
 	 * String utilities. 
@@ -17,6 +17,12 @@ package com.flexcapacitor.utils {
 		public function StringUtils() {
 			
 		}
+		
+		public static const TAB:String = "\t";
+		public static const NEW_LINE:String = "\n";
+		
+		public static var indentPattern:RegExp = /([\t ]*)(.*)$/gm;
+		public static var whiteSpaceStartPattern:RegExp = /(^[\t ]*).*$/;
 		
 		/**
 		 * The padLeft method creates a new string by concatenating enough leading 
@@ -191,6 +197,39 @@ package com.flexcapacitor.utils {
 		    var output:String = value.replace(/^\s\s*/, "").replace(/\s\s*$/, "");
 			
 			return output;
+		}
+		
+		
+		/**
+		 * Gets the tab or whitespace amount before a matching token
+		 * 
+<pre>
+var whiteSpace:String = getWhiteSpaceBeforeContent("  Hello");
+trace(whiteSpace); // "  "
+</pre>
+		 * */
+		public static function getWhiteSpaceBeforeContent(input:String):String {
+			if (input==null || input=="") return "";
+			var whiteSpace:String = input.replace(whiteSpaceStartPattern, "$1");
+			return whiteSpace;
+		}
+		
+		
+		/**
+		 * Indent by one tab or a specific amount of white space
+		 * 
+<pre>
+var indented:String = indent("Hello World");
+trace(indented); // "	Hello World"
+var indented:String = indent("Hello World", "		");
+trace(indented); // "		Hello World"
+</pre>
+		 * */
+		public static function indent(input:String, indentAmount:String = "\t"):String {
+			if (input==null || input=="") return indentAmount;
+			
+			var indentedText:String = input.replace(indentPattern, indentAmount + "$1$2");
+			return indentedText;
 		}
 	}
 }

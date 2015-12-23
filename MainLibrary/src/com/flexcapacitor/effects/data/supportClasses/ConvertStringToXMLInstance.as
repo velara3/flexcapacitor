@@ -67,7 +67,7 @@ package com.flexcapacitor.effects.data.supportClasses {
 			///////////////////////////////////////////////////////////
 			if (validate) {
 				if (source==null) {
-					dispatchErrorEvent("The source is not set.");
+					dispatchErrorEvent("The source is not set. It is null.");
 				}
 				
 				if (propertyName!=null 
@@ -100,25 +100,34 @@ package com.flexcapacitor.effects.data.supportClasses {
 				else {
 					newXML = xml;
 				}
+				
 			}
 			else {
 				if (hasEventListener(ConvertStringToXML.INVALID_VALUE)) {
-					dispatchEvent(new Event(ConvertStringToXML.INVALID_VALUE));
+					dispatchActionEvent(new Event(ConvertStringToXML.INVALID_VALUE));
 				}
 					
 				if (action.invalidXMLEffect) {
 					playEffect(action.invalidXMLEffect);
 				}
 				
-				cancel("XML String value is invalid");
+				finish();
+				return;
 			}
 			
 			if (action.inspectXML) {
 				trace(className + " processed XML:\n", newXML.toString());
 			}
 			
-			
 			action.data = newXML as XML;
+			
+			if (hasEventListener(ConvertStringToXML.VALID_VALUE)) {
+				dispatchActionEvent(new Event(ConvertStringToXML.VALID_VALUE));
+			}
+			
+			if (action.validXMLEffect) {
+				playEffect(action.validXMLEffect);
+			}
 			
 			///////////////////////////////////////////////////////////
 			// Finish the effect

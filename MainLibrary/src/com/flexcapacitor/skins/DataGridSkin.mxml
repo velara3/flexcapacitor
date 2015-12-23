@@ -455,6 +455,9 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
 					grid["gridView"] = factory;
 					
 				}
+				else {
+					grid.mxmlContent = gridLayers;
+				}
 			}
 		}
 		

@@ -16,11 +16,21 @@ package com.flexcapacitor.services {
 	import ru.inspirit.net.events.MultipartURLLoaderEvent;
 	
 	/**
-	 * Adds upload attachment. 
+	 * Adds upload attachment. You may need to add an extension if the file is not uploading.<br/><br/>
 	 * 
-	 * Example,
+	 * For example, "myFile" may not work but "myFile.png" will. You may also need to try 
+	 * an alternate contentType. "image/png" may not work but "application/octet-stream" may.<br/><br/>
 	 * 
-	 * <pre>
+	 * WPAttachmentService enumerates a few of the content types:  <br/><br/>
+	 * 
+	 * • GENERIC_MIME_TYPE:String = "application/octet-stream"<br/>
+	 * • PNG_MIME_TYPE:String = "image/png";<br/>
+	 * • FLASH_MIME_TYPE:String = "application/x-shockwave-flash"<br/>
+	 * • JPEG_MIME_TYPE:String = "image/jpeg";<br/>
+	 * • GIF_MIME_TYPE:String = "image/gif";<br/><br/>
+	 * 
+	 * How to use:
+<pre>
 // we need to create service
 var uploadAttachmentService:WPAttachmentService = new WPAttachmentService();
 uploadAttachmentService.addEventListener(WPService.RESULT, uploadAttachmentResultsHandler, false, 0, true);
@@ -38,23 +48,32 @@ if (data is FileReference) {
 else {
 	uploadAttachmentService.fileData = data as ByteArray;
 	
+	// FILE NAME MAY REQUIRE EXTENSION. SO instead of "myPicture" use "myPicture.png"
 	if (fileName) {
 		uploadAttachmentService.fileName = fileName;
 	}
 	
+	// default is "attachment" can leave this null
 	if (dataField) {
 		uploadAttachmentService.dataField = dataField;
 	}
 	
+	// WPAttachmentService.GENERIC_MIME_TYPE would be "application/octet-stream"
 	if (contentType) {
 		uploadAttachmentService.contentType = contentType;
 	}
 	
 	uploadAttachmentService.uploadAttachment();
 }
-	</pre>
+</pre>
 	 * */
 	public class WPAttachmentService extends WPService {
+		
+		public static const GENERIC_MIME_TYPE:String = "application/octet-stream"
+		public static const PNG_MIME_TYPE:String = "image/png";
+		public static const FLASH_MIME_TYPE:String = "application/x-shockwave-flash"
+		public static const JPEG_MIME_TYPE:String = "image/jpeg";
+		public static const GIF_MIME_TYPE:String = "image/gif";
 		
 		/**
 		 * Constructor
@@ -119,6 +138,10 @@ else {
 			if (!multipartURLLoader) {
 				multipartURLLoader = new MultipartURLLoader();
 			}
+			else {
+				multipartURLLoader.clearFiles();
+				multipartURLLoader.clearVariables();
+			}
 			
 			if (currentToken==null) {
 				// clear out previous values
@@ -167,11 +190,14 @@ else {
 			
 			multipartURLLoader.addVariable("nonce", currentToken);
 
+			// READ ME: 
+			// You must specify an extension in some cases. So myFile won't work but myFile.png will. 
 			
 			// uploading byte array sometimes would result in corrupt data
 			// passing a file in and getting it's bytes and leaving content type at application/octet-stream
 			// seems to work
-			// using other types and specifying different content type resulted in 
+			
+			// using other types content types resulted in 
 			// corrupt uploads. have not had time to find what the cause is
 			if (file) {
 				fileData = file.data;

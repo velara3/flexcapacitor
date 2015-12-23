@@ -146,7 +146,7 @@
 			 * */
 			protected function clickHandler(event:MouseEvent):void {
 				
-				if (UIComponentGlobals.designMode || preventLaunching) {
+				if (preventLaunching) {
 					return;
 				}
 				

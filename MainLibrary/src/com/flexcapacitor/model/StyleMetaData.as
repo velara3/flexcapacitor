@@ -1,5 +1,7 @@
 
 package com.flexcapacitor.model {
+	import com.flexcapacitor.utils.StyleUtils;
+	
 	import mx.styles.IStyleClient;
 	
 	/**
@@ -57,25 +59,44 @@ package com.flexcapacitor.model {
 				
 			}
 			
-			// this shows if it's defined at all 
-			definedInline = target && target is IStyleClient && target.getStyle(name)!==undefined;
+			updateValues(target, getValue);
 			
-			if (!definedInline) {
-				inheritedValue = target.getStyle(name);
-				nonInheritedValue = undefined;
-				value = inheritedValue;
-				textValue = "" + inheritedValue;
+		}
+		
+		/**
+		 * @inherit
+		 * */
+		override public function updateValues(target:Object, getValue:Boolean = true):void {
+			super.updateValues(target, getValue);
+
+			var styleClient:IStyleClient = target as IStyleClient;
+			
+			if (getValue && styleClient) {
+				
+				definedInline = StyleUtils.isStyleDeclaredInline(styleClient, name);
+				
+				if (definedInline) {
+					// set inline or inherited
+					// we also have the inheritedStyles and nonInherited object on IStyleClient
+					inheritedValue = undefined;
+					nonInheritedValue = styleClient.getStyle(name);
+					value = nonInheritedValue;
+					textValue = "" + nonInheritedValue;
+				}
+				else {
+					inheritedValue = styleClient.getStyle(name);
+					nonInheritedValue = undefined;
+					value = inheritedValue;
+					textValue = "" + inheritedValue;
+				}
 			}
 			else {
-				// don't know how to get this value -
-				// UPDATE: there is CSS code in MiniInspector to check if a value is 
-				// set inline or inherited
-				// we also have the inheritedStyles and nonInherited object on IStyleClient
 				inheritedValue = undefined;
-				nonInheritedValue = target.getStyle(name);
-				value = nonInheritedValue;
-				textValue = "" + nonInheritedValue;
+				nonInheritedValue = undefined;
+				value = undefined;
+				textValue = "";
 			}
+			
 		}
 	}
 }

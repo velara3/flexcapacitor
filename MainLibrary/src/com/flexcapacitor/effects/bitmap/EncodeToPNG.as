@@ -37,10 +37,10 @@ package com.flexcapacitor.effects.bitmap {
 	 * Once in byte array format can be saved to file. <br/><br/>
 	 * 
 	 * Example:<br/>x
-	<pre>
-		&lt;bitmap:EncodeToPNG id="encodeToPNG" data="{bitmapData}" />
-		&lt;file:PromptSaveAs id="promptToSavePNGFile" data="{encodeToPNG.byteArray}"/>
-	</pre>
+<pre>
+	&lt;bitmap:EncodeToPNG id="encodeToPNG" data="{bitmapData}" />
+	&lt;file:PromptSaveAs id="promptToSavePNGFile" data="{encodeToPNG.byteArray}"/>
+</pre>
 	 * */
 	public class EncodeToPNG extends ActionEffect {
 		

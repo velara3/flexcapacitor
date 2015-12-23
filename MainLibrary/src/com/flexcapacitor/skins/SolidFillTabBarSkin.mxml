@@ -88,7 +88,7 @@ created by the TabBarSkin use the TabBarButtonSkin class.
         </s:layout>
         <s:itemRenderer>
             <fx:Component>
-                <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillTabBarClasses.SolidFillTabBarButtonSkin" />
+                <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillSupportClasses.SolidFillTabBarButtonSkin" />
             </fx:Component>
         </s:itemRenderer>
     </s:DataGroup>

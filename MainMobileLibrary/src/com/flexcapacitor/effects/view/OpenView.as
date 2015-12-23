@@ -10,14 +10,14 @@ package com.flexcapacitor.effects.view {
 	import spark.transitions.ViewTransitionBase;
 
 	/**
-	 * Opens a view<br/><br/>
+	 * Opens a view. Works with CloseView<br/><br/>
 	 * 
 	 * Example:
-	 * <pre>
-	 * &lt;view:OpenView destinationViewClass="{SettingsView}" target="{this}"/>
-	 * </pre>
+<pre>
+&lt;view:OpenView destinationViewClass="{SettingsView}" target="{this}"/>
+</pre>
 	 * 
-	 * @copy spark.components.ViewNavigator#pushView()
+	 * @see CloseView
 	 * */
 	public class OpenView extends ActionEffect {
 		

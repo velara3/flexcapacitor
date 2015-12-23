@@ -1,6 +1,6 @@
 
 package com.flexcapacitor.data.database {
-	import flash.data.SQLColumnSchema;
+	
 	
 	/**
 	 * SQL Column used for filtering a select statement

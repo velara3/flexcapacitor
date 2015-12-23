@@ -3,6 +3,7 @@
 package com.flexcapacitor.utils {
 	import mx.core.IStateClient;
 	import mx.core.IStateClient2;
+	import mx.core.UIComponent;
 	import mx.states.State;
 
 	/**
@@ -98,6 +99,22 @@ package com.flexcapacitor.utils {
 		public static function getDefaultStateName(target:IStateClient):String
 		{
 			return (target is IStateClient2 && (IStateClient2(target).states.length > 0)) ? IStateClient2(target).states[0].name : null;
+		}
+		
+		/**
+		 * Sets the style in the state specified. Creates state if it doesn't exist.
+		 * */
+		public static function setStyleInState(styleName:String, value:*, state:*, target:UIComponent = null):void {
+			var stateName:String = state is String ? state as String : "name" in state ? state.name : null;
+			
+			if (!StateUtils.hasState(target, state)) {
+				state = createState(stateName, null, target);
+			}
+			else if (!(state is State)) {
+				state = getState(target, stateName);
+			}
+			
+			
 		}
 
 	}

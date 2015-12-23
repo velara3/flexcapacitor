@@ -41,6 +41,7 @@ package com.flexcapacitor.services {
 		public static const UPDATE_POST:String 				= "updatePost";
 		public static const DELETE_POST:String 				= "deletePost";
 		public static const SEARCH_POSTS:String 			= "searchPosts";
+		public static const GET_PAGE:String		 			= "getPage";
 		public static const GET_POST:String		 			= "getPost";
 		public static const GET_POSTS:String 				= "getPosts";
 		public static const DELETE_ATTACHMENT:String 		= "deleteAttachment";
@@ -67,8 +68,11 @@ package com.flexcapacitor.services {
 		public static const GET_POSTS_BY_USER:String 		= "getPostsByUser";
 		public static const GET_PROJECTS_BY_USER:String 	= "getProjectsByUser";
 		public static const GET_PROJECT_BY_ID:String 		= "getProjectsById";
+		public static const GET_PROJECT_HOME_PAGE:String 	= "getProjectHomePage";
+		public static const SET_PROJECT_HOME_PAGE:String 	= "setProjectHomePage";
 		public static const GET_POSTS_BY_CATEGORY:String 	= "getPostsByCategory";
 		public static const GET_API_INFO:String 			= "info";
+		public static const GET_BLOG_INFO:String 			= "getBlogInfo";
 		public static const SEND_URL:String 				= "sendURL";
 		
 		private var _call:String;
