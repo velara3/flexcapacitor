@@ -28,9 +28,14 @@ package com.flexcapacitor.utils.supportClasses {
 		}
 		
 		/**
-		 * Unqualified class name
+		 * Layer name
 		 * */
 		public var name:String;
+		
+		/**
+		 * Folder name if part of a folder
+		 * */
+		public var folderName:String;
 		
 		/**
 		 * Qualified class name
@@ -46,6 +51,11 @@ package com.flexcapacitor.utils.supportClasses {
 		 * Class or path to icon
 		 * */
 		public var icon:Object;
+		
+		/**
+		 * Info about a layer if imported from a file 
+		 * */
+		public var layerInfo:Object;
 		
 		/**
 		 * Default properties

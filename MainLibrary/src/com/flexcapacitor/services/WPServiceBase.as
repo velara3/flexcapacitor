@@ -39,6 +39,8 @@ package com.flexcapacitor.services {
 	 * There are plugins out there that will remove WP autoformatting<br/>
 	 * There are plugins that will interfere with the JSON results as well<br/><br/>
 	 * 
+	 * Alternatively, save data to custom fields.<br/><br/>
+	 * 
 	 * Error #1132: Invalid JSON parse input.<br/>
 	 * - check the text property of the event to see the original source. <br/><br/>
 	 * 
@@ -125,6 +127,8 @@ package com.flexcapacitor.services {
 		 * */
 		public var updateSitePathOnLogin:Boolean = true;
 
+		private var _host:String;
+
 		/**
 		 * URL to Wordpress blog. For example, http://www.domain.com
 		 * If the site is multisite then set the site variable. 
@@ -132,7 +136,19 @@ package com.flexcapacitor.services {
 		 * @see sites
 		 * @see usePermalink
 		 * */
-		public var host:String;
+		public function get host():String
+		{
+			return _host;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set host(url:String):void
+		{
+			_host = url;
+		}
+
 
 		/**
 		 * Path to API when using permalink. For example,

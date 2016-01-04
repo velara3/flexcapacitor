@@ -110,6 +110,7 @@ else {
 		
 		/**
 		 * Name of file. If a file reference is specified then file.name is used. 
+		 * Filename may need an extension such as ".png" for it to work.
 		 * @see file
 		 * */
 		public var fileName:String;
@@ -124,6 +125,10 @@ else {
 		 * */
 		public var contentType:String = "application/octet-stream";
 		
+		/**
+		 * Used to send custom data
+		 * */
+		public var customData:Object;
 		
 		/**
 		 * Upload attachment
@@ -189,6 +194,12 @@ else {
 			}
 			
 			multipartURLLoader.addVariable("nonce", currentToken);
+			
+			if (customData) {
+				for (var property:String in customData) {
+					multipartURLLoader.addVariable(property, customData[property]);
+				}
+			}
 
 			// READ ME: 
 			// You must specify an extension in some cases. So myFile won't work but myFile.png will. 
@@ -208,6 +219,7 @@ else {
 					//fileName = file.name;
 				}
 			}
+			
 			multipartURLLoader.addFile(fileData, fileName, dataField, contentType);
 			
 			// Error: Error #2101: The String passed to URLVariables.decode() must be a 
@@ -242,7 +254,7 @@ else {
 			try {
 				profile ? currentTime = getTimer():-0;
 				json = JSON.parse(result);
-				profile ? parseTime = getTimer()- currentTime:-(1);
+				profile ? parseTime = getTimer() - currentTime:-(1);
 				token = json.nonce;
 				
 				if (json) {
@@ -256,10 +268,10 @@ else {
 				dispatchEvent(serviceEvent);
 				
 			}
-			catch (e:Error) {
+			catch (error:Error) {
 				// Error #1132: Invalid JSON parse input.
 				serviceEvent.resultEvent = event;
-				serviceEvent.parseError = e;
+				serviceEvent.parseError = error;
 				serviceEvent.data = json;
 				serviceEvent.message = "Parse result error";
 				dispatchEvent(serviceEvent);
@@ -271,6 +283,10 @@ else {
 			uploadPending = false;
 			deletePending = false;
 			
+			// clear custom fields object;
+			if (customData) {
+				customData = null
+			}
 			// clear out previous values
 			//multipartURLLoader.clearFiles();
 			//multipartURLLoader.clearVariables();

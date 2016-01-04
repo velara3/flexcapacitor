@@ -8,7 +8,6 @@ package com.flexcapacitor.effects.file {
 	import flash.display.BitmapData;
 	import flash.display.Loader;
 	import flash.display.LoaderInfo;
-	import flash.events.Event;
 	import flash.events.ProgressEvent;
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;

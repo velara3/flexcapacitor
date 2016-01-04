@@ -707,6 +707,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			if (!action.fileStringDictionary[fileReference] && fileReference.data) {
 				if (fileReference.data!=null) {
 					action.fileStringDictionary[fileReference] = fileReference.data.readUTFBytes(fileReference.data.length);
+					fileReference.data.position = 0;
 				}
 				else {
 					action.fileStringDictionary[fileReference] = null;

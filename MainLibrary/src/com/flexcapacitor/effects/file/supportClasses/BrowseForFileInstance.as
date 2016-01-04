@@ -14,6 +14,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;
 	import flash.system.ApplicationDomain;
+	import flash.system.Capabilities;
 	
 	import mx.managers.SystemManager;
 	
@@ -113,6 +114,12 @@ package com.flexcapacitor.effects.file.supportClasses {
 			
 			action.invokeBrowseDialog = true;
 			
+			if (Capabilities.playerType=="Desktop") {
+				buttonHandler();
+				waitForHandlers();
+				return;
+			}
+			
 			// add a click event listener to the parent 
 			// so we can attach a click event listeners to the child 
 			// while the event is bubbling.
@@ -144,7 +151,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 		/**
 		 * Handles the event tied to opening a file dialog. 
 		 * */
-		public function buttonHandler(event:MouseEvent):void {
+		public function buttonHandler(event:MouseEvent = null):void {
 			var action:BrowseForFile = BrowseForFile(effect);
 			var fileFilters:Array = action.fileFilters ? action.fileFilters : [];
 			var fileFilterDescription:String = action.fileFilterDescription || " ";
@@ -165,7 +172,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			// prevent this from opening two dialogs next time
-			action.targetAncestor.removeEventListener(MouseEvent.CLICK, buttonHandler);
+			if (action.targetAncestor) {
+				action.targetAncestor.removeEventListener(MouseEvent.CLICK, buttonHandler);
+			}
 			
 			if (!action.invokeBrowseDialog) {
 				// this means... the event listener was not removed - we shouldn't be here

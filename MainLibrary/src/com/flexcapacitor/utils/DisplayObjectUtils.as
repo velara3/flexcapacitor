@@ -97,6 +97,67 @@ else {
 		public static const JPEG_MIME_TYPE:String = "image/jpeg";
 		public static const GIF_MIME_TYPE:String = "image/gif";
 		
+		/**
+		 * Blend modes from 
+		 * https://www.adobe.com/devnet-apps/photoshop/fileformatashtml/
+		
+		'pass' = pass through, 
+		'norm' = normal, 
+		'diss' = dissolve, 
+		'dark' = darken, 
+		'mul ' = multiply, 
+		'idiv' = color burn, 
+		'lbrn' = linear burn, 
+		'dkCl' = darker color, 
+		'lite' = lighten, 
+		'scrn' = screen, 
+		'div ' = color dodge, 
+		'lddg' = linear dodge, 
+		'lgCl' = lighter color, 
+		'over' = overlay, 
+		'sLit' = soft light, 
+		'hLit' = hard light, 
+		'vLit' = vivid light, 
+		'lLit' = linear light, 
+		'pLit' = pin light, 
+		'hMix' = hard mix, 
+		'diff' = difference, 
+		'smud' = exclusion, 
+		'fsub' = subtract, 
+		'fdiv' = divide,
+		'hue ' = hue, 
+		'sat ' = saturation, 
+		'colr' = color, 
+		'lum ' = luminosity
+		 * */
+		public static var BLEND_MODES:Object = {
+			norm: "normal",
+			dark: "darken",
+			lite: "lighten",
+			hue:  "hue",
+			sat:  "saturation",
+			colr: "color",
+			lum:  "luminosity",
+			mul:  "multiply",
+			scrn: "screen",
+			diss: "dissolve",
+			over: "overlay",
+			hLit: "hard light",
+			sLit: "soft light",
+			diff: "difference",
+			smud: "exclusion",
+			div:  "color dodge",
+			idiv: "color burn",
+			lbrn: "linear burn",
+			lddg: "linear dodge",
+			vLit: "vivid light",
+			lLit: "linear light",
+			pLit: "pin light",
+			hMix: "hard mix",
+			pass: "pass through",
+			fsub: "subtract", 
+			fdiv: "divide"
+		}
 		
 		/**
 		 * Used to encode images
@@ -1321,7 +1382,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var useEncoder:Boolean;
 			var rectangle:Rectangle;
 			var fastCompression:Boolean = true;
-			var timeEvents:Boolean = true;
+			var timeEvents:Boolean = false;
 			var altBase64:Boolean = false;
 			var base64Data:String;
 			
@@ -1335,7 +1396,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			if (component) {
-				bitmapData = BitmapUtil.getSnapshot(component);
+				bitmapData = getUIComponentBitmapData(component);
 			}
 			else if (target is DisplayObject) {
 				bitmapData = getBitmapDataSnapshot2(target as DisplayObject);
@@ -1366,7 +1427,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				trace ("encode to base 64. time=" + (getTimer()-time));
 			}
 			
-			base64BitmapCache[target] = base64Data;
+			checkCache ? base64BitmapCache[target] = base64Data : void;
 			
 			return base64Data;
 		}
@@ -2815,5 +2876,87 @@ trace(size); // {width = 200, height = 100}
 			
 			return bitmapAsset;
 		}
+		
+		/**
+		 * Get blend mode from blend mode key. 
+		 * 		
+		UIComponent supported blend modes:
+		add,alpha,darken,difference,erase,hardlight,invert,layer,lighten,multiply,normal,subtract,screen,
+		overlay,colordodge,colorburn,exclusion,softlight,hue,saturation,color,luminosity
+		
+		Group: 
+		auto,add,alpha,darken,difference,erase,hardlight,invert,layer,lighten,multiply,normal,subtract,screen,
+		overlay,colordodge,colorburn,exclusion,softlight,hue,saturation,color,luminosity
+		
+		From Group.as: 
+		
+		*  A value from the BlendMode class that specifies which blend mode to use. 
+		*  A bitmap can be drawn internally in two ways. 
+		*  If you have a blend mode enabled or an external clipping mask, the bitmap is drawn 
+		*  by adding a bitmap-filled square shape to the vector render. 
+		*  If you attempt to set this property to an invalid value",
+			" 
+		*  Flash Player or Adobe AIR sets the value to <code>BlendMode.NORMAL</code>. 
+		*
+		*  <p>A value of "auto" (the default) is specific to Group's use of 
+		*  blendMode and indicates that the underlying blendMode should be 
+		*  <code>BlendMode.NORMAL</code> except when <code>alpha</code> is not
+		*  equal to either 0 or 1, when it is set to <code>BlendMode.LAYER</code>. 
+		*  This behavior ensures that groups have correct
+		*  compositing of their graphic objects when the group is translucent.</p>
+		* 
+		 * */
+		public static function getBlendModeByKey(key:String, supportedInFlash:Boolean = true, groupModes:Boolean = false):String {
+			var blendMode:String = BLEND_MODES[key];
+			
+			if (supportedInFlash) {
+				
+				// if supported by Group
+				if (groupModes) {
+					if (flexGroupBlendModes.indexOf(blendMode)!=-1) {
+						return blendMode;
+					}
+					else {
+						return null;
+					}
+				}
+				else {
+					// if supported in UIComponent
+					if (flexBlendModes.indexOf(blendMode)!=-1) {
+						return blendMode;
+					}
+					else {
+						return null;
+					}
+				}
+			}
+			return blendMode;
+		}
+		
+		public static var flexBlendModes:Array = 
+		   ["add",
+			"alpha",
+			"darken",
+			"difference",
+			"erase",
+			"hardlight",
+			"invert",
+			"layer",
+			"lighten",
+			"multiply",
+			"normal",
+			"subtract",
+			"screen",
+			"overlay",
+			"colordodge",
+			"colorburn",
+			"exclusion",
+			"softlight",
+			"hue",
+			"saturation",
+			"color",
+			"luminosity"];
+		
+		public static var flexGroupBlendModes:Array = ["auto"].concat(flexBlendModes);
 	}
 }

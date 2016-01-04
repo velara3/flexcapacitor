@@ -246,6 +246,7 @@ var array2:Array = [4,5,6];
 
 var newArray:Array = ArrayUtils.join(array, array2, [7,8,9]); 
 </pre>
+		 * @see add
 		 * */
 		public static function join(...Arguments):Array {
 			var newArray:Array = [];
@@ -261,7 +262,8 @@ var newArray:Array = ArrayUtils.join(array, array2, [7,8,9]);
 		}
 		
 		/**
-		 * Add additional arrays to first array and return a new array.
+		 * Add additional arrays to first array and supposed to return same array but 
+		 * is returning a new array. See join.
 		 * 
 <pre>
 var array:Array = [1,2,3];
@@ -269,6 +271,7 @@ var array2:Array = [4,5,6];
 
 var newArray:Array = ArrayUtils.add([0], array, array2, [7,8,9]); 
 </pre>
+		 * @see join
 		 * */
 		public static function add(original:Array, ...Arguments):Array {
 			var numberOfArguments:int = Arguments ? Arguments.length : 0;
@@ -280,6 +283,20 @@ var newArray:Array = ArrayUtils.add([0], array, array2, [7,8,9]);
 			}
 			
 			return original;
+		}
+		
+		/**
+		 * Get array from vector
+		 * */
+		public static function getArrayFromVector(vector:*):Array {
+			var numberOfItems:int = vector && "length" in vector ? vector.length : 0;
+			var array:Array = [];
+			
+			for (var i:int = 0; i < numberOfItems; i++) {
+				array.push(vector[i]);
+			}
+			
+			return array;
 		}
 	}
 }

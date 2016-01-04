@@ -144,6 +144,8 @@ testService.sendURL(url, "POST", data);
 	 * There are plugins out there that will remove WP autoformatting<br/>
 	 * There are plugins that will interfere with the JSON results as well<br/><br/>
 	 * 
+	 * Alternatively, save data to a custom field.<br/><br/>
+	 * 
 	 * Error #1132: Invalid JSON parse input.<br/>
 	 * - check the text property of the event to see the original source. <br/><br/>
 	 * 
@@ -217,6 +219,11 @@ if ( !empty($values["custom"]) ) {
 		 * Delete attachment URL
 		 * */
 		public var deleteAttachmentURL:String = "attachments/delete_attachment";
+		
+		/**
+		 * Delete attachments URL
+		 * */
+		public var deleteAttachmentsURL:String = "attachments/delete_attachments";
 		
 		public var getPageURL:String = "core/get_page";
 		
@@ -408,6 +415,21 @@ if ( !empty($values["custom"]) ) {
 			call = WPServiceEvent.DELETE_ATTACHMENT;
 			request.method = URLRequestMethod.GET;
 			request.data = null;
+			load(request);
+		}
+		
+		/**
+		 * Delete attachments. 
+		 * */
+		public function deleteAttachments(ids:Array, forceDelete:Boolean = true):void {
+			//url = deleteAttachmentsURL + "&ids=" + ids + "&force_delete=" + forceDelete;
+			url = deleteAttachmentsURL;
+			call = WPServiceEvent.DELETE_ATTACHMENTS;
+			request.method = URLRequestMethod.POST;
+			var form:URLVariables = new URLVariables();
+			form.force_delete = forceDelete;
+			form.ids = ids ? ids.join(",") : -1;
+			request.data = form;
 			load(request);
 		}
 		

@@ -6,14 +6,16 @@
 				autoDrawBackground="true"
 				opaqueBackground="#ffffff"
 				showsCaret="false"
+				
+				useHandCursor="true"
+				buttonMode="true"
 				>
 	
 
 	<fx:Script>
 		<![CDATA[
 			
-			import mx.events.FlexEvent;
-			import spark.utils.DataItem;
+			
 			
 			override public function set data(value:Object):void {
 				super.data = value;
