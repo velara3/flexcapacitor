@@ -108,6 +108,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			var closePreviousInstanceIfOpen:Boolean = action.closePreviousInstanceIfOpen;
 			var closeOnEscapeKey:Boolean = action.closeOnEscapeKey;
 			var fitMaxSizeToApplication:Boolean = action.fitMaxSizeToApplication;
+			var useHardPercent:Boolean = action.useHardPercent;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -176,12 +177,25 @@ package com.flexcapacitor.effects.popup.supportClasses {
 				IStyleClient(popUp).setStyle("modalTransparencyDuration", modalDuration);
 			}
 			
-			if (percentWidth!=0 && popUp is ILayoutElement) {
-				ILayoutElement(popUp).percentWidth = percentWidth;
+			if (useHardPercent) {
+				if (percentWidth!=0 && popUp is ILayoutElement) {
+					IFlexDisplayObject(popUp).width = FlexGlobals.topLevelApplication.width*(percentWidth/100);
+				}
+				
+				if (percentHeight!=0 && popUp is ILayoutElement) {
+					IFlexDisplayObject(popUp).height = FlexGlobals.topLevelApplication.height*(percentHeight/100);
+				}
 			}
-			if (percentHeight!=0 && popUp is ILayoutElement) {
-				ILayoutElement(popUp).percentHeight = percentHeight;
+			else {
+				if (percentWidth!=0 && popUp is ILayoutElement) {
+					ILayoutElement(popUp).percentWidth = percentWidth;
+				}
+				
+				if (percentHeight!=0 && popUp is ILayoutElement) {
+					ILayoutElement(popUp).percentHeight = percentHeight;
+				}
 			}
+			
 			if (width!=0) {
 				popUp.width = width;
 			}
@@ -214,6 +228,9 @@ package com.flexcapacitor.effects.popup.supportClasses {
 					// filter already added
 				}
 			}
+			
+			
+			IFlexDisplayObject(popUp).addEventListener(OpenPopUp.CLOSING, closingHandler, false, 0, true);
 			
 			if (addMouseEvents || closeOnMouseDownOutside) {
 				IFlexDisplayObject(popUp).addEventListener(Event.REMOVED, removedHandler, false, 0, true);
@@ -290,8 +307,20 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			waitForHandlers();
 		}
 		
+		public function closingHandler(event:Event):void {
+			removeEventListeners();
+			close();
+			
+			///////////////////////////////////////////////////////////
+			// End the effect
+			///////////////////////////////////////////////////////////
+			finish();
+			
+		}
+		
 		public function keyUpHandler(event:KeyboardEvent):void {
 			if (event.keyCode==Keyboard.ESCAPE) {
+				removeEventListeners();
 				close();
 				
 				///////////////////////////////////////////////////////////
@@ -464,7 +493,9 @@ package com.flexcapacitor.effects.popup.supportClasses {
 				parent = action.parent;
 			}
 			
+			
 			if (popUp) {
+				IFlexDisplayObject(popUp).removeEventListener(OpenPopUp.CLOSING, closingHandler);
 				IFlexDisplayObject(popUp).removeEventListener(Event.REMOVED, removedHandler);
 				IFlexDisplayObject(popUp).removeEventListener(MouseEvent.MOUSE_UP, mouseUpOutsideHandler);
 				IFlexDisplayObject(popUp).removeEventListener(OpenPopUp.MOUSE_DOWN_OUTSIDE, mouseUpOutsideHandler);

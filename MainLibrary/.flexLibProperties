@@ -429,6 +429,7 @@
     <classEntry path="com.flexcapacitor.performance.Timely"/>
     <classEntry path="com.flexcapacitor.model.ChartItemData"/>
     <classEntry path="com.flexcapacitor.utils.DescribeTypeCacheRecords"/>
+    <classEntry path="com.flexcapacitor.controls.ListNoKeyboardHandling"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>

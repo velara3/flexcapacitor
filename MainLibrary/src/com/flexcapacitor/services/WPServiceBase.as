@@ -453,6 +453,7 @@ package com.flexcapacitor.services {
 			
 			if (json && json is Object && "status" in json && json.status=="error") {
 				error = true;
+				serviceEvent.hasError = true;
 				serviceEvent.message = json.error;//"Update token error";
 				errorOccured = true;
 				errorMessage = event.toString();

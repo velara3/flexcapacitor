@@ -13,7 +13,9 @@ package com.flexcapacitor.effects.popup {
 	/**
 	 * Closes a pop up.<br/><br/>
 	 * 
-	 * Typically you use it with OpenPopUp or ShowStatusMessage.
+	 * Typically you use it with OpenPopUp or ShowStatusMessage. This class 
+	 * dispatches a OpenPopUp.CLOSING event on the popUp that OpenPopUp listens for
+	 * so it can dispatch it's own close events. 
 	 * 
 	 * Opening a pop up:<br/>
 	 * <pre>
@@ -29,17 +31,19 @@ package com.flexcapacitor.effects.popup {
 	 * </pre>
 	 * 
 	 * To Use:<br/>
-	 * <pre>
-	 * 	&lt;popup:ClosePopUp popUp="{openPopUp.popUp}" />
-	 * </pre>
+<pre>
+&lt;popup:ClosePopUp popUp="{openPopUp.popUp}" />
+</pre>
 	 * 
 	 * To use when inside the pop up use:<br/>
-	 * <pre>
-	 * 	&lt;popup:ClosePopUp popUp="{this}" />
-	 * </pre>
+<pre>
+&lt;popup:ClosePopUp popUp="{this}" />
+</pre>
 	 * 
 	 * Note: If there is flicker when closing then be sure to set the triggerEvent of this 
 	 * effect. 
+	 * 
+	 * @see OpenPopUp
 	 * */
 	public class ClosePopUp extends ActionEffect {
 		

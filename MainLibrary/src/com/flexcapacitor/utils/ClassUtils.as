@@ -369,6 +369,8 @@ trace(name); // "mySuperButton"
 		 * 
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param sort Sorts the properties in the array
+		 * 
+		 * @see #getPropertiesMetaData()
 		 * */
 		public static function getPropertyNames(object:Object, sort:Boolean = true):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
@@ -423,6 +425,8 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * @param object The object to check property for
 		 * @param propertyName Name of property to check for
 		 * @param useFlashAPI Uses Flash internal methods
+		 * 
+		 * @see #hasStyle()
 		 * */
 		public static function hasProperty(object:Object, propertyName:String, useFlashAPI:Boolean = false):Boolean {
 			if (object==null || object=="" || propertyName==null || propertyName=="") return false;
@@ -468,6 +472,8 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * @param object The object to check style exists on
 		 * @param styleName Name of style to check for
 		 * @param useOtherMethod Uses Flash internal methods
+		 * 
+		 * @see #isStyleDefined()
 		 * */
 		public static function hasStyle(object:Object, styleName:String, useOtherMethod:Boolean = false):Boolean {
 			var styleClient:IStyleClient = object ? object as IStyleClient : null;
@@ -508,7 +514,9 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * 
 		 * @param object The object to check style exists on
 		 * @param styleName Name of style to check for
+		 * 
 		 * @see StyleManager.isValidStyleValue()
+		 * @see #hasStyle()
 		 * */
 		public static function isStyleDefined(object:Object, styleName:String):Boolean {
 			var styleManager:IStyleManager2;
@@ -593,16 +601,22 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * and so on until it gets to Object. <br/><br/>
 		 * 
 		 * Usage:<br/>
-		 <pre>
-		 var allProperties:XMLList = getPropertiesMetaData(myButton);
-		 var buttonOnlyProperties:XMLList = getPropertiesMetaData(myButton, null, null, getQualifiedClassName(myButton));
-		 var buttonOnlyProperties2:XMLList = getPropertiesMetaData(myButton, null, null, "spark.components::Button");
-		 </pre>
+<pre>
+var allProperties:XMLList = getPropertiesMetaData(myButton);
+var buttonOnlyProperties:XMLList = getPropertiesMetaData(myButton, null, null, getQualifiedClassName(myButton));
+var buttonOnlyProperties2:XMLList = getPropertiesMetaData(myButton, null, null, "spark.components::Button");
+</pre>
 		 * 
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param propertyType Either accessor, variable or all. Default is all. 
 		 * @param existingItems An existing list of properties
 		 * @param stopAt Stops at Object unless you change this value
+		 * 
+		 * @see #getStyleNames()
+		 * @see #getPropertyNames()
+		 * @see #getMetaData()
+		 * @see #getStylesMetaData()
+		 * @see #getEventsMetaData()
 		 * */
 		public static function getPropertiesMetaData(object:Object, propertyType:String = "all", existingItems:XMLList = null, stopAt:String = null):XMLList {
 			var describedTypeRecord:DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
@@ -730,13 +744,16 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * 
 		 * Usage:<br/>
 <pre>
-	var allStyles:XMLList = getStyleMetaDataList(myButton);
+var allStyles:XMLList = getStyleMetaDataList(myButton);
 </pre>
 		 * 
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param existingItems An existing list of styles
 		 * @param stopAt Stops at Object unless you change this value
+		 * 
 		 * @see #getPropertiesMetaData()
+		 * @see #getEventsMetaData()
+		 * @see #getMetaData()
 		 * */
 		public static function getStylesMetaData(object:Object, existingItems:XMLList = null, stopAt:String = "Object"):XMLList {
 			return getMetaData(object, STYLE, existingItems, stopAt);
@@ -756,11 +773,15 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * 
 		 * Usage:<br/>
 <pre>
-	var allEvents:XMLList = getEventsMetaDataList(myButton);
+var allEvents:XMLList = getEventsMetaDataList(myButton);
 </pre>
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param existingItems An existing list of events
 		 * @param stopAt Stops at Object unless you change this value
+		 * 
+		 * @see #getPropertiesMetaData()
+		 * @see #getStylesMetaData()
+		 * @see #getMetaData()
 		 * */
 		public static function getEventsMetaData(object:Object, existingItems:XMLList = null, stopAt:String = "Object"):XMLList {
 			return getMetaData(object, EVENT, existingItems, stopAt);
@@ -778,14 +799,18 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * information for it and then gets it's super class ButtonBase and 
 		 * adds all that information and so on until it gets to Object. <br/><br/>
 		 * 
-		 * Usage:<br/><pre>
-		 * var allStyles:XMLList = getMetaData(myButton, "Style");
-		 * </pre>
+		 * Usage:<br/>
+<pre>
+var allStyles:XMLList = getMetaData(myButton, "Style");
+</pre>
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param metaType The name of the data in the item name property. Either Style or Event
 		 * @param existingItems The list of the data in the item name property
 		 * @param stopAt Stops at Object unless you change this value
+		 * 
 		 * @see #getPropertiesMetaData()
+		 * @see #getStylesMetaData()
+		 * @see #getEventsMetaData()
 		 * */
 		public static function getMetaData(object:Object, metaType:String, existingItems:XMLList = null, stopAt:String = "Object"):XMLList {
 			var describedTypeRecord:DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
@@ -797,7 +822,7 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			// can be on typeDescription.metadata or factory.metadata
 			var isRoot:Boolean = object is String ? false : true;
 			var className:String = describedTypeRecord.typeName;
-			var itemsLength:int;
+			var numberOfItems:int;
 			var itemsList:XMLList;
 			var existingItemsLength:int = existingItems ? existingItems.length() : 0;
 			var metaName:String;
@@ -820,10 +845,10 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			
 			// make a copy because modifying the xml modifies the cached xml
 			itemsList = itemsList.copy();
-			itemsLength = itemsList.length();
+			numberOfItems = itemsList.length();
 			
 			
-			for (var i:int;i<itemsLength;i++) {
+			for (var i:int;i<numberOfItems;i++) {
 				var item:XML = XML(itemsList[i]);
 				metaName = item.arg[0].@value;
 				item.@name = metaName;
@@ -837,7 +862,7 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 						//existingItem.@declaredBy = className;
 						existingItem.appendChild(new XML("<overrides type=\""+ className + "\"/>"));
 						delete itemsList[i];
-						itemsLength--;
+						numberOfItems--;
 						i--;
 						continue;
 					}
@@ -849,7 +874,7 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			}
 			
 			// add new items to previous items
-			if (itemsLength>0) {
+			if (numberOfItems>0) {
 				existingItems = new XMLList(existingItems.toString()+itemsList.toString());
 			}
 
@@ -870,6 +895,8 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		
 		/**
 		 * Get AccessorMetaData data for the given property. 
+		 * 
+		 * @see #getMetaDataOfStyle();
 		 * */
 		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
 			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(target);
@@ -920,13 +947,15 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 
 		 * Usage:<br/>
  <pre>
- var styleMetaData:StyleMetaData = getStylesFromArray(myButton, "color");
+ var styleMetaData:StyleMetaData = getMetaDataOfStyle(myButton, "color");
  </pre>
 		 * @returns an StyleMetaData object
 		 * @param target IStyleClient that contains the style
 		 * @param style name of style
 		 * @param type if style is not defined on target class we check super class. default null 
 		 * @param stopAt if we don't want to look all the way up to object we can set the class to stop looking at
+		 * 
+		 * @see #getMetaDataOfProperty()
 		 * */
 		public static function getMetaDataOfStyle(target:Object, style:String, type:String = null, stopAt:String = null):StyleMetaData {
 			var describedTypeRecord:DescribeTypeCacheRecord;
@@ -1029,14 +1058,21 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * 
 		 * @param object The object to use. Either string, object or class.
 		 * @param possibleStyles An existing list of styles
+		 * 
+		 * @returns an array of style names or an empty array
+		 * 
+		 * @see #getPropertiesFromArray()
 		 * */
 		public static function getStylesFromArray(object:Object, possibleStyles:Object):Array {
-			possibleStyles = ArrayUtil.toArray(possibleStyles);
 			var styleNames:Array = getStyleNames(object);
 			var result:Array = [];
 			var style:String;
+			var numberOfStyles:int;
 			
-			for (var i:int; i < possibleStyles.length; i++) {
+			possibleStyles = ArrayUtil.toArray(possibleStyles);
+			numberOfStyles = possibleStyles.length;
+			
+			for (var i:int; i < numberOfStyles; i++) {
 				style = possibleStyles[i];
 				
 				if (styleNames.indexOf(style)!=-1) {
@@ -1048,6 +1084,46 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			
 			
 			return result;
+		}
+		
+		/**
+		 * Gets an array of the styles from an object with name value pair<br/><br/>
+		 * 
+		 * Usage:<br/>
+		 <pre>
+		 // returns ["color", "fontFamily"]
+		 var styles:Array = getStylesFromArray(myButton, {"color":10,"fontFamily":30,"marshmallow":20});
+		 </pre>
+		 * 
+		 * @param object The object to check.
+		 * @param object A generic object with properties on it.
+		 * 
+		 * @see #getPropertiesFromObject()
+		 * */
+		public static function getStylesFromObject(object:Object, possibleStyles:Object):Array {
+			var propertiesNames:Array = getPropertyNames(possibleStyles);
+			
+			return getStylesFromArray(object, propertiesNames);
+		}
+		
+		/**
+		 * Gets an array of the properties from an object with name value pair<br/><br/>
+		 * 
+		 * Usage:<br/>
+<pre>
+// returns ["x", "width"]
+var properties:Array = getPropertiesFromArray(myButton, {"x":10,"apple":30,"width":20});
+</pre>
+		 * 
+		 * @param object The object to check.
+		 * @param object A generic object with properties on it.
+		 * 
+		 * @see #getStylesFromObject()
+		 * */
+		public static function getPropertiesFromObject(object:Object, possibleProperties:Object):Array {
+			var propertiesNames:Array = getPropertyNames(possibleProperties);
+			
+			return getPropertiesFromArray(object, propertiesNames);
 		}
 		
 		public static var constraints:Array = ["baseline", "left", "top", "right", "bottom", "horizontalCenter", "verticalCenter"];
@@ -1062,15 +1138,22 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
  </pre>
 		 * 
 		 * @param object The object to use. Either string, object or class.
-		 * @param possibleStyles An list of possible properties
+		 * @param possibleProperties An list of possible properties
+		 * 
+		 * @returns an array of styles names or empty array
+		 * 
+		 * @see #getStylesFromArray()
 		 * */
 		public static function getPropertiesFromArray(object:Object, possibleProperties:Object, removeConstraints:Boolean = true):Array {
-			possibleProperties = ArrayUtil.toArray(possibleProperties);
 			var propertyNames:Array = getPropertyNames(object);
 			var result:Array = [];
 			var property:String;
+			var numberOfProperties:int;
 			
-			for (var i:int; i < possibleProperties.length; i++) {
+			possibleProperties = ArrayUtil.toArray(possibleProperties);
+			numberOfProperties = possibleProperties.length;
+			
+			for (var i:int; i < numberOfProperties; i++) {
 				property = possibleProperties[i];
 				
 				if (propertyNames.indexOf(property)!=-1) {

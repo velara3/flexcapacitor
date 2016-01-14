@@ -2,9 +2,11 @@ package com.flexcapacitor.effects.popup.supportClasses
 {
 	
 	import com.flexcapacitor.effects.popup.ClosePopUp;
+	import com.flexcapacitor.effects.popup.OpenPopUp;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
 	import flash.events.Event;
+	import flash.events.IEventDispatcher;
 	
 	import mx.core.FlexGlobals;
 	import mx.core.IFlexDisplayObject;
@@ -100,6 +102,11 @@ package com.flexcapacitor.effects.popup.supportClasses
 			// if using EventHandler the trigger event must be set on each effect playing. 
 			if (triggerEvent==null) {
 				triggerEvent = new Event(Event.REMOVED);
+			}
+			
+			// dispatch event so our OpenPopUp effect can dispatch close events
+			if (popUp is IEventDispatcher) {
+				IEventDispatcher(popUp).dispatchEvent(new Event(OpenPopUp.CLOSING));
 			}
 			
 			if (FlexGlobals.topLevelApplication && triggerEvent) {

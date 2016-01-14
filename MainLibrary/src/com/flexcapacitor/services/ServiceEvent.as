@@ -76,6 +76,8 @@ package com.flexcapacitor.services {
 		
 		public var errorEvent:Object;
 		
+		public var hasError:Boolean;
+		
 		override public function clone():Event {
 			return new ServiceEvent(type, bubbles, cancelable);
 		}

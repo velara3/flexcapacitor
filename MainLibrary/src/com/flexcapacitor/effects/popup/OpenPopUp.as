@@ -11,6 +11,7 @@ package com.flexcapacitor.effects.popup {
 	
 	import flash.display.Sprite;
 	import flash.events.Event;
+	import flash.events.IEventDispatcher;
 	import flash.filters.DropShadowFilter;
 	
 	import mx.core.FlexGlobals;
@@ -114,6 +115,11 @@ protected function openpopup_closeHandler(event:Event):void {
 		public static const CLOSE:String = "close";
 		
 		/**
+		 * Event name constant when pop up is closed through ClosePopUp effect
+		 * */
+		public static const CLOSING:String = "closing";
+		
+		/**
 		 * Event name constant when pop up is closed and user cancels
 		 * */
 		public static const CANCEL_ACTION:String = "cancel";
@@ -160,6 +166,7 @@ protected function openpopup_closeHandler(event:Event):void {
 		
 		/**
 		 * Popup options. Object of name value pairs used by the ClassFactory properties object.
+		 * @see #data
 		 * */
 		public var popUpOptions:Object;
 		
@@ -226,6 +233,7 @@ protected function openpopup_closeHandler(event:Event):void {
 		
 		/**
 		 * Data object that is passed to pop up if pop up contains a data property
+		 * @see #popUpOptions
 		 * */
 		public var data:Object;
 		
@@ -386,9 +394,17 @@ protected function openpopup_closeHandler(event:Event):void {
 		public var fitMaxSizeToApplication:Boolean;
 		
 		/**
+		 * Used to set the width and height as percent of the application size instead 
+		 * of setting the percentWidth or percentHeight property of the pop up.
+		 * This is because sometimes the component does not resize with only the 
+		 * percentWidth or percentHeight property due to Flex layout rules. 
+		 * */
+		public var useHardPercent:Boolean;
+		
+		/**
 		 * Method to manually close the popup
 		 * */
-		public function close():void {
+		public function close(dispatchClosingEvent:Boolean = false):void {
 			
 			// can't use popUp call later so using top level application call later
 			// TypeError: Error #1009: Cannot access a property or method of a null object reference.
@@ -399,6 +415,11 @@ protected function openpopup_closeHandler(event:Event):void {
 			// if using EventHandler the trigger event must be set on each effect playing. 
 			if (triggerEvent==null) {
 				triggerEvent = new Event(Event.REMOVED);
+			}
+			
+			// dispatch event so our OpenPopUp effect can dispatch close events
+			if (popUp is IEventDispatcher) {
+				IEventDispatcher(popUp).dispatchEvent(new Event(OpenPopUp.CLOSING));
 			}
 			
 			if (FlexGlobals.topLevelApplication && triggerEvent) {

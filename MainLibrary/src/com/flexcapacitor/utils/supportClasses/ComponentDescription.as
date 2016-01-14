@@ -78,7 +78,6 @@ package com.flexcapacitor.utils.supportClasses {
 		 * */
 		public var createBackgroundSnapshot:Boolean;
 		
-		
 		/**
 		 * Creates an image of the selected component and adds it in the exact place and size 
 		 * of the original component. Doesn't always work with auto layout scenarios..
@@ -86,14 +85,26 @@ package com.flexcapacitor.utils.supportClasses {
 		public var convertElementToImage:Boolean;
 		
 		/**
+		 * If component is image and source is set to bitmap data then 
+		 * add an id to find it later if it is not uploaded it won't show up
+		 * on reload or copy and paste. 
+		 * */
+		public var bitmapDataID:String;
+		
+		/**
 		 * Properties
 		 * */
-		public var properties:Object;
+		public var properties:Object = {};
 		
 		/**
 		 * Styles
 		 * */
-		public var styles:Object;
+		public var styles:Object = {};
+		
+		/**
+		 * Events
+		 * */
+		public var events:Object = {};
 		
 		/**
 		 * Instance of component. Optional. 
@@ -261,7 +272,7 @@ package com.flexcapacitor.utils.supportClasses {
 		}
 		
 		/**
-		 * Get a clone of this object
+		 * Get a clone of this object. Should verify this works - maybe loop through
 		 * */
 		public function clone():ComponentDescription {
 			var item:ComponentDescription = new ComponentDescription();
@@ -270,25 +281,26 @@ package com.flexcapacitor.utils.supportClasses {
 			item.cursors = cursors;
 			item.defaultProperties = defaultProperties;
 			item.defaultStyles = defaultStyles;
+			item.events = events;
 			item.icon = icon;
 			item.inspectorClass = inspectorClass;
 			item.inspectorClassName = inspectorClassName;
 			item.inspectorInstance = inspectorInstance;
+			item.locked = locked;
+			item.markupData = markupData;
 			item.name = name;
 			item.parent = parent;
 			item.parentVisible = parentVisible;
-			item.visible = visible;
-			item.styles = styles;
 			item.skin = skin;
-			item.properties = properties;
-			item.locked = locked;
+			item.styles = styles;
 			item.preprocessors = preprocessors;
 			item.processedMarkupData = processedMarkupData;
 			item.processedStylesData = processedStylesData;
+			item.properties = properties;
 			item.stylesData = stylesData;
+			item.visible = visible;
 			//item.propertyNames = propertyNames; read only
 			//item.styleNames = styleNames;
-			item.markupData = markupData;
 			//item.styleData = styleData;
 			
 			return item;

@@ -21,7 +21,7 @@ package com.flexcapacitor.utils {
 		public static const TAB:String = "\t";
 		public static const NEW_LINE:String = "\n";
 		
-		public static var indentPattern:RegExp = /([\t ]*)(.*)$/gm;
+		public static var indentPattern:RegExp = /([\t ]*)(.+)$/gm;
 		public static var whiteSpaceStartPattern:RegExp = /(^[\t ]*).*$/;
 		
 		/**
