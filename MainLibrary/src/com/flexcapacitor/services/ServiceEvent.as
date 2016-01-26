@@ -76,7 +76,30 @@ package com.flexcapacitor.services {
 		
 		public var errorEvent:Object;
 		
-		public var hasError:Boolean;
+		private var _hasError:Boolean;
+
+		public function get hasError():Boolean
+		{
+			return _hasError;
+		}
+
+		public function set hasError(value:Boolean):void
+		{
+			_hasError = value;
+		}
+		
+		private var _successful:Boolean;
+
+		public function get successful():Boolean
+		{
+			return _successful;
+		}
+
+		public function set successful(value:Boolean):void
+		{
+			_successful = value;
+		}
+
 		
 		override public function clone():Event {
 			return new ServiceEvent(type, bubbles, cancelable);

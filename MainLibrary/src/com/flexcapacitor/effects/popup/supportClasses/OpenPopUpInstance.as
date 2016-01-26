@@ -287,6 +287,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			//if (action.autoCenter || action.keepReference) { // we need to keep it for remove handler?
 			if (true) {
 				action.popUp = IFlexDisplayObject(popUp);
+				//action.popUpParent = popUp.parent;
 			}
 			
 			///////////////////////////////////////////////////////////
@@ -330,7 +331,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			}
 		}
 		
-		public function close():void {
+		public function close(removePopUps:Boolean = false):void {
 			
 			var action:OpenPopUp = OpenPopUp(effect);
 			var popUp:Object = action.popUp;
@@ -338,6 +339,9 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			var continueValue:String = action.continueActionValue;
 			var cancelValue:String = action.cancelActionValue;
 			
+			if (removePopUps) {
+				
+			}
 			
 			if (!action.dispatchedCloseEvent) {
 				

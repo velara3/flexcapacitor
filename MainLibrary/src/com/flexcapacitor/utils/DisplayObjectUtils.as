@@ -25,6 +25,9 @@ package com.flexcapacitor.utils {
 	import mx.collections.ArrayCollection;
 	import mx.core.BitmapAsset;
 	import mx.core.FlexGlobals;
+	import mx.core.IFlexModule;
+	import mx.core.IFlexModuleFactory;
+	import mx.core.IInvalidating;
 	import mx.core.IUIComponent;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
@@ -35,9 +38,11 @@ package com.flexcapacitor.utils {
 	import mx.graphics.codec.JPEGEncoder;
 	import mx.graphics.codec.PNGEncoder;
 	import mx.managers.ISystemManager;
+	import mx.styles.StyleManager;
 	import mx.utils.Base64Encoder;
 	import mx.utils.MatrixUtil;
 	
+	import spark.components.Image;
 	import spark.components.supportClasses.GroupBase;
 	import spark.components.supportClasses.InvalidatingSprite;
 	import spark.components.supportClasses.Skin;
@@ -1222,6 +1227,30 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				return color;
 		}
 		
+		/**
+		 * Gets the color as uint. Converts "#FFFFFF" to "0xFFFFFF" and then casts 
+		 * it to a uint.
+		 * */
+		public static function getColorAsUInt(color:String, moduleFactory:IFlexModuleFactory = null):uint {
+			var number:Number;
+			
+			if (color.charAt(0) == "#") {
+				// Map "#77EE11" to 0x77EE11
+				number = Number("0x" + color.slice(1));
+				return isNaN(number) ? StyleManager.NOT_A_COLOR : uint(number);
+			}
+			
+			if (color.charAt(1) == "x" && color.charAt(0) == "0") {
+				number = Number(color);
+				return isNaN(number) ? StyleManager.NOT_A_COLOR : uint(number);
+			}
+			
+			number = StyleManager.getStyleManager(moduleFactory).getColorName(color);
+			
+			return isNaN(number) ? StyleManager.NOT_A_COLOR : uint(number);
+			
+		}
+		
 		
 		/**
 		 * Gets the color under the mouse pointer.
@@ -1303,7 +1332,10 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		}
 	
 		/**
-		 * Gets the elements by type
+		 * Gets visual elements by their type. 
+		 * 
+		 * For example, gets all the Buttons or Images when 
+		 * that type is passed in. You can pass in an existing array of objects to add to
 		 * */
 		public static function getElementsByType(container:IVisualElementContainer, type:Class, elements:Array = null):Array {
 			if (elements==null) elements = [];
@@ -1346,7 +1378,6 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			if (hasJPEGEncoderOptions || hasPNGEncoderOptions) {
-				//trace("encoder found");
 				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions);
 			}
 			else {
@@ -1405,7 +1436,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				bitmapData = target as BitmapData;
 			}
 			else if (target is GraphicElement) {
-				bitmapData = getGraphicElementBitmapData(target as IGraphicElement);
+				//bitmapData = getGraphicElementBitmapData(target as IGraphicElement);
 				//bitmapData = rasterize2(GraphicElement(target).displayObject);
 				bitmapData = getBitmapDataSnapshot2(GraphicElement(target).displayObject);
 			}
@@ -1682,7 +1713,8 @@ trace(size); // {width = 200, height = 100}
 		 *  Returns a rectangle that describes the visible region of the target, 
 		 *  including any filters. The padding argument specifies how much space
 		 *  to pad the temporary BitmapData with, to capture any extra visible pixels
-		 *  from things like filters.<br/><br/>
+		 *  from things like filters. See also getRectangleBounds() which is useful 
+		 *  for UIComponents.<br/><br/>
 		 * 
 		 *  Note that this actually captures the full bounds of an object as seen
 		 *  by the player, including any transparent areas. For example, the player 
@@ -1703,6 +1735,8 @@ trace(size); // {width = 200, height = 100}
 		 * 
 		 *  @param padding The amount of padding to use to catch any pixels
 		 *  outside the core object area (such as filtered or text objects have).
+		 * 
+		 * @see #getRectangleBounds()
 		 */
 		public static function getRealBounds(target:DisplayObject, matrix:Matrix = null, padding:int = 0):Rectangle {
 			var bitmap:BitmapData;
@@ -2170,7 +2204,40 @@ trace(size); // {width = 200, height = 100}
 		}
 		
 		/**
-		 * Get graphic element bitmap data
+		 * Create a duplicate and place it in the same location 
+		 * */
+		public static function duplicateIntoImage(graphicElement:IGraphicElement, transparent:Boolean = true, fillColor:uint = 0xFFFFFF, useLocalSpace:Boolean = true, clipRectangle:Rectangle = null):Image {
+			var bitmapData:BitmapData = getGraphicElementBitmapData(graphicElement as IGraphicElement, transparent, fillColor, useLocalSpace, clipRectangle);
+			var container:Object = graphicElement.owner ? graphicElement.owner : graphicElement.parent;
+			var image:Image = new Image();
+			var x:Number;
+			var y:Number;
+			image.source = bitmapData;
+			image.includeInLayout = false;
+			x = graphicElement.getLayoutBoundsX();
+			y = graphicElement.getLayoutBoundsY();
+			
+			image.x = x;
+			image.y = y;
+			image.width = bitmapData.width;
+			image.height = bitmapData.height;
+			
+			if (container is IVisualElementContainer) {
+				container.addElement(image);
+			}
+			else if (container is DisplayObjectContainer) {
+				container.addChild(image);
+			}
+			
+			if (container is IInvalidating) {
+				IInvalidating(container).validateNow();
+			}
+			
+			return image;
+		}
+		
+		/**
+		 * Get graphic element bitmap data. Not done.
 		 * */
 		public static function getVisualElementBitmapData(visualElement:IVisualElement, transparent:Boolean = true, fillColor:uint = 0xFFFFFF, useLocalSpace:Boolean = true, clipRectangle:Rectangle = null):BitmapData {
 			var bitmapData:BitmapData;
@@ -2275,9 +2342,11 @@ trace(size); // {width = 200, height = 100}
 		public static function getBitmapAssetSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000):BitmapAsset {
 			//var bounds:Rectangle = target.getBounds(target);
 			var bounds:Rectangle = target.getBounds(target);
-			var targetWidth:Number = target.width==0 ? 1 : bounds.size.x;
-			var targetHeight:Number = target.height==0 ? 1 : bounds.size.y;
-			var bitmapData:BitmapData = new BitmapData((targetWidth + horizontalPadding) * scaleX, (targetHeight + verticalPadding) * scaleY, transparentFill, fillColor);
+			var targetWidth:Number = target.width==0 ? 1 : Math.max(bounds.size.x, target.width, 1);
+			var targetHeight:Number = target.height==0 ? 1 : Math.max(bounds.size.y, target.height, 1);
+			var adjustedWidth:Number = Math.max((targetWidth + horizontalPadding) * scaleX, 1);
+			var adjustedHeight:Number = Math.max((targetHeight + verticalPadding) * scaleY, 1);
+			var bitmapData:BitmapData = new BitmapData(adjustedWidth, adjustedHeight, transparentFill, fillColor);
 			var matrix:Matrix = new Matrix();
 			var container:Sprite = new Sprite();
 			var bitmap:Bitmap;
@@ -2577,18 +2646,6 @@ trace(size); // {width = 200, height = 100}
 			container.transform.matrix = target.transform.matrix;
 			container.addChild(bitmap);
 			return bitmapData;
-			
-			targetWidth = container.getBounds(container).size.x;
-			targetHeight = container.getBounds(container).size.y;
-			
-			targetWidth = Math.max(container.getBounds(container).size.x, targetWidth);
-			targetHeight = Math.max(container.getBounds(container).size.y, targetHeight);
-			
-			var bitmapData2:BitmapData = new BitmapData(targetWidth, targetHeight, transparentFill, fillColor);
-			
-			drawBitmapData(bitmapData2, container, matrix);
-			
-			return bitmapData2;
 		}
 		
 		

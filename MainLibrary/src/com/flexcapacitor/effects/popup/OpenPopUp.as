@@ -16,9 +16,16 @@ package com.flexcapacitor.effects.popup {
 	
 	import mx.core.FlexGlobals;
 	import mx.core.IFlexDisplayObject;
+	import mx.core.IUIComponent;
 	import mx.core.UIComponent;
+	import mx.core.mx_internal;
+	import mx.effects.EffectManager;
 	import mx.effects.IEffect;
 	import mx.managers.PopUpManager;
+	import mx.managers.SystemManager;
+	import flash.display.DisplayObjectContainer;
+	
+	use namespace mx_internal;
 	
 	/**
 	 * Pop up close event
@@ -401,6 +408,8 @@ protected function openpopup_closeHandler(event:Event):void {
 		 * */
 		public var useHardPercent:Boolean;
 		
+		public var popUpParent:DisplayObjectContainer;
+		
 		/**
 		 * Method to manually close the popup
 		 * */
@@ -417,27 +426,37 @@ protected function openpopup_closeHandler(event:Event):void {
 				triggerEvent = new Event(Event.REMOVED);
 			}
 			
+			if (popUp && popUp as IUIComponent && UIComponent(popUp).isEffectStarted) {
+				if (endEffectsPlaying && popUp && popUp as IUIComponent) {
+					EffectManager.endEffectsForTarget(popUp as IUIComponent);
+				}
+				
+				// we exit out because if we continue, we would close the pop up.
+				// but if we did that then when the effect ends it puts up a 
+				// display object "shield" and there would be no way to close 
+				// the display object shield since we removed the pop up 
+				// display object that has our closing event listeners 
+				return;
+			}
+			
+			try {
+				PopUpManager.removePopUp(popUp as IFlexDisplayObject);
+				
+				if (popUpParent && popUpParent.stage) {
+					//PopUpManager.removePopUp(popUpParent as IFlexDisplayObject);
+				}
+			}
+			catch (error:Error) {
+				// sometimes the pop up is already closed or something 
+				// or there's a bug in PopUpManager or EffectManager
+			}
+			
 			// dispatch event so our OpenPopUp effect can dispatch close events
 			if (popUp is IEventDispatcher) {
 				IEventDispatcher(popUp).dispatchEvent(new Event(OpenPopUp.CLOSING));
 			}
 			
-			if (FlexGlobals.topLevelApplication && triggerEvent) {
-				// causes flicker when effects are used in pop up because 
-				// it is removed then added back so effects can run
-				// so we wait a frame
-				//PopUpManager.removePopUp(popUp as IFlexDisplayObject);
-				UIComponent(FlexGlobals.topLevelApplication).callLater(PopUpManager.removePopUp, [(popUp as IFlexDisplayObject)]);
-			}
-			else {
-				try {
-					PopUpManager.removePopUp(popUp as IFlexDisplayObject);
-				}
-				catch (error:Error) {
-					// sometimes the pop up is already closed or something 
-					// or there's a bug in PopUpManager or EffectManager	
-				}
-			}
+			var systemManager:Object = SystemManager.getSWFRoot(FlexGlobals.topLevelApplication);
 		}
 	}
 }

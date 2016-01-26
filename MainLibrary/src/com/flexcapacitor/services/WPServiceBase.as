@@ -405,6 +405,7 @@ package com.flexcapacitor.services {
 			serviceEvent.call = call;
 			serviceEvent.text = result;
 			serviceEvent.resultEvent = event;
+			serviceEvent.successful = true;
 			
 			try {
 				profile ? currentTime = getTimer():-0;
@@ -413,10 +414,12 @@ package com.flexcapacitor.services {
 			}
 			catch (e:Error) {
 				// Error #1132: Invalid JSON parse input.
+				serviceEvent.hasError = true;
 				serviceEvent.resultEvent = event;
 				serviceEvent.parseError = e;
-				serviceEvent.data = json;
+				serviceEvent.data = result;
 				serviceEvent.message = "Parse result error";
+				serviceEvent.successful = false;
 				
 				errorOccured = true;
 				errorMessage = event.toString();
@@ -439,6 +442,7 @@ package com.flexcapacitor.services {
 				errorOccured = true;
 				errorMessage = event.toString();
 				errorEvent = event;
+				serviceEvent.successful = false;
 			}
 			
 			// token call
@@ -458,6 +462,7 @@ package com.flexcapacitor.services {
 				errorOccured = true;
 				errorMessage = event.toString();
 				errorEvent = event;
+				serviceEvent.successful = false;
 				//dispatchEvent(serviceEvent);
 				//return;
 			}

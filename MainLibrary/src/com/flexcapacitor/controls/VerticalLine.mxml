@@ -1,31 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:Line xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark"
-		alpha=".45"
+		alpha="1"
 		height="100%">
 	
-	<!-- Vertical indented line
-	
-	Usage: 
-	<s:VerticalLine height = "100%"/>
+	<!-- 
+	/**
+	* The Line class is a graphic element that draws a line between two points.
+	* 
+	* <p>The default stroke for a Spark Line is undefined; therefore, if you do not specify
+	* the stroke, the line is invisible. This class defines a stroke and provides properties 
+	* to set the style and color.</p>
+	* 
+	* TODO: Convert to using styles and make this an AS3 class. Also, should probably draw a second line for 
+	* the shadow rather than use a filter.
+	* 
+	* Usage: 
+	<pre>
+	&lt;s:VerticalLine width="100%" color="#9a9a9a" alpha="1" width="1"/>
+	&lt;s:VerticalLine width="100%" color="#9a9a9a" shadowColor="#FFFFFF" alpha="1" shadowAngle="90"/>
+	</pre>
+	* */
 	-->
+	<fx:Script>
+		<![CDATA[
+			
+			
+			[Bindable]
+			[Inspectable(name="color", type="uint", format="Color", inherit="no", defaultValue="#9A9A9A")]
+			public var color:uint = 0x9A9A9A;
+			
+			[Bindable]
+			[Inspectable(name="joints", type="String", enumeration="round,miter,bevel", inherit="no")]
+			public var joints:String = "miter";
+			
+			[Bindable]
+			[Inspectable(name="miterLimit", type="uint", inherit="no", minValue="1", maxValue="255")]
+			public var miterLimit:uint = 4;
+			
+			[Bindable]
+			[Inspectable(name="pixelHinting", type="Boolean", inherit="no", theme="spark")]
+			public var pixelHinting:Boolean = true;
+			
+			[Bindable]
+			[Inspectable(name="shadowAlpha", type="Number", inherit="no", minValue="0.0", maxValue="1.0")]
+			public var shadowAlpha:Number = 1;
+			
+			[Bindable]
+			[Inspectable(name="shadowAngle", type="uint", inherit="no", minValue="0", maxValue="360")]
+			public var shadowAngle:uint = 90;
+			
+			[Bindable]
+			[Inspectable(name="shadowColor", type="uint", format="Color", inherit="no")]
+			public var shadowColor:uint = 0xFFFFFF;
+			
+			[Bindable]
+			[Inspectable(name="strokeWeight", type="Number", inherit="no", minValue="0.0", maxValue="100.0")]
+			public var strokeWeight:Number = 1;
+		]]>
+	</fx:Script>
+
 	<fx:Declarations>
-		<fx:Number id="strokeColor">#9a9a9a</fx:Number>
-		<fx:Number id="shadowColor">#FFFFFF</fx:Number>
 	</fx:Declarations>
 	
 	<s:stroke>
 		<s:SolidColorStroke caps="round" 
-							color="#9a9b9d" 
-							joints="miter" 
-							miterLimit="4"
-							weight="1"/>
+							color="{color}" 
+							joints="{joints}" 
+							miterLimit="{miterLimit}"
+							weight="{strokeWeight}"
+							pixelHinting="{pixelHinting}"/>
 	</s:stroke>
 	<s:filters>
 		<s:DropShadowFilter alpha="1" 
-							angle="0" 
+							angle="{shadowAngle}" 
 							blurX="0" blurY="0" 
-							color="#FFFFFF"
+							color="{shadowColor}"
 							distance="1" 
 							hideObject="false" 
 							inner="false" 

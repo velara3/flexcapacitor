@@ -107,9 +107,32 @@ package com.flexcapacitor.model {
 		
 		/**
 		 * Import metadata XML node into this instance
+		 * 
+		 * Example Accessor data:
+		 * 
+<pre>
+&lt;accessor name="color" access="readwrite" type="uint" declaredBy="com.flexcapacitor.controls::HorizontalLine">
+  &lt;metadata name="Bindable">
+     &lt;arg key="event" value="propertyChange"/>
+  &lt;/metadata>
+  &lt;metadata name="Inspectable">
+     &lt;arg key="name" value="color"/>
+     &lt;arg key="type" value="uint"/>
+     &lt;arg key="format" value="Color"/>
+     &lt;arg key="inherit" value="no"/>
+  &lt;/metadata>
+  &lt;metadata name="__go_to_definition_help">
+     &lt;arg key="pos" value="0"/>
+  &lt;/metadata>
+  &lt;metadata name="__go_to_definition_help">
+     &lt;arg key="pos" value="0"/>
+  &lt;/metadata>
+&lt;/accessor>
+</pre>
+         * 
 		 * */
 		public function unmarshall(item:XML, target:* = null, getValue:Boolean = true):void {
-			var args:XMLList = item.arg;
+			var args:XMLList = item..arg;
 			var keyName:String;
 			var keyValue:String;
 			var propertyValue:*;

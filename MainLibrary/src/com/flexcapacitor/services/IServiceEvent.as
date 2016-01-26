@@ -21,6 +21,18 @@ package com.flexcapacitor.services {
 		function set data(value:Object):void;
 		
 		/**
+		 * True if it has errors
+		 * */
+		function get hasError():Boolean;
+		function set hasError(value:Boolean):void;
+		
+		/**
+		 * True if successful
+		 * */
+		function get successful():Boolean;
+		function set successful(value:Boolean):void;
+		
+		/**
 		 * Object that contains the fault event
 		 * */
 		function get faultEvent():Event;
