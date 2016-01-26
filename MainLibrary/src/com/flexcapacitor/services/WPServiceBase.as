@@ -516,6 +516,7 @@ package com.flexcapacitor.services {
 				if (updateSitePathOnLogin && originalSite && site != originalSite) {
 					site = originalSite;
 				}
+				sites = [];
 			}
 			
 			inProgress = false;

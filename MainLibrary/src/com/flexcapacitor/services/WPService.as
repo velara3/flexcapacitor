@@ -11,7 +11,7 @@ package com.flexcapacitor.services {
 	 * 
 	 * This class works with the JSON API for WordPress here, https://wordpress.org/plugins/json-api/. <br/><br/>
 	 * 
-	 * How to update or create a new post: 
+	 * How to create a new post: 
 	 * 
 <pre>
 var wpSaveService:WPService = new WPService();
@@ -24,16 +24,16 @@ var object:URLVariables = new URLVariables();
 // (optional) all fields are optional. if they are included they are updated 
 object.title = "My Day at the Beach";
 object.content = "Today started like any other day...";
-object.categories = "document";
-object.status = WPService.STATUS_PUBLISH;
+//object.categories = "document";
+object.status = WPService.STATUS_PUBLISH; // optional. sets post status to published
 
 // (optional) adding metadata in the custom fields 
 object["custom[myCustomField]"] = "1234";
 object["custom[myOtherCustomField]"] = "some value";
 
-// if you don't supply an ID a new document 
-// is created on the server for the user that is logged in
-// otherwise the document with the matching id is updated
+// if you don't supply an ID a new post 
+// it is created on the server for the user that is logged in
+// otherwise the post with the matching id is updated
 if (id) {
    object.id = id;
 }
@@ -71,6 +71,107 @@ public function saveFaultHandler(event:IServiceEvent):void {
 	trace("Error when trying to save document.");
 }
 </pre>
+ * 
+	 * How to update a post: 
+	 * 
+<pre>
+var wpSaveService:WPService = new WPService();
+wpSaveService.host = "http://www.example.com/blog";
+wpSaveService.addEventListener(WPServiceBase.RESULT, saveResultsHandler, false, 0, true);
+wpSaveService.addEventListener(WPServiceBase.FAULT, saveFaultHandler, false, 0, true);
+
+var object:URLVariables = new URLVariables();
+
+// (optional) all fields are optional. if they are included they are updated 
+object.title = "My Day at the Beach";
+object.content = "Today started like any other day...";
+object.categories = "document";
+object.status = WPService.STATUS_PUBLISH;
+
+// (optional) adding metadata in the custom fields 
+object["custom[myCustomField]"] = "1234";
+object["custom[myOtherCustomField]"] = "some value";
+
+object.id = "54"; // id of post
+
+wpSaveService.save(object); 
+
+
+// Results from save
+public function saveResultsHandler(event:IWPServiceEvent):void {
+	var data:Object = event.data;
+	var post:Object;
+	var saveSuccessful:Boolean;
+	
+	var call:String = event.call;
+	var data:Object  = event.data;
+	var message:String = event.message;
+	var text:String = event.text;
+	
+	if (data && data.post) {
+		post = data.post;
+		var postID:int = post.id;
+		
+		saveSuccessful = true;
+		//trace("Document saved: "+ name);
+	}
+	else {
+		saveSuccessful = false;
+		//trace("Document not saved: "+ message);
+	}
+	
+}
+
+// Result from save fault
+public function saveFaultHandler(event:IServiceEvent):void {
+	trace("Error when trying to save document.");
+}
+</pre>
+	 * 
+ * 
+	 * How to retrieve a post: 
+	 * 
+<pre>
+var wpOpenService:WPService = new WPService();
+wpOpenService.host = "http://www.example.com/blog";
+wpOpenService.addEventListener(WPServiceBase.RESULT, loadResultsHandler, false, 0, true);
+wpOpenService.addEventListener(WPServiceBase.FAULT, loadFaultHandler, false, 0, true);
+
+var id:String = 54;
+var isPage:Boolean = true;
+
+// open page
+//openService.open(id, true);
+
+// open post
+openService.open(id, false);
+
+
+// Results from load
+public function loadResultsHandler(event:IWPServiceEvent):void {
+	var data:Object = event.data;
+	var post:Object;
+	
+	var call:String = event.call;
+	var data:Object  = event.data;
+	var message:String = event.message;
+	var text:String = event.text;
+	
+	if (data && data.post) {
+		post = data.post;
+		var postID:int = post.id;
+	}
+	else if (data && "error" in data) {
+	    // error occurred  
+	}
+	
+}
+
+// Result from load fault
+public function loadFaultHandler(event:IServiceEvent):void {
+	trace("Error when trying to load document.");
+}
+</pre>
 	 * 
 	 * How to delete a post: 
 <pre>
@@ -83,7 +184,9 @@ wpDeleteService.addEventListener(WPServiceBase.FAULT, saveFaultHandler, false, 0
 wpDeleteService.id = 100;
 wpDeleteService.delete();
 </pre>
+	 * 
 	 * How to login: 
+	 * 
 <pre>
 public var loginService:WPService;
 public function login(username:String, password:String):void {
@@ -95,7 +198,7 @@ public function login(username:String, password:String):void {
 		loginService.addEventListener(WPService.FAULT, loginFaultHandler, false, 0, true);
 	}
 	
-	loginService.host = "http://www.example.com/blog";
+	loginService.host = "https://www.example.com/blog";
 	
 	loginService.loginUser(username, password);
 	
@@ -175,7 +278,7 @@ and add this after it:
 // add custom fields  
 if ( !empty($values["custom"]) ) {
 	foreach ($values["custom"] as $metakey => $metavalue) {
-		update_post_meta($this->id,$metakey, $metavalue);
+		update_post_meta($this->id, $metakey, $metavalue);
 	}
 }
 </pre>

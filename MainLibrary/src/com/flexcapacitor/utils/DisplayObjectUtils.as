@@ -1405,8 +1405,9 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				bitmapData = target as BitmapData;
 			}
 			else if (target is GraphicElement) {
+				bitmapData = getGraphicElementBitmapData(target as IGraphicElement);
+				//bitmapData = rasterize2(GraphicElement(target).displayObject);
 				bitmapData = getBitmapDataSnapshot2(GraphicElement(target).displayObject);
-				//bitmapData = getGraphicElementBitmapData(target as IGraphicElement);
 			}
 			else {
 				throw Error("Target is null. Target must be a display object.");
