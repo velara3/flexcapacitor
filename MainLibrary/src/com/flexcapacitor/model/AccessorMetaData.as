@@ -84,6 +84,11 @@ package com.flexcapacitor.model {
 						
 						else if (keyName=="format") {
 							format = keyValue;
+							
+							if (keyValue is String && keyValue.toLowerCase()=="color") {
+								isColor = true;
+							}
+							
 							continue innerloop;
 						}
 						

@@ -1144,7 +1144,7 @@ var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(
 		 * Get color value in hex value format
 		 * 
 <pre>
-var color:String = getColorInHex(256, true);
+var color:String = getColorInHex(255, true);
 trace(color); // #ff0000
 </pre>
 		 * 

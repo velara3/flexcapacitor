@@ -30,7 +30,14 @@ package com.flexcapacitor.model {
 		public var value:*;
 		
 		/**
+		 * Set to true if format is "Color"
+		 * @see #format
+		 * */
+		public var isColor:Boolean;
+		
+		/**
 		 * Format of data. For example, Color, Number, etc
+		 * @see #isColor
 		 * */
 		public var format:String;
 		
@@ -173,6 +180,9 @@ package com.flexcapacitor.model {
 		
 				else if (keyName=="format") {
 					format = keyValue;
+					if (keyValue is String && keyValue.toLowerCase()=="color") {
+						isColor = true;
+					}
 					continue;
 				}
 				

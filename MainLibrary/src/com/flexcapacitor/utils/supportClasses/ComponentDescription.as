@@ -208,6 +208,13 @@ package com.flexcapacitor.utils.supportClasses {
 		 * Instance of inspector class. 
 		 * */
 		public var inspectorInstance:UIComponent;
+
+		/**
+		 * Wraps the output with an anchor when exporting to HTML
+		 * */
+		public var wrapWithAnchor:Boolean;
+		public var anchorURL:String;
+		public var anchorTarget:String;
 		
 		/**
 		 * Cursors

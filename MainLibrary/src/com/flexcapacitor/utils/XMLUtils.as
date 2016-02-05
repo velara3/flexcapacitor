@@ -590,6 +590,17 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Takes the trailing "/>" off and puts on a ">"
+		 * */
+		public static function getOpeningTag(xml:XML):String {
+			var result:String = xml.toXMLString();
+			
+			result = result.substr(0, result.length-2) + ">";
+			
+			return result;
+		}
+		
+		/**
 		 * Get name value pair from child nodes
 		 * 
 		 * Returns a string representation of the XML object. The rules for this conversion depend 

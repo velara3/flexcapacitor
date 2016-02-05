@@ -402,6 +402,53 @@ trace(name); // "mySuperButton"
 			return properties;
 		}
 		
+		/**
+		 * Returns an array the events for the given object including super class events. <br/><br/>
+		 * 
+		 * For example, if you give it a Spark Button class it gets all the
+		 * events for it and all the events on the super classes.<br/><br/>
+		 * 
+		 * Usage:<br/>
+ <pre>
+ var allEvents:Array = getEventNames(myButton);
+ </pre>
+		 * 
+		 * @param object The object to inspect. Either string, object or class.
+		 * @param sort Sorts the events in order in the array
+		 * 
+		 * @see #getPropertyNames()
+		 * @see #getStylesNames()
+		 * */
+		public static function getEventNames(object:Object, sort:Boolean = true):Array {
+			var describedTypeRecord:DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
+			var typeDescription:* = describedTypeRecord.typeDescription;
+			var hasFactory:Boolean = typeDescription.factory.length()>0;
+			var factory:XMLList = typeDescription.factory;
+			var numberOfItems:int;
+			var itemsList:XMLList;
+			var eventName:String;
+			var events:Array = [];
+			
+			itemsList = hasFactory ? factory.event : typeDescription.event;
+			numberOfItems = itemsList.length();
+			
+			for (var i:int;i<numberOfItems;i++) {
+				var item:XML = XML(itemsList[i]);
+				eventName = item.@name;
+				events.push(eventName);
+			}
+			
+			if (describedTypeRecord.typeName=="Object" && numberOfItems==0) {
+				for (eventName in object) {
+					events.push(eventName);
+				}
+			}
+			
+			if (sort) events.sort();
+			
+			return events;
+		}
+		
 		
 		/**
 		 * Returns true if the object has the property specified. <br/><br/>
@@ -901,9 +948,21 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
 			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(target);
 			var accessorMetaData:AccessorMetaData;
-			var matches:XMLList = describedTypeRecord.typeDescription..accessor.(@name==property);
-			var matches2:XMLList = describedTypeRecord.typeDescription..variable.(@name==property);
+			var matches:XMLList;
+			var matches2:XMLList;
 			var node:XML;
+			
+			// we should not include facade properties
+			// could we move this up a few lines before the XMLList stuff and save some cpu cycles?
+			// testing now
+			var cachedMetaData:Object = DescribeTypeCacheRecord[property];
+			if (cachedMetaData is AccessorMetaData) {
+				AccessorMetaData(cachedMetaData).updateValues(target);
+				return AccessorMetaData(cachedMetaData);
+			}
+			
+			matches = describedTypeRecord.typeDescription..accessor.(@name==property);
+			matches2 = describedTypeRecord.typeDescription..variable.(@name==property);
 			
 			if (matches.length()>0) {
 				node = matches[0];
@@ -912,13 +971,6 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 				node = matches2[0];
 			}
 			
-			// we should not include facade properties
-			
-			var cachedMetaData:Object = DescribeTypeCacheRecord[property];
-			if (cachedMetaData is AccessorMetaData) {
-				AccessorMetaData(cachedMetaData).updateValues(target);
-				return AccessorMetaData(cachedMetaData);
-			}
 			
 			if (node) {
 				accessorMetaData = new AccessorMetaData();
@@ -1168,6 +1220,46 @@ var properties:Array = getPropertiesFromArray(myButton, {"x":10,"apple":30,"widt
 						else {
 							result.push(property);
 						}
+					}
+				}
+			}
+			
+			
+			return result;
+		}
+		
+		/**
+		 * Gets an array of valid events from an array of possible event names<br/><br/>
+		 * 
+		 * Usage:<br/>
+ <pre>
+ // returns ["click"]
+ var events:Array = getEventsFromArray(myButton, ["chicken","potatoe","width","click","x"]);
+ </pre>
+		 * 
+		 * @param object The object to use. Either string, object or class.
+		 * @param possibleEvents An list of possible events
+		 * 
+		 * @returns an array of event names or an empty array
+		 * 
+		 * @see #getStylesFromArray()
+		 * @see #getPropertiesFromArray()
+		 * */
+		public static function getEventsFromArray(object:Object, possibleEvents:Object):Array {
+			var eventNames:Array = getEventNames(object);
+			var result:Array = [];
+			var eventName:String;
+			var numberOfEvents:int;
+			
+			possibleEvents = ArrayUtil.toArray(possibleEvents);
+			numberOfEvents = possibleEvents.length;
+			
+			for (var i:int; i < numberOfEvents; i++) {
+				eventName = possibleEvents[i];
+				
+				if (eventNames.indexOf(eventName)!=-1) {
+					if (result.indexOf(eventName)==-1) {
+						result.push(eventName);
 					}
 				}
 			}
