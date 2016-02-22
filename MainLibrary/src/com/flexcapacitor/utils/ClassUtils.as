@@ -365,9 +365,9 @@ trace(name); // "mySuperButton"
 		}
 		
 		public static var eventNamesCache:Dictionary = new Dictionary(true);
-		public static var propertiesNamesCache:Dictionary = new Dictionary(true);
-		public static var stylesNamesCache:Dictionary = new Dictionary(true);
-		public static var methodsNamesCache:Dictionary = new Dictionary(true);
+		public static var propertyNamesCache:Dictionary = new Dictionary(true);
+		public static var styleNamesCache:Dictionary = new Dictionary(true);
+		public static var methodNamesCache:Dictionary = new Dictionary(true);
 		
 		/**
 		 * Returns an array the properties for the given object including super class properties. <br/><br/>
@@ -399,20 +399,22 @@ trace(name); // "mySuperButton"
 			var propertyName:String;
 			var properties:Array = [];
 			var typeName:String;
+			var isDynamic:Boolean;
 			
 			
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
 			// check cache first
-			if (propertiesNamesCache[typeName]) {
+			if (propertyNamesCache[typeName]) {
 				// create a copy so it's not modified elsewhere
-				return (propertiesNamesCache[typeName] as Array).slice();
+				return (propertyNamesCache[typeName] as Array).slice();
 			}
 			
 			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
 			typeDescription = describedTypeRecord.typeDescription;
 			hasFactory = typeDescription.factory.length()>0;
 			factory = typeDescription.factory;
+			isDynamic = typeDescription.@isDynamic=="true";
 			
 			itemsList = hasFactory ? factory.variable + factory.accessor : typeDescription.variable + typeDescription.accessor;
 			// create a copy so it's not modified elsewhere
@@ -427,7 +429,7 @@ trace(name); // "mySuperButton"
 			}
 			
 			// get dynamic properties
-			if (typeName=="Object" && numberOfItems==0) {
+			if (typeName=="Object" && isDynamic) {
 				for (propertyName in object) {
 					properties.push(propertyName);
 				}
@@ -436,8 +438,8 @@ trace(name); // "mySuperButton"
 			if (sort) properties.sort();
 			
 			// save results in a cache for next time
-			if (typeName) {
-				propertiesNamesCache[typeName] = properties.slice();
+			if (typeName && typeName!="Object") {
+				propertyNamesCache[typeName] = properties.slice();
 			}
 			
 			return properties;
@@ -463,7 +465,7 @@ trace(name); // "mySuperButton"
 		 * @see #getStyleNames()
 		 * @see #getMethodNames()
 		 * */
-		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null):Array {
+		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var typeDescription:*;
 			var hasFactory:Boolean;
@@ -478,6 +480,8 @@ trace(name); // "mySuperButton"
 			var nextClass:String;
 			var item:XML;
 			var typeName:String;
+			var isDynamic:Boolean;
+			
 			
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
@@ -493,10 +497,10 @@ trace(name); // "mySuperButton"
 			extendsClass = hasFactory ? typeDescription.factory.extendsClass : typeDescription.extendsClass;
 			numberOfExtendedClasses = extendsClass.length();
 			factory = typeDescription.factory;
-			isRoot = existingItems==null;
+			isDynamic = typeDescription.@isDynamic=="true";
 			
 			itemsList = hasFactory ? factory.metadata.(@name==metaType): typeDescription.metadata.(@name==metaType);
-			//itemsList = itemsList.copy();
+			itemsList = itemsList.copy();
 			numberOfItems = itemsList.length();
 			
 			if (existingItems==null) {
@@ -505,7 +509,6 @@ trace(name); // "mySuperButton"
 			
 			for (var i:int;i<numberOfItems;i++) {
 				item = XML(itemsList[i]);
-				//eventName = item.@name;
 				eventName = item.arg[0].@value;
 				existingItems.push(eventName);
 			}
@@ -519,7 +522,7 @@ trace(name); // "mySuperButton"
 						break;
 					}
 					
-					existingItems = getEventNames(nextClass, sort, stopAt, existingItems);
+					existingItems = getEventNames(nextClass, sort, stopAt, existingItems, false);
 				}
 			}
 			
@@ -527,8 +530,103 @@ trace(name); // "mySuperButton"
 			if (sort) existingItems.sort();
 			
 			// save results in a cache for next time
-			if (isRoot && typeName) {
+			if (isRoot && typeName && typeName!="Object") {
 				eventNamesCache[typeName] = existingItems.slice();
+			}
+			
+			return existingItems;
+		}
+		
+		/**
+		 * Returns an array the styles for the given object including super class styles. 
+		 * Setting includeInherited to false is not yet implemented.<br/><br/>
+		 * 
+		 * For example, if you give it a Spark Button class it gets all the
+		 * styles for it and all the styles on the super classes.<br/><br/>
+		 * 
+		 * Usage:<br/>
+ <pre>
+ var allEvents:Array = getStyleNames(myButton);
+ </pre>
+		 * 
+		 * @param object The object to inspect. Either string, object or class.
+		 * @param sort Sorts the styles in order in the array.
+		 * @param includeInherited Gets inherited. Default is true. False is not implemented
+		 * 
+		 * @see #getPropertyNames()
+		 * @see #getEventNames()
+		 * @see #getMethodNames()
+		 * */
+		public static function getStyleNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true):Array {
+			/*
+			old method:
+			var stylesList:XMLList = getStylesMetaData(object);
+			var styleNames:Array = XMLUtils.convertXMLListToArray(stylesList.@name);
+			return styleNames;
+			*/
+			
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var typeDescription:*;
+			var hasFactory:Boolean;
+			var extendsClass:XMLList;
+			var numberOfExtendedClasses:int;
+			var factory:XMLList;
+			var numberOfItems:int;
+			var itemsList:XMLList;
+			var styleName:String;
+			var metaType:String = "Style";
+			var nextClass:String;
+			var item:XML;
+			var typeName:String;
+			
+			typeName = object is String ? String(object) : getQualifiedClassName(object);
+			
+			// check cache first
+			if (styleNamesCache[typeName]) {
+				// create a copy so it's not modified elsewhere
+				return (styleNamesCache[typeName] as Array).slice();
+			}
+			
+			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
+			typeDescription = describedTypeRecord.typeDescription;
+			hasFactory = typeDescription.factory.length()>0;
+			extendsClass = hasFactory ? typeDescription.factory.extendsClass : typeDescription.extendsClass;
+			numberOfExtendedClasses = extendsClass.length();
+			factory = typeDescription.factory;
+			
+			itemsList = hasFactory ? factory.metadata.(@name==metaType): typeDescription.metadata.(@name==metaType);
+			itemsList = itemsList.copy();
+			numberOfItems = itemsList.length();
+			
+			if (existingItems==null) {
+				existingItems = [];
+			}
+			
+			for (var i:int;i<numberOfItems;i++) {
+				item = XML(itemsList[i]);
+				styleName = item.arg[0].@value;
+				existingItems.push(styleName);
+			}
+			
+			// add events from super classes
+			if (isRoot && numberOfExtendedClasses>0) {
+				for (i=0;i<numberOfExtendedClasses;i++) {
+					nextClass = String(extendsClass[i].@type);
+					
+					if (nextClass==stopAt) {
+						break;
+					}
+					
+					existingItems = getStyleNames(nextClass, sort, stopAt, existingItems, false);
+				}
+			}
+			
+			
+			if (sort) existingItems.sort();
+			
+			// save results in a cache for next time
+			if (isRoot && typeName && typeName!="Object") {
+				styleNamesCache[typeName] = existingItems.slice();
 			}
 			
 			return existingItems;
@@ -568,9 +666,9 @@ var allMethods:Array = getMethodNames(myButton);
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
 			// check cache first
-			if (methodsNamesCache[typeName]) {
+			if (methodNamesCache[typeName]) {
 				// create a copy so it's not modified elsewhere
-				return (methodsNamesCache[typeName] as Array).slice();
+				return (methodNamesCache[typeName] as Array).slice();
 			}
 			
 			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
@@ -596,8 +694,8 @@ var allMethods:Array = getMethodNames(myButton);
 			if (sort) methods.sort();
 			
 			// save results in a cache for next time
-			if (typeName) {
-				methodsNamesCache[typeName] = methods.slice();
+			if (typeName && typeName!="Object") {
+				methodNamesCache[typeName] = methods.slice();
 			}
 			
 			return methods;
@@ -1632,18 +1730,18 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * Gets an array of the styles from an object with name value pair<br/><br/>
 		 * 
 		 * Usage:<br/>
-		 <pre>
-		 // returns ["color", "fontFamily"]
-		 var styles:Array = getStylesFromArray(myButton, {"color":10,"fontFamily":30,"marshmallow":20});
-		 </pre>
+<pre>
+// returns ["color", "fontFamily"]
+var styles:Array = getStylesFromObject(myButton, {"color":10,"fontFamily":30,"marshmallow":20});
+</pre>
 		 * 
 		 * @param object The object to check.
 		 * @param object A generic object with properties on it.
 		 * 
 		 * @see #getPropertiesFromObject()
 		 * */
-		public static function getStylesFromObject(object:Object, possibleStyles:Object):Array {
-			var propertiesNames:Array = getPropertyNames(possibleStyles);
+		public static function getStylesFromObject(object:Object, possibleStylesObject:Object):Array {
+			var propertiesNames:Array = getStyleNames(possibleStylesObject);
 			
 			return getStylesFromArray(object, propertiesNames);
 		}
@@ -1654,7 +1752,7 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * Usage:<br/>
 <pre>
 // returns ["x", "width"]
-var properties:Array = getPropertiesFromArray(myButton, {"x":10,"apple":30,"width":20});
+var properties:Array = getPropertiesFromObject(myButton, {"x":10,"apple":30,"width":20});
 </pre>
 		 * 
 		 * @param object The object to check.
@@ -1662,8 +1760,8 @@ var properties:Array = getPropertiesFromArray(myButton, {"x":10,"apple":30,"widt
 		 * 
 		 * @see #getStylesFromObject()
 		 * */
-		public static function getPropertiesFromObject(object:Object, possibleProperties:Object):Array {
-			var propertiesNames:Array = getPropertyNames(possibleProperties);
+		public static function getPropertiesFromObject(object:Object, possiblePropertiesObject:Object):Array {
+			var propertiesNames:Array = getPropertyNames(possiblePropertiesObject);
 			
 			return getPropertiesFromArray(object, propertiesNames);
 		}
@@ -1782,22 +1880,7 @@ var properties:Array = getPropertiesFromArray(myButton, {"x":10,"apple":30,"widt
 			
 			return object;
 		}
-		
-		/**
-		 * Gets an array of the styles from the object<br/><br/>
-		 * 
-		 * Usage:<br/>
-		 var styles:Array = getStyleNames(myButton);
-		 </pre>
-		 * 
-		 * @param object The object to use. Either string, object or class.
-		 * */
-		public static function getStyleNames(object:Object):Array {
-			var stylesList:XMLList = getStylesMetaData(object);
-			var styleNames:Array = XMLUtils.convertXMLListToArray(stylesList.@name);
-			
-			return styleNames;
-		}
+
 		
 		/**
 		 * Checks if the application has the definition. Returns true if it does. 
