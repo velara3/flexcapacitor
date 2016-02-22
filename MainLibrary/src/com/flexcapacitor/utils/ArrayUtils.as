@@ -276,6 +276,9 @@ var newArray:Array = ArrayUtils.add([0], array, array2, [7,8,9]);
 		public static function add(original:Array, ...Arguments):Array {
 			var numberOfArguments:int = Arguments ? Arguments.length : 0;
 			
+			// if original is null then error will occur here 
+			// we should let it error bc they want to add to a known array
+			// if that is null then purpose is not met
 			for (var i:int;i<numberOfArguments;i++) {
 				if (Arguments[i]) {
 					original = original.concat(Arguments[i]);

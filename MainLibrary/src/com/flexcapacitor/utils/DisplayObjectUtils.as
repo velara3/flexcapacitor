@@ -25,7 +25,6 @@ package com.flexcapacitor.utils {
 	import mx.collections.ArrayCollection;
 	import mx.core.BitmapAsset;
 	import mx.core.FlexGlobals;
-	import mx.core.IFlexModule;
 	import mx.core.IFlexModuleFactory;
 	import mx.core.IInvalidating;
 	import mx.core.IUIComponent;
@@ -52,7 +51,6 @@ package com.flexcapacitor.utils {
 	import spark.primitives.BitmapImage;
 	import spark.primitives.supportClasses.GraphicElement;
 	import spark.skins.IHighlightBitmapCaptureClient;
-	import spark.utils.BitmapUtil;
 	
 	use namespace mx_internal;
 	
@@ -1377,6 +1375,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				type = "jpeg";
 			}
 			
+			// you have to be careful, if line breaks occur, the image data will not show
 			if (hasJPEGEncoderOptions || hasPNGEncoderOptions) {
 				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions);
 			}
@@ -1418,7 +1417,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var base64Data:String;
 			
 			
-			if (base64BitmapCache[target] && checkCache) {
+			if (checkCache && base64BitmapCache[target]) {
 				return base64BitmapCache[target];
 			}
 			
@@ -1490,6 +1489,9 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				// Base64.encode(data:ByteArray);
 				results = Base64Encoder2.encode(byteArray);
 			}
+			
+			// have to remove line breaks for background: url(datauri) to work
+			results = results.replace(/\n/g, "");
 			
 			return results;
 		}

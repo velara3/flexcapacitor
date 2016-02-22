@@ -8,7 +8,9 @@ package com.flexcapacitor.utils {
 	import com.flexcapacitor.model.MetaData;
 	import com.flexcapacitor.model.StyleMetaData;
 	
+	import flash.events.IEventDispatcher;
 	import flash.system.ApplicationDomain;
+	import flash.utils.Dictionary;
 	import flash.utils.describeType;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
@@ -114,7 +116,7 @@ package com.flexcapacitor.utils {
 			
 			return name;
 		}
-
+		
 		/**
 		 * Get super class name of the target object
 		 * */
@@ -123,6 +125,15 @@ package com.flexcapacitor.utils {
 			if (name && name.indexOf("::")) {
 				name = name.split("::")[name.split("::").length-1]; // i'm sure theres a better way to do this
 			}
+			
+			return name;
+		}
+		
+		/**
+		 * Get fully qualified super class of the target object
+		 * */
+		public static function getSuperClass(element:Object):String {
+			var name:String = flash.utils.getQualifiedSuperclassName(element);
 			
 			return name;
 		}
@@ -353,6 +364,10 @@ trace(name); // "mySuperButton"
 			return null
 		}
 		
+		public static var eventNamesCache:Dictionary = new Dictionary(true);
+		public static var propertiesNamesCache:Dictionary = new Dictionary(true);
+		public static var stylesNamesCache:Dictionary = new Dictionary(true);
+		public static var methodsNamesCache:Dictionary = new Dictionary(true);
 		
 		/**
 		 * Returns an array the properties for the given object including super class properties. <br/><br/>
@@ -370,28 +385,49 @@ trace(name); // "mySuperButton"
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param sort Sorts the properties in the array
 		 * 
+		 * @see #getStyleNames()
+		 * @see #getEventNames()
 		 * @see #getPropertiesMetaData()
 		 * */
 		public static function getPropertyNames(object:Object, sort:Boolean = true):Array {
-			var describedTypeRecord:DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
-			var typeDescription:* = describedTypeRecord.typeDescription;
-			var hasFactory:Boolean = typeDescription.factory.length()>0;
-			var factory:XMLList = typeDescription.factory;
-			var itemsLength:int;
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var typeDescription:*;
+			var hasFactory:Boolean;
+			var factory:XMLList;
+			var numberOfItems:int;
 			var itemsList:XMLList;
 			var propertyName:String;
 			var properties:Array = [];
+			var typeName:String;
+			
+			
+			typeName = object is String ? String(object) : getQualifiedClassName(object);
+			
+			// check cache first
+			if (propertiesNamesCache[typeName]) {
+				// create a copy so it's not modified elsewhere
+				return (propertiesNamesCache[typeName] as Array).slice();
+			}
+			
+			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
+			typeDescription = describedTypeRecord.typeDescription;
+			hasFactory = typeDescription.factory.length()>0;
+			factory = typeDescription.factory;
 			
 			itemsList = hasFactory ? factory.variable + factory.accessor : typeDescription.variable + typeDescription.accessor;
-			itemsLength = itemsList.length();
+			// create a copy so it's not modified elsewhere
+			itemsList = itemsList.copy();
+			numberOfItems = itemsList.length();
 			
-			for (var i:int;i<itemsLength;i++) {
+			
+			for (var i:int;i<numberOfItems;i++) {
 				var item:XML = XML(itemsList[i]);
 				propertyName = item.@name;
 				properties.push(propertyName);
 			}
 			
-			if (describedTypeRecord.typeName=="Object" && itemsLength==0) {
+			// get dynamic properties
+			if (typeName=="Object" && numberOfItems==0) {
 				for (propertyName in object) {
 					properties.push(propertyName);
 				}
@@ -399,11 +435,17 @@ trace(name); // "mySuperButton"
 			
 			if (sort) properties.sort();
 			
+			// save results in a cache for next time
+			if (typeName) {
+				propertiesNamesCache[typeName] = properties.slice();
+			}
+			
 			return properties;
 		}
 		
 		/**
-		 * Returns an array the events for the given object including super class events. <br/><br/>
+		 * Returns an array the events for the given object including super class events. 
+		 * Setting includeInherited to false is not yet implemented.<br/><br/>
 		 * 
 		 * For example, if you give it a Spark Button class it gets all the
 		 * events for it and all the events on the super classes.<br/><br/>
@@ -414,41 +456,152 @@ trace(name); // "mySuperButton"
  </pre>
 		 * 
 		 * @param object The object to inspect. Either string, object or class.
-		 * @param sort Sorts the events in order in the array
+		 * @param sort Sorts the events in order in the array.
+		 * @param includeInherited Gets inherited. Default is true. False is not implemented
 		 * 
 		 * @see #getPropertyNames()
-		 * @see #getStylesNames()
+		 * @see #getStyleNames()
+		 * @see #getMethodNames()
 		 * */
-		public static function getEventNames(object:Object, sort:Boolean = true):Array {
-			var describedTypeRecord:DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(object);
-			var typeDescription:* = describedTypeRecord.typeDescription;
-			var hasFactory:Boolean = typeDescription.factory.length()>0;
-			var factory:XMLList = typeDescription.factory;
+		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null):Array {
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var typeDescription:*;
+			var hasFactory:Boolean;
+			var extendsClass:XMLList;
+			var numberOfExtendedClasses:int;
+			var factory:XMLList;
+			var isRoot:Boolean;
 			var numberOfItems:int;
 			var itemsList:XMLList;
 			var eventName:String;
-			var events:Array = [];
+			var metaType:String = "Event";
+			var nextClass:String;
+			var item:XML;
+			var typeName:String;
 			
-			itemsList = hasFactory ? factory.event : typeDescription.event;
+			typeName = object is String ? String(object) : getQualifiedClassName(object);
+			
+			// check cache first
+			if (eventNamesCache[typeName]) {
+				// create a copy so it's not modified elsewhere
+				return (eventNamesCache[typeName] as Array).slice();
+			}
+			
+			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
+			typeDescription = describedTypeRecord.typeDescription;
+			hasFactory = typeDescription.factory.length()>0;
+			extendsClass = hasFactory ? typeDescription.factory.extendsClass : typeDescription.extendsClass;
+			numberOfExtendedClasses = extendsClass.length();
+			factory = typeDescription.factory;
+			isRoot = existingItems==null;
+			
+			itemsList = hasFactory ? factory.metadata.(@name==metaType): typeDescription.metadata.(@name==metaType);
+			//itemsList = itemsList.copy();
+			numberOfItems = itemsList.length();
+			
+			if (existingItems==null) {
+				existingItems = [];
+			}
+			
+			for (var i:int;i<numberOfItems;i++) {
+				item = XML(itemsList[i]);
+				//eventName = item.@name;
+				eventName = item.arg[0].@value;
+				existingItems.push(eventName);
+			}
+			
+			// add events from super classes
+			if (isRoot && numberOfExtendedClasses>0) {
+				for (i=0;i<numberOfExtendedClasses;i++) {
+					nextClass = String(extendsClass[i].@type);
+					
+					if (nextClass==stopAt) {
+						break;
+					}
+					
+					existingItems = getEventNames(nextClass, sort, stopAt, existingItems);
+				}
+			}
+			
+			
+			if (sort) existingItems.sort();
+			
+			// save results in a cache for next time
+			if (isRoot && typeName) {
+				eventNamesCache[typeName] = existingItems.slice();
+			}
+			
+			return existingItems;
+		}
+		
+		/**
+		 * Returns an array the methods for the given object including super class methods. 
+		 * Setting includeInherited to false is not yet implemented.<br/><br/>
+		 * 
+		 * For example, if you give it a Spark Button class it gets all the
+		 * methods for it and all the methods on the super classes.<br/><br/>
+		 * 
+		 * Usage:<br/>
+<pre>
+var allMethods:Array = getMethodNames(myButton);
+</pre>
+		 * 
+		 * @param object The object to inspect. Either string, object or class.
+		 * @param sort Sorts the methods in order in the array.
+		 * @param includeInherited Gets inherited. Default is true. False is not implemented
+		 * 
+		 * @see #getEventNames()
+		 * @see #getPropertyNames()
+		 * @see #getStylesNames()
+		 * */
+		public static function getMethodNames(object:Object, sort:Boolean = true, includeInherited:Boolean = true):Array {
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var typeDescription:*;
+			var hasFactory:Boolean;
+			var factory:XMLList;
+			var numberOfItems:int;
+			var itemsList:XMLList;
+			var methodName:String;
+			var methods:Array = [];
+			var typeName:String;
+			
+			typeName = object is String ? String(object) : getQualifiedClassName(object);
+			
+			// check cache first
+			if (methodsNamesCache[typeName]) {
+				// create a copy so it's not modified elsewhere
+				return (methodsNamesCache[typeName] as Array).slice();
+			}
+			
+			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
+			typeDescription = describedTypeRecord.typeDescription;
+			hasFactory = typeDescription.factory.length()>0;
+			factory = typeDescription.factory;
+			
+			itemsList = hasFactory ? factory.method : typeDescription.method;
 			numberOfItems = itemsList.length();
 			
 			for (var i:int;i<numberOfItems;i++) {
 				var item:XML = XML(itemsList[i]);
-				eventName = item.@name;
-				events.push(eventName);
+				methodName = item.@name;
+				methods.push(methodName);
 			}
 			
 			if (describedTypeRecord.typeName=="Object" && numberOfItems==0) {
-				for (eventName in object) {
-					events.push(eventName);
+				for (methodName in object) {
+					methods.push(methodName);
 				}
 			}
 			
-			if (sort) events.sort();
+			if (sort) methods.sort();
 			
-			return events;
+			// save results in a cache for next time
+			if (typeName) {
+				methodsNamesCache[typeName] = methods.slice();
+			}
+			
+			return methods;
 		}
-		
 		
 		/**
 		 * Returns true if the object has the property specified. <br/><br/>
@@ -492,6 +645,88 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			var properties:Array = getPropertyNames(object);
 			
 			if (properties.indexOf(propertyName)!=-1) {
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Returns true if the object has the event specified. <br/><br/>
+		 * 
+		 * For example:<br/>
+<pre>
+	var hasEvent:Boolean = ClassUtils.hasEvent(myButton, "click"); // true
+	var hasEvent:Boolean = ClassUtils.hasEvent(myButton, "spagetti"); // false
+	var hasEvent:Boolean = ClassUtils.hasEvent(myButton, "width"); // false
+</pre>
+		 * 
+		 * @param object The object to check event for
+		 * @param propertyName Name of event to check for
+		 * @param useFlashAPI Uses Flash internal methods
+		 * 
+		 * @see #hasStyle()
+		 * */
+		public static function hasEvent(object:Object, eventName:String, includeInheritedEvents:Boolean = false):Boolean {
+			var events:Array;
+			var found:Boolean;
+			
+			if (object==null || object=="" || eventName==null || eventName=="") return false;
+			
+			events = getEventNames(object);
+			
+			if (events.indexOf(eventName)!=-1) {
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Returns true if the object has the method specified. <br/><br/>
+		 * 
+		 * If useFlashAPI is true then uses Flash internal methods
+<pre> 
+	"method" in object and object.hasOwnProperty(methodName);
+</pre>
+		 * <br/>
+		 * 
+		 * Otherwise it uses describeType.<br/><br/>
+		 * 
+		 * For example:<br/>
+<pre>
+	var hasMethod:Boolean = ClassUtils.hasMethod(myButton, "styleChanged"); // true
+	var hasMethod:Boolean = ClassUtils.hasMethod(myButton, "spagetti"); // false
+	var hasMethod:Boolean = ClassUtils.hasMethod(myButton, "width"); // false
+</pre>
+		 * 
+		 * @param object The object to check method for
+		 * @param propertyName Name of method to check for
+		 * @param useFlashAPI Uses Flash internal methods
+		 * 
+		 * @see #hasStyle()
+		 * */
+		public static function hasMethod(object:Object, methodName:String, useFlashAPI:Boolean = false):Boolean {
+			var methods:Array;
+			var found:Boolean;
+			
+			if (object==null || object=="" || methodName==null || methodName=="") return false;
+			
+			if (useFlashAPI) {
+				
+				if (methodName && object is IEventDispatcher) {
+					found = "method" in object || object.hasOwnProperty(methodName);
+					if (!(found is Function)) {
+						found = false;
+					}
+				}
+				
+				return found;
+			}
+			
+			methods = getMethodNames(object);
+			
+			if (methods.indexOf(methodName)!=-1) {
 				return true;
 			}
 			
@@ -865,13 +1100,13 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			var hasFactory:Boolean = typeDescription.factory.length()>0;
 			var factory:* = typeDescription.factory;
 			var extendsClass:XMLList = hasFactory ? typeDescription.factory.extendsClass : typeDescription.extendsClass;
-			var extendsLength:int = extendsClass.length();
+			var numberOfExtendedClasses:int = extendsClass.length();
 			// can be on typeDescription.metadata or factory.metadata
 			var isRoot:Boolean = object is String ? false : true;
 			var className:String = describedTypeRecord.typeName;
 			var numberOfItems:int;
 			var itemsList:XMLList;
-			var existingItemsLength:int = existingItems ? existingItems.length() : 0;
+			var numberOfExistingItems:int = existingItems ? existingItems.length() : 0;
 			var metaName:String;
 			var duplicateItems:Array = [];
 			
@@ -902,7 +1137,7 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 				item.@metadataType = metaType;
 				item.@declaredBy = className;
 				
-				for (var j:int=0;j<existingItemsLength;j++) {
+				for (var j:int=0;j<numberOfExistingItems;j++) {
 					var existingItem:XML = existingItems[j];
 					
 					if (metaName==existingItem.@name) {
@@ -925,8 +1160,8 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 				existingItems = new XMLList(existingItems.toString()+itemsList.toString());
 			}
 
-			if (isRoot && extendsLength>0) {
-				for (i=0;i<extendsLength;i++) {
+			if (isRoot && numberOfExtendedClasses>0) {
+				for (i=0;i<numberOfExtendedClasses;i++) {
 					var nextClass:String = String(extendsClass[i].@type);
 					
 					if (nextClass==stopAt) {
@@ -940,10 +1175,51 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			return existingItems;
 		}
 		
+		
+		
+		/**
+		 * Get MetaData data for the given member. 
+		 * 
+		 * @see #getMetaDataOfStyle();
+		 * */
+		public static function getMetaDataOf(target:Object, member:String, ignoreFacades:Boolean = true):MetaData {
+			var isProperty:Boolean;
+			var isStyle:Boolean;
+			var isEvent:Boolean;
+			var isMethod:Boolean;
+			
+			isProperty = hasProperty(target, member);
+			if (!isProperty) {
+				isStyle = hasStyle(target, member);
+				if (!isEvent) {
+					isEvent = hasEvent(target, member);
+					if (!isMethod) {
+						isMethod = hasMethod(target, member);
+					}
+				}
+			}
+			
+			if (isProperty) {
+				return getMetaDataOfProperty(target, member, ignoreFacades);
+			}
+			else if (isStyle) {
+				return getMetaDataOfStyle(target, member);
+			}
+			else if (isEvent) {
+				return getMetaDataOfEvent(target, member);
+			}
+			else if (isMethod) {
+				return getMetaDataOfMethod(target, member);
+			}
+			
+			return null;
+		}
+		
 		/**
 		 * Get AccessorMetaData data for the given property. 
 		 * 
 		 * @see #getMetaDataOfStyle();
+		 * @see #getMetaDataOfEvent();
 		 * */
 		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
 			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(target);
@@ -1004,7 +1280,7 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * @returns an StyleMetaData object
 		 * @param target IStyleClient that contains the style
 		 * @param style name of style
-		 * @param type if style is not defined on target class we check super class. default null 
+		 * @param type if style is not defined on target class we check super class. used in recursive search. default null 
 		 * @param stopAt if we don't want to look all the way up to object we can set the class to stop looking at
 		 * 
 		 * @see #getMetaDataOfProperty()
@@ -1094,6 +1370,220 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 				}
 				
 				return styleMetaData;
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get EventMetaData data for the given event. 
+
+		 * Usage:<br/>
+ <pre>
+ var eventMetaData:EventMetaData = getMetaDataOfEvent(myButton, "color");
+ </pre>
+		 * @returns an EventMetaData object
+		 * @param target IEventClient that contains the event
+		 * @param event name of event
+		 * @param type if event is not defined on target class we check super class. default null 
+		 * @param stopAt if we don't want to look all the way up to object we can set the class to stop looking at
+		 * 
+		 * @see #getMetaDataOfProperty()
+		 * */
+		public static function getMetaDataOfEvent(target:Object, event:String, type:String = null, stopAt:String = null):EventMetaData {
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var eventMetaData:EventMetaData;
+			var extendsClassList:XMLList;
+			var cachedMetaData:Object;
+			var typeDescription:XML;
+			var foundEvent:Boolean;
+			var hasFactory:Boolean;
+			var matches:XMLList;
+			var factory:Object;
+			var node:XML;
+			
+			if (type) {
+				describedTypeRecord = DescribeTypeCache.describeType(type);
+			}
+			else {
+				describedTypeRecord = DescribeTypeCache.describeType(target);
+			}
+			
+			cachedMetaData = describedTypeRecord[event];
+			
+			if (cachedMetaData is EventMetaData) {
+				EventMetaData(cachedMetaData).updateValues(target);
+				return EventMetaData(cachedMetaData);
+			}
+			
+			typeDescription = describedTypeRecord.typeDescription[0];
+			factory = typeDescription.factory;
+			hasFactory = factory.length()>0;
+			
+			// sometimes factory exists sometimes it doesn't wtf?
+			if (hasFactory) {
+				//matches = describedTypeRecord.typeDescription.factory.metadata.(@name=="Event").arg.(@value==event);
+				matches = factory.metadata.(@name=="Event").arg.(@value==event);
+			}
+			else {
+				matches = typeDescription.metadata.(@name=="Event").arg.(@value==event);
+			}
+			
+			if (matches && matches.length()==0) {
+				
+				if (hasFactory) {
+					extendsClassList = factory.extendsClass;
+				}
+				else {
+					extendsClassList = typeDescription.extendsClass;
+				}
+				
+				var numberOfTypes:int = extendsClassList.length();
+				
+				for (var i:int;i<numberOfTypes;i++) {
+					type = extendsClassList[i].@type;
+					if (type==stopAt) return null;
+					if (type=="Class") return null;
+					
+					return getMetaDataOfEvent(target, event, type);
+				}
+			}
+			
+			if (matches.length()>0) {
+				node = matches[0].parent();
+				if ("typeName" in typeDescription) {
+					node.@declaredBy = typeDescription.typeName;
+				}
+				else if (type) {
+					node.@declaredBy = type;
+				}
+				else if (typeDescription.hasOwnProperty("name")) {
+					node.@declaredBy = typeDescription.@name;
+				}
+				eventMetaData = new EventMetaData();
+				eventMetaData.unmarshall(node, target);
+				
+				// we want to cache event meta data
+				if (eventMetaData) {
+					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
+					//	Error$/throwError [no source]	
+					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
+						
+					DescribeTypeCache.registerCacheHandler(event, function (record:DescribeTypeCacheRecord):Object {
+						//if (relevantPropertyFacades.indexOf(event)!=-1) {
+						return eventMetaData;
+						//}
+					});
+				}
+				
+				return eventMetaData;
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get MethodMetaData data for the given method. 
+		 *
+		 * Usage:<br/>
+<pre>
+	var methodMetaData:MethodMetaData = getMetaDataOfMethod(myButton, "color");
+</pre>
+		 * @returns an MethodMetaData object
+		 * @param target IMethodClient that contains the method
+		 * @param method name of method
+		 * @param type if method is not defined on target class we check super class. default null 
+		 * @param stopAt if we don't want to look all the way up to object we can set the class to stop looking at
+		 * 
+		 * @see #getMetaDataOfProperty()
+		 * */
+		public static function getMetaDataOfMethod(target:Object, method:String, type:String = null, stopAt:String = null):MethodMetaData {
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var methodMetaData:MethodMetaData;
+			var extendsClassList:XMLList;
+			var cachedMetaData:Object;
+			var typeDescription:XML;
+			var foundMethod:Boolean;
+			var hasFactory:Boolean;
+			var matches:XMLList;
+			var factory:Object;
+			var node:XML;
+			
+			if (type) {
+				describedTypeRecord = DescribeTypeCache.describeType(type);
+			}
+			else {
+				describedTypeRecord = DescribeTypeCache.describeType(target);
+			}
+			
+			cachedMetaData = describedTypeRecord[method];
+			
+			if (cachedMetaData is MethodMetaData) {
+				MethodMetaData(cachedMetaData).updateValues(target);
+				return MethodMetaData(cachedMetaData);
+			}
+			
+			typeDescription = describedTypeRecord.typeDescription[0];
+			factory = typeDescription.factory;
+			hasFactory = factory.length()>0;
+			
+			// sometimes factory exists sometimes it doesn't wtf?
+			if (hasFactory) {
+				//matches = describedTypeRecord.typeDescription.factory.metadata.(@name=="Method").arg.(@value==method);
+				matches = factory.metadata.(@name=="Method").arg.(@value==method);
+			}
+			else {
+				matches = typeDescription.metadata.(@name=="Method").arg.(@value==method);
+			}
+			
+			if (matches && matches.length()==0) {
+				
+				if (hasFactory) {
+					extendsClassList = factory.extendsClass;
+				}
+				else {
+					extendsClassList = typeDescription.extendsClass;
+				}
+				
+				var numberOfTypes:int = extendsClassList.length();
+				
+				for (var i:int;i<numberOfTypes;i++) {
+					type = extendsClassList[i].@type;
+					if (type==stopAt) return null;
+					if (type=="Class") return null;
+					
+					return getMetaDataOfMethod(target, method, type);
+				}
+			}
+			
+			if (matches.length()>0) {
+				node = matches[0].parent();
+				if ("typeName" in typeDescription) {
+					node.@declaredBy = typeDescription.typeName;
+				}
+				else if (type) {
+					node.@declaredBy = type;
+				}
+				else if (typeDescription.hasOwnProperty("name")) {
+					node.@declaredBy = typeDescription.@name;
+				}
+				methodMetaData = new MethodMetaData();
+				methodMetaData.unmarshall(node, target);
+				
+				// we want to cache method meta data
+				if (methodMetaData) {
+					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
+					//	Error$/throwError [no source]	
+					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
+					
+					DescribeTypeCache.registerCacheHandler(method, function (record:DescribeTypeCacheRecord):Object {
+						//if (relevantPropertyFacades.indexOf(method)!=-1) {
+						return methodMetaData;
+						//}
+					});
+				}
+				
+				return methodMetaData;
 			}
 			
 			return null;

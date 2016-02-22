@@ -33,6 +33,13 @@ controls|BeveledImageButton {
 	skinClass: ClassReference("com.flexcapacitor.skins.BeveledImageButtonSkin");
 }
 
+controls|BeveledImageToggleButton {
+	skinClass: ClassReference("com.flexcapacitor.skins.BeveledImageToggleButtonSkin");
+	focusAlpha: 0;
+	backgroundColor: #CCCCCC;
+	backgroundAlpha: 1;
+}
+
 controls|FrameContainer {
 	skinClass: ClassReference("com.flexcapacitor.skins.FrameSkin");
 	backgroundColor: #9a9b9d;
@@ -55,19 +62,24 @@ controls|InsetLabel {
 }
 
 controls|DataGrid {
-	columnSeparatorAlpha: 1;
-	columnSeparatorColor: #E6E6E6;
-	columnSeparatorWeight: 1;
-	headerBackgroundColor: #D8D8D8;
-	headerTextColor: #696969;
-	headerRowSeparatorColor: #696969;
-	headerRowSeparatorAlpha: 1;
-	rowSeparatorAlpha: 1;
-	rowSeparatorColor: #E6E6E6;
-	rowSeparatorWeight: 1;
-	showHeader: true;
-	selectionBorderAlpha: 1;
-	skinClass: ClassReference("com.flexcapacitor.skins.DataGridSkin");
+	columnSeparatorAlpha: 		1;
+	columnSeparatorColor: 		#E6E6E6;
+	columnSeparatorWeight: 		1;
+	
+	headerBackgroundColor: 		#D8D8D8;
+	headerTextColor: 			#696969;
+	headerRowSeparatorColor: 	#696969;
+	headerRowSeparatorAlpha: 	1;
+	showHeader: 				true;
+	
+	rowSeparatorAlpha: 			1;
+	rowSeparatorColor: 			#E6E6E6;
+	rowSeparatorWeight: 		1;
+	
+	selectionBorderAlpha: 		1;
+	selectionBorderColor: 		1;
+	skinClass: 					ClassReference("com.flexcapacitor.skins.DataGridSkin");
+	itemRenderer: 				ClassReference("com.flexcapacitor.controls.supportClasses.GridItemRenderer");
 }
 
 controls|Hyperlink {
@@ -85,7 +97,7 @@ controls|ItemRendererButton {
 }
 
 controls|ClearButton {
-	skinClass: ClassReference("com.flexcapacitor.skins.ClearButton");
+	skinClass: ClassReference("com.flexcapacitor.skins.ClearButtonSkin");
 }
 
 controls|SearchTextInput {

@@ -4,6 +4,10 @@
 
 package com.flexcapacitor.controls
 {
+	import com.flexcapacitor.controls.supportClasses.GridItemRenderer;
+	
+	import mx.core.ClassFactory;
+	
 	import spark.components.DataGrid;
 	
 	
@@ -113,28 +117,49 @@ package com.flexcapacitor.controls
 	[Style(name="headerBackgroundColor", inherit="yes", type="uint", format="Color")]
 	
 	/**
-	 * This is an attempt at a better DataGrid. It uses the com.flexcapacitor.skins.DataGridSkin class. 
-	 * This skin is set in the defaults.css of the Flex Capacitor library (FCLibrary). 
+	 * This is an attempt at a better DataGrid. It uses the com.flexcapacitor.skins.DataGridSkin skin class
+	 * and com.flexcapacitor.renderers.GridItemRenderer item renderer class. 
+	 * This skin and item renderer are set in the defaults.css of the Flex Capacitor library (FCLibrary). 
+	 * If you don't need text selection and text roll over color you can set the item renderer 
+	 * back to the default spark.skins.spark::DefaultGridItemRenderer and it may save a few cycles. 
+	 * With our grid item renderer it's only purpose is to allow setting the color of the text on hover and select. 
+	 * <br/><br/>
 	 * 
-	 * This adds additional styles, properties and events: <br/> <br/>
+	 * This control also fixes the header top line showing when borderVisible is false. <br/>
 	 * 
-	 * - Added columnSeparatorAlpha <br/>
-	 * - Added columnSeparatorColor <br/>
-	 * - Added columnSeparatorWeight <br/>
-	 * - Added headerBackgroundColor <br/>
-	 * - headerRowSeparatorColor <br/>
-	 * - headerRowSeparatorAlpha <br/>
-	 * - rowSeparatorAlpha <br/>
-	 * - rowSeparatorColor <br/>
-	 * - rowSeparatorWeight <br/>
-	 * - showHeader <br/>
-	 * - selectionBorderColor style check which is alternative for caretColor <br/>
-	 * - selectionBorderAlpha <br/>
-	 * - rollOverAlpha <br/>
-	 * - backgroundColor<br/>
-	 * - backgroundAlpha<br/>
-	 * - Fixes the header top line showing when borderVisible is false. <br/>
-	 * - Adds a gridItemEditorSessionSaving event. It is up to the grid item editor to dispatch this event. <br/>
+	 * It also adds a gridItemEditorSessionSaving event so you can check the value
+	 * the user input before accepting it and cancel the saving if you so choose. 
+	 * It is up to the grid item editor to dispatch this event. <br/>
+	 * 
+	 * The following are the original and additional styles, properties and events: <br/> <br/>
+	 * 
+	 * - columnSeparatorAlpha - Alpha of column separator. Default is 1. <br/>
+	 * - columnSeparatorColor - Color of column separator. Default is #E6E6E6. <br/>
+	 * - columnSeparatorWeight - Width of column separator. Default is 1px. <br/><br/>
+	 * 
+	 * - headerBackgroundColor - Background color of the header. Default is #D8D8D8. <br/>
+	 * - headerRowSeparatorColor - Color of the separator between the header and the datagrid rows. Deafult is #696969. <br/>
+	 * - headerRowSeparatorAlpha - Alpha of the header separator row. Default is 1. <br/><br/>
+	 * 
+	 * - rowSeparatorAlpha - Alpha of the row separator line. Default is 1. <br/>
+	 * - rowSeparatorColor - Color of the row separator line. Default is #E6E6E6. <br/>
+	 * - rowSeparatorWeight - Height of the row separator line. Default is 1. <br/><br/>
+	 * 
+	 * - showHeader - If enabled header is shown. Default is true. <br/><br/>
+	 * 
+	 * - selectionBorderColor - Color of the border around the selected or caret item. Default is #000000. <br/>
+	 * - selectionBorderAlpha - Alpha of the border around the selected or caret item. Default is 1. <br/><br/>
+	 * 
+	 * - rollOverAlpha - Alpha of the background color on roll over. Default is 1. <br/>
+	 * - rollOverColor - Color of the background on roll over. Default is <br/><br/>
+	 * 
+	 * - color - Color of the text. Default is #000000. <br/>
+	 * - textSelectionColor - Color of the text when selected. Default is #000000. <br/>
+	 * - textRollOverColor - Color of the text on roll over. Default is #000000. <br/><br/>
+	 * 
+	 * - backgroundColor - Background color of the DataGrid. Default is <br/>
+	 * - backgroundAlpha - Background alpha of the DataGrid. Default is <br/><br/>
+	 * 
 	 * - Backwards compatible with Flex 4.6 <br/> <br/>
 	 *
 	 *  <p>The <code>&lt;s:DataGrid&gt;</code> tag inherits all of the tag 
@@ -146,20 +171,23 @@ package com.flexcapacitor.controls
 	 *    gridItemEditorSessionSaving="<i>No default</i>"
 	 *  
 	 *    <strong>Styles</strong>
-	 *    columnSeparatorAlpha="0x0099FF"
-	 *    columnSeparatorColor="useDominantBaseline"
+	 *    columnSeparatorAlpha="1"
+	 *    columnSeparatorColor="0xFF00FF"
 	 *    columnSeparatorWeight="1"
 	 *    headerBackgroundColor="1.0"
 	 *    headerRowSeparatorColor="0xFFFFFF"
 	 *    headerRowSeparatorAlpha="1"
-	 *    rowSeparatorAlpha="1.0"
+	 *    rowSeparatorAlpha="1"
 	 *    rowSeparatorColor="red"
 	 *    rowSeparatorWeight="1"
 	 *    selectionBorderColor="blue"
 	 *    selectionBorderAlpha="1"
 	 *    backgroundColor="0xFFFFFF"
 	 *    backgroundAlpha="1"
+	 *    useRollOver="true"
 	 *    rollOverAlpha="1"
+	 *    rollOverColor="1"
+	 *    selectionColor="blue"
 	 *    showHeader="true"
 	 *  /&gt;
 	 *  </pre>
@@ -176,6 +204,8 @@ package com.flexcapacitor.controls
 		
 		public function DataGrid() {
 			super();
+			
+			itemRenderer = new ClassFactory(GridItemRenderer);
 		}
 	}
 }

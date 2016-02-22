@@ -6,46 +6,63 @@ package com.flexcapacitor.performance {
 	
 	
 	/**
-	 Track the performance of your code by timing your code. 
+	 * Track the performance of your code by timing it. 
 	 * You can track the time a block of code runs by calling start 
 	 * and stop. When you call stop the time that has elapsed is 
-	 * traced to the console. 
+	 * traced to the console. <br/><br/>
+	 * 
+	 * To increase the column width set the markNameMaxWidth. <br/><br/>
 	 * 
 	 Usage:
 <pre>
-	 PerformanceMeter.start("test");
-	 // do something
-	 PerformanceMeter.stop("test"); // outputs to console 10ms
+ PerformanceMeter.start("test");
+ // do something
+ PerformanceMeter.stop("test"); // outputs to console 10ms
 </pre>
 	 * You can use the mark method to track the time that has elapsed since the 
 	 * last call to mark. 
+	 * Usage:
 <pre>
-	 Usage:
-	 PerformanceMeter.mark("before bitmap resampling", true); // setting true resets the running timer
-	 // code that runs for 10 milliseconds
-	 PerformanceMeter.mark("after bitmap resampling"); // traces "before bitmap resampling: 10ms"
-	 // more code that takes 5 milliseconds
-	 PerformanceMeter.mark("after more code"); // traces "after bitmap resampling: 5ms"
-	 // more code 
-	 PerformanceMeter.mark("end of method"); // traces "after more code: 5ms"
+ PerformanceMeter.mark("before bitmap resampling", true); // setting true resets the running timer
+ // code that runs for 10 milliseconds
+ PerformanceMeter.mark("after bitmap resampling"); // traces "before bitmap resampling: 10ms"
+ // more code that takes 5 milliseconds
+ PerformanceMeter.mark("after more code"); // traces "after bitmap resampling: 5ms"
+ // more code 
+ PerformanceMeter.mark("end of method"); // traces "after more code: 5ms"
 </pre>
 	 * 
 	 Usage:
+		 * <b>Simple example:</b>
+<pre>
+PerformanceMeter.start("test");
+// do something
+PerformanceMeter.stop("test"); // outputs to console 10ms
+</pre>
+		 * 
+		 * <b>Advanced example (multiple tests):</b>
 <pre>
 PerformanceMeter.timestampPoolCount = 1000;
 PerformanceMeter.traceMessages = false;
-var length:int = 1000;
-for (var i:int;i<length;i++) {
-	PerformanceMeter.start("test", true);
-	// do something
-	PerformanceMeter.stop("test");
+ * 
+var testData:ProfileTest;
+var count:int = 1000;
+
+for (var i:int;i&lt;count;i++) {
+  PerformanceMeter.start("test", true);
+  // do something
+  PerformanceMeter.stop("test");
 }
-var testData:ProfileTest = PerformanceMeter.getTest("test");
+
+testData = PerformanceMeter.getTest("test");
+
+// test data summary
 trace("Average duration: " + testData.average);
 trace("Normalized duration: " + testData.normalize);
 trace("Fastest time: " + testData.minimum);
 trace("Slowest time: " + testData.maximum);
 </pre>
+	 * 
 	 */
 	public class PerformanceMeter {
 		
@@ -231,7 +248,40 @@ trace("Slowest time: " + testData.maximum);
 		/**
 		 * Creates a test with the name specified. If multicall is true then when
 		 * the test is created it creates a timestamp in the test's timestamps array
-		 * each time a call start is called on the test with the same name
+		 * each time a call start is called on the test with the same name.<br/><br/>
+		 * 
+		 * <b>Simple example:</b>
+<pre>
+PerformanceMeter.start("test");
+// do something
+PerformanceMeter.stop("test"); // outputs to console 10ms
+</pre>
+		 * 
+		 * <b>Advanced example (multiple tests):</b>
+<pre>
+PerformanceMeter.timestampPoolCount = 1000;
+PerformanceMeter.traceMessages = false;
+ * 
+var testData:ProfileTest;
+var count:int = 1000;
+
+for (var i:int;i&lt;count;i++) {
+  PerformanceMeter.start("test", true);
+  // do something
+  PerformanceMeter.stop("test");
+}
+
+testData = PerformanceMeter.getTest("test");
+
+// test data summary
+trace("Average duration: " + testData.average);
+trace("Normalized duration: " + testData.normalize);
+trace("Fastest time: " + testData.minimum);
+trace("Slowest time: " + testData.maximum);
+</pre>
+		 * 
+		 * @see #stop()
+		 * @see #mark()
 		 * */
 		public static function start(name:String, multicall:Boolean=true, bufferOutput:Boolean = false):void {
 			if (!initialized) initialize();
@@ -277,6 +327,16 @@ trace("Slowest time: " + testData.maximum);
 		 * If trace messages is true and the test is not set to buffer 
 		 * then traces a message to the console. The test can be set to
 		 * buffer by setting a parameter when you called start().
+		 * 
+		 * Usage:
+<pre>
+PerformanceMeter.start("test");
+// do something
+PerformanceMeter.stop("test"); // outputs to console 10ms
+</pre>
+		 * 
+		 * @see #start()
+		 * @see #mark()
 		 * */
 		public static function stop(name:String, traceBufferedOut:Boolean = false):uint {
 			var string:String;
@@ -369,7 +429,10 @@ trace("Slowest time: " + testData.maximum);
 		}
 		
 		/**
-		 * Marks a point in time with the current value of the getTimer count. Also shows the difference since last mark.
+		 * Marks a point in time with the current value of the getTimer count. 
+		 * Also shows the difference since last mark.
+		 * 
+		 * 
 		 * */
 		public static function mark(name:String="", resetRunningTimer:Boolean = false):void {
 			lastMarkDifference = lastMark==0 || resetRunningTimer ? 0 : getTimer() - lastMark;

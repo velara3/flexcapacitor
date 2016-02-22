@@ -348,7 +348,7 @@
     <classEntry path="com.flexcapacitor.services.WPServiceEvent"/>
     <classEntry path="com.flexcapacitor.skins.BeveledImageButtonSkin"/>
     <classEntry path="com.flexcapacitor.skins.BorderContainerSkin"/>
-    <classEntry path="com.flexcapacitor.skins.ClearButton"/>
+    <classEntry path="com.flexcapacitor.skins.ClearButtonSkin"/>
     <classEntry path="com.flexcapacitor.skins.DataGridSkin"/>
     <classEntry path="com.flexcapacitor.skins.DataGridSkin2"/>
     <classEntry path="com.flexcapacitor.skins.FrameSkin"/>
@@ -430,10 +430,12 @@
     <classEntry path="com.flexcapacitor.model.ChartItemData"/>
     <classEntry path="com.flexcapacitor.utils.DescribeTypeCacheRecords"/>
     <classEntry path="com.flexcapacitor.controls.ListNoKeyboardHandling"/>
+    <classEntry path="com.flexcapacitor.utils.EventMetaData"/>
+    <classEntry path="com.flexcapacitor.utils.MethodMetaData"/>
   </includeClasses>
   <includeResources>
-    <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>
+    <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>
     <resourceEntry destPath="design.xml" sourcePath="design.xml"/>
     <resourceEntry destPath="com/flexcapacitor/controls/supportClasses/ace.html" sourcePath="com/flexcapacitor/controls/supportClasses/ace.html"/>
     <resourceEntry destPath="defaults.css" sourcePath="defaults.css"/>

@@ -103,7 +103,7 @@
     <fx:Metadata>
         <![CDATA[ 
         /** 
-        * @copy spark.skins.spark.ApplicationSkin#hostComponent
+         * @copy spark.skins.spark.ApplicationSkin#hostComponent
          */
         [HostComponent("spark.components.Image")]
         ]]>

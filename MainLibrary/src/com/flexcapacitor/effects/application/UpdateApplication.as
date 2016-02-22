@@ -245,16 +245,16 @@ package com.flexcapacitor.effects.application {
 	 * These properties are also set on this effect instance called remoteVersion, available, description and details.<br/><br/>
 	 * 
 	 * <b>Notable Errors:</b><br/>
-	 * [StatusUpdateErrorEvent: (type=updateError text=Invalid HTTP status code: 404 id=16820 + subErrorID=404)]<br/>
+	 * StatusUpdateErrorEvent: (type=updateError text=Invalid HTTP status code: 404 id=16820 + subErrorID=404)<br/>
 	 * - The AIR application file is not found in the location specified in the URL tag in the 
 	 * UpdateDescriptor.xml. Check the updateDescriptorPath property on the instance and verify it
 	 * by copying it and pasting it into a browser. If the file starts to download 
 	 * then it is the correct path. If not you may need to upload it to your server.<br/><br/>
 	 * 
-	 * [ErrorEvent type="error" Cannot update (from remote)" errorID=16828]<br/>
+	 * ErrorEvent type="error" Cannot update (from remote) errorID=16828<br/>
 	 * - Cannot update application, usually because the application is running in the AIR Debug Launcher (ADL).<br/><br/>
 	 * 
-	 * [DownloadErrorEvent (type=downloadError text= id=16800 subErrorID=2032)]<br/>
+	 * DownloadErrorEvent (type=downloadError text= id=16800 subErrorID=2032)<br/>
 	 * - Occurs during validating the downloaded update file. The subErrorID property may contain additional information.<br/>
 	 * - Possibly because the application is running in the AIR Debug Launcher (ADL)?<br/><br/>
 	 * 

@@ -162,7 +162,7 @@ package com.flexcapacitor.utils {
 			
 			// loop through each property on the target and set the item and value
 			for (var i:int; i<propertyNames.length;i++) {
-				trace("setting " + propertyNames[i] + " to " + target[propertyNames[i]]);
+				//trace("setting " + propertyNames[i] + " to " + target[propertyNames[i]]);
 				setItemValue(propertyNames[i], target[propertyNames[i]], createNonExistantItems);
 			}
 			

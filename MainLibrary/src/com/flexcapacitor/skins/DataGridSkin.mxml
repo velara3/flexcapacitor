@@ -39,6 +39,7 @@ Works with the com.flexcapacitor.controls.DataGrid class.
  - Added rollOverAlpha
  - Fixes the header top line showing when borderVisible is false.
  - Backwards compatible with Flex 4.6
+ - added more since time of this writing. check datagrid class for more documentation
 
 
 
@@ -316,6 +317,11 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
         </fx:Component>
         
         <!--- @private -->
+        <fx:Component id="itemRenderer">
+            <s:DefaultGridItemRenderer />
+        </fx:Component>
+        
+        <!--- @private -->
         <fx:Component id="selectionIndicator">
             <s:Rect implements="spark.components.gridClasses.IGridVisualElement">
                 <fx:Script fb:purpose="styling">
@@ -366,6 +372,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
     
     <fx:Script fb:purpose="styling">
     <![CDATA[
+		import spark.components.gridClasses.IGridItemEditor;
 		import mx.core.FlexVersion;
 		import mx.events.FlexEvent;
 		import mx.managers.SystemManager;
@@ -430,6 +437,12 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
 				if (contentFill.indexOf("bgFill")!=-1) {
 					contentFill.splice(contentFill.indexOf("bgFill"));
 				}
+			}
+			
+			if (dataGrid && dataGrid.getStyle("itemRenderer")!==undefined) {
+				//const renderer:IFactory = new ClassFactory(dataGrid.getStyle("itemRenderer"));
+				//dataGrid.itemRenderer = renderer;
+				//dataGrid.itemRenderer;
 			}
 			
             super.updateDisplayList(unscaledWidth, unscaledHeight);
@@ -512,7 +525,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
                 <!--- @private -->
                 <s:Scroller id="scroller" minViewportInset="1" hasFocusableChildren="false" height="100%">
                     <!--- @private -->
-                    <s:Grid id="grid" itemRenderer="spark.skins.spark.DefaultGridItemRenderer">
+                    <s:Grid id="grid" itemRenderer="{itemRenderer}">
 
                     </s:Grid>                    
                 </s:Scroller>

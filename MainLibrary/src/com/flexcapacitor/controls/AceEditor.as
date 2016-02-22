@@ -830,8 +830,8 @@ package com.flexcapacitor.controls {
 		/**
 		 * Jumps to the matching brace or tag. 
 		 * */
-		public function jumpToMatching(select:Object):void {
-			editor.jumpToMatching(select);
+		public function jumpToMatching(select:Boolean = true, expand:Boolean = true):void {
+			editor.jumpToMatching(select, expand);
 		}
 		
 		/**
@@ -1434,6 +1434,41 @@ package com.flexcapacitor.controls {
 		 * */
 		public function appendText(text:String):void {
 			session.insert({row: session.getLength(), column: 0}, "\n" + text);
+		}
+		
+		/**
+		 * Set annotation
+		 * @param row row for annotation
+		 * @param column column of annotation
+		 * @param text text to display for annotation
+		 * @param type - type can be error, warning and information
+		 * */
+		public function setAnnotation(row:int, column:int = 0, text:String = null, type:String = null):void {
+			editor.getSession().setAnnotations([{
+				row: row,
+				column: column,
+				text: text,
+				type: type
+			}]);
+		}
+		
+		/**
+		 * Sets one or more annotations. See setAnnotation for object name value pairs.
+		 * @see setAnnotation
+		 * @param row row for annotation
+		 * @param column column of annotation
+		 * @param text text to display for annotation
+		 * @param type - type can be error, warning and information
+		 * */
+		public function setAnnotations(annotations:Array):void {
+			editor.getSession().setAnnotations(annotations);
+		}
+		
+		/**
+		 * Clears all annotations
+		 * */
+		public function clearAnnotations():void {
+			editor.getSession().setAnnotations([]);
 		}
 		
 		/**

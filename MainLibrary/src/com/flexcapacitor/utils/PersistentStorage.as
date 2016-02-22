@@ -52,6 +52,73 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Write domain specific logic
+		 * */
+		public static function writeToDomain(storageName:String, name:String, value:*, host:String):void {
+			var out:String;
+			var bytes:ByteArray;
+			var input:Object = read(storageName);
+			
+			// object should be:
+			// {domainName:{name:value, name2:value}, domainName2:{name:value}}
+			if (input==null || !(input is Object)) {
+				input = {};
+			}
+			
+			// make a host entry
+			if (!(host in input)) {
+				input[host] = {};
+			}
+			
+			// set our name value pair
+			if (value==null || value==undefined) {
+				delete input[host][name];
+			}
+			else {
+				input[host][name] = value;
+			}
+			
+			// turn our object into a string
+			out = JSON.stringify(input);
+			
+			// convert to bytes
+			bytes = new ByteArray();
+			bytes.writeUTFBytes(out);
+			
+			// encrypt
+			EncryptedLocalStore.setItem(storageName, bytes);
+		}
+		
+		/**
+		 * Read domain specific logic
+		 * */
+		public static function readFromDomain(storageName:String, host:String, name:String = null):Object {
+			var out:String;
+			var bytes:ByteArray;
+			var input:Object = read(storageName);
+			var hostObject:Object;
+			
+			// object should be:
+			// {domainName:{name:value, name2:value}, domainName2:{name:value}}
+			if (input==null || !(input is Object)) {
+				return null;
+			}
+			
+			// read a host entry
+			if (host in input) {
+				hostObject = input[host];
+				
+				if (hostObject && name) {
+					return hostObject[name];
+				}
+				
+				return hostObject;
+			}
+			
+			return null;
+		}
+		
+		/**
 		 * Returns the value stored in the given name. 
 		 * If the stored value was an object than an object is returned.
 		 * If the stored value was a string then the string is returned. 
@@ -88,6 +155,71 @@ package com.flexcapacitor.utils {
 		 * */
 		public static function remove(name:String):* {
 			EncryptedLocalStore.removeItem(name);
+		}
+		
+		/**
+		 * Removes an item with the given name from a domain.
+		 * If name is not specified, it removes everything in the domain and domain entry itself.
+		 * Returns false if nothing found or nothing removed or true if key or host was removed. 
+		 * */
+		public static function removeFromDomain(storageName:String, name:String, host:String):Boolean {
+			var out:String;
+			var bytes:ByteArray;
+			var input:Object = read(storageName);
+			var hostObject:Object;
+			
+			// object should be:
+			// {domainName:{name:value, name2:value}, domainName2:{name:value}}
+			if (input==null || !(input is Object)) {
+				return false;
+			}
+			
+			if (name==null) {
+				return false;
+			}
+			
+			// read a host entry
+			if (host in input) {
+				hostObject = input[host];
+				
+				if (name==null) {
+					delete input[host];
+				}
+				else if (name in hostObject) {
+					delete hostObject[name];
+				}
+				
+				// turn our object into a string
+				out = JSON.stringify(input);
+				
+				// convert to bytes
+				bytes = new ByteArray();
+				bytes.writeUTFBytes(out);
+				
+				// encrypt
+				EncryptedLocalStore.setItem(storageName, bytes);
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Removes all items with the given storage name.
+		 * */
+		public static function removeAllFromStorage(storageName:String):void {
+			
+			EncryptedLocalStore.removeItem(storageName);
+			
+		}
+		
+		/**
+		 * Resets all storage items for the application to nothing.
+		 * */
+		public static function resetStorage():void {
+			
+			EncryptedLocalStore.reset();
+			
 		}
 	}
 }

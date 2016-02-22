@@ -6,7 +6,8 @@ package com.flexcapacitor.effects.nativeProcess {
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
 	import flash.events.Event;
-	import flash.events.MouseEvent;
+	import flash.events.IOErrorEvent;
+	import flash.events.NativeProcessExitEvent;
 	import flash.events.ProgressEvent;
 	
 	import mx.effects.Effect;
@@ -101,23 +102,24 @@ tell application "System Preferences"
 	activate
 end tell
 </pre>
-	 * <b>The following example runs the ant process. 
+	 * <b>The following example runs the ant process.</b><br/><br/>
+	 * 
 	 * We've copied Ant into a folder in our application directory, "Ant/bin/ant".
 	 * And we've set permissions to execute the ant command (right click, select file properties).
 	 * The working directory is the application directory by default. 
 	 * We pass in our build.xml file in the arguments.  
 <pre>
 &lt;nativeProcess:RunProcess id="runAntProcess"
-						  startDelay="60"
-						  repeatCount="1" 
-						  repeatDelay="500"
-						  executablePath		="./Ant/bin/ant"
-						  standardOutputData	="runProcess_standardOutputDataHandler(event)"
-						  standardErrorData		="runProcess_standardErrorDataHandler(event)"
-						  standardErrorIOError	="runProcess_standardErrorIOErrorHandler(event)"
-						  standardOutputIOError	="runProcess_standardOutputIOErrorHandler(event)"
-						  exit					="runProcess_exitHandler(event)"
-						  error					="runAntProcess_errorHandler(event)">
+		  startDelay="60"
+		  repeatCount="1" 
+		  repeatDelay="500"
+		  executablePath		="./Ant/bin/ant"
+		  standardOutputData	="runProcess_standardOutputDataHandler(event)"
+		  standardErrorData		="runProcess_standardErrorDataHandler(event)"
+		  standardErrorIOError	="runProcess_standardErrorIOErrorHandler(event)"
+		  standardOutputIOError	="runProcess_standardOutputIOErrorHandler(event)"
+		  exit					="runProcess_exitHandler(event)"
+		  error					="runAntProcess_errorHandler(event)">
 	
 	&lt;nativeProcess:arguments>
 		&lt;fx:Array>
@@ -175,7 +177,8 @@ protected function runProcess_standardOutputDataHandler(event:ProgressEvent):voi
 	 * ArgumentError: Error #3214: NativeProcessStartupInfo.executable does not specify a valid executable file.<br/><br/>
 	 * 
 	 * <b>SOLUTION</b><br/>
-	 * Path to executable incorrect. Script executable, "usr/bin/osascript"<br/>
+	 * Path to executable incorrect. For example, on Mac, the script executable, "usr/bin/osascript" or a executable
+	 * you've placed in your application directory, "./MyExectuable/do.exe" or "./MyExecutable/do".<br/>
 	 * */
 	public class RunProcess extends ActionEffect {
 		

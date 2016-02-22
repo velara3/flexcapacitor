@@ -169,16 +169,19 @@ var myFiles:Array = [];
 
 protected function loadFile_completeHandler(event:Event):void {
 	var data:Object = new Object();
+	data.file = loadFile.currentFileReference;
+	data.name = loadFile.currentFileReference.name;
 	data.bitmapData = loadFile.bitmapData;
 	data.byteArray = loadFile.data;
-	data.name = loadFile.currentFile.name;
+	data.dataAsString = loadFile.dataAsString;
 	data.contentType = loadFile.loaderContentType;
-	data.file = loadFile.currentFile;
 	myFiles.push(data);
+	
+	// if multiple files pass in the file reference to get the string value
+	var value:String = loadFile.fileStringDictionary[loadFile.currentFileReference];
 }
 </pre>
 
-	 * To do:<br/><br/>
 	 * 
 	 * @see BrowseForFile
 	 * @see GetFile
@@ -345,6 +348,11 @@ protected function loadFile_completeHandler(event:Event):void {
 			}
 		}
 
+		/**
+		 * File name of the last file loaded
+		 * */
+		[Bindable]
+		public var fileName:String;
 		
 		/**
 		 * Number of files.  
@@ -594,6 +602,7 @@ protected function loadFile_completeHandler(event:Event):void {
 			loaderInfo = null;
 			loaderContentType = "";
 			loaderByteArray = null;
+			fileName = null;
 		}
 		
 		/**

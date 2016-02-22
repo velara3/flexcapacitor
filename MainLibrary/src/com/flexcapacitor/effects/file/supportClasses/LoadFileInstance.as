@@ -697,10 +697,11 @@ package com.flexcapacitor.effects.file.supportClasses {
 		 * Updates the current file property in the action class
 		 * */
 		public function updateCurrentFile(fileReference:FileReference):void {
-			var action:LoadFile = LoadFile(effect);
+			var action:LoadFile 		= LoadFile(effect);
 			action.currentFileReference = fileReference;
-			action.data = fileReference.data;
-			action.type = fileReference.type;
+			action.data 				= fileReference.data;
+			action.type 				= fileReference.type;
+			action.fileName 			= fileReference.name;
 			
 			// prevent converting the whole byte array into string each time
 			// we update the current file

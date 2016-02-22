@@ -54,6 +54,8 @@ package com.flexcapacitor.utils
 		public static const BOCU_1:RegExp		= /^\xFB\xEE\x28/; // FB EE 28 optionally followed by FF
 		public static const GB_18030:RegExp		= /^\x84\x31\x95\x33/;
 		
+		public static const NewLine:String 		= "&#10;";
+		
 		/**
 		 * Constant representing a element type returned from XML.nodeKind.
 		 *
@@ -251,6 +253,9 @@ package com.flexcapacitor.utils
 				var htmlText:String;
 				
 				if (htmlLoader==null) {
+					// Error: The validateXML() call was invalid. 
+					// You must call initialize() a few frames before calling validateXML().
+					// Example: XMLUtils.initialize();
 					throw new Error(notInitializedMessage);
 				}
 				
@@ -390,7 +395,7 @@ package com.flexcapacitor.utils
 		public static function parseValidationResult(result:String, value:String):XMLValidationInfo {
 			var validationInfo:XMLValidationInfo = new XMLValidationInfo();
 			var isMozilla:Boolean;
-			var isChrome:Boolean;
+			var isChrome:Boolean; // by chrome we may mean webkit
 			var characterCount:int;
 			var lastLine:String;
 			var isValid:Boolean;
@@ -418,7 +423,7 @@ package com.flexcapacitor.utils
 					validationInfo.row = row;
 					validationInfo.column = column;
 					lines = result.split(/:/);
-					if (lines.length>3) {
+					if (lines.length>2) {
 						specificError = StringUtils.trim(lines.slice(2).join(":"));
 					}
 				}
@@ -429,7 +434,7 @@ package com.flexcapacitor.utils
 					validationInfo.row = row;
 					validationInfo.column = column;
 					lines = result.split(/:/);
-					if (lines.length>3) {
+					if (lines.length>2) {
 						specificError = StringUtils.trim(lines.slice(2).join(":"));
 					}
 				}
