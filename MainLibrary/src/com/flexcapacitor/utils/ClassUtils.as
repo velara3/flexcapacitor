@@ -1739,9 +1739,11 @@ var styles:Array = getStylesFromObject(myButton, {"color":10,"fontFamily":30,"ma
 		 * @param object A generic object with properties on it.
 		 * 
 		 * @see #getPropertiesFromObject()
+		 * @see #getEventsFromObject()
 		 * */
-		public static function getStylesFromObject(object:Object, possibleStylesObject:Object):Array {
-			var propertiesNames:Array = getStyleNames(possibleStylesObject);
+		public static function getStylesFromObject(object:Object, valueObject:Object):Array {
+			// get the properties on the value object
+			var propertiesNames:Array = getPropertyNames(valueObject);
 			
 			return getStylesFromArray(object, propertiesNames);
 		}
@@ -1759,11 +1761,33 @@ var properties:Array = getPropertiesFromObject(myButton, {"x":10,"apple":30,"wid
 		 * @param object A generic object with properties on it.
 		 * 
 		 * @see #getStylesFromObject()
+		 * @see #getEventsFromObject()
 		 * */
-		public static function getPropertiesFromObject(object:Object, possiblePropertiesObject:Object):Array {
-			var propertiesNames:Array = getPropertyNames(possiblePropertiesObject);
+		public static function getPropertiesFromObject(object:Object, valueObject:Object):Array {
+			var propertiesNames:Array = getPropertyNames(valueObject);
 			
 			return getPropertiesFromArray(object, propertiesNames);
+		}
+		
+		/**
+		 * Gets an array of the events from an object with name value pair<br/><br/>
+		 * 
+		 * Usage:<br/>
+<pre>
+// returns ["click"]
+var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myClickHandler});
+</pre>
+		 * 
+		 * @param object The object to check.
+		 * @param object A generic object with properties on it.
+		 * 
+		 * @see #getStylesFromObject()
+		 * @see #getPropertiesFromObject()
+		 * */
+		public static function getEventsFromObject(object:Object, valueObject:Object):Array {
+			var propertiesNames:Array = getPropertyNames(valueObject);
+			
+			return getEventsFromArray(object, propertiesNames);
 		}
 		
 		public static var constraints:Array = ["baseline", "left", "top", "right", "bottom", "horizontalCenter", "verticalCenter"];

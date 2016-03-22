@@ -49,6 +49,7 @@ package com.flexcapacitor.utils {
 	import spark.core.IGraphicElement;
 	import spark.core.SpriteVisualElement;
 	import spark.primitives.BitmapImage;
+	import spark.primitives.Rect;
 	import spark.primitives.supportClasses.GraphicElement;
 	import spark.skins.IHighlightBitmapCaptureClient;
 	
@@ -275,12 +276,14 @@ else {
 		/**
 		 * Gets the component tree list starting at the given element. 
 		 * application as IVisualElement
-		 
+		 * 
 		 Usage:
-		 var rootComponent:ComponentDescriptor = getComponentDisplayList(FlexGlobals.topLevelApplication);
+<pre>
+var rootComponent:ComponentDescriptor = getComponentDisplayList(FlexGlobals.topLevelApplication);
 		 
-		 trace(ObjectUtil.toString(rootComponent));
-		 
+trace(ObjectUtil.toString(rootComponent));
+</pre>
+		 * 		 
 		 * */
 		public static function getComponentDisplayList2(element:Object, parentItem:ComponentDescription = null, depth:int = 0, dictionary:Dictionary = null):ComponentDescription {
 			var item:ComponentDescription;
@@ -1359,7 +1362,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * Returns a string "data:image/png;base64,..." where ... is the image data. 
 		 * @see getBase64ImageDataString
 		 * */
-		public static function getBase64ImageDataString(target:Object, type:String = "png", encoderOptions:Object = null, ignoreErrors:Boolean = false):String {
+		public static function getBase64ImageDataString(target:Object, type:String = "png", encoderOptions:Object = null, ignoreErrors:Boolean = false, color:Number = NaN):String {
 			var hasJPEGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.JPEGEncoderOptions");
 			var hasPNGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.PNGEncoderOptions");
 			var output:String;
@@ -1377,7 +1380,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			
 			// you have to be careful, if line breaks occur, the image data will not show
 			if (hasJPEGEncoderOptions || hasPNGEncoderOptions) {
-				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions);
+				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions, false, 80, color);
 			}
 			else {
 				output = "data:image/" + type + ";base64," + "";
@@ -1389,7 +1392,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		
 		
 		/**
-		 * Returns base64 image string.
+		 * Returns base64 image string. This function may be doing too much. 
 		 * 
 		 * Encoding to JPG took 2000ms in some cases where PNG took 200ms.
 		 * I have not extensively tested this but it seems to be 10x faster
@@ -1405,7 +1408,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * This function gets called multiple times sometimes. We may be encoding more than we have too.
 		 * But is probably a bug somewhere.  
 		 * */
-		public static function getBase64ImageData(target:Object, type:String = "png", encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80):String {
+		public static function getBase64ImageData(target:Object, type:String = "png", encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1):String {
 			var component:IUIComponent = target as IUIComponent;
 			var bitmapData:BitmapData;
 			var byteArray:ByteArray;
@@ -1415,6 +1418,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var timeEvents:Boolean = false;
 			var altBase64:Boolean = false;
 			var base64Data:String;
+			var colorTransform:ColorTransform;
 			
 			
 			if (checkCache && base64BitmapCache[target]) {
@@ -1443,12 +1447,21 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				throw Error("Target is null. Target must be a display object.");
 			}
 			
+			if (!isNaN(color)) {
+				rectangle = new Rectangle(0,0,bitmapData.width, bitmapData.height);
+				//colorTransform = new ColorTransform(color >> 16 & 0x0000FF / 255, color >> 8 & 0x0000FF / 255, color & 0x0000FF / 255);
+				colorTransform = new ColorTransform();
+				colorTransform.color = color;
+				colorTransform.alphaMultiplier = alpha;
+				bitmapData.colorTransform(rectangle, colorTransform);
+			}
+			
 			if (timeEvents) {
 				trace ("get snapshot. time=" + (getTimer()-time));
 				time = getTimer();
 			}
 			
-			byteArray = getBitmapByteArray(bitmapData, null, useEncoder, type, fastCompression, quality);
+			byteArray = getBitmapByteArray(bitmapData, null, useEncoder, type, fastCompression, quality, encoderOptions);
 			
 			if (timeEvents) {
 				trace ("encode to " + type + ". time=" + (getTimer()-time));
@@ -1535,11 +1548,13 @@ trace(result); // rgba(255, 0, 0, 0.3);
 												  type:String = "png", 
 												  fastCompression:Boolean = true, 
 												  quality:int = 80, 
-												  encoderOptions:Object = null):ByteArray {
+												  bitmapDataEncoderOptions:Object = null):ByteArray {
+			
+			var PNGEncoderOptionsClass:Object;
+			var byteArray:ByteArray;
 			
 			var hasJPEGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.JPEGEncoderOptions");
 			var hasPNGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.PNGEncoderOptions");
-			var byteArray:ByteArray;
 			
 			if (clipRectangle==null) {
 				clipRectangle = new Rectangle(0, 0, bitmapData.width, bitmapData.height);
@@ -1551,8 +1566,8 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			// if we have BitmapData.encode options use them right away and return the data
-			if (encoderOptions) {
-				byteArray = Object(bitmapData).encode(clipRectangle, pngEncoderOptions);
+			if (bitmapDataEncoderOptions) {
+				byteArray = Object(bitmapData).encode(clipRectangle, bitmapDataEncoderOptions);
 				return byteArray;
 			}
 			
@@ -1571,8 +1586,8 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				
 				// using BitmapData.encode()
 					if (!pngEncoderOptions) {
-						// did you get an error here? include this class and set flash player to 19 or newer
-						var PNGEncoderOptionsClass:Object = ClassUtils.getDefinition("flash.display.PNGEncoderOptions");
+						// did you get an error here? include this class and set flash player swfversion to 19 or newer
+						PNGEncoderOptionsClass = ClassUtils.getDefinition("flash.display.PNGEncoderOptions");
 						// be sure to include this class in your project or library or else use the other encoder
 						pngEncoderOptions = new PNGEncoderOptionsClass(fastCompression);
 					}
@@ -1660,6 +1675,96 @@ rect.fill = DisplayObjectUtil.createCheckeredFill();
 				
 				
 				return bitmapFill;
+		}
+		
+		/**
+		 * Adds diagonal lines to a display object or bitmapdata. Not complete. <br/><br/>
+		 * 
+		 * How to use: 
+<pre>
+// not complete
+DisplayObjectUtil.addDiagonalLines(displayObject, 10, 10);
+</pre>
+		 * */
+		public static function addDiagonalLines(object:IBitmapDrawable, width:int=10, height:int=10):BitmapFill {
+			var showClip:Boolean;
+			var lineBitmapData:BitmapData;
+			var targetSprite:SpriteVisualElement;
+			var spriteVE:SpriteVisualElement = new SpriteVisualElement();
+			var fillSprite:Sprite = new Sprite();
+			var visualElementContainer:IVisualElementContainer;
+			var displayObjectContainer:DisplayObjectContainer;
+			
+			if (object && "parent" in object) {
+				displayObjectContainer = Object(object).parent as DisplayObjectContainer;
+			}
+			
+			if (object && "owner" in object) {
+				visualElementContainer = Object(object).owner as IVisualElementContainer;
+			}
+			
+			// draw our diagonal line on a sprite
+			fillSprite.graphics.lineStyle(1, 0xFF0000);
+			fillSprite.graphics.moveTo(0, 10);
+			fillSprite.graphics.lineTo(10, 0);
+			
+			// draw all the pixels into a bitmap data object 
+			lineBitmapData = new BitmapData(10, 10, true, 0x000000000000000000);
+			lineBitmapData.draw(fillSprite);
+			
+			if (showClip) {
+				spriteVE.addChild(fillSprite);
+				
+				if (visualElementContainer) {
+					visualElementContainer.addElement(spriteVE);
+				}
+				else if (displayObjectContainer) {
+					displayObjectContainer.addChild(spriteVE);
+				}
+				return null;
+			}
+			
+			// create a new sprite and with the graphics object 
+			// draw a rectangle and fill it with a repeating bitmap data
+			targetSprite = new SpriteVisualElement();
+			targetSprite.graphics.beginBitmapFill(lineBitmapData, null, true);
+			targetSprite.graphics.drawRect(0, 0, width, height);
+			targetSprite.graphics.endFill();
+			
+			// add 
+			//targetSprite.blendMode = BlendMode.ERASE;
+			spriteVE.addChild(targetSprite);
+			
+			if (visualElementContainer) {
+				visualElementContainer.addElement(spriteVE);
+			}
+			else if (displayObjectContainer) {
+				displayObjectContainer.addChild(spriteVE);
+			}
+			
+			return null;
+			
+			//fillSprite.graphics.endFill();
+			
+			
+			var bitmapFill:BitmapFill = new BitmapFill();
+			bitmapFill.fillMode = BitmapFillMode.REPEAT;
+			bitmapFill.source = fillSprite;
+			
+			var rect:Rect = new Rect();
+			rect.fill = bitmapFill;
+			rect.width = width;
+			rect.height = height;
+			
+			var bitmapData:BitmapData = new BitmapData(width, height, true);
+			bitmapData.draw(targetSprite);
+			
+			var bitmap:Bitmap = new Bitmap(bitmapData);
+			//bitmapData.draw(rect, null, null, BlendMode.ERASE);
+			//bitmapData.draw(rect);
+			//addElement(spriteVE);
+			
+			return bitmapFill;
 		}
 		
 		/**

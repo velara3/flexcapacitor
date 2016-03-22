@@ -48,6 +48,11 @@ package com.flexcapacitor.utils.supportClasses {
 		public var classType:Object;
 		
 		/**
+		 * Key used to initiate the tool
+		 * */
+		public var key:String;
+		
+		/**
 		 * Class or path to icon
 		 * */
 		public var icon:Object;

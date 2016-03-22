@@ -143,13 +143,14 @@ package com.flexcapacitor.skins
 			var borderStyle:String = getStyle("borderStyle");
 			var borderVisible:Boolean = getStyle("borderVisible");
 			var cornerRadius:Number = getStyle("cornerRadius");
-			var borderSides:String = getStyle("borderSides");;
+			var borderSides:String = getStyle("borderSides");
 			var bRoundedCorners:Boolean = getStyle("roundedBottomCorners").toString().toLowerCase() == "true";
 			var bHasAllSides:Boolean = true;
 			var radiusObj:Object;
 			var borderColor:Number = getStyle("borderColor");
 			var borderAlpha:Number = getStyle("borderAlpha");
 			
+			// Something in this class causes an infinite loop when an element is removed
 			
 			// BORDER //
 			if (hostComponent && hostComponent.borderStroke) {

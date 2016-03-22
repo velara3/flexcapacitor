@@ -20,7 +20,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 	
 	
 	/**
-	 *  @copy SaveContentsToFile
+	 *  @copy SaveDataToFile
 	 * */  
 	public class SaveDataToFileInstance extends ActionEffectInstance {
 		
@@ -78,7 +78,9 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var fileExists:Boolean;
 			var stream:FileStream;
 			var file:File;
-			var dateFileNameDelimiter:String = action.dateFileNameDelimiter;
+			var dateFileNameDelimiter:String;
+			
+			dateFileNameDelimiter = action.dateFileNameDelimiter;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
