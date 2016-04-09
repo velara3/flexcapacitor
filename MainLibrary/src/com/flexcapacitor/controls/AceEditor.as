@@ -76,11 +76,18 @@ package com.flexcapacitor.controls {
 	[Event(name="editorReady", type="flash.events.Event")]
 	
 	/**
-	 *  Dispached when the user presses CTRL + S 
+	 *  Dispached when the user presses CTRL + S on Win and Linux or CMD + S on Mac
 	 *
 	 *  @eventType flash.events.Event
 	 */
 	[Event(name="save", type="flash.events.Event")]
+	
+	/**
+	 *  Dispached when the user presses CTRL + F on Win or Linux or CMD + F on Mac 
+	 *
+	 *  @eventType flash.events.Event
+	 */
+	[Event(name="find", type="flash.events.Event")]
 	
 	/**
 	 *  Dispached as the mouse moves over the editor.
@@ -293,6 +300,7 @@ package com.flexcapacitor.controls {
 		public static const SELECTION_CHANGE:String = "selectionChange";
 		public static const CURSOR_CHANGE:String = "cursorChange";
 		public static const MOUSE_MOVE_OVER_EDITOR:String = "mouseMoveOverEditor";
+		public static const FIND:String = "find";
 		
 		public static const EDITOR_READY:String = "editorReady";
 		public static const EDITOR_CHANGE:String = "change";
@@ -1746,11 +1754,41 @@ package com.flexcapacitor.controls {
 				name: 'blockComment',
 				bindKey: {win: "Ctrl-Shift-c", "mac": "Cmd-Shift-C"},
 				exec: blockCommentHandler});
-			
+editor.commands.addCommand({
+	name: 'find',
+	bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
+	exec: findKeyboardHandler});
 		}
 		
 		/**
-		 * Handler for save keyboard shortcut
+		 * Use to add commands to the editor<br ><br >
+		 * 
+		 * Example: 
+<pre>
+editor.addCommand({
+	name: 'find',
+	bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
+	exec: findKeyboardHandler});
+</pre>
+		 * */
+		public function addCommand(object:Object):void {
+			editor.commands.addCommand(object);
+		}
+		
+		/**
+		 * Used to remove commands from the editor<br ><br >
+		 * 
+		 * Example (not tested): 
+<pre>
+editor.removeCommand({name: 'find'});
+</pre>
+		 * */
+		public function removeCommand(object:Object):void {
+			editor.commands.removeCommand(object);
+		}
+		
+		/**
+		 * Handler for block comment keyboard shortcut
 		 * */
 		public function blockCommentHandler(editor:Object, event:Object):void {
 			editor.toggleBlockComment();
@@ -1763,6 +1801,15 @@ package com.flexcapacitor.controls {
 			//console.log("saving", editor.session.getValue())
 			if (hasEventListener(SAVE)) {
 				dispatchEvent(new Event(SAVE));
+			}
+		}
+		
+		/**
+		 * Handler for find keyboard shortcut
+		 * */
+		public function findKeyboardHandler(editor:Object, event:Object):void {
+			if (hasEventListener(FIND)) {
+				dispatchEvent(new Event(FIND));
 			}
 		}
 		
@@ -2091,13 +2138,17 @@ editor.console = {log:trace, error:trace};
 		public function focusHandler(event:Object, editor:Object):void {
 			var action:String = event.action;
 			
-			//trace("action:" + action);
-			
 			if (hasEventListener(FocusEvent.FOCUS_IN)) {
-				
 				dispatchEvent(new FocusEvent(FocusEvent.FOCUS_IN));
 			}
 			
+		}
+		
+		/**
+		 * Forces a blur
+		 * */
+		public function blur():void {
+			editor.blur();
 		}
 		
 		/**

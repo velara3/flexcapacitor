@@ -39,6 +39,21 @@ package com.flexcapacitor.utils.supportClasses {
 		public var classType:Object;
 		
 		/**
+		 * Qualified class name that will export HTML code
+		 * */
+		public var htmlClassName:String;
+		
+		/**
+		 * Class used to create HTML element
+		 * */
+		public var htmlClassType:Object;
+		
+		/**
+		 * Class used to override default HTML class object
+		 * */
+		public var customHTMLClassType:Object;
+		
+		/**
 		 * Class or path to icon
 		 * */
 		public var icon:Object;

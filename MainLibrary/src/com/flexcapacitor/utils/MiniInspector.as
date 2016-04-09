@@ -606,12 +606,12 @@ package com.flexcapacitor.utils {
 		protected function addMouseHandler(value:Boolean = true):void {
 			
 			if (value) {
-				swfRoot.addEventListener(MouseEvent.CLICK, handleClick, true, EventPriority.CURSOR_MANAGEMENT, true);
-				swfRoot.addEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true, EventPriority.CURSOR_MANAGEMENT, true);
+				swfRoot.addEventListener(MouseEvent.CLICK, clickHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+				swfRoot.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
 			}
 			else {
-				swfRoot.removeEventListener(MouseEvent.CLICK, handleClick, true);
-				swfRoot.removeEventListener(MouseEvent.MOUSE_DOWN, handleMouseDown, true);
+				swfRoot.removeEventListener(MouseEvent.CLICK, clickHandler, true);
+				swfRoot.removeEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler, true);
 			}
 		}
 		
@@ -829,7 +829,7 @@ package com.flexcapacitor.utils {
 		 * Press step into to bring the debugger to the check target method
 		 * In that method you can check details in the target property
 		 * */
-		protected function handleClick(event:MouseEvent):void {
+		protected function clickHandler(event:MouseEvent):void {
 			
 			if (enabled) {
 				if (!requireCTRLKey || event.ctrlKey) {
@@ -848,7 +848,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Check if dragging for ruler
 		 * */
-		protected function handleMouseDown(event:MouseEvent):void {
+		protected function mouseDownHandler(event:MouseEvent):void {
 			
 			if (enabled && showRuler) {
 				if (!requireCTRLKey || event.ctrlKey) {
@@ -2200,7 +2200,16 @@ package com.flexcapacitor.utils {
 				
 				
 				if (elementContainer && target is IVisualElement) {
-					elementIndex = elementContainer.getElementIndex(target as IVisualElement) - 1;
+					// sometimes on skins or on a target on the application or application skin
+					// the element is not found - possibly because application uses proxy methods. 
+					// so we wrap in a try
+					// ArgumentError: ...ApplicationSkin252 is not found in this Group.
+					try {
+						elementIndex = elementContainer.getElementIndex(target as IVisualElement) - 1;
+					}
+					catch (error:*) {
+						return null;
+					}
 					
 					if (elementIndex>-1 && elementIndex<elementContainer.numElements) {
 						target = elementContainer.getElementAt(elementIndex);
@@ -2234,7 +2243,16 @@ package com.flexcapacitor.utils {
 			if (target.parent && !(target is SystemManager)) {
 				
 				if (elementContainer && target is IVisualElement) {
-					elementIndex = elementContainer.getElementIndex(target as IVisualElement) + 1;
+					// sometimes on skins or on a target on the application or application skin
+					// the element is not found - possibly because application uses proxy methods. 
+					// so we wrap in a try
+					// ArgumentError: ...ApplicationSkin252 is not found in this Group.
+					try {
+						elementIndex = elementContainer.getElementIndex(target as IVisualElement) + 1;
+					}
+					catch (error:*) {
+						return null;
+					}
 					
 					if (elementIndex>-1 && elementIndex<elementContainer.numElements) {
 						target = elementContainer.getElementAt(elementIndex);

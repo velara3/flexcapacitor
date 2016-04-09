@@ -5,6 +5,7 @@ package com.flexcapacitor.utils {
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.BlendMode;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.IBitmapDrawable;
@@ -1419,6 +1420,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var altBase64:Boolean = false;
 			var base64Data:String;
 			var colorTransform:ColorTransform;
+			var tintType2:Boolean = true;
 			
 			
 			if (checkCache && base64BitmapCache[target]) {
@@ -1448,10 +1450,16 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			if (!isNaN(color)) {
-				rectangle = new Rectangle(0,0,bitmapData.width, bitmapData.height);
-				//colorTransform = new ColorTransform(color >> 16 & 0x0000FF / 255, color >> 8 & 0x0000FF / 255, color & 0x0000FF / 255);
-				colorTransform = new ColorTransform();
-				colorTransform.color = color;
+				rectangle = new Rectangle(0, 0, bitmapData.width, bitmapData.height);
+				
+				if (tintType2) {
+					colorTransform = new ColorTransform(color >> 16 & 0x0000FF / 255, color >> 8 & 0x0000FF / 255, color & 0x0000FF / 255);
+				}
+				else  {
+					colorTransform = new ColorTransform();
+					colorTransform.color = color;
+				}
+				
 				colorTransform.alphaMultiplier = alpha;
 				bitmapData.colorTransform(rectangle, colorTransform);
 			}
@@ -1678,6 +1686,36 @@ rect.fill = DisplayObjectUtil.createCheckeredFill();
 		}
 		
 		/**
+		 * Given a UIComponent, DisplayObject, BitmapData or GraphicElement
+		 * returns bitmap data of that object.  
+		 * */
+		public static function getAnyTypeBitmapData(anything:Object):BitmapData {
+			var component:IUIComponent = anything as IUIComponent;
+			var bitmapData:BitmapData;
+			
+			
+			if (component) {
+				bitmapData = getUIComponentBitmapData(component);
+			}
+			else if (anything is DisplayObject) {
+				bitmapData = getBitmapDataSnapshot2(anything as DisplayObject);
+			}
+			else if (anything is BitmapData) {
+				bitmapData = anything as BitmapData;
+			}
+			else if (anything is GraphicElement) {
+				//bitmapData = getGraphicElementBitmapData(target as IGraphicElement);
+				//bitmapData = rasterize2(GraphicElement(target).displayObject);
+				bitmapData = getBitmapDataSnapshot2(GraphicElement(anything).displayObject);
+			}
+			else {
+				throw Error("Target is not of an acceptable type. UIComponent, DisplayObject, BitmapData and GraphicElement are accepted.");
+			}
+			
+			return bitmapData;
+		}
+		
+		/**
 		 * Adds diagonal lines to a display object or bitmapdata. Not complete. <br/><br/>
 		 * 
 		 * How to use: 
@@ -1686,60 +1724,86 @@ rect.fill = DisplayObjectUtil.createCheckeredFill();
 DisplayObjectUtil.addDiagonalLines(displayObject, 10, 10);
 </pre>
 		 * */
-		public static function addDiagonalLines(object:IBitmapDrawable, width:int=10, height:int=10):BitmapFill {
+		public static function addDiagonalLines(object:IBitmapDrawable, lineWidth:int=3, lineHeight:int=3, eraseLines:Boolean = true, color:int = 0xFFFFFF):SpriteVisualElement {
 			var showClip:Boolean;
+			var copyOfTargetBitmapData:BitmapData;
 			var lineBitmapData:BitmapData;
-			var targetSprite:SpriteVisualElement;
-			var spriteVE:SpriteVisualElement = new SpriteVisualElement();
-			var fillSprite:Sprite = new Sprite();
+			var diagonalLinesSprite:SpriteVisualElement;
+			var spriteContainer:SpriteVisualElement;
+			var fillSprite:Sprite;
 			var visualElementContainer:IVisualElementContainer;
 			var displayObjectContainer:DisplayObjectContainer;
 			
+			// get copy of target
+			copyOfTargetBitmapData = getAnyTypeBitmapData(object);
+			
+			// create container for target 
+			spriteContainer = new SpriteVisualElement();
+			fillSprite = new Sprite();
+			
+			// add copy of target to container
+			var targetBitmap:Bitmap = new Bitmap(copyOfTargetBitmapData);
+			spriteContainer.blendMode = BlendMode.LAYER;
+			spriteContainer.addChild(targetBitmap);
+			
+			/*
 			if (object && "parent" in object) {
 				displayObjectContainer = Object(object).parent as DisplayObjectContainer;
 			}
 			
 			if (object && "owner" in object) {
 				visualElementContainer = Object(object).owner as IVisualElementContainer;
-			}
+			}*/
+			
 			
 			// draw our diagonal line on a sprite
-			fillSprite.graphics.lineStyle(1, 0xFF0000);
-			fillSprite.graphics.moveTo(0, 10);
-			fillSprite.graphics.lineTo(10, 0);
+			fillSprite.graphics.lineStyle(0, color, 1, true);
+			fillSprite.graphics.moveTo(0, lineWidth);
+			fillSprite.graphics.lineTo(lineHeight, 0);
 			
-			// draw all the pixels into a bitmap data object 
-			lineBitmapData = new BitmapData(10, 10, true, 0x000000000000000000);
+			// NOTE THIS way is crap. the lines are not connecting.
+			// draw all the line pixels into a bitmap data object 
+			// the third and forth properties make the non pixel areas transparent instead of filled
+			lineBitmapData = new BitmapData(lineWidth+1, lineHeight+1, true, 0x0000000000000000000000000000);
 			lineBitmapData.draw(fillSprite);
 			
 			if (showClip) {
-				spriteVE.addChild(fillSprite);
+				spriteContainer.addChild(fillSprite);
 				
 				if (visualElementContainer) {
-					visualElementContainer.addElement(spriteVE);
+					visualElementContainer.addElement(spriteContainer);
 				}
 				else if (displayObjectContainer) {
-					displayObjectContainer.addChild(spriteVE);
+					displayObjectContainer.addChild(spriteContainer);
 				}
 				return null;
 			}
 			
 			// create a new sprite and with the graphics object 
 			// draw a rectangle and fill it with a repeating bitmap data
-			targetSprite = new SpriteVisualElement();
-			targetSprite.graphics.beginBitmapFill(lineBitmapData, null, true);
-			targetSprite.graphics.drawRect(0, 0, width, height);
-			targetSprite.graphics.endFill();
+			diagonalLinesSprite = new SpriteVisualElement();
+			diagonalLinesSprite.graphics.beginBitmapFill(lineBitmapData, null, true);
+			diagonalLinesSprite.graphics.drawRect(0, 0, targetBitmap.width, targetBitmap.height);
+			diagonalLinesSprite.graphics.endFill();
 			
-			// add 
-			//targetSprite.blendMode = BlendMode.ERASE;
-			spriteVE.addChild(targetSprite);
+			// to erase the lines set the blend mode to erase
+			if (eraseLines) {
+				diagonalLinesSprite.blendMode = BlendMode.ERASE;
+				spriteContainer.addChild(diagonalLinesSprite);
+			}
+			else {
+				//diagonalLinesSprite.blendMode = BlendMode.ERASE;
+				spriteContainer.addChild(diagonalLinesSprite);
+			}
+			
+			
+			return spriteContainer;
 			
 			if (visualElementContainer) {
-				visualElementContainer.addElement(spriteVE);
+				visualElementContainer.addElement(spriteContainer);
 			}
 			else if (displayObjectContainer) {
-				displayObjectContainer.addChild(spriteVE);
+				displayObjectContainer.addChild(spriteContainer);
 			}
 			
 			return null;
@@ -1757,9 +1821,9 @@ DisplayObjectUtil.addDiagonalLines(displayObject, 10, 10);
 			rect.height = height;
 			
 			var bitmapData:BitmapData = new BitmapData(width, height, true);
-			bitmapData.draw(targetSprite);
+			bitmapData.draw(diagonalLinesSprite);
 			
-			var bitmap:Bitmap = new Bitmap(bitmapData);
+			targetBitmap = new Bitmap(bitmapData);
 			//bitmapData.draw(rect, null, null, BlendMode.ERASE);
 			//bitmapData.draw(rect);
 			//addElement(spriteVE);

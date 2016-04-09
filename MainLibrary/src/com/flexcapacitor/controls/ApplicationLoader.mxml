@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 
+		 width="400" height="300"
+		 clipAndEnableScrolling="true"
+		 creationComplete="creationComplete()">
+	
+	<fx:Metadata>
+		[Event(name="applicationComplete", type="mx.events.FlexEvent")]
+		[Event(name="securityError", type="flash.events.SecurityErrorEvent")]
+		[Event(name="ioError", type="flash.events.IOErrorEvent")]
+		[Event(name="uncaughtErrorEvent", type="flash.events.UncaughtErrorEvent")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexEvent;
+			import mx.events.ResizeEvent;
+			import mx.managers.SystemManager;
+			import mx.utils.NameUtil;
+			
+			/**
+			 * When embedded without mimetype:
+			 * 
+			 *  components.ApplicationLoader_embeddedApplication (@3086a0acfbe1)
+			 *  components::ApplicationLoader_embeddedApplication_dataClass$ (@3086a123f2c1)
+			 *  object.dataClass, 
+			 *  object.movieClipData
+			 * 
+			 * When embedded with mimetype:
+			 * 
+				Error: Error #2136: The SWF file app:/LiveMXMLEditor.swf contains invalid data.
+					at components::ApplicationLoader/creationComplete()[/Users/monkeypunch/Documents/Adobe Flash Builder 45/AceEditorTest/src/components/ApplicationLoader.mxml:120]
+					at components::ApplicationLoader/___ApplicationLoader_BorderContainer1_creationComplete()[/Users/monkeypunch/Documents/Adobe Flash Builder 45/AceEditorTest/src/components/ApplicationLoader.mxml:5]
+					at flash.events::EventDispatcher/dispatchEventFunction()
+					at flash.events::EventDispatcher/dispatchEvent()
+					at mx.core::UIComponent/dispatchEvent()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/core/UIComponent.as:13688]
+					at mx.core::UIComponent/set initialized()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/core/UIComponent.as:1839]
+					at mx.managers::LayoutManager/doPhasedInstantiation()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/LayoutManager.as:850]
+					at mx.managers::LayoutManager/doPhasedInstantiationCallback()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/LayoutManager.as:1188]
+
+			 * 
+			 * making a copy because Flash Builder doesn't include the resource if it's embedded anywhere
+			 * */
+			[Embed(source="com/flexcapacitor/controls/supportClasses/applications/application.swf", mimeType="application/octet-stream")]
+			public var EmbeddedSparkApplication:Class;
+			
+			/**
+			 * System manager of the target application
+			 * */
+			public var targetSystemManager:SystemManager;
+			
+			/**
+			 * Set to false for loading local file? And true for loading remote swf.
+			 * */
+			private var trustContent:Boolean;
+			
+			/**
+			 * Set to false. 
+			 * */
+			private var loadForCompatibility:Boolean;
+			
+			/**
+			 * Maintains the aspect ratio
+			 * */
+			private var maintainAspectRatio:Boolean = true;
+			
+			/**
+			 * Set to false to prevent application from scaling to fit (vs resizing)
+			 * */
+			private var scaleContent:Boolean;
+			
+			/**
+			 * The document / application
+			 * */
+			public var targetApplication:Object;
+			
+			/**
+			 * Application ready
+			 * */
+			public var applicationReady:Boolean;
+			
+			public var useEmbeddedSWF:Boolean = true;
+			
+			private var _url:String = "application.swf";
+			
+			public var isDesktop:Boolean;
+
+			/**
+			 * 
+			 * */
+			[Bindable]
+			public function get url():String {
+				return _url;
+			}
+			
+			public function set url(value:String):void {
+				_url = value;
+				load();
+			}
+			
+			public var _swfLoader:Loader;
+			
+			/**
+			 * Loading with bytes might be problematic.
+			 * Loading a swf may allow marshalling support
+			 * Loading bytearray may be preventing it. Adding new items is causing errors. 
+			 * Nope. Needed to load into currentDomain not new domain.
+			 * */
+			public function loadWithBytes():void {
+				var context:LoaderContext;
+				var embeddedApplicationByteArray:ByteArray;
+				
+				_swfLoader = new Loader();
+				
+				//nothing to do onComplete or onProgress method just to debug
+				// Add complete event listener
+				_swfLoader.contentLoaderInfo.addEventListener(Event.COMPLETE, project_completeHandler);
+				// Add progress event listener
+				_swfLoader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, project_progressHandler);
+				
+				
+				// Add error event listener. Critical if you don't want run time errors if there
+				// are problems loading the file.
+				_swfLoader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, project_ioErrorHandler);
+				
+				// Incase of loading Flex. Very important.
+				_swfLoader.addEventListener("mx.managers.SystemManager.isBootstrapRoot", systemManagerHandler);
+				_swfLoader.addEventListener("mx.managers.SystemManager.isStageRoot", systemManagerHandler);
+				
+				// Load on the loader with a new URLRequest instance passing the path to
+				// it's constructor.
+				/*
+				SecurityError: Error #3226: Cannot import a SWF file when LoaderContext.allowCodeImport is false.
+					at flash.display::Loader/_loadBytes()
+					at flash.display::Loader/loadBytes()
+					at components::ApplicationLoader/loadWithBytes()[/Users/monkeypunch/Documents/Adobe Flash Builder 45/AceEditorTest/src/components/ApplicationLoader.mxml:116]
+					at components::ApplicationLoader/creationComplete()[/Users/monkeypunch/Documents/Adobe Flash Builder 45/AceEditorTest/src/components/ApplicationLoader.mxml:170]
+					at components::ApplicationLoader/___ApplicationLoader_BorderContainer1_creationComplete()[/Users/monkeypunch/Documents/Adobe Flash Builder 45/AceEditorTest/src/components/ApplicationLoader.mxml:5]
+					at flash.events::EventDispatcher/dispatchEventFunction()
+					at flash.events::EventDispatcher/dispatchEvent()
+					at mx.core::UIComponent/dispatchEvent()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/core/UIComponent.as:13688]
+					at mx.core::UIComponent/set initialized()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/core/UIComponent.as:1839]
+					at mx.managers::LayoutManager/doPhasedInstantiation()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/LayoutManager.as:850]
+					at mx.managers::LayoutManager/doPhasedInstantiationCallback()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/LayoutManager.as:1188]
+				*/
+				
+				
+				context = new LoaderContext();
+				context.allowCodeImport = true;
+				
+				// Specify the current application's security domain.
+				
+				//  Error: Error #2114: Parameter LoaderContext.securityDomain must be null.
+				//   	at flash.display::Loader/_loadBytes()
+				//context.securityDomain = SecurityDomain.currentDomain;
+				context.securityDomain = null;
+				
+				// Specify a new ApplicationDomain, which loads the sub-app into a 
+				// peer ApplicationDomain.
+				
+				context.applicationDomain = new ApplicationDomain();
+				embeddedApplicationByteArray = new EmbeddedSparkApplication();
+				
+				// load it up
+				_swfLoader.loadBytes(embeddedApplicationByteArray, context);
+				
+				// We have to add the loader so it creation is done.
+				//addElement(_swfLoader);
+			}
+			
+			
+			private function systemManagerHandler(e:Event):void {
+				// Prevent default stops default behaviour here and thus stops some potential
+				// run time errors.         
+				e.preventDefault();
+			}
+			
+			public function createCleanApplication():void {
+				creationComplete();
+			}
+			
+			/**
+			 * STEP 1. 
+			 * 
+			 * When this is added to the display list then we
+			 * load in a blank application.
+			 * 
+			 * */
+			private function creationComplete():void {
+				var context:LoaderContext;
+				var embeddedApplication:Object;
+				var isByteArray:Boolean;
+				
+				isDesktop = Capabilities.playerType=="Desktop";
+				
+				// SecurityError: Error #3207: Application-sandbox content cannot access this feature.
+				// this is not necessary on AIR since AIR can access all content
+				if (!isDesktop) {
+					systemManager.allowDomain("*");
+				}
+				
+				context = new LoaderContext();
+				
+				/* Specify the current application's security domain. */
+				//Error: Error #2114: Parameter LoaderContext.securityDomain must be null.
+				//	at flash.display::Loader/_loadBytes()
+				// context.securityDomain = SecurityDomain.currentDomain;
+				context.securityDomain = null;
+				context.allowCodeImport = true;
+				
+				/* Specify a new ApplicationDomain, which loads the sub-app into a 
+				peer ApplicationDomain. */
+				//context.applicationDomain = new ApplicationDomain();
+				context.applicationDomain = ApplicationDomain.currentDomain;
+				
+				projectLoader.trustContent = trustContent;
+				projectLoader.loadForCompatibility = loadForCompatibility;
+				projectLoader.maintainAspectRatio = maintainAspectRatio;
+				projectLoader.scaleContent = scaleContent;
+				
+				// if not on server context throws errors
+				if (Security.sandboxType == Security.REMOTE) {
+					//projectLoader.loaderContext = context;
+					projectLoader.trustContent = !trustContent;
+				}
+				
+				if (!isDesktop) {
+					// "http://yourdomain.com/SubApp3.swf";
+					projectLoader.source = url;
+				}
+				else {
+					if (useEmbeddedSWF) {
+						//loadWithBytes();
+						//return;
+						// SecurityError: Error #3226: Cannot import a SWF file when LoaderContext.allowCodeImport is false.
+						//   at flash.display::Loader/_loadBytes()
+						projectLoader.loaderContext = context;
+						embeddedApplication = new EmbeddedSparkApplication();
+						isByteArray = embeddedApplication is ByteArray;
+						
+						projectLoader.source = embeddedApplication;
+						projectLoader.validateProperties();
+						//project_completeHandler(null);
+					}
+					else {
+						projectLoader.source = "assets/applications/" + url;
+					}
+				}
+				
+				/*
+				TypeError: Error #1009: Cannot access a property or method of a null object reference.
+					at mx.managers.systemClasses::MarshallingSupport/get swfBridgeGroup()
+					at mx.managers.systemClasses::MarshallingSupport/hasSWFBridges()
+					at mx.managers.systemClasses::MarshallingSupport/addEventListener()
+					at mx.managers.systemClasses::MarshallingSupport/addEventListenerHandler()
+					at flash.events::EventDispatcher/dispatchEventFunction()
+					at flash.events::EventDispatcher/dispatchEvent()
+					at mx.managers::SystemManager/addEventListener()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:1550]
+					at flash.display::InteractiveObject/set contextMenu()
+					at spark.components::Application/initContextMenu()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/spark/src/spark/components/Application.as:1853]
+					at spark.components::Application/initialize()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/spark/src/spark/components/Application.as:1385]
+					at application/initialize()
+					at mx.managers.systemClasses::ChildManager/childAdded()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/systemClasses/ChildManager.as:197]
+					at mx.managers.systemClasses::ChildManager/initializeTopLevelWindow()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/systemClasses/ChildManager.as:367]
+					at mx.managers::SystemManager/initializeTopLevelWindow()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:3065]
+					at mx.managers::SystemManager/http://www.adobe.com/2006/flex/mx/internal::kickOff()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:2851]
+					at mx.managers::SystemManager/http://www.adobe.com/2006/flex/mx/internal::preloader_completeHandler()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:2731]
+					at flash.events::EventDispatcher/dispatchEventFunction()
+					at flash.events::EventDispatcher/dispatchEvent()
+					at mx.preloaders::Preloader/timerHandler()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/preloaders/Preloader.as:572]
+					at flash.utils::Timer/_timerDispatch()
+					at flash.utils::Timer/tick()
+				
+				
+				Solution: 
+				
+				ADD MARSHALLING SUPPORT IN COMPILER ARGUMENTS
+				
+				   -includes=mx.managers.systemClasses.MarshallingSupport 
+				*/
+				
+				
+				
+				
+				//projectLoader.autoLoad = autoLoad;
+				//load();
+				
+				//stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
+			}
+			
+			public var loadedLoaderInfo:LoaderInfo;
+			
+			/**
+			 * STEP 2. 
+			 * 
+			 * SWF is Loaded now listen for Application Complete
+			 * */
+			protected function project_completeHandler(event:Event):void {
+				//var loader:SWFLoader = event.currentTarget as SWFLoader;
+				/*
+				SecurityDomain 'http://www.radii8.com/demo2/RadiateExample.html?debug=true' 
+				tried to access incompatible context 'http://www.flexcapacitor.com/apps/aboutyou/AboutYou.swf'
+				SecurityError: Error #2121: Security sandbox violation: Loader.content: 
+				http://www.radii8.com/demo2/RadiateExample.swf/[[DYNAMIC]]/3 cannot access 
+				http://www.flexcapacitor.com/apps/urlcodec/URLCodec.swf. This may be worked around by 
+				calling Security.allowDomain.
+				
+				*/
+				
+				var loaderClassName:String;
+				var isFromEmbedded:Boolean;
+				var content:Object;
+				
+				
+				if (projectLoader.loaderInfo) {
+					loadedLoaderInfo = projectLoader.loaderInfo;
+				}
+				else if (event && event.currentTarget is LoaderInfo) {
+					loadedLoaderInfo = event.currentTarget as LoaderInfo;
+					isFromEmbedded = true;
+				}
+				
+				if (loadedLoaderInfo) {
+					loadedLoaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+				}
+				
+				if (isFromEmbedded) {
+					content = loadedLoaderInfo.content;
+					loaderClassName = NameUtil.getUnqualifiedClassName(loadedLoaderInfo.content);
+				}
+				else {
+					content = projectLoader.content
+					loaderClassName = NameUtil.getUnqualifiedClassName(content);
+				}
+				
+				
+				if (content is DisplayObject) {
+					//parentAllowsChild.selected = b.parentAllowsChild;
+					//childAllowsParent.selected = b.childAllowsParent;
+					targetSystemManager = content as SystemManager;
+					
+					if (targetSystemManager==null) {
+						targetSystemManager = content.topLevelSystemManager as SystemManager;
+					}
+					
+					if (targetSystemManager) {
+						targetSystemManager.addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
+					}
+					else {
+						content.addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
+					}
+					//LoaderInfo(targetApplication.loaderInfo).uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+				}
+				
+				hideBusyIndicators();
+				
+				
+				//Radiate.info("SWF Loaded");
+			}
+			
+			/**
+			 * STEP 3.
+			 * 
+			 * Blank application loaded. Import the document. 
+			 * */
+			protected function applicationComplete(event:Event):void {
+				var loader:Object = event.currentTarget;
+				//var radiate:Radiate = Radiate.instance;
+				//parentAllowsChild.selected = b.parentAllowsChild;
+				//childAllowsParent.selected = b.childAllowsParent;
+				
+				
+				//TypeError: Error #1034: Type Coercion failed: cannot convert _application_mx_managers_SystemManager@3bc14daf8ae1 to mx.managers.SystemManager.
+				//   at components::ApplicationLoader/applicationComplete()[/Users/monkeypunch/Documents/Adobe Flash Builder 45/AceEditorTest/src/components/ApplicationLoader.mxml:341]
+				// this error is probabaly because the application.swf is 4.6 and this application is 4.15 
+				targetSystemManager = loader as SystemManager;
+				targetApplication = loader.application;
+				
+				applicationReady = true;
+				dispatchEvent(event);
+				
+				// 8.5 x 11 at 72dpi is 612x792
+				//targetApplication.width = 800;//Radiate.DEFAULT_DOCUMENT_WIDTH;
+				//targetApplication.height = 792;//Radiate.DEFAULT_DOCUMENT_HEIGHT;
+				
+				/*
+				drawBackgroundGrid();
+				updateBackgroundSize();
+				
+				iDocument.instance = targetApplication;
+				iDocument.addComponentDescription(targetApplication);
+				
+				//radiate.setDocument(iDocument);
+				//radiate.setTarget(targetApplication);
+				
+				//codeAvailable = true;
+				//Radiate.info("Document container app complete");
+				if (iDocument.source) {
+					validateNow();
+					Radiate.parseSource(iDocument);
+					iDocument.resetSaveStatus();
+					updateBackgroundSize();
+					
+				}
+				
+				
+				radiate.addEventListener(RadiateEvent.SCALE_CHANGE, scaleChange, false, 0, true);
+				radiate.addEventListener(RadiateEvent.DOCUMENT_SIZE_CHANGE, sizeChange, false, 0, true);
+				radiate.addEventListener(RadiateEvent.PROPERTY_CHANGED, propertyChange, false, 0, true);
+				
+				radiate.selectDocument(iDocument);
+				radiate.setTarget(targetApplication);
+				//updateAppScrollPosition();
+				
+				//setTimeout(updateAppScrollPosition, 10);
+				//setTimeout(updateAppScrollPosition, 100);
+				//setTimeout(updateAppScrollPosition, 500);
+				
+				hideBusyIndicators();
+				
+				applicationReady = true;
+				
+				radiate.centerApplication(true, true, true);
+				
+				radiate.dispatchDocumentOpenEvent(iDocument);
+				//Radiate.info("Application Complete");
+				
+				
+				dispatchEvent(event);
+				applicationReady = true;
+				*/
+			}
+			
+			/**
+			 * Load blank Spark Application SWF
+			 * */
+			public function load():void {
+				
+				removeErrorMessages();
+				
+				showBusyIndicators();
+				
+				if (url) {
+					try {
+						//projectLoader.trustContent = trustContent;
+						projectLoader.loaderContext = null;
+						projectLoader.source = "";
+						projectLoader.source = url;
+						projectLoader.load();
+					}
+					catch (error:Error) {
+						//Radiate.error(error.message, error);
+						hideBusyIndicators();
+					}
+				}
+				else {
+					hideBusyIndicators();
+				}
+			}
+			
+			/**
+			 * Load URL
+			 * */
+			public function loadRemote(url:String, trustContent:Boolean = true, loadForCompatibility:Boolean = false):void {
+				
+				systemManager.allowDomain("*");
+				showBusyIndicators();
+				
+				if (url) {
+					try {
+						// if not on server context throws errors
+						//if (Security.sandboxType == Security.REMOTE) {
+						//projectLoader.loaderContext = context;
+						projectLoader.trustContent = trustContent;
+						//}
+						
+						var context:LoaderContext = new LoaderContext();
+						
+						/* Specify the current application's security domain. */
+						//context.securityDomain = SecurityDomain.currentDomain;
+						//projectLoader.loaderContext = context;
+						projectLoader.loadForCompatibility = loadForCompatibility;
+						projectLoader.source = "";
+						projectLoader.source = url;
+						projectLoader.load();
+					}
+					catch (error:Error) {
+						//dispatchEvent(error);
+						hideBusyIndicators();
+					}
+				}
+				else {
+					hideBusyIndicators();
+				}
+			}
+			
+			/**
+			 * 
+			 * */
+			private function removeErrorMessages():void {
+				
+				if (projectLoader && projectLoader.loaderInfo) {
+					projectLoader.loaderInfo.uncaughtErrorEvents.removeEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+				}
+				
+				if (targetSystemManager) {
+					//parentAllowsChild.selected = b.parentAllowsChild;
+					//childAllowsParent.selected = b.childAllowsParent;
+					
+					targetSystemManager.removeEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
+				}
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_ioErrorHandler(event:IOErrorEvent):void {
+				//trace("ioerror");
+				dispatchEvent(event);
+				hideBusyIndicators();
+			}
+			
+			/**
+			 * Show busy indicatos
+			 * */
+			public function showBusyIndicators():void {
+				//fadeOutBusy.end();
+				//fadeInBusy.play();
+				
+				if (!loadingLabel) return;
+				loadingLabel.visible =  true;
+				loadingLabel.includeInLayout =  true;
+			}
+			
+			/**
+			 * Hide busy indicators
+			 * */
+			public function hideBusyIndicators():void {
+				
+				if (!loadingLabel) return;
+				loadingLabel.visible =  false;
+				loadingLabel.includeInLayout =  false;
+			}
+			
+			private function uncaughtErrorHandler(event:UncaughtErrorEvent):void {
+				dispatchEvent(event);
+				return;
+				
+				
+				event.preventDefault();
+				
+				//to capture the error message
+				var errorMessage:String = new String();
+				
+				if (event.error is Error) {
+					errorMessage = Error( event.error ).message;
+				}
+				else if (event.error is ErrorEvent) {
+					errorMessage = ErrorEvent( event.error ).text;
+				}
+				else {
+					errorMessage = event.error.toString();
+				}
+				
+				//Radiate.logTarget.logEvent(new LogEvent("Uncaught Error", LogEventLevel.ERROR));
+				//Radiate.error(errorMessage);
+				//trace("Uncaught error", event);
+				
+				hideBusyIndicators();
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_securityErrorHandler(event:SecurityErrorEvent):void {
+				//trace("security error");
+				//Radiate.error(event.text, event);
+				dispatchEvent(event);
+				hideBusyIndicators();
+			}
+			
+			protected function projectLoader_resizeHandler(event:ResizeEvent):void {
+				//Radiate.info("Project loader resize");
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_httpStatusHandler(event:HTTPStatusEvent):void {
+				//trace("http status");				
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_initHandler(event:Event):void
+			{
+				//trace("init");
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_progressHandler(event:ProgressEvent):void
+			{
+				//trace("PROGRESS");
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_unloadHandler(event:Event):void
+			{
+				//trace("unload");
+				//Radiate.info("SWF unloaded");
+				hideBusyIndicators();
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function project_openHandler(event:Event):void
+			{
+				//trace("open");
+				showBusyIndicators();
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:SWFLoader id="projectLoader" 
+				 resize="projectLoader_resizeHandler(event)"
+				 complete="project_completeHandler(event)"
+				 httpStatus="project_httpStatusHandler(event)"
+				 init="project_initHandler(event)"
+				 ioError="project_ioErrorHandler(event)"
+				 open="project_openHandler(event)"
+				 progress="project_progressHandler(event)"
+				 securityError="project_securityErrorHandler(event)"
+				 unload="project_unloadHandler(event)"/>
+	
+	<s:Label id="loadingLabel" color="#ffffff" text="Loading. Please wait..." 
+			 fontWeight="bold" horizontalCenter="0" verticalCenter="0"/>
+	
+</s:Group>

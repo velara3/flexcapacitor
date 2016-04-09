@@ -28,19 +28,53 @@ package com.flexcapacitor.utils.supportClasses {
 		}
 		
 		/**
-		 * Layer name
+		 * Layer name. By default this is the unqualified class name but 
+		 * can be changed. 
+		 * 
+		 * @see className
+		 * @see qualifiedClassName
 		 * */
 		public var name:String;
 		
 		/**
-		 * Folder name if part of a folder
+		 * Unqualified class name
+		 * 
+		 * @see name
+		 * @see qualifiedClassName
+		 * */
+		public var className:String;
+		
+		/**
+		 * Qualified class name
+		 * @see name
+		 * @see className
+		 * */
+		public var qualifiedClassName:String;
+		
+		/**
+		 * Folder name if part of a folder. Usually set during import of other document types
 		 * */
 		public var folderName:String;
 		
 		/**
-		 * Qualified class name
+		 * Tag name when exporting to HTML
 		 * */
-		public var className:String;
+		public var htmlTagName:String;
+		
+		/**
+		 * Name of the class used when exporting to HTML
+		 * */
+		public var htmlClassName:String;
+		
+		/**
+		 * Type of class used when exporting to HTML
+		 * */
+		public var htmlClassType:Object;
+		
+		/**
+		 * Reference to the HTMLElement
+		 * */
+		public var htmlElement:Object;
 		
 		/**
 		 * Class used to create component instance
