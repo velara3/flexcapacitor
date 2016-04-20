@@ -103,7 +103,7 @@ package com.flexcapacitor.effects.clipboard.supportClasses {
 			///////////////////////////////////////////////////////////
 			
 			// check for null data
-			if (data==null && allowNullData) {
+			if ((data==null || data=="") && allowNullData) {
 				
 				if (action.noDataEffect) {
 					playEffect(action.noDataEffect);

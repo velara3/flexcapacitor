@@ -556,6 +556,9 @@ package com.flexcapacitor.utils {
 			
 			isOnServer = rootDisplay.loaderInfo.url.indexOf("http")==0 ? true : false;
 			
+			// isDebugger = flash.system.Capabilities.isDebugger(); is Flash Player debugger
+			// isReleaseBuild = would be nice to be able to disable in release build - not sure how to know
+			
 			debug = true;
 			
 			addMouseHandler();
