@@ -2,11 +2,11 @@ package com.flexcapacitor.controls
 {
 	import flash.events.KeyboardEvent;
 	
-	import spark.components.List;
+	import mx.controls.Tree;
 	
-	public class ListNoKeyboardHandling extends List
+	public class TreeNoKeyboardHandling extends Tree
 	{
-		public function ListNoKeyboardHandling()
+		public function TreeNoKeyboardHandling()
 		{
 			super();
 		}

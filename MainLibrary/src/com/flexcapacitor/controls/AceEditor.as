@@ -1452,6 +1452,7 @@ package com.flexcapacitor.controls {
 		 * @param type - type can be error, warning and information
 		 * */
 		public function setAnnotation(row:int, column:int = 0, text:String = null, type:String = null):void {
+			if (editor==null) return;
 			editor.getSession().setAnnotations([{
 				row: row,
 				column: column,
@@ -1476,7 +1477,9 @@ package com.flexcapacitor.controls {
 		 * Clears all annotations
 		 * */
 		public function clearAnnotations():void {
-			editor.getSession().setAnnotations([]);
+			if (editor) {
+				editor.getSession().setAnnotations([]);
+			}
 		}
 		
 		/**

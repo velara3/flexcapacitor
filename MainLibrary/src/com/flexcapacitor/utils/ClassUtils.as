@@ -364,6 +364,7 @@ trace(name); // "mySuperButton"
 			return null
 		}
 		
+		public static var membersNamesCache:Dictionary = new Dictionary(true);
 		public static var eventNamesCache:Dictionary = new Dictionary(true);
 		public static var propertyNamesCache:Dictionary = new Dictionary(true);
 		public static var styleNamesCache:Dictionary = new Dictionary(true);
@@ -384,12 +385,13 @@ trace(name); // "mySuperButton"
 		 * 
 		 * @param object The object to inspect. Either string, object or class.
 		 * @param sort Sorts the properties in the array
+		 * @param ignoreCache Ignores the cache in case we've added properties on a dynamic object
 		 * 
 		 * @see #getStyleNames()
 		 * @see #getEventNames()
 		 * @see #getPropertiesMetaData()
 		 * */
-		public static function getPropertyNames(object:Object, sort:Boolean = true):Array {
+		public static function getPropertyNames(object:Object, sort:Boolean = true, ignoreCache:Boolean = false):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var typeDescription:*;
 			var hasFactory:Boolean;
@@ -405,12 +407,12 @@ trace(name); // "mySuperButton"
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
 			// check cache first
-			if (propertyNamesCache[typeName]) {
+			if (propertyNamesCache[typeName] && !ignoreCache) {
 				// create a copy so it's not modified elsewhere
 				return (propertyNamesCache[typeName] as Array).slice();
 			}
 			
-			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
+			describedTypeRecord = DescribeTypeCache.describeType(object);
 			typeDescription = describedTypeRecord.typeDescription;
 			hasFactory = typeDescription.factory.length()>0;
 			factory = typeDescription.factory;
@@ -464,8 +466,9 @@ trace(name); // "mySuperButton"
 		 * @see #getPropertyNames()
 		 * @see #getStyleNames()
 		 * @see #getMethodNames()
+		 * @see #getMemberNames()
 		 * */
-		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true):Array {
+		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true, ignoreCache:Boolean = false):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var typeDescription:*;
 			var hasFactory:Boolean;
@@ -486,7 +489,7 @@ trace(name); // "mySuperButton"
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
 			// check cache first
-			if (eventNamesCache[typeName]) {
+			if (eventNamesCache[typeName] && !ignoreCache) {
 				// create a copy so it's not modified elsewhere
 				return (eventNamesCache[typeName] as Array).slice();
 			}
@@ -557,14 +560,7 @@ trace(name); // "mySuperButton"
 		 * @see #getEventNames()
 		 * @see #getMethodNames()
 		 * */
-		public static function getStyleNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true):Array {
-			/*
-			old method:
-			var stylesList:XMLList = getStylesMetaData(object);
-			var styleNames:Array = XMLUtils.convertXMLListToArray(stylesList.@name);
-			return styleNames;
-			*/
-			
+		public static function getStyleNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true, ignoreCache:Boolean = false):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var typeDescription:*;
 			var hasFactory:Boolean;
@@ -582,7 +578,7 @@ trace(name); // "mySuperButton"
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
 			// check cache first
-			if (styleNamesCache[typeName]) {
+			if (styleNamesCache[typeName] && !ignoreCache) {
 				// create a copy so it's not modified elsewhere
 				return (styleNamesCache[typeName] as Array).slice();
 			}
@@ -652,7 +648,7 @@ var allMethods:Array = getMethodNames(myButton);
 		 * @see #getPropertyNames()
 		 * @see #getStylesNames()
 		 * */
-		public static function getMethodNames(object:Object, sort:Boolean = true, includeInherited:Boolean = true):Array {
+		public static function getMethodNames(object:Object, sort:Boolean = true, includeInherited:Boolean = true, ignoreCache:Boolean = false):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var typeDescription:*;
 			var hasFactory:Boolean;
@@ -666,7 +662,7 @@ var allMethods:Array = getMethodNames(myButton);
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
 			// check cache first
-			if (methodNamesCache[typeName]) {
+			if (methodNamesCache[typeName] && !ignoreCache) {
 				// create a copy so it's not modified elsewhere
 				return (methodNamesCache[typeName] as Array).slice();
 			}
@@ -728,9 +724,11 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * */
 		public static function hasProperty(object:Object, propertyName:String, useFlashAPI:Boolean = false):Boolean {
 			if (object==null || object=="" || propertyName==null || propertyName=="") return false;
+
+			var properties:Array;
+			var found:Boolean;
 			
 			if (useFlashAPI) {
-				var found:Boolean;
 				found = propertyName in object;
 				
 				if (!found) {
@@ -740,7 +738,7 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 				return found;
 			}
 			
-			var properties:Array = getPropertyNames(object);
+			properties = getPropertyNames(object);
 			
 			if (properties.indexOf(propertyName)!=-1) {
 				return true;
@@ -834,7 +832,7 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		/**
 		 * Returns true if the object has the style specified. <br/><br/>
 		 * 
-		 * If useOtherMethod is true then we check inherited and noninherited objects
+		 * If checkFlexObjects is true then we check inherited and noninherited objects
 		 * to see if they have the style listed. Not sure if this is correct.
  <pre> 
  var hasStyle:Boolean = style in styleClient.inheritingStyles || styleName in styleClient.nonInheritingStyles;
@@ -851,36 +849,102 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * 
 		 * @param object The object to check style exists on
 		 * @param styleName Name of style to check for
-		 * @param useOtherMethod Uses Flash internal methods
+		 * @param checkFlexObjects Checks the inheriting and nonInheriting properties of style client
 		 * 
 		 * @see #isStyleDefined()
 		 * */
-		public static function hasStyle(object:Object, styleName:String, useOtherMethod:Boolean = false):Boolean {
+		public static function hasStyle(object:Object, styleName:String, checkFlexObjects:Boolean = false):Boolean {
 			var styleClient:IStyleClient = object ? object as IStyleClient : null;
-			if (styleClient==null || styleClient=="" || styleName==null || styleName=="") return false;
 			var found:Boolean;
+			var styles:Array;
+			
+			if (styleName==null || styleName=="") return false;
+			
+			if (!(object is String) && styleClient==null) return false; 
 			
 			// not sure if this is a valid way to tell if an object has a style
-			if (useOtherMethod) {
+			if (checkFlexObjects) {
+				
+				if (!(object is String)) {
+					throw new Error("Object cannot be of type String and use second method");
+				}
+				
 				if (styleName in styleClient.inheritingStyles) {
 					found = true;
 				}
 				else if (styleName in styleClient.nonInheritingStyles) {
 					found = true;
 				}
-			}
-			
-			if (useOtherMethod) {
+				
 				return found;
 			}
 			
-			var styles:Array = getStyleNames(styleClient);
+			
+			styles = getStyleNames(styleClient);
 			
 			if (styles.indexOf(styleName)!=-1) {
 				return true;
 			}
 			
 			return false;
+		}
+		
+		/**
+		 * Returns an array the members for the given object including super class members. 
+		 * This includes events, properties, styles and optionally method names.<br/><br/>
+		 * 
+		 * For example, if you give it a Spark Button class it gets all the
+		 * members for it and all the members on the super classes.<br/><br/>
+		 * 
+		 * Usage:<br/>
+ <pre>
+ var allMembers:Array = getMemberNames(myButton);
+ </pre>
+		 * 
+		 * @param object The object to inspect. Either string, object or class.
+		 * @param sort Sorts the members in order
+		 * @param includeMethods includes method names
+		 * @param ignoreCache on dynamic objects and styles clients new properties and news styles 
+		 * could be added. set to true to check for new properties or styles
+		 * 
+		 * @see #getPropertyNames()
+		 * @see #getStyleNames()
+		 * @see #getMethodNames()
+		 * @see #getMemberNames()
+		 * */
+		public static function getMemberNames(object:Object, sort:Boolean = true, includeMethods:Boolean = false, ignoreCache:Boolean = false):Array {
+			var members:Array;
+			var events:Array;
+			var styles:Array;
+			var properties:Array;
+			var methods:Array;
+			var typeName:String;
+			
+			typeName = object is String ? String(object) : getQualifiedClassName(object);
+			
+			// check cache first
+			if (membersNamesCache[typeName] && !ignoreCache) {
+				// create a copy so it's not modified elsewhere
+				return (membersNamesCache[typeName] as Array).slice();
+			}
+			
+			events = getEventNames(object, false);
+			styles = getStyleNames(object, false);
+			properties = getPropertyNames(object, false, ignoreCache);
+			
+			if (includeMethods) {
+				methods = getMethodNames(object, false, true);
+				members = events.concat(styles.concat(properties.concat(methods)));
+			}
+			else {
+				members = events.concat(styles.concat(properties));
+			}
+			
+			if (sort) {
+				members.sort(Array.CASEINSENSITIVE);
+			}
+			
+			return members;
 		}
 		
 		/**
@@ -1009,7 +1073,7 @@ var buttonOnlyProperties2:XMLList = getPropertiesMetaData(myButton, null, null, 
 			// can be on typeDescription.metadata or factory.metadata
 			var isRoot:Boolean = object is String ? false : true;
 			var className:String = !isRoot ? object as String : getQualifiedClassName(object);
-			var itemsLength:int;
+			var numberOfItems:int;
 			var itemsList:XMLList;
 			var existingItemsLength:int = existingItems ? existingItems.length() : 0;
 			var metaName:String;
@@ -1035,10 +1099,10 @@ var buttonOnlyProperties2:XMLList = getPropertiesMetaData(myButton, null, null, 
 			
 			// make a copy because modifying the xml modifies the cached xml
 			itemsList = itemsList.copy();
-			itemsLength = itemsList.length();
+			numberOfItems = itemsList.length();
 			
 			
-			for (var i:int;i<itemsLength;i++) {
+			for (var i:int;i<numberOfItems;i++) {
 				var item:XML = XML(itemsList[i]);
 				metaName = item.@name;
 				item.@metadataType = item.localName();
@@ -1060,7 +1124,7 @@ var buttonOnlyProperties2:XMLList = getPropertiesMetaData(myButton, null, null, 
 						}
 						
 						delete itemsList[i];
-						itemsLength--;
+						numberOfItems--;
 						i--;
 						continue;
 					}
@@ -1072,7 +1136,7 @@ var buttonOnlyProperties2:XMLList = getPropertiesMetaData(myButton, null, null, 
 			}
 			
 			// add new items to previous items
-			if (itemsLength>0) {
+			if (numberOfItems>0) {
 				existingItems = new XMLList(existingItems.toString()+itemsList.toString());
 			}
 			
@@ -1278,20 +1342,37 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		/**
 		 * Get MetaData data for the given member. 
 		 * 
+		 * Given an instance of a class, checks if that class has
+		 * a property, style, event or method of the given name.
+		 * 
+		 * Some properties are facades for styles. By default we ignore 
+		 * properties that are facades. 
+		 * 
+		 * @returns MetaData of member or null if not found
+		 * 
 		 * @see #getMetaDataOfStyle();
+		 * @see #getMetaDataOfProperty();
+		 * @see #getMetaDataOfMethod();
+		 * @see #getMetaDataOfEvent();
 		 * */
-		public static function getMetaDataOf(target:Object, member:String, ignoreFacades:Boolean = true):MetaData {
+		public static function getMetaDataOfMember(target:Object, member:String, ignoreFacades:Boolean = true):MetaData {
 			var isProperty:Boolean;
 			var isStyle:Boolean;
 			var isEvent:Boolean;
 			var isMethod:Boolean;
+			var typeName:String;
+			var hasMember:Boolean;
+			
 			
 			isProperty = hasProperty(target, member);
+			
 			if (!isProperty) {
 				isStyle = hasStyle(target, member);
-				if (!isEvent) {
+				
+				if (!isStyle) {
 					isEvent = hasEvent(target, member);
-					if (!isMethod) {
+					
+					if (!isEvent) {
 						isMethod = hasMethod(target, member);
 					}
 				}
@@ -1314,22 +1395,67 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		}
 		
 		/**
+		 * Checks if target or type has a given member. 
+		 * 
+		 * Given an instance of a class, checks if that class has
+		 * a property, style, event or method of the given name.
+		 * 
+		 * Some properties are facades for styles. By default we ignore 
+		 * properties that are facades. 
+		 * 
+		 * @returns MetaData of member or null if not found
+		 * 
+		 * @see #getMetaDataOfStyle();
+		 * @see #getMetaDataOfProperty();
+		 * @see #getMetaDataOfMethod();
+		 * @see #getMetaDataOfEvent();
+		 * */
+		public static function hasMember(target:Object, member:String, ignoreFacades:Boolean = true):Boolean {
+			var isProperty:Boolean;
+			var isStyle:Boolean;
+			var isEvent:Boolean;
+			var isMethod:Boolean;
+			
+			isProperty = hasProperty(target, member);
+			
+			if (!isProperty) {
+				isStyle = hasStyle(target, member);
+				
+				if (!isStyle) {
+					isEvent = hasEvent(target, member);
+					
+					if (!isEvent) {
+						isMethod = hasMethod(target, member);
+					}
+				}
+			}
+			
+			return isProperty || isStyle || isEvent || isMethod;
+		}
+		
+		/**
 		 * Get AccessorMetaData data for the given property. 
 		 * 
 		 * @see #getMetaDataOfStyle();
 		 * @see #getMetaDataOfEvent();
 		 * */
 		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
-			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord = mx.utils.DescribeTypeCache.describeType(target);
+			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord;
 			var accessorMetaData:AccessorMetaData;
 			var matches:XMLList;
 			var matches2:XMLList;
 			var node:XML;
+			var cachedMetaData:Object;
+			
+			
+			describedTypeRecord = DescribeTypeCache.describeType(target);
 			
 			// we should not include facade properties
 			// could we move this up a few lines before the XMLList stuff and save some cpu cycles?
 			// testing now
-			var cachedMetaData:Object = DescribeTypeCacheRecord[property];
+			//cachedMetaData = DescribeTypeCacheRecord[property];
+			cachedMetaData = describedTypeRecord[property];
+			
 			if (cachedMetaData is AccessorMetaData) {
 				AccessorMetaData(cachedMetaData).updateValues(target);
 				return AccessorMetaData(cachedMetaData);
@@ -1364,6 +1490,7 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			
 			return null;
 		}
+		
 		public static const relevantPropertyFacades:Array = 
 			[ "top", "left", "right", "bottom", 
 			"verticalCenter", "horizontalCenter", "baseline"];
@@ -1385,6 +1512,7 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * */
 		public static function getMetaDataOfStyle(target:Object, style:String, type:String = null, stopAt:String = null):StyleMetaData {
 			var describedTypeRecord:DescribeTypeCacheRecord;
+			var cachedMetaData:Object;
 			var styleMetaData:StyleMetaData;
 			var extendsClassList:XMLList;
 			var typeDescription:XML;
@@ -1401,7 +1529,8 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 				describedTypeRecord = DescribeTypeCache.describeType(target);
 			}
 			
-			var cachedMetaData:Object = describedTypeRecord[style];
+			cachedMetaData = describedTypeRecord[style];
+			
 			if (cachedMetaData is StyleMetaData) {
 				StyleMetaData(cachedMetaData).updateValues(target);
 				return StyleMetaData(cachedMetaData);
@@ -1763,10 +1892,10 @@ var properties:Array = getPropertiesFromObject(myButton, {"x":10,"apple":30,"wid
 		 * @see #getStylesFromObject()
 		 * @see #getEventsFromObject()
 		 * */
-		public static function getPropertiesFromObject(object:Object, valueObject:Object):Array {
+		public static function getPropertiesFromObject(object:Object, valueObject:Object, removeConstraints:Boolean = false):Array {
 			var propertiesNames:Array = getPropertyNames(valueObject);
 			
-			return getPropertiesFromArray(object, propertiesNames);
+			return getPropertiesFromArray(object, propertiesNames, removeConstraints);
 		}
 		
 		/**
@@ -1790,7 +1919,7 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 			return getEventsFromArray(object, propertiesNames);
 		}
 		
-		public static var constraints:Array = ["baseline", "left", "top", "right", "bottom", "horizontalCenter", "verticalCenter"];
+		public static var CONSTRAINTS:Array = ["baseline", "left", "top", "right", "bottom", "horizontalCenter", "verticalCenter"];
 		
 		/**
 		 * Gets an array of valid properties from an array of possible property names<br/><br/>
@@ -1798,7 +1927,9 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 		 * Usage:<br/>
  <pre>
  // returns ["width", "x"]
- var properties:Array = getPropertiesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x"]);
+ var properties:Array = getPropertiesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x","top"], true);
+ // returns ["width", "x", "top"]
+ var properties:Array = getPropertiesFromArray(myButton, ["chicken","potatoe","width","swisscheese","x","top"], false);
  </pre>
 		 * 
 		 * @param object The object to use. Either string, object or class.
@@ -1808,7 +1939,7 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 		 * 
 		 * @see #getStylesFromArray()
 		 * */
-		public static function getPropertiesFromArray(object:Object, possibleProperties:Object, removeConstraints:Boolean = true):Array {
+		public static function getPropertiesFromArray(object:Object, possibleProperties:Object, removeConstraints:Boolean = false):Array {
 			var propertyNames:Array = getPropertyNames(object);
 			var result:Array = [];
 			var property:String;
@@ -1824,8 +1955,9 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 					if (result.indexOf(property)==-1) {
 						
 						if (removeConstraints) {
+							
 							// remove constraints (they are a facade for the styles)
-							if (constraints.indexOf(property)==-1) { 
+							if (CONSTRAINTS.indexOf(property)==-1) { 
 								result.push(property);
 							}
 						}
@@ -1880,6 +2012,32 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 			return result;
 		}
 		
+		/**
+		 * Removes the constraint values from an array since the constraint properties
+		 * are a facade for the styles of the same name. 
+		 * 
+		 * @returns an array with the elements that were removed
+		 * */
+		public static function removeConstraintsFromArray(items:Array):Array {
+			var numberOfItems:int = items ? items.length : 0;
+			var constraints:Array = [];
+			var property:String;
+			
+			for (var i:int; i < numberOfItems; i++) {
+				property = items[i];
+				
+				// found constraint then delete it from the object
+				if (CONSTRAINTS.indexOf(property)!=-1) { 
+					items.slice(i, 1);
+					
+					if (constraints.indexOf(property)==-1) {
+						constraints.push(property);
+					}
+				}
+			}
+			
+			return constraints;
+		}
 		
 		/**
 		 * Removes the constraint values from an object since the constraint properties
@@ -1896,7 +2054,7 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 				property = propertyNames[i];
 				
 				// found constraint then delete it from the object
-				if (constraints.indexOf(property)!=-1) { 
+				if (CONSTRAINTS.indexOf(property)!=-1) { 
 					object[property] = null;
 					delete object[property];
 				}

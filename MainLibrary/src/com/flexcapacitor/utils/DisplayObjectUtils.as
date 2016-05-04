@@ -308,13 +308,13 @@ trace(ObjectUtil.toString(rootComponent));
 			
 			if (element is IVisualElementContainer) {
 				var visualContainer:IVisualElementContainer = IVisualElementContainer(element);
-				var length:int = visualContainer.numElements;
+				var numberOfElements:int = visualContainer.numElements;
 				
 				if (parentItem.children) {
 					//parentItem.children.removeAll(); // reseting above
 				}
 				
-				for (var i:int;i<length;i++) {
+				for (var i:int;i<numberOfElements;i++) {
 					childElement = visualContainer.getElementAt(i);
 						
 					if (dictionary && dictionary[childElement]) {
@@ -2284,6 +2284,16 @@ trace(size); // {width = 200, height = 100}
 			var fillRect:Rectangle;
 			var skin:DisplayObject;
 			var propagatedTransform:ColorTransform = propagateColorTransform ? target.transform.colorTransform : null;
+			
+			if (expectedBounds==null) {
+				if ("stage" in target && target.stage==null) { 
+					// target was removed from the stage
+					expectedBounds = new Rectangle(0,0,1,1);
+				}
+				else {
+					expectedBounds = new Rectangle(0,0,1,1);
+				}
+			}
 			
 			targetWidth = expectedBounds.width;
 			targetHeight = expectedBounds.height;

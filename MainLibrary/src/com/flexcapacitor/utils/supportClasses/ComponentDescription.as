@@ -203,11 +203,25 @@ package com.flexcapacitor.utils.supportClasses {
 		 * */
 		public var exportChildDescriptors:Boolean = true;
 		
+		private var _parent:ComponentDescription;
+
 		/**
 		 * Parent in the component hierarchy. This is different than the 
 		 * display list hierarchy.
-		 * */ 
-		public var parent:ComponentDescription;
+		 * */
+		public function get parent():ComponentDescription
+		{
+			return _parent;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set parent(value:ComponentDescription):void
+		{
+			_parent = value;
+		}
+
 		
 		/**
 		 * Skin class. If it doesn't exist the component 
@@ -377,6 +391,19 @@ package com.flexcapacitor.utils.supportClasses {
 			}
 			
 			return _styleNames;
+		}
+		
+		/**
+		 * Get an array of events used by this instance
+		 * */
+		public function get eventNames():Array {
+			var _eventNames:Array = [];
+			
+			for (var name:String in events)  {
+				_eventNames.push(name);
+			}
+			
+			return _eventNames;
 		}
 	}
 }

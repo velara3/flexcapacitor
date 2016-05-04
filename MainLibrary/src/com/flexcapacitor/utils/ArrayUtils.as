@@ -301,5 +301,93 @@ var newArray:Array = ArrayUtils.add([0], array, array2, [7,8,9]);
 			
 			return array;
 		}
+		
+		/**
+		 * Checks if one array contains any items in a second array  
+		 * */
+		public static function containsAny(array:Array, items:Array):Boolean {
+			var itemFound:Boolean;
+			
+			if (array && array.length && items && items.length) {
+				
+				for each (var item:* in items) {
+					itemFound = array.indexOf(item)!=-1;
+					
+					if (itemFound) {
+						return itemFound;
+					}
+				}
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Adds any items in second array to first array. Modifies the original array.
+		 * @param array the array containing a list of items
+		 * @param itemsToAdd an array of items to add to the orginal array
+		 * @returns returns the original array
+		 * */
+		public static function addMissingItems(array:Array, itemsToAdd:Array):Array {
+			var originalItems:Array;
+			var item:Object;
+			
+			if (array) {
+				if (itemsToAdd && itemsToAdd.length) {
+					
+					for (var i:int = 0; i < itemsToAdd.length; i++) {
+						item = itemsToAdd[i];
+						
+						// don't add twice
+						if (array.indexOf(item)==-1) {
+							array.push(item);
+						}
+					}
+					
+				}
+			}
+			
+			return array;
+		}
+			
+		/**
+		 * Returns a new array that has none of the items from the second array
+		 * @param array the original array containing a list of items
+		 * @param itemsToRemove an array of items to remove from the orginal array
+		 * @param returnRemovedItems if set to true returns a new array of items that were removed
+		 * @returns returns a new array that contains the items that were removed or 
+		 * if returnRemoveItems is true then returns a new array of the removed items
+		 * */
+		public static function removeAllItems(array:Array, itemsToRemove:Array, returnRemovedItems:Boolean = false):Array {
+			var originalItems:Array;
+			var removedItems:Array = [];
+			var location:int;
+			
+			if (array && array.length && itemsToRemove && itemsToRemove.length) {
+				originalItems = array.slice();
+				
+				for each (var item:* in itemsToRemove) {
+					location = originalItems.indexOf(item);
+					
+					while (location!=-1) {
+						if (removedItems.indexOf(item)==-1 && returnRemovedItems) {
+							removedItems.push(item);
+						}
+						
+						originalItems.splice(location, 1);
+						location = originalItems.indexOf(item);
+					}
+				}
+			}
+			
+			if (returnRemovedItems) {
+				return removedItems;
+			}
+			
+			return originalItems;
+		}
+		
+		
+
 	}
 }

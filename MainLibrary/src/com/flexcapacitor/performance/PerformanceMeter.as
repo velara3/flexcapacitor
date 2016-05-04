@@ -85,11 +85,33 @@ trace("Slowest time: " + testData.maximum);
 		private static var privateTest:ProfileTest;
 		private static var _poolCount:int = 10;
 		private static var _tests:Vector.<ProfileTest>;
+		private static var lastTime:int;
 		private static var lastMarkDifference:int;
 		private static var lastMarkText:String;
 		private static var supportMultitest:Boolean;
 		private static var _poolTimestamps:Vector.<Timestamp>;
 		private static var privateTimestamp:Timestamp;
+		
+		/**
+		 * Show the time stamp next to mark output 
+		 * 
+<pre>
+PerformanceMeter.mark("Before xml validation", true);
+isValid = XMLUtils.isValidXML(code);
+PerformanceMeter.mark("After xml validation");
+
+// output when enabled
+
+Performance Mark   Before xml validation     : 36058ms
+Performance Mark   After xml validation      : 36059ms +0
+
+// disabled
+Performance Mark   Before xml validation     : 
+Performance Mark   After xml validation      : +0
+</pre>
+		 * 
+		 * */
+		private static var showTimestamp:Boolean;
 		/**
 		 * Number of timestamps to create before hand for multiple test
 		 * */
@@ -435,12 +457,20 @@ PerformanceMeter.stop("test"); // outputs to console 10ms
 		 * 
 		 * */
 		public static function mark(name:String="", resetRunningTimer:Boolean = false):void {
-			lastMarkDifference = lastMark==0 || resetRunningTimer ? 0 : getTimer() - lastMark;
+			lastTime = getTimer();
+			lastMarkDifference = lastMark==0 || resetRunningTimer ? 0 : lastTime - lastMark;
 			
 			if (traceMessages) {
-				lastMarkText = performanceMarkText + padString(name, markNameMaxWidth) + ": " + getTimer() + "ms"; 
+				if (showTimestamp) {
+					lastMarkText = performanceMarkText + padString(name, markNameMaxWidth) + ": " + lastTime + "ms";
+				}
+				else {
+					lastMarkText = performanceMarkText + padString(name, markNameMaxWidth) + ":"; 
+				}
+				
 				lastMarkText += lastMark==0 || resetRunningTimer ? "" : " " + "+" + lastMarkDifference;
 				lastMark = getTimer();
+				
 				if (traceMessages) {
 					trace(lastMarkText);
 				}

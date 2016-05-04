@@ -1,11 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+<s:SWFLoader xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark" 
 		 xmlns:mx="library://ns.adobe.com/flex/mx" 
 		 
 		 width="400" height="300"
-		 clipAndEnableScrolling="true"
-		 creationComplete="creationComplete()">
+		 creationComplete="creationComplete()"
+		 resize="projectLoader_resizeHandler(event)"
+		 complete="project_completeHandler(event)"
+		 httpStatus="project_httpStatusHandler(event)"
+		 init="project_initHandler(event)"
+		 ioError="project_ioErrorHandler(event)"
+		 open="project_openHandler(event)"
+		 progress="project_progressHandler(event)"
+		 securityError="project_securityErrorHandler(event)"
+		 unload="project_unloadHandler(event)">
 	
 	<fx:Metadata>
 		[Event(name="applicationComplete", type="mx.events.FlexEvent")]
@@ -51,26 +59,6 @@
 			 * System manager of the target application
 			 * */
 			public var targetSystemManager:SystemManager;
-			
-			/**
-			 * Set to false for loading local file? And true for loading remote swf.
-			 * */
-			private var trustContent:Boolean;
-			
-			/**
-			 * Set to false. 
-			 * */
-			private var loadForCompatibility:Boolean;
-			
-			/**
-			 * Maintains the aspect ratio
-			 * */
-			private var maintainAspectRatio:Boolean = true;
-			
-			/**
-			 * Set to false to prevent application from scaling to fit (vs resizing)
-			 * */
-			private var scaleContent:Boolean;
 			
 			/**
 			 * The document / application
@@ -189,7 +177,7 @@
 			 * load in a blank application.
 			 * 
 			 * */
-			private function creationComplete():void {
+			public function creationComplete():void {
 				var context:LoaderContext;
 				var embeddedApplication:Object;
 				var isByteArray:Boolean;
@@ -216,20 +204,19 @@
 				//context.applicationDomain = new ApplicationDomain();
 				context.applicationDomain = ApplicationDomain.currentDomain;
 				
-				projectLoader.trustContent = trustContent;
-				projectLoader.loadForCompatibility = loadForCompatibility;
-				projectLoader.maintainAspectRatio = maintainAspectRatio;
-				projectLoader.scaleContent = scaleContent;
+				trustContent = trustContent;
+				maintainAspectRatio = maintainAspectRatio;
+				scaleContent = scaleContent;
 				
 				// if not on server context throws errors
 				if (Security.sandboxType == Security.REMOTE) {
-					//projectLoader.loaderContext = context;
-					projectLoader.trustContent = !trustContent;
+					//loaderContext = context;
+					trustContent = !trustContent;
 				}
 				
 				if (!isDesktop) {
 					// "http://yourdomain.com/SubApp3.swf";
-					projectLoader.source = url;
+					source = url;
 				}
 				else {
 					if (useEmbeddedSWF) {
@@ -237,16 +224,16 @@
 						//return;
 						// SecurityError: Error #3226: Cannot import a SWF file when LoaderContext.allowCodeImport is false.
 						//   at flash.display::Loader/_loadBytes()
-						projectLoader.loaderContext = context;
+						loaderContext = context;
 						embeddedApplication = new EmbeddedSparkApplication();
 						isByteArray = embeddedApplication is ByteArray;
 						
-						projectLoader.source = embeddedApplication;
-						projectLoader.validateProperties();
+						source = embeddedApplication;
+						validateProperties();
 						//project_completeHandler(null);
 					}
 					else {
-						projectLoader.source = "assets/applications/" + url;
+						source = "assets/applications/" + url;
 					}
 				}
 				
@@ -285,7 +272,7 @@
 				
 				
 				
-				//projectLoader.autoLoad = autoLoad;
+				//autoLoad = autoLoad;
 				//load();
 				
 				//stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
@@ -315,8 +302,8 @@
 				var content:Object;
 				
 				
-				if (projectLoader.loaderInfo) {
-					loadedLoaderInfo = projectLoader.loaderInfo;
+				if (loaderInfo) {
+					loadedLoaderInfo = loaderInfo;
 				}
 				else if (event && event.currentTarget is LoaderInfo) {
 					loadedLoaderInfo = event.currentTarget as LoaderInfo;
@@ -332,7 +319,7 @@
 					loaderClassName = NameUtil.getUnqualifiedClassName(loadedLoaderInfo.content);
 				}
 				else {
-					content = projectLoader.content
+					content = content
 					loaderClassName = NameUtil.getUnqualifiedClassName(content);
 				}
 				
@@ -437,19 +424,20 @@
 			/**
 			 * Load blank Spark Application SWF
 			 * */
-			public function load():void {
-				
+			override public function load(url:Object = null):void {
+				super.load(url);
+				/*
 				removeErrorMessages();
 				
 				showBusyIndicators();
 				
 				if (url) {
 					try {
-						//projectLoader.trustContent = trustContent;
-						projectLoader.loaderContext = null;
-						projectLoader.source = "";
-						projectLoader.source = url;
-						projectLoader.load();
+						//trustContent = trustContent;
+						loaderContext = null;
+						source = "";
+						source = url;
+						load();
 					}
 					catch (error:Error) {
 						//Radiate.error(error.message, error);
@@ -459,6 +447,7 @@
 				else {
 					hideBusyIndicators();
 				}
+				*/
 			}
 			
 			/**
@@ -473,19 +462,19 @@
 					try {
 						// if not on server context throws errors
 						//if (Security.sandboxType == Security.REMOTE) {
-						//projectLoader.loaderContext = context;
-						projectLoader.trustContent = trustContent;
+						//loaderContext = context;
+						trustContent = trustContent;
 						//}
 						
 						var context:LoaderContext = new LoaderContext();
 						
 						/* Specify the current application's security domain. */
 						//context.securityDomain = SecurityDomain.currentDomain;
-						//projectLoader.loaderContext = context;
-						projectLoader.loadForCompatibility = loadForCompatibility;
-						projectLoader.source = "";
-						projectLoader.source = url;
-						projectLoader.load();
+						//loaderContext = context;
+						loadForCompatibility = loadForCompatibility;
+						source = "";
+						source = url;
+						load();
 					}
 					catch (error:Error) {
 						//dispatchEvent(error);
@@ -502,8 +491,8 @@
 			 * */
 			private function removeErrorMessages():void {
 				
-				if (projectLoader && projectLoader.loaderInfo) {
-					projectLoader.loaderInfo.uncaughtErrorEvents.removeEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+				if (loaderInfo) {
+					loaderInfo.uncaughtErrorEvents.removeEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
 				}
 				
 				if (targetSystemManager) {
@@ -529,20 +518,20 @@
 			public function showBusyIndicators():void {
 				//fadeOutBusy.end();
 				//fadeInBusy.play();
-				
+				/*
 				if (!loadingLabel) return;
 				loadingLabel.visible =  true;
-				loadingLabel.includeInLayout =  true;
+				loadingLabel.includeInLayout =  true;*/
 			}
 			
 			/**
 			 * Hide busy indicators
 			 * */
 			public function hideBusyIndicators():void {
-				
+				/*
 				if (!loadingLabel) return;
 				loadingLabel.visible =  false;
-				loadingLabel.includeInLayout =  false;
+				loadingLabel.includeInLayout =  false;*/
 			}
 			
 			private function uncaughtErrorHandler(event:UncaughtErrorEvent):void {
@@ -634,18 +623,8 @@
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
 	
-	<s:SWFLoader id="projectLoader" 
-				 resize="projectLoader_resizeHandler(event)"
-				 complete="project_completeHandler(event)"
-				 httpStatus="project_httpStatusHandler(event)"
-				 init="project_initHandler(event)"
-				 ioError="project_ioErrorHandler(event)"
-				 open="project_openHandler(event)"
-				 progress="project_progressHandler(event)"
-				 securityError="project_securityErrorHandler(event)"
-				 unload="project_unloadHandler(event)"/>
 	
-	<s:Label id="loadingLabel" color="#ffffff" text="Loading. Please wait..." 
-			 fontWeight="bold" horizontalCenter="0" verticalCenter="0"/>
+	<!--<s:Label id="loadingLabel" color="#ffffff" text="Loading. Please wait..." 
+			 fontWeight="bold" horizontalCenter="0" verticalCenter="0"/>-->
 	
-</s:Group>
+</s:SWFLoader>
