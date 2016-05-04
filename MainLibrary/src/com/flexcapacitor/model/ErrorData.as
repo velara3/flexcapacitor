@@ -12,6 +12,7 @@ package com.flexcapacitor.model {
 		public var errorID:String;
 		public var message:String;
 		public var name:String;
+		public var stackTrace:String;
 		
 		/**
 		 * Returns an instance with name and message
