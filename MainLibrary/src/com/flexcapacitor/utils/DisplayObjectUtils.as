@@ -2653,8 +2653,8 @@ trace(size); // {width = 200, height = 100}
 			var bitmapData:BitmapData = new BitmapData(bounds.width, bounds.height, true /*transparent*/, 0);
 			
 			try {
-				if (quality) {
-					bitmapData.drawWithQuality(IBitmapDrawable(target), matrix, propagateColorTransform ? target.transform.colorTransform : null, null, null, smoothing, quality);
+				if (quality && "drawWithQuality" in bitmapData) {
+					bitmapData["drawWithQuality"](IBitmapDrawable(target), matrix, propagateColorTransform ? target.transform.colorTransform : null, null, null, smoothing, quality);
 				}
 				else {
 					bitmapData.draw(IBitmapDrawable(target), matrix, propagateColorTransform ? target.transform.colorTransform : null, null, null, smoothing);
@@ -2677,8 +2677,8 @@ trace(size); // {width = 200, height = 100}
 													  smoothing:Boolean = false,
 													  propagateColorTransform:Boolean = false,
 													  visibleBounds:Rectangle = null):Object {
-			if (quality==null) {
-				quality = StageQuality.HIGH_16X16_LINEAR;
+			if (quality==null && "HIGH_16X16_LINEAR" in StageQuality) {
+				quality = StageQuality["HIGH_16X16_LINEAR"];
 			}
 			
 			return getSnapshot(target, visibleBounds, propagateColorTransform, smoothing, quality);
@@ -3104,7 +3104,7 @@ trace(size); // {width = 200, height = 100}
 											  smoothing:Boolean = false, 
 											  quality:String = "16x16linear"):void {
 			
-			bitmapData.drawWithQuality(displayObject, matrix, colorTransform, blendMode, clipRect, smoothing, quality);
+			bitmapData["drawWithQuality"](displayObject, matrix, colorTransform, blendMode, clipRect, smoothing, quality);
 		}
 		
 		/**

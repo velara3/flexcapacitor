@@ -10,8 +10,22 @@ package com.flexcapacitor.model {
 	
 	import mx.events.MenuEvent;
 	
-	import spark.events.MenuEvent;
 	
+	/**
+	 *  Dispatched on selection as a result
+	 *  of user interaction. 
+	 *
+	 *  @eventType spark.events.MenuEvent.SELECTED
+	 */
+	[Event(name="selected", type="flash.events.Event")]
+	
+	/**
+	 *  Dispatched when selection is checked as a result
+	 *  of user interaction. 
+	 *
+	 *  @eventType spark.events.MenuEvent.CHECKED
+	 */
+	[Event(name="checked", type="flash.events.Event")]
 	
 	/**
 	 *  Dispatched when selection changes as a result
@@ -76,10 +90,12 @@ package com.flexcapacitor.model {
 		
 		public static var NativeMenuQualifiedName:String = "flash.display.NativeMenu";
 		public static var NativeMenuItemQualifiedName:String = "flash.display.NativeMenuItem";
+		public static var MenuItemQualifiedName:String = "MenuEvent";
 		public static var NativeMenuDefinition:Object;
 		public static var NativeMenuItemDefinition:Object;
 		public static var isWin:Boolean;
 		public static var isMac:Boolean;
+		public static var menuEventType:Class;
 		
 		/**
 		 * If true we have already checked if native classes were available.
@@ -440,16 +456,24 @@ package com.flexcapacitor.model {
 			return menuItem;
 		}
 		
+		// spark.events.MenuEvent is not in 4.6.0
+		public static const CHECKED:String = "checked";
+		public static const SELECTED:String = "selected";
+		
 		public static function addEventListeners(newMenuItem:MenuItem, originalMenu:IEventDispatcher, addAnyway:Boolean = true):void {
 			
-			if (addAnyway || originalMenu.hasEventListener(spark.events.MenuEvent.SELECTED)) {
-				newMenuItem.addEventListener(spark.events.MenuEvent.SELECTED, function(event:Event):void {
+			if (menuEventType is MenuEvent) {
+				
+			}
+			
+			if (addAnyway || originalMenu.hasEventListener(SELECTED)) {
+				newMenuItem.addEventListener(SELECTED, function(event:Event):void {
 					originalMenu.dispatchEvent(event);
 				}, false, 0, true);
 			}
 			
-			if (addAnyway || originalMenu.hasEventListener(spark.events.MenuEvent.CHECKED)) {
-				newMenuItem.addEventListener(spark.events.MenuEvent.CHECKED, function(event:Event):void {
+			if (addAnyway || originalMenu.hasEventListener(CHECKED)) {
+				newMenuItem.addEventListener(CHECKED, function(event:Event):void {
 					originalMenu.dispatchEvent(event);
 				}, false, 0, true);
 			}
@@ -511,7 +535,13 @@ package com.flexcapacitor.model {
 					NativeMenuItemDefinition = getDefinitionByName(NativeMenuItemQualifiedName);
 				}
 				
+				if (ApplicationDomain.currentDomain.hasDefinition(NativeMenuItemQualifiedName)) {
+					NativeMenuItemDefinition = getDefinitionByName(NativeMenuItemQualifiedName);
+				}
+				
 			}
+			
+			
 			
 			initialized = true;
 		}
