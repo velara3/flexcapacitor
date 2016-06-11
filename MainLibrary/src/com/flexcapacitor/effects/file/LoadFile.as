@@ -137,8 +137,8 @@ package com.flexcapacitor.effects.file {
 					   loaderTotalComplete="trace('all loaders have loaded');loadFile.removeReferences();"/>
 	&lt;/file:selectionEffect>
 &lt;/file:BrowseForFile>
- </pre>
- * To allow multiple selection
+</pre>
+ * To allow multiple selection in the browser
 <pre>
 &lt;file:BrowseForFile id="browseForFile"
 					fileTypes="png,jpg,jpeg,gif"
@@ -146,12 +146,26 @@ package com.flexcapacitor.effects.file {
 					allowMultipleSelection="true">
 	&lt;file:selectionEffect>
 		&lt;file:LoadFile id="loadFile"  
-					   fileReference="{browseForFile.fileReferenceList}"
+					   fileReferenceList="{browseForFile.fileReferenceList}"
 					   complete="trace('file loaded')"
 					   totalComplete="trace('all files loaded');loadFile.removeReferences();"/>
 	&lt;/file:selectionEffect>
 &lt;/file:BrowseForFile>
- </pre>
+</pre>
+ * To allow multiple selection on desktop
+<pre>
+&lt;file:BrowseForFile id="browseForFile"
+					fileTypes="png,jpg,jpeg,gif"
+					targetAncestor="{this}"
+					allowMultipleSelection="true">
+	&lt;file:selectionEffect>
+		&lt;file:LoadFile id="loadFile"  
+					   filesArray="{browseForFile.fileList}"
+					   complete="trace('file loaded')"
+					   totalComplete="trace('all files loaded');loadFile.removeReferences();"/>
+	&lt;/file:selectionEffect>
+&lt;/file:BrowseForFile>
+</pre>
 	 * You can also manually pass in an array of files into the filesArray property 
 	 * and then call loadFile.play():
 <pre>

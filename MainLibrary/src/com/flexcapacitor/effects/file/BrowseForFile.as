@@ -38,7 +38,7 @@ package com.flexcapacitor.effects.file {
 	 * 
 	 * The selection effect or multiple selection effect is run 
 	 * when files are selected. The file or files are set 
-	 * in the fileReference or fileReferenceList property. 
+	 * in the fileReference, fileReferenceList or fileList property. 
 	 * 
 	 * NOTE: In the browser this effect MUST be called within the 
 	 * bubbling of a click event. If another effect is run before this one

@@ -311,6 +311,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 					fileReference = fileList[0];
 					action.fileReference = fileReference;
 					action.file = fileReference as Object;
+					action.fileList = fileList.slice();
 					fileCount = fileList.length;
 					
 					if (fileCount>1) {
@@ -333,6 +334,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 					fileReference = fileList[0];
 					fileCount = fileList.length;
 					action.fileReference = fileReference;
+					action.fileList = fileList.slice();
 					action.file = fileReference as Object;
 					
 					if (fileCount>1) {
