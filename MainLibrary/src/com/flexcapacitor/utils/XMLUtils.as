@@ -11,6 +11,7 @@ package com.flexcapacitor.utils
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities;
 	import flash.utils.getDefinitionByName;
+	import flash.xml.XMLDocument;
 	
 	
 	/**
@@ -124,8 +125,84 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Creates a node with the given name. 
+		 * 
+		 * @see #flash.xml.XMLDocument.createElement()
+		 * */
+		public static function createElement(xml:XML, name:*):XML {
+			var newNode:XML;
+			
+			if (xml==null) {
+				if (name is QName) {
+					xml = new XML();
+					xml.setName(QName(name).localName);
+					xml.setNamespace(QName(name).uri);
+					return xml;
+				}
+				
+				return new XML("<" + name + "/>");
+			}
+			
+			newNode = new XML();
+			newNode.setName(name);
+			
+			// doing it this way to add namespaces?
+			newNode = xml.appendChild(newNode);
+			delete xml[newNode.childIndex()];
+			return newNode;
+		}
+		
+		/**
+		 * Creates a text node with the given value. 
+		 * 
+		 * @see flash.xml.XMLDocument#createTextNode()
+		 * */
+		public static function createTextNode(xml:XML, value:String):XML {
+			var textNode:XML;
+			
+			if (xml==null) {
+				xml = new XML();
+				return xml.appendChild(value);
+			}
+			
+			textNode = xml.appendChild(value);
+			delete xml[textNode.childIndex()];
+			return textNode;
+		}
+		
+		/**
+		 * Removes the node if it has a parent.
+		 * */
+		public static function removeNode(xml:XML):XML {
+			var parent:XML = xml ? xml.parent() : null;
+			if (parent) {
+				delete parent[xml.name()][xml.childIndex()];
+			}
+			return xml;
+		}
+		
+		
+		/**
+		 * Add a namespace to a XML node
+		 * */
+		public function addNamespace(xml:XML, namespaceName:String, namespaceURI:String):XML {
+			var newNamespace:Namespace = new Namespace(namespaceName, namespaceURI);
+			xml.setNamespace(newNamespace);
+			
+			for each (var node:XML in xml.descendants()) {
+				node.setNamespace(newNamespace);
+				
+				for each (var attribute:XML in node.attributes()) {
+					attribute.setNamespace(newNamespace);
+				}
+			}
+			
+			return xml;
+		}
+		
+		/**
 		 * Encodes values that are not allowed in attribute quotes. 
-		 * Replaces double quote, ampersand, less than sign and greater than sign. 
+		 * Replaces single quote, double quote, ampersand, less than and greater than sign and new line. 
 		 * For example, replaces double quote with "&quot;"
 		 * Use decodeAttributeString() when reading values. 
 		 * 
@@ -135,6 +212,7 @@ package com.flexcapacitor.utils
 			var outputValue:String = value;
 			outputValue = outputValue.replace(/&(?!amp;)/g, "&amp;");
 			outputValue = outputValue.replace(/"/g, "&quot;");
+			outputValue = outputValue.replace(/'/g, "&apos;");
 			outputValue = outputValue.replace(/</g, "&lt;");
 			outputValue = outputValue.replace(/>/g, "&gt;");
 			outputValue = outputValue.replace(/\n/g, "&#10;");
@@ -143,7 +221,7 @@ package com.flexcapacitor.utils
 		
 		/**
 		 * Decodes HTML entities that are not allowed in attribute quotes. 
-		 * Replaces double quote, ampersand, less than sign and greater than sign. 
+		 * Replaces single quote, double quote, ampersand, less than sign and greater than sign. 
 		 * 
 		 * For example, replaces "&quot;" with double quote.
 		 * Use getAttributeSafeString() when writing values. 
@@ -152,11 +230,20 @@ package com.flexcapacitor.utils
 		 * */
 		public static function decodeAttributeString(value:String = ""):String {
 			var outputValue:String = value.replace(/&quot;/g, '"');
+			outputValue = outputValue.replace(/&apos;/g, "'");
 			outputValue = outputValue.replace(/&amp;/g, "&");
 			outputValue = outputValue.replace(/&lt;/g, "<");
 			outputValue = outputValue.replace(/&gt;/g, ">");
 			outputValue = outputValue.replace(/&#10;/g, "\n");
 			return outputValue;
+		}
+		
+		/**
+		 * Sets an attribute to the given value
+		 * */
+		public static function setAttribute(xml:XML, attributeName:*, value:String = ""):XML {
+			xml.@[attributeName] = value;
+			return xml;
 		}
 		
 		/**
@@ -535,7 +622,7 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Returns true if node has attribute. Not handing namespaces.
+		 * Returns true if node has attribute. Not handling namespaces.
 		 * 
 		 * @param node XML item
 		 * @return true if attribute exists
@@ -545,6 +632,18 @@ package com.flexcapacitor.utils
 			var exists:Boolean = (attributes.indexOf(attribute)!=-1);
 			
 			return exists;
+		}
+		
+		/**
+		 * Remove attribute from a node
+		 * 
+		 * @param node XML item
+		 * */
+		public static function removeAttribute(node:XML, attributeName:Object):XML {
+			var result:Array = [];
+			
+			delete node.@[attributeName];
+			return node;
 		}
 		
 		/**
@@ -633,10 +732,12 @@ package com.flexcapacitor.utils
 				}
 				
 				if (toSimpleString) {
-					result[nodeName] = childNode.toString();
+					//result[nodeName] = childNode.toString();
+					result[nodeName] = childNode.children().toString();
 				}
 				else {
-					result[nodeName] = childNode.toXMLString();
+					//result[nodeName] = childNode.toXMLString();
+					result[nodeName] = childNode.children().toXMLString();
 				}
 			}
 			

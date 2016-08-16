@@ -27,6 +27,25 @@ package com.flexcapacitor.utils.supportClasses {
 			}
 		}
 		
+		private var _componentDefinition:ComponentDefinition;
+
+		/**
+		 * Reference to the component definition 
+		 * */
+		public function get componentDefinition():ComponentDefinition
+		{
+			return _componentDefinition;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set componentDefinition(value:ComponentDefinition):void
+		{
+			_componentDefinition = value;
+		}
+
+		
 		/**
 		 * Layer name. By default this is the unqualified class name but 
 		 * can be changed. 
@@ -62,6 +81,16 @@ package com.flexcapacitor.utils.supportClasses {
 		public var htmlTagName:String;
 		
 		/**
+		 * HTML to place after
+		 * */
+		public var htmlAfter:String;
+		
+		/**
+		 * HTML to override
+		 * */
+		public var htmlOverride:String;
+		
+		/**
 		 * Name of the class used when exporting to HTML
 		 * */
 		public var htmlClassName:String;
@@ -75,6 +104,31 @@ package com.flexcapacitor.utils.supportClasses {
 		 * Reference to the HTMLElement
 		 * */
 		public var htmlElement:Object;
+		
+		/**
+		 * Reference to the XML node when imported from an XML document
+		 * */
+		public var nodeXML:XML;
+		
+		/**
+		 * Reference to declarations 
+		 * */
+		public var declarations:Object;
+		
+		/**
+		 * Reference to scripts 
+		 * */
+		public var scriptsArray:Array;
+		
+		/**
+		 * Reference to styles 
+		 * */
+		public var stylesLinks:Array;
+		
+		/**
+		 * Reference to array of metadata 
+		 * */
+		public var metadata:Array;
 		
 		/**
 		 * Class used to create component instance

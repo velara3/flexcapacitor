@@ -120,9 +120,9 @@ package com.flexcapacitor.utils {
 		/**
 		 * Get super class name of the target object
 		 * */
-		public static function getSuperClassName(element:Object):String {
+		public static function getSuperClassName(element:Object, fullyQualified:Boolean = false):String {
 			var name:String = flash.utils.getQualifiedSuperclassName(element);
-			if (name && name.indexOf("::")) {
+			if (name && name.indexOf("::") && !fullyQualified) {
 				name = name.split("::")[name.split("::").length-1]; // i'm sure theres a better way to do this
 			}
 			

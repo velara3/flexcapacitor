@@ -59,6 +59,11 @@ package com.flexcapacitor.utils.supportClasses {
 		public var icon:Object;
 		
 		/**
+		 * Child node properties
+		 * */
+		public var childNodes:Array;
+		
+		/**
 		 * Default properties
 		 * */
 		public var defaultProperties:Object;

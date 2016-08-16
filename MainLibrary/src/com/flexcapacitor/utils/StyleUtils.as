@@ -212,6 +212,7 @@ package com.flexcapacitor.utils {
 			
 			return output;
 		}
+		
 		/**
 		 * Returns if style is inherited or declared inline or set in actionscript with setStyle();
 		 * */
@@ -219,6 +220,19 @@ package com.flexcapacitor.utils {
 			if (styleClient && 
 				styleClient.styleDeclaration && 
 				styleName in styleClient.styleDeclaration.overrides) {
+				return true;
+			}
+			
+			return false;
+		}
+		
+		/**
+		 * Returns if style is declared
+		 * */
+		public static function hasStyle(styleClient:IStyleClient, styleName:String):Boolean {
+			var isStyle:Boolean = ClassUtils.hasStyle(styleClient, styleName);
+			
+			if (isStyle) {
 				return true;
 			}
 			

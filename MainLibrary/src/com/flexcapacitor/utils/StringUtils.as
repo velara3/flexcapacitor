@@ -22,7 +22,12 @@ package com.flexcapacitor.utils {
 		public static const NEW_LINE:String = "\n";
 		
 		public static var indentPattern:RegExp = /([\t ]*)(.+)$/gm;
+		public static var singleOutdentPattern:RegExp = /^[\t ]{0,1}/gm;
+		public static var doubleOutdentPattern:RegExp = /^[\t ]{0,2}/gm;
+		public static var tripleOutdentPattern:RegExp = /^[\t ]{0,3}/gm;
+		public static var outdentAllPattern:RegExp = /([\t ]*)(.+)$/gm;
 		public static var whiteSpaceStartPattern:RegExp = /(^[\t ]*).*$/;
+		public static var tabCountPattern:RegExp = /(^[\t ]*)/gm;
 		
 		/**
 		 * The padLeft method creates a new string by concatenating enough leading 
@@ -214,6 +219,22 @@ trace(whiteSpace); // "  "
 			return whiteSpace;
 		}
 		
+		/**
+		 * Gets the tab count before non whitespace characters
+		 * 
+<pre>
+var count:int = getTabCountBeforeContent("  Hello");
+trace(count); // 1
+</pre>
+		 * */
+		public static function getTabCountBeforeContent(input:String, allLines:Boolean = false):int {
+			if (input==null || input=="") return 0;
+			var result:Array = input.match(tabCountPattern);
+			var matches:Array = result && result.length ? String(result[0]).match(/\t/g) : null;
+			var count:int = matches ? matches.length : 0;
+			return count;
+		}
+		
 		
 		/**
 		 * Indent by one tab or a specific amount of white space
@@ -228,8 +249,41 @@ trace(indented); // "		Hello World"
 		public static function indent(input:String, indentAmount:String = "\t"):String {
 			if (input==null || input=="") return indentAmount;
 			
+			if (indentAmount==null || indentAmount=="") indentAmount = "\t";
+			
 			var indentedText:String = input.replace(indentPattern, indentAmount + "$1$2");
 			return indentedText;
+		}
+
+		/**
+		 * Outdent by one or more tabs
+		 * 
+<pre>
+var outdented:String = outdent("	Hello World");
+trace(outdented); // "Hello World"
+var indented3Times:String = outdent("			Hello World", 2);
+trace(indented3Times); // "	Hello World" - one indent left
+</pre>
+		 * */
+		public static function outdent(input:String, outdentAmount:uint = 1):String {
+			if (input==null || input=="") return "";
+			
+			var outdentedText:String;
+			
+			if (outdentAmount==1) {
+				outdentedText = input.replace(singleOutdentPattern, "");
+			}
+			else if (outdentAmount==2) {
+				outdentedText = input.replace(doubleOutdentPattern, "");
+			}
+			else if (outdentAmount==3) {
+				outdentedText = input.replace(tripleOutdentPattern, "");
+			}
+			else {
+				outdentedText = input.replace(new RegExp("^[\t ]{0," + outdentAmount + "}", "gm"), "");
+			}
+			
+			return outdentedText;
 		}
 	}
 }
