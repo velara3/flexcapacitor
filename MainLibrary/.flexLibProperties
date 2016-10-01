@@ -434,6 +434,9 @@
     <classEntry path="com.flexcapacitor.utils.MethodMetaData"/>
     <classEntry path="com.flexcapacitor.utils.NativeMenuManager"/>
     <classEntry path="com.flexcapacitor.utils.SimpleXMLEncoder"/>
+    <classEntry path="com.flexcapacitor.skins.CallOutSkin"/>
+    <classEntry path="com.flexcapacitor.controls.RichTextEditorBarCallout"/>
+    <classEntry path="com.flexcapacitor.controls.TabNavigator"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>

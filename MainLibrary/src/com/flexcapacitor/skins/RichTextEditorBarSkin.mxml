@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+-->
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		xmlns:s="library://ns.adobe.com/flex/spark" 
+		xmlns:mx="library://ns.adobe.com/flex/mx" 
+		xmlns:richTextEditorClasses="com.flexcapacitor.controls.richTextEditorClasses.*">
+	
+	<!-- host component -->
+	<fx:Metadata>
+		[HostComponent("com.flexcapacitor.controls.RichTextEditorBar")]
+	</fx:Metadata>	
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			
+			import flashx.textLayout.formats.TextAlign;
+			
+			[Embed(source = "richTextEditorClasses/tools/center.png")]
+			private const CENTER:Class;
+			[Embed(source = "richTextEditorClasses/tools/justify.png")]
+			private const JUSTIFY:Class;
+			[Embed(source = "richTextEditorClasses/tools/left.png")]
+			private const LEFT:Class;
+			[Embed(source = "richTextEditorClasses/tools/right.png")]
+			private const RIGHT:Class;
+			
+			override protected function createChildren():void
+			{
+				super.createChildren();
+				
+				var alignmentData:ArrayList = new ArrayList();
+				alignmentData.addItem({icon: LEFT, toolTip: "Left", value: TextAlign.LEFT});
+				alignmentData.addItem({icon: CENTER, toolTip: "Center", value: TextAlign.CENTER});
+				alignmentData.addItem({icon: RIGHT, toolTip: "Right", value: TextAlign.RIGHT});
+				alignmentData.addItem({icon: JUSTIFY, toolTip: "Justify", value: TextAlign.JUSTIFY});
+				alignTool.dataProvider = alignmentData;
+				
+				var linkTargetLocations:ArrayList = new ArrayList();
+				linkTargetLocations.addItem("_self");
+				linkTargetLocations.addItem("_blank");
+				linkTargetLocations.addItem("_parent");
+				linkTargetLocations.addItem("_top");
+				linkTool.linkTargetLocations = linkTargetLocations;
+				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+	</fx:Declarations>
+	
+	<s:transitions>
+		<s:Transition fromState="normal" toState="*">
+			<s:Sequence duration="250">
+				<s:Resize target="{this}"/>
+				<s:AddAction target="{linkTool}"/>
+				<s:Fade target="{linkTool}"/>
+			</s:Sequence>
+		</s:Transition>
+		<s:Transition fromState="linkDialog" toState="*">
+			<s:Sequence duration="250">
+				<!--<s:RemoveAction target="{linkTool}"/>-->
+				<s:Fade target="{linkTool}"/>
+				<s:Resize target="{this}"/>
+			</s:Sequence>
+		</s:Transition>
+	</s:transitions>
+	
+	<s:states>
+		<s:State name="normal"/>
+		<s:State name="linkDialog"/>
+	</s:states>
+	
+	<!-- SkinParts
+	name=textArea, type=spark.components.TextArea, required=true
+	name=fontTool, type=spark.components.richTextEditorClasses.FontTool, required=false
+	name=sizeTool, type=spark.components.richTextEditorClasses.SizeTool, required=false
+	name=boldTool, type=spark.components.richTextEditorClasses.BoldTool, required=false
+	name=italicTool, type=spark.components.richTextEditorClasses.ItalicTool, required=true
+	name=underlineTool, type=spark.components.richTextEditorClasses.UnderlineTool, required=true
+	name=colorTool, type=spark.components.richTextEditorClasses.ColorTool, required=false
+	name=alignTool, type=spark.components.richTextEditorClasses.AlignTool, required=false
+	name=bulletTool, type=spark.components.richTextEditorClasses.BulletTool, required=false
+	name=linkTool, type=spark.components.richTextEditorClasses.LinkTool, required=false
+	-->
+	
+	<s:VGroup width="100%">
+		<s:HGroup width="100%" >	
+			<richTextEditorClasses:FontTool id="fontTool" width="100%" maxWidth="120" minWidth="80"/>
+			<richTextEditorClasses:SizeTool id="sizeTool" width="60"/>
+			<s:HGroup gap="0">
+				<richTextEditorClasses:BoldTool id="boldTool" width="20" icon="@Embed('richTextEditorClasses/tools/bold.png')"/>
+				<richTextEditorClasses:ItalicTool id="italicTool" width="20" icon="@Embed('richTextEditorClasses/tools/italic.png')"/>
+				<richTextEditorClasses:UnderlineTool id="underlineTool" width="20" icon="@Embed('richTextEditorClasses/tools/underline.png')"/>
+			</s:HGroup>
+			<richTextEditorClasses:ColorTool id="colorTool" height="21" width="20"/>
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
+			<richTextEditorClasses:AlignTool id="alignTool" width="80" />
+			<richTextEditorClasses:BulletTool id="bulletTool" width="20" icon="@Embed('richTextEditorClasses/tools/bullet.png')"/>
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
+			<richTextEditorClasses:LinkButtonTool id="showLinkTool" width="23" icon="@Embed('richTextEditorClasses/tools/link.png')"/>
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
+			<richTextEditorClasses:ClearFormattingTool id="clearFormattingTool" width="23" />
+		</s:HGroup>
+		<richTextEditorClasses:LinkTool id="linkTool" 
+										includeIn="linkDialog" 
+										itemCreationPolicy="immediate"
+										width="100%"/>
+	</s:VGroup>
+
+</s:Skin>

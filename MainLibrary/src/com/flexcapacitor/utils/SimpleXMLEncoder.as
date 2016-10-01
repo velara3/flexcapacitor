@@ -21,6 +21,7 @@
 package com.flexcapacitor.utils
 {
 	
+	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	
@@ -119,7 +120,9 @@ package com.flexcapacitor.utils
 		
 		private var myXMLDoc:XML;
 		
-		public var encodeSimpleAsAttributes:Boolean = false;
+		public var encodePrimitivesAsAttributes:Boolean = false;
+		
+		public var namespaceDefinitions:Dictionary = new Dictionary(true);
 		
 		//--------------------------------------------------------------------------
 		//
@@ -174,11 +177,21 @@ package com.flexcapacitor.utils
 			var nodeName:String;
 			//myElement = myXMLDoc.createElement("foo");
 			myElement = new XML(<foo/>);
-			nodeName = qname ? qname.localName : obj.className ? obj.className : getQualifiedClassName(obj);
+			nodeName = qname ? qname.localName : "className" in obj && obj.className ? obj.className : getQualifiedClassName(obj);
+			
+			if (nodeName && nodeName.indexOf("::")!=-1) {
+				nodeName = nodeName.replace("::", ".");
+			}
+			
 			myElement.setName(nodeName);
-			if (qname.uri) {
+			
+			if (qname && qname.uri) {
 				myElement.setNamespace(qname.uri);
 			}
+			else {
+				myElement.setNamespace("library://ns.adobe.com/flex/spark");
+			}
+			
 			var index:int = myElement.childIndex();
 			//myElement.localName = qname ? qname.localName : obj.className ? obj.className : getQualifiedClassName(obj);
 			parentNode.appendChild(myElement);
@@ -200,7 +213,8 @@ package com.flexcapacitor.utils
 			else if (typeType == SimpleXMLEncoder.ARRAY_TYPE)
 			{
 				var numMembers:uint = obj.length;
-				var itemQName:QName = new QName("", "item");
+				//var itemQName:QName = new QName("", "item");
+				var itemQName:QName; // let it be named after it's kind
 				
 				for (var i:uint = 0; i < numMembers; i++)
 				{
@@ -244,7 +258,7 @@ package com.flexcapacitor.utils
 				
 				if (valueString!==null && valueString!=="") {
 					
-					if (encodeSimpleAsAttributes) {
+					if (encodePrimitivesAsAttributes) {
 						myElement.parent().@[nodeName] = valueString;
 						
 						if (parentNode) {

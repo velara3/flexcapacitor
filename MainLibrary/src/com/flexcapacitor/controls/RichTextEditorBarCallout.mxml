@@ -1,0 +1,169 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Callout xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:controls="com.flexcapacitor.controls.*" >
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.events.FlexMouseEvent;
+			import mx.events.ResizeEvent;
+			
+			import spark.components.RichEditableText;
+			
+			private var _richEditableText:RichEditableText;
+
+			/**
+			 * Reference to the RichEditableText component on the stage. Required.
+			 * */
+			public function get richEditableText():RichEditableText {
+				return _richEditableText;
+			}
+
+			/**
+			 * @private
+			 */
+			public function set richEditableText(value:RichEditableText):void {
+				// remove previous rich editable text field
+				if (_richEditableText!=null && value!=_richEditableText) {
+					editorBar.detachRichEditableText(_richEditableText);
+					richEditableText.removeEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
+					richEditableText.removeEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
+				}
+				
+				_richEditableText = value;
+				
+				if (value) {
+					if (showEditorOnFocusIn) {
+						_richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler, false, 0, true);
+						_richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler, false, 0, true);
+					}
+					else {
+						_richEditableText.removeEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
+						_richEditableText.removeEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
+					}
+				}
+			}
+
+			
+			private var _showEditorOnFocusIn:Boolean;
+
+			/**
+			 * Show call out on focus in of rich text field
+			 * */
+			public function get showEditorOnFocusIn():Boolean
+			{
+				return _showEditorOnFocusIn;
+			}
+
+			/**
+			 * @private
+			 */
+			public function set showEditorOnFocusIn(value:Boolean):void
+			{
+				_showEditorOnFocusIn = value;
+				
+				if (_showEditorOnFocusIn && richEditableText) {
+					richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler, false, 0, true);
+					richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler, false, 0, true);
+				}
+				else if (!_showEditorOnFocusIn && richEditableText) {
+					richEditableText.removeEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
+					richEditableText.removeEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
+				}
+			}
+
+			
+			/**
+			 * Hides the callout when the mouse clicked outside of the editor 
+			 * and outside of the rich editable text component.
+			 * */
+			public var hideOnMouseDownOutside:Boolean = true;
+			
+			/**
+			 * This component shows the RichTextEditorBar in a call out.
+			 * To Use 
+			 * 1. Create an instance of this component in MXML declarations or in AS3
+			 * 2. Set the instance.richEditableText property to a Rich Editable Text component on the stage.
+			 * 3. Call the open method and pass in the RichEditableText as the owner. 
+			 * 4. Call the close method to hide the editor bar when done
+			 * */
+			override public function open(owner:DisplayObjectContainer, modal:Boolean = false):void {
+				super.open(owner, modal);
+				
+				if (owner is RichEditableText) {
+					richEditableText = owner as RichEditableText;
+				}
+				
+				if (richEditableText==null) {
+					throw Error("You must assign an instance of RichEditableText before calling open");
+				}
+				
+				editorBar.attachRichEditableText(richEditableText);
+				
+				if (hideOnMouseDownOutside && !hasEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE)) {
+					addEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler, false, 0, true);
+				}
+				else if (!hideOnMouseDownOutside) {
+					removeEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler);
+				}
+				
+				if (showEditorOnFocusIn && richEditableText) {
+					richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
+					richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
+				}
+			}
+			
+			public function mouseDownOutsideHandler(event:MouseEvent):void {
+				var focusedComponent:Object = focusManager.getFocus();
+				var relatedObject:Object = event.relatedObject;
+				var isRelatedObjectRelated:Boolean;
+				
+				isRelatedObjectRelated = richEditableText.contains(relatedObject as DisplayObject);
+				
+				//trace(' focusedComponent: ' + focusedComponent);
+				//trace(' relatedObject: ' + relatedObject);
+				//trace(' is related: ' + isRelatedObjectRelated);
+				
+				if (focusedComponent!=richEditableText || 
+					(relatedObject!=richEditableText && !isRelatedObjectRelated)) {
+					//commitTextEditorValues();
+					close(false, richEditableText.textFlow);
+				}
+				
+			}
+			
+			
+			/**
+			 *  @private
+			 */
+			override public function close(commit:Boolean=false, data:*=null):void {
+				
+				if (hideOnMouseDownOutside) {
+					removeEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler);
+				}
+				
+				super.close(commit, data);
+			}
+			
+			
+			/**
+			 * If we have showEditorOnFocusIn set to true then we open the call out when 
+			 * the user focuses in on the rich editable text field.
+			 * */
+			public function richEditableText_focusInHandler(event:Event):void {
+				
+				if (showEditorOnFocusIn && isOpen==false) {
+					open(richEditableText);
+				}
+			}
+			
+			protected function editorBar_resizeHandler(event:ResizeEvent):void {
+				updatePopUpPosition();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<controls:RichTextEditorBar id="editorBar" width="100%" resize="editorBar_resizeHandler(event)" />
+</s:Callout>

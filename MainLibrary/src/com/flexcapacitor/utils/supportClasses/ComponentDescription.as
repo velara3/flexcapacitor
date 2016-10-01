@@ -81,6 +81,11 @@ package com.flexcapacitor.utils.supportClasses {
 		public var htmlTagName:String;
 		
 		/**
+		 * HTML to place before
+		 * */
+		public var htmlBefore:String;
+		
+		/**
 		 * HTML to place after
 		 * */
 		public var htmlAfter:String;
@@ -164,6 +169,11 @@ package com.flexcapacitor.utils.supportClasses {
 		 * User defined styles
 		 * */
 		public var userStyles:String;
+		
+		/**
+		 * User defined attributes
+		 * */
+		public var htmlAttributes:String;
 		
 		/**
 		 * Creates a snapshot of the selected component and sets it as a background to the element.

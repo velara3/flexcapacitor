@@ -130,20 +130,6 @@ package com.flexcapacitor.controls {
 	[Event(name="selectionChange", type="flash.events.Event")]
 	
 	/**
-	 *  Dispached after the <code>selectionAnchorPosition</code> and/or
-	 *  <code>selectionActivePosition</code> properties have changed
-	 *  for any reason.
-	 *
-	 *  @eventType mx.events.FlexEvent.SELECTION_CHANGE
-	 *  
-	 *  @langversion 3.0
-	 *  @playerversion Flash 10
-	 *  @playerversion AIR 1.5
-	 *  @productversion Flex 4
-	 */
-	[Event(name="selectionChange", type="flash.events.Event")]
-	
-	/**
 	 *  Dispatched after a user editing operation is complete.
 	 *
 	 *  @eventType spark.events.TextOperationEvent.CHANGE
@@ -173,11 +159,14 @@ package com.flexcapacitor.controls {
 	 * Listening and dispatching events duration: Average:4ms with debug build.<br>
 	 * Not listening or dispatching events duration: Average:1ms with debug build.<br/><br/>
 	 * 
+	 * A "editorReady" event is dispatched when the editor is ready to use and the isEditorReady property 
+	 * is set to true. 
+	 * 
 	 * To use in MXML:<br/>
 	<pre>
 	&lt;local:AceEditor id="ace" height="100%" width="100%"
 			top="60" left="0" right="0" bottom="30" 
-			complete="ace_completeHandler(event)"
+			editorReady="aceEditorReadyHandler(event)"
 			selectionChange="ace_selectionChangeHandler(event)"
 			cursorChange="ace_cursorChangeHandler(event)"
 			mouseMoveOverEditor="ace_mouseMoveOverChangeHandler(event)"
@@ -207,11 +196,12 @@ package com.flexcapacitor.controls {
 		var tokenLabel:String = token ? token.type : "";
 	}
 	
-	protected function ace_completeHandler(event:Event):void {
+	protected function aceEditorReadyHandler(event:Event):void {
+		ace.isEditorReady; // true when editor is ready
 		ace.setMode("ace/mode/html");
 		ace.setValue(myHTMLContent);
 	}
-	
+
 	private var lastSearchValue:String;
 			
 	protected function searchInput_clickHandler(event:Event):void {
@@ -947,6 +937,42 @@ package com.flexcapacitor.controls {
 		 * */
 		public function navigateWordRight():void {
 			editor.navigateWordRight();
+		}
+		
+		/**
+		 * Scrolls the document to wherever "page down" is, without changing the cursor position.
+		 * */
+		public function scrollPageDown():void {
+			editor.scrollPageDown();
+		}
+		
+		/**
+		 * Scrolls the document to wherever "page up" is, without changing the cursor position.
+		 * */
+		public function scrollPageUp():void {
+			editor.scrollPageUp();
+		}
+		
+		/**
+		 * Scrolls to a line. If center is true, it puts the line in middle of screen (or attempts to).
+		 * */
+		public function scrollToLine(line:int, center:Boolean = false, animate:Boolean = true, callBack:Function = null):void {
+			editor.scrollToLine(line, center, animate, callBack);
+		}
+		
+		/**
+		 * Scrolls to a specific row
+		 * */
+		public function scrollToRow(row:Object = null):void {
+			editor.scrollToRow(row);
+		}
+		
+		/**
+		 * Scrolls to the last row
+		 * */
+		public function scrollToEnd():void {
+			var lastRow:int = editor.session.getLength();
+			editor.scrollToRow(lastRow);
 		}
 		
 		/**
@@ -1715,7 +1741,7 @@ package com.flexcapacitor.controls {
 			setValue(text);
 			clearSelection();
 			
-			dispatchEvent(new Event("editorReady"));
+			dispatchEvent(new Event(EDITOR_READY));
 		}
 		
 		/**
@@ -1757,10 +1783,12 @@ package com.flexcapacitor.controls {
 				name: 'blockComment',
 				bindKey: {win: "Ctrl-Shift-c", "mac": "Cmd-Shift-C"},
 				exec: blockCommentHandler});
-editor.commands.addCommand({
-	name: 'find',
-	bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
-	exec: findKeyboardHandler});
+			editor.commands.addCommand({
+				name: 'find',
+				bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
+				exec: findKeyboardHandler});
+			
+			isEditorReady = true;
 		}
 		
 		/**
@@ -1965,6 +1993,12 @@ editor.console = {log:trace, error:trace};
 		 </pre>
 		 * */
 		public var aceFound:Boolean;
+		
+		/**
+		 * This is set to true when the editor is found and ready to use
+		 * */
+		[Bindable]
+		public var isEditorReady:Boolean;
 		
 		/**
 		 * Errors occur on exit possibly because of an on unload event. 

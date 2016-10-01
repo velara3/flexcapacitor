@@ -160,6 +160,7 @@ package com.flexcapacitor.utils {
 			if (element && element.hasOwnProperty("id")) {
 				id = element.id;
 			}
+			
 			return id;
 		}
 

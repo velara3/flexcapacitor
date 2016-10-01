@@ -15,6 +15,9 @@
     <fx:Script fb:purpose="styling">
         <![CDATA[
 			import mx.core.FlexVersion;
+			import mx.events.FlexEvent;
+			
+			import spark.events.TextOperationEvent;
 			
 			private var paddingChanged:Boolean;
 			
@@ -226,6 +229,26 @@
 			override public function get focusSkinExclusions():Array { return focusExclusions;};
 			
 			
+			public function textDisplay_valueCommitHandler(event:FlexEvent):void {
+				
+				if (textDisplay.text!="") {
+					clearButton.visible = true;
+				}
+				else {
+					clearButton.visible = false;
+				}
+			}
+			
+			protected function textDisplay_changeHandler(event:TextOperationEvent):void
+			{
+				if (textDisplay.text!="") {
+					clearButton.visible = true;
+				}
+				else {
+					clearButton.visible = false;
+				}
+			}
+			
 		]]>
     </fx:Script>
     
@@ -267,6 +290,8 @@
     <s:RichEditableText id="textDisplay"
 						verticalAlign="middle"
 						widthInChars="10"
+						valueCommit="textDisplay_valueCommitHandler(event)"
+						change="textDisplay_changeHandler(event)"
 						left="1" right="1" top="1" bottom="1" 
 						/>
 	
@@ -283,7 +308,8 @@
 	
 	<!-- search button -->
 	<s:Button id="searchButton" 
-			  visible="{textDisplay.text=='' &amp;&amp; showSearchIcon}" 
+			  visible="{textDisplay.text=='' &amp;&amp; showSearchIcon}"
+			  includeInLayout="{textDisplay.text=='' &amp;&amp; showSearchIcon}"
 			  right="4" top="1" bottom="1"
 			  width="{clearButton.height}" 
 			  focusEnabled="false" 
@@ -294,8 +320,8 @@
 	<!--- @private -->
 	<!--- clears the text input when pressed -->
 	<s:Button id="clearButton" 
-			  visible="{textDisplay.text!=''}" 
 			  right="3" top="1" bottom="1"
+			  visible="false"
 			  width="{clearButton.height}" 
 			  focusEnabled="false" 
 			  skinClass="{clearButtonSkin}"

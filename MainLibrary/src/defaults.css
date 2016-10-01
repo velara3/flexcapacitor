@@ -100,7 +100,16 @@ controls|ClearButton {
 	skinClass: ClassReference("com.flexcapacitor.skins.ClearButtonSkin");
 }
 
+controls|ClearButtonTextInput {
+	skinClass: ClassReference("com.flexcapacitor.skins.SearchTextInputSkin");
+	borderColorMobile: #CCCCCC;
+}
+
 controls|SearchTextInput {
 	skinClass: ClassReference("com.flexcapacitor.skins.SearchTextInputSkin");
 	borderColorMobile: #CCCCCC;
+}
+
+controls|RichTextEditorBar {
+	skinClass: ClassReference("com.flexcapacitor.skins.RichTextEditorBarSkin");
 }

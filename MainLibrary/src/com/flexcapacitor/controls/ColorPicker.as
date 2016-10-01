@@ -23,14 +23,46 @@ package com.flexcapacitor.controls
 		}
 		
 		
-		override protected function createChildren():void
-		{
+		override protected function createChildren():void {
+			var eventListenerNeeded:Boolean;
+			
+			if (textInput==null) {
+				eventListenerNeeded = true;
+			}
+			
 			super.createChildren();
 			
 			var swatch:SwatchPanel = getDropdown();
 			if (!swatch.textInput.hasEventListener(FlexEvent.CHANGING)) {
 				swatch.textInput.addEventListener(FlexEvent.CHANGING, changingEventHandler);
 			}
+			
+			if (eventListenerNeeded && swatch.textInput) {
+				swatch.textInput.addEventListener(ClearButtonTextInput.CLEAR_TEXT, clearTextHandler, false, 0, true);
+			}
+		}
+		
+		/**
+		 * Clear button pressed. Restore original selected color.
+		 * */
+		public function clearTextHandler(event:Event):void {
+			
+			dropdown.selectedIndex = selectedIndex;
+			dropdown.selectedColor = selectedColor;
+			dropdown.textInput.text = rgbToHex(selectedColor);
+		}
+		
+		/**
+		 *  @private
+		 *  Convert RGB offset to Hex.
+		 */    
+		public function rgbToHex(color:uint):String {
+			// Find hex number in the RGB offset
+			var colorInHex:String = color.toString(16);
+			var c:String = "00000" + colorInHex;
+			var e:int = c.length;
+			c = c.substring(e - 6, e);
+			return c.toUpperCase();
 		}
 		
 		protected function changingEventHandler(event:Event):void

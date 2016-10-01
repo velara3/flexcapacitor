@@ -11,7 +11,6 @@ package com.flexcapacitor.utils
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities;
 	import flash.utils.getDefinitionByName;
-	import flash.xml.XMLDocument;
 	
 	
 	/**
@@ -185,15 +184,69 @@ package com.flexcapacitor.utils
 		/**
 		 * Add a namespace to a XML node
 		 * */
-		public function addNamespace(xml:XML, namespaceName:String, namespaceURI:String):XML {
-			var newNamespace:Namespace = new Namespace(namespaceName, namespaceURI);
+		public static function addNamespace(xml:XML, namespaceName:String, namespaceURI:String, setAttributes:Boolean = false):XML {
+			var newNamespace:Namespace;
+			
+			newNamespace = new Namespace(namespaceName, namespaceURI);
 			xml.setNamespace(newNamespace);
 			
 			for each (var node:XML in xml.descendants()) {
 				node.setNamespace(newNamespace);
 				
-				for each (var attribute:XML in node.attributes()) {
-					attribute.setNamespace(newNamespace);
+				if (setAttributes) {
+					for each (var attribute:XML in node.attributes()) {
+						attribute.setNamespace(newNamespace);
+					}
+				}
+			}
+			
+			return xml;
+		}
+		
+		/**
+		 * Remove a namespace
+		 * */
+		public static function removeNamespace(xml:XML, namespaceReference:Namespace, includeAttributes:Boolean = false):XML {
+			xml.removeNamespace(namespaceReference);
+			
+			// pretty sure this isn't necessary
+			for each (var node:XML in xml.descendants()) {
+				node.removeNamespace(namespaceReference);
+				
+				if (includeAttributes) {
+					for each (var attribute:XML in node.attributes()) {
+						attribute.removeNamespace(namespaceReference);
+					}
+				}
+			}
+			
+			return xml;
+		}
+		
+		/**
+		 * Add namespace to XML
+		 * */
+		public function addNamespaceToXML(value:XML, newNamespace:Namespace, oldNamespace:Namespace = null, includeAttributes:Boolean = true):XML {
+			var newNamespace:Namespace;
+			var xml:XML;
+			var node:XML;
+			var attribute:XML
+			
+			xml = value as XML;
+			
+			if (oldNamespace) {
+				xml.removeNamespace(oldNamespace);
+			}
+			
+			xml.setNamespace(newNamespace);
+			
+			for each (node in xml.descendants()) {
+				node.setNamespace(newNamespace);
+				
+				if (includeAttributes) {
+					for each (attribute in node.attributes()) {
+						attribute.setNamespace(newNamespace);
+					}
 				}
 			}
 			
@@ -622,6 +675,70 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Get list of childnode names from a node
+		 * and allows you to skip nodes with namespace is set.
+		 * 
+		 * <pre>
+		 * &lt;s:HGroup xmlns:s="library://ns.adobe.com/flex/spark">
+		 * </pre>
+		 * Returns "HGroup" when local is true or
+		 * "library://ns.adobe.com/flex/spark::HGroup" when local is false. 
+		 * 
+		 * @param node XML item
+		 * @param includeNamespace indicates to node names that have namespace set
+		 * */
+		public static function getChildNodeNamesNamespace(node:XML, includeNamespace:Boolean = true):Array {
+			var result:Array = [];
+			var name:String;
+			
+			for each (var childNode:XML in node.children()) {
+				
+				if (!includeNamespace) {
+					if (childNode.namespace()) {
+						continue;
+					}
+				}
+				
+				if (childNode.namespace()) {
+					name = childNode.namespace();
+				}
+				
+				name = childNode.name().toString();
+				
+				result.push(name);
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * Get list of childnode names from a node
+		 * that include only nodes with a specific namespace set.
+		 * 
+		 * <pre>
+		 * &lt;s:HGroup xmlns:s="library://ns.adobe.com/flex/spark">
+		 * </pre>
+		 * Returns "library://ns.adobe.com/flex/spark::HGroup" when the namespace is not default. 
+		 * 
+		 * @param node XML item
+		 * @param includeNamespace indicates to node names that have namespace set
+		 * */
+		public static function getQualifiedChildNodeNames(node:XML):Array {
+			var result:Array = [];
+			var name:String;
+			
+			for each (var childNode:XML in node.children()) {
+				
+				if (childNode.namespace()) {
+					name = childNode.name().toString();
+					result.push(name);
+				}
+			}
+			
+			return result;
+		}
+		
+		/**
 		 * Returns true if node has attribute. Not handling namespaces.
 		 * 
 		 * @param node XML item
@@ -651,7 +768,7 @@ package com.flexcapacitor.utils
 		 * 
 		 * @param node XML item
 		 * */
-		public static function getAttributeNames(node:XML):Array {
+		public static function getAttributeNames(node:XML, includeNamespaceAttributes:Boolean = true):Array {
 			var result:Array = [];
 			var attributeName:String;
 			
@@ -669,7 +786,49 @@ package com.flexcapacitor.utils
 				
 				var usageCount:XMLList = attribute..nsElement::*;
 				*/
+				
+				if (!includeNamespaceAttributes) {
+					// skip namespace attributes
+					if (attribute.namespace()) {
+						continue;
+					}
+				}
+				
 				result.push(attributeName);
+			}
+			
+			return result;
+		}
+		
+		/**
+		 * Get list of qualified attribute names from a node. Attributes with a namespace.
+		 * 
+		 * @param node XML item
+		 * */
+		public static function getQualifiedAttributeNames(node:XML):Array {
+			var result:Array = [];
+			var attributeName:String;
+			
+			for each (var attribute:XML in node.attributes()) {
+				attributeName = attribute.name().toString();
+				
+				/*
+				var a:Object = attribute.namespace().prefix     //returns prefix i.e. rdf
+				var b:Object = attribute.namespace().uri        //returns uri of prefix i.e. http://www.w3.org/1999/02/22-rdf-syntax-ns#
+				
+				var c:Object = attribute.inScopeNamespaces()   //returns all inscope namespace as an associative array like above
+				
+				//returns all nodes in an xml doc that use the namespace
+				var nsElement:Namespace = new Namespace(attribute.namespace().prefix, attribute.namespace().uri);
+				
+				var usageCount:XMLList = attribute..nsElement::*;
+				*/
+				
+				// add only namespace attributes
+				if (attribute.namespace()) {
+					result.push(attributeName);
+				}
+				
 			}
 			
 			return result;
@@ -718,31 +877,42 @@ package com.flexcapacitor.utils
 		 * 
 		 * @param node XML item
 		 * */
-		public static function getChildNodesValueObject(node:XML, local:Boolean = true, toSimpleString:Boolean = true):Object {
+		public static function getChildNodesValueObject(node:XML, includeQualifiedNames:Boolean = true, toSimpleString:Boolean = true):Object {
 			var result:Array = [];
-			var nodeName:String;
+			var localName:String;
+			var qualifiedName:String;
 			
 			for each (var childNode:XML in node.children()) {
 				
-				if (!local) {
-					nodeName = childNode.name().toString();
-				}
-				else {
-					nodeName = childNode.localName();
+				if (includeQualifiedNames) {
+					qualifiedName = childNode.localName();
 				}
 				
+				localName = childNode.name().toString();
+				
 				if (toSimpleString) {
-					//result[nodeName] = childNode.toString();
-					result[nodeName] = childNode.children().toString();
+					if (includeQualifiedNames) {
+						//result[localName] = childNode.toString();
+						result[qualifiedName] = result[localName] = childNode.children().toString();
+					}
+					else {
+						result[localName] = childNode.children().toString();
+					}
 				}
 				else {
-					//result[nodeName] = childNode.toXMLString();
-					result[nodeName] = childNode.children().toXMLString();
+					if (includeQualifiedNames) {
+						//result[nodeName] = childNode.toXMLString();
+						result[qualifiedName] = result[localName] = childNode.children().toXMLString();
+					}
+					else {
+						result[localName] = childNode.children().toXMLString();
+					}
 				}
 			}
 			
 			return result;
 		}
+		
 		
 		/**
 		 * Checks for a Byte-Order-Marker or BOM at the beginning of the text. This character is invisible in many text editors.

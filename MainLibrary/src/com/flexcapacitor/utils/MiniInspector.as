@@ -2791,6 +2791,10 @@ package com.flexcapacitor.utils {
 			message += "Target Information";
 			message += showConsoleDividerMarks ? "\n" + dividerMarks + "":"";
 			
+			if (componentItem==null) {
+				message += "\nThe target is no longer available. It may have been removed from the stage";
+				return message;
+			}
 			
 			// describe component
 			if (componentItem.id!=null) {
