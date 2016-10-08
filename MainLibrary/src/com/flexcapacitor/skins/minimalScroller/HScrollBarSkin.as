@@ -36,7 +36,7 @@ use namespace mx_internal;
  *  @playerversion AIR 2.5 
  *  @productversion Flex 4.5
  */
-public class HScrollBarSkin extends MobileSkin
+public class HScrollBarSkin extends MinimalSkin
 {   
     //--------------------------------------------------------------------------
     //
@@ -66,7 +66,9 @@ public class HScrollBarSkin extends MobileSkin
         
         // The minimum width is set such that, at it's smallest size, the thumb appears
         // as wide as it is high.
-        minThumbWidth = (minHeight - paddingBottom) + (paddingHorizontal * 2);   
+        minThumbWidth = (minHeight - paddingBottom) + (paddingHorizontal * 2);
+		
+		trackSkinClass = HScrollBarTrackSkin;  
     }
     
     //--------------------------------------------------------------------------
@@ -88,6 +90,11 @@ public class HScrollBarSkin extends MobileSkin
      *  Skin to use for the thumb Button skin part
      */
     protected var thumbSkinClass:Class;
+    
+    /**
+     *  Skin to use for the track Button skin part
+     */
+    protected var trackSkinClass:Class;
     
     //--------------------------------------------------------------------------
     //
@@ -130,7 +137,7 @@ public class HScrollBarSkin extends MobileSkin
         {
             // We don't want a visible track so we set the skin to MobileSkin
             track = new Button();
-            track.setStyle("skinClass", MobileSkin);
+            track.setStyle("skinClass", MinimalSkin);
             track.width = minWidth;
             track.height = minHeight;
             addChild(track);

@@ -36,7 +36,7 @@ use namespace mx_internal;
  *  @playerversion AIR 2.5 
  *  @productversion Flex 4.5
  */
-public class VScrollBarSkin extends MobileSkin
+public class VScrollBarSkin extends MinimalSkin
 {
     
     //--------------------------------------------------------------------------
@@ -68,7 +68,9 @@ public class VScrollBarSkin extends MobileSkin
         
         // The minimum height is set such that, at it's smallest size, the thumb appears
         // as high as it is wide.
-        minThumbHeight = (minWidth - paddingRight) + (paddingVertical * 2);   
+        minThumbHeight = (minWidth - paddingRight) + (paddingVertical * 2);
+		
+        trackSkinClass = VScrollBarTrackSkin;
     }
     
     //--------------------------------------------------------------------------
@@ -91,6 +93,11 @@ public class VScrollBarSkin extends MobileSkin
      *  Skin to use for the thumb Button skin part
      */
     protected var thumbSkinClass:Class;
+    
+    /**
+     *  Skin to use for the track Button skin part
+     */
+    protected var trackSkinClass:Class;
     
     //--------------------------------------------------------------------------
     //
@@ -128,12 +135,13 @@ public class VScrollBarSkin extends MobileSkin
      */
     override protected function createChildren():void
     {
+		
         // Create our skin parts if necessary: track and thumb.
         if (!track)
         {
             // We don't want a visible track so we set the skin to MobileSkin
             track = new Button();
-            track.setStyle("skinClass", MobileSkin);
+            track.setStyle("skinClass", trackSkinClass);
             track.width = minWidth;
             track.height = minHeight;
             addChild(track);

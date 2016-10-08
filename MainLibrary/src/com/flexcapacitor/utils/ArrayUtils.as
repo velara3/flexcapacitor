@@ -77,7 +77,7 @@ trace(person); // returns [person1, person1]; since we set "findAll" to true it 
 		 * */
 		public static function getItem(haystack:*, needle:*, property:String = null, caseSensitive:Boolean = true, findAll:Boolean = false):Object {
 			var needleLowerCase:* = !caseSensitive && needle is String ? String(needle).toLowerCase() : needle;
-			var total:int = haystack ? haystack.length : 0;
+			var numberOfItems:int = haystack ? haystack.length : 0;
 			var sourceArray:Array;
 			var value:Object;
 			var item:Object;
@@ -90,7 +90,7 @@ trace(person); // returns [person1, person1]; since we set "findAll" to true it 
 				sourceArray = haystack;
 			}
 			
-			for (var i:int;i<total;i++) {
+			for (var i:int;i<numberOfItems;i++) {
 				
 				if (property==null) {
 					value = sourceArray[i];
@@ -102,6 +102,7 @@ trace(person); // returns [person1, person1]; since we set "findAll" to true it 
 				if (caseSensitive) {
 					if (value==needle) {
 						item = sourceArray[i];
+						
 						if (findAll) {
 							all.push(item);
 							continue;
@@ -115,6 +116,7 @@ trace(person); // returns [person1, person1]; since we set "findAll" to true it 
 					if (value==needleLowerCase || 
 						(value!=null && value.toString().toLowerCase()==needleLowerCase)) {
 						item = sourceArray[i];
+						
 						if (findAll) {
 							all.push(item);
 							continue;

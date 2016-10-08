@@ -12,10 +12,6 @@
 package com.flexcapacitor.skins.minimalScroller
 {
 
-import flash.display.CapsStyle;
-import flash.display.JointStyle;
-import flash.display.LineScaleMode;
-
 import mx.core.DPIClassification;
 import mx.core.mx_internal;
 
@@ -24,14 +20,14 @@ import spark.components.Button;
 use namespace mx_internal;
 
 /**
- *  ActionScript-based skin for the HScrollBar thumb skin part in mobile applications. 
+ *  ActionScript-based skin for the HScrollBar track skin part in mobile applications. 
  * 
  *  @langversion 3.0
  *  @playerversion Flash 10
  *  @playerversion AIR 2.5 
  *  @productversion Flex 4.5
  */
-public class HScrollBarThumbSkin extends MinimalSkin
+public class HScrollBarTrackSkin extends MinimalSkin
 {
     //--------------------------------------------------------------------------
     //
@@ -60,7 +56,7 @@ public class HScrollBarThumbSkin extends MinimalSkin
      *  @playerversion AIR 2.5
      *  @productversion Flex 4.5
      */
-    public function HScrollBarThumbSkin()
+    public function HScrollBarTrackSkin()
     {
         super();
 		
@@ -138,18 +134,10 @@ public class HScrollBarThumbSkin extends MinimalSkin
         super.drawBackground(unscaledWidth, unscaledHeight);
 		
 		var paddingTop:uint		= getStyle("paddingTop");
-		var chromeColor:Number 	= getStyle("chromeColor");
         var thumbHeight:Number 	= unscaledHeight - paddingBottom - paddingTop;
-		var borderColor:Number 	= 0xCCCCCC;
-		var borderAlpha:Number 	= 1;
-		var borderWeight:int 	= 1;
         
-        graphics.beginFill(chromeColor, 1);
-        graphics.lineStyle(borderWeight, borderColor, borderAlpha, false, LineScaleMode.NORMAL, CapsStyle.NONE, JointStyle.ROUND);
-        graphics.drawRoundRect(paddingHorizontal + .5, 0.5+paddingTop, 
-            unscaledWidth - 2 * paddingHorizontal, thumbHeight, 
-            thumbHeight, thumbHeight);
-        
+        graphics.beginFill(0, 0);
+        graphics.drawRect(paddingHorizontal + .5, 0.5+paddingTop, unscaledWidth - 2 * paddingHorizontal, thumbHeight);
         graphics.endFill();
     }    
 }

@@ -46,6 +46,7 @@ package com.flexcapacitor.utils {
 			var dictionary:Dictionary = new Dictionary(true);
 			var fontList:Array = Font.enumerateFonts(showDeviceFontInformation);
 			var numberOfFonts:int = fontList.length;
+			var getOutput:Boolean = false;
 			var output:String = "";
 			var filtered:Array = [];
 			var fontObject:Object;
@@ -55,11 +56,11 @@ package com.flexcapacitor.utils {
 			
 			
 			if (systemManager==null && FlexGlobals.topLevelApplication.systemManager) {
-				output += systemManager==null ? "Warning: Target system manager is null. Using FlexGlobals top level application system manager\n" : "";
+				if (getOutput) output += systemManager==null ? "Warning: Target system manager is null. Using FlexGlobals top level application system manager\n" : "";
 				systemManager = FlexGlobals.topLevelApplication.systemManager;
 			}
 			else if (systemManager==null) {
-				output += "Could not find system manager";
+				if (getOutput) output += "Could not find system manager";
 				return [];
 			}
 			
@@ -76,28 +77,30 @@ package com.flexcapacitor.utils {
 				
 				filtered.push(font);
 				
-				paddedName = name; //padString(name, minimumStyleNamePadding);
-				fontObject = getFontFamilyEmbedded(name, systemManager);
 				
-				//output += prespace + paddedName;
-				
-				if (fontObject.embeddedCFF.length>0) {
-					output += "Embedded CFF: " + fontObject.embeddedCFF.join(", ");
-				}
-				
-				if (fontObject.embedded.length>0) {
+				if (getOutput) {
+					paddedName = name; //padString(name, minimumStyleNamePadding);
+					fontObject = getFontFamilyEmbedded(name, systemManager);
+					//output += prespace + paddedName;
+					
 					if (fontObject.embeddedCFF.length>0) {
-						output+= "; ";
-						output+= "Embedded    : ";
-					}
-					else {
-						output+= "Embedded: ";
+						output += "Embedded CFF: " + fontObject.embeddedCFF.join(", ");
 					}
 					
-					output += fontObject.embedded.join(", ");
+					if (fontObject.embedded.length>0) {
+						if (fontObject.embeddedCFF.length>0) {
+							output+= "; ";
+							output+= "Embedded    : ";
+						}
+						else {
+							output+= "Embedded: ";
+						}
+						
+						output += fontObject.embedded.join(", ");
+					}
+					
+					output += "\n";
 				}
-				
-				output += "\n";
 				
 			}
 			

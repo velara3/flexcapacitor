@@ -35,12 +35,13 @@ package com.flexcapacitor.controls
 	import flash.events.FocusEvent;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.text.Font;
 	import flash.text.engine.FontPosture;
 	import flash.text.engine.FontWeight;
 	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
 	
-	import mx.core.UIComponent;
+	import mx.collections.IList;
 	import mx.core.mx_internal;
 	import mx.events.FlexEvent;
 	
@@ -67,6 +68,7 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.formats.TextDecoration;
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.operations.ApplyFormatOperation;
+	import flashx.textLayout.property.Property;
 
 	use namespace mx_internal;
 	
@@ -77,13 +79,38 @@ package com.flexcapacitor.controls
 	[Style(name = "borderColor", inherit = "no", type = "unit")]
 	[Style(name = "focusColor", inherit = "yes", type = "unit")]
 	
+	/**
+	 * Component used to apply rich text formatting to a rich editable text field or text area
+	 * */
 	public class RichTextEditorBar extends SkinnableComponent {
 		
 		public function RichTextEditorBar() {
 			super();
 			
 			this.textFlow = new TextFlow(); //Prevents a stack trace that happends when you try to access the textflow on click.
+			
 		}
+		
+		private var _defaultErrorHandler:Function;
+
+		public function get defaultErrorHandler():Function
+		{
+			return _defaultErrorHandler;
+		}
+
+		public function set defaultErrorHandler(value:Function):void
+		{
+			_defaultErrorHandler = value;
+			
+			// set this to define an error handler that doesn't throw errors
+			if (_defaultErrorHandler!=null) {
+				Property.errorHandler = _defaultErrorHandler
+			}
+			else {
+				//Property.errorHandler = Property.defaultErrorHandler;
+			}
+		}
+
 		
 		public const LINK_SELECTED_CHANGE:String = "linkSelectedChange";
 		
@@ -289,6 +316,10 @@ package com.flexcapacitor.controls
 			{
 				fontTool.addEventListener(IndexChangeEvent.CHANGE, handleFontChange, false, 0, true);
 				fontTool.toolTip = "Font Family";
+				
+				if (fontDataProvider) {
+					fontTool.dataProvider = fontDataProvider;
+				}
 			}
 			
 			if (instance == sizeTool)
@@ -989,10 +1020,14 @@ package com.flexcapacitor.controls
 		 */
 		private function handleFontChange(event:Event):void {
 			var format:TextLayoutFormat;
+			var font:Font;
+			var fontName:String;
+			var selectedItem:Object;
 			
 			if (fontTool.selectedItem) {
 				format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-				format.fontFamily = fontTool.selectedItem;
+				selectedItem = fontTool.selectedItem;
+				format.fontFamily = selectedItem is Font ? Font(selectedItem).fontName : selectedItem;
 				richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 				richEditableText.setFocus();
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
@@ -1213,6 +1248,17 @@ package com.flexcapacitor.controls
 			}
 		}
 		
+		/*
+		When applying a size that is NaN an error is thrown. For example, value 12..2 throws an error.
+		
+		RangeError: Property fontSize value NaN is out of range
+			at flashx.textLayout.property::Property$/defaultErrorHandler()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/property/Property.as:39]
+			at flashx.textLayout.property::Property/setHelper()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/property/Property.as:238]
+			at flashx.textLayout.formats::TextLayoutFormat/setStyleByProperty()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/formats/TextLayoutFormat.as:1333]
+			at flashx.textLayout.formats::TextLayoutFormat/set fontSize()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/formats/TextLayoutFormat.as:1821]
+			at com.flexcapacitor.controls::RichTextEditorBar/handleSizeChange()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1239]
+		*/
+		
 		/**
 		 *  @private
 		 */
@@ -1226,7 +1272,15 @@ package com.flexcapacitor.controls
 				*/
 				var newFontSize:Number = sizeTool.selectedItem;
 				var cf:TextLayoutFormat = new TextLayoutFormat();
-				cf.fontSize = newFontSize;
+				
+				if (isNaN(newFontSize)) {
+					newFontSize = parseFloat(sizeTool.selectedItem);
+					
+					if (isNaN(newFontSize)) {
+						newFontSize = 12;
+					}
+				}
+				cf.fontSize = Math.max(1, Math.min(newFontSize, 720));
 				IEditManager(richEditableText.textFlow.interactionManager).applyLeafFormat(cf);
 				
 				richEditableText.setFocus();
@@ -1324,7 +1378,7 @@ package com.flexcapacitor.controls
 				// call prevent to prevent a runtime error
 				event.preventDefault();
 				
-				trace("FLOW OPERATION ERROR OCCURRED on " + operation + " on " + target);
+				//trace("FLOW OPERATION ERROR OCCURRED on " + operation + " on " + target);
 			}
 		}
 		
@@ -1355,5 +1409,10 @@ package com.flexcapacitor.controls
 				//enterDebugger();
 			}
 		}
+		
+		/**
+		 * List of fonts 
+		 * */
+		public var fontDataProvider:IList;
 	}
 }

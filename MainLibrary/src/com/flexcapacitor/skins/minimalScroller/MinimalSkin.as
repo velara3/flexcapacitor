@@ -38,7 +38,7 @@ use namespace mx_internal;
  *  @playerversion AIR 2.5 
  *  @productversion Flex 4.5
  */
-public class MobileSkin extends UIComponent implements IHighlightBitmapCaptureClient
+public class MinimalSkin extends UIComponent implements IHighlightBitmapCaptureClient
 {
     //--------------------------------------------------------------------------
     //
@@ -80,7 +80,7 @@ public class MobileSkin extends UIComponent implements IHighlightBitmapCaptureCl
      *  @productversion Flex 4.5
      * 
      */
-    public function MobileSkin()
+    public function MinimalSkin()
     {
     }
     
@@ -107,7 +107,7 @@ public class MobileSkin extends UIComponent implements IHighlightBitmapCaptureCl
      *  Toggles transparent, centered hit-area if the unscaled size is less
      *  than one-quarter inch square. Physical size is based on applicationDPI.
      */
-    mx_internal var useMinimumHitArea:Boolean = true;
+    mx_internal var useMinimumHitArea:Boolean = false;
     
     /**
      *  Specifies a default width. <code>measuredWidth</code> returns this value

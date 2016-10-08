@@ -370,7 +370,7 @@
     <classEntry path="com.flexcapacitor.skins.TransparentScrollerSkin"/>
     <classEntry path="com.flexcapacitor.skins.minimalScroller.HScrollBarSkin"/>
     <classEntry path="com.flexcapacitor.skins.minimalScroller.HScrollBarThumbSkin"/>
-    <classEntry path="com.flexcapacitor.skins.minimalScroller.MobileSkin"/>
+    <classEntry path="com.flexcapacitor.skins.minimalScroller.MinimalSkin"/>
     <classEntry path="com.flexcapacitor.skins.minimalScroller.VScrollBarSkin"/>
     <classEntry path="com.flexcapacitor.skins.minimalScroller.VScrollBarThumbSkin"/>
     <classEntry path="com.flexcapacitor.skins.solidFillSupportClasses.FirstButtonSkin"/>

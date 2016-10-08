@@ -105,7 +105,7 @@ limitations under the License.
 	
 	<s:VGroup width="100%">
 		<s:HGroup width="100%" >	
-			<richTextEditorClasses:FontTool id="fontTool" width="100%" maxWidth="120" minWidth="80"/>
+			<richTextEditorClasses:FontTool id="fontTool" width="100%" maxWidth="180" minWidth="140"/>
 			<richTextEditorClasses:SizeTool id="sizeTool" width="60"/>
 			<s:HGroup gap="0">
 				<richTextEditorClasses:BoldTool id="boldTool" width="20" icon="@Embed('richTextEditorClasses/tools/bold.png')"/>

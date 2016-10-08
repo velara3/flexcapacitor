@@ -12,25 +12,23 @@
 package com.flexcapacitor.skins.minimalScroller
 {
 
-import flash.display.CapsStyle;
-import flash.display.JointStyle;
-import flash.display.LineScaleMode;
-
 import mx.core.DPIClassification;
 import mx.core.mx_internal;
-use namespace mx_internal;
 
 import spark.components.Button;
 
+use namespace mx_internal;
+
+
 /**
- *  ActionScript-based skin for the VScrollBar thumb skin part in mobile applications. 
+ *  ActionScript-based skin for the VScrollBar track skin part in mobile applications. 
  * 
  *  @langversion 3.0
  *  @playerversion Flash 10
  *  @playerversion AIR 2.5 
  *  @productversion Flex 4.5
  */
-public class VScrollBarThumbSkin extends MinimalSkin
+public class VScrollBarTrackSkin extends MinimalSkin
 {
     //--------------------------------------------------------------------------
     //
@@ -60,7 +58,7 @@ public class VScrollBarThumbSkin extends MinimalSkin
      *  @productversion Flex 4.5
      * 
      */
-    public function VScrollBarThumbSkin()
+    public function VScrollBarTrackSkin()
     {
         super();
         
@@ -139,18 +137,10 @@ public class VScrollBarThumbSkin extends MinimalSkin
         super.drawBackground(unscaledWidth, unscaledHeight);
 		
 		var paddingLeft:uint	= getStyle("paddingLeft");
-		var chromeColor:Number 	= getStyle("chromeColor");
         var thumbWidth:Number 	= unscaledWidth - paddingRight - paddingLeft;
-		var borderColor:Number 	= 0xCCCCCC;
-		var borderAlpha:Number 	= 1;
-		var borderWeight:int 	= 1;
         
-        graphics.beginFill(chromeColor, 1);
-        graphics.lineStyle(borderWeight, borderColor, borderAlpha, false, LineScaleMode.NORMAL, CapsStyle.NONE, JointStyle.ROUND);
-        graphics.drawRoundRect(0.5+paddingLeft, paddingVertical + 0.5, 
-			thumbWidth, unscaledHeight - 2 * paddingVertical, 
-			thumbWidth, thumbWidth);
-        
+        graphics.beginFill(0, 0);
+		graphics.drawRect(0.5+paddingLeft, paddingVertical + 0.5, thumbWidth, unscaledHeight - 2 * paddingVertical);
         graphics.endFill();
     }
     
