@@ -43,6 +43,7 @@ package com.flexcapacitor.controls
 	
 	import mx.collections.IList;
 	import mx.core.mx_internal;
+	import mx.events.ColorPickerEvent;
 	import mx.events.FlexEvent;
 	
 	import spark.components.RichEditableText;
@@ -65,6 +66,7 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.elements.SpanElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.events.FlowOperationEvent;
+	import flashx.textLayout.events.TextLayoutEvent;
 	import flashx.textLayout.formats.TextDecoration;
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.operations.ApplyFormatOperation;
@@ -110,7 +112,11 @@ package com.flexcapacitor.controls
 				//Property.errorHandler = Property.defaultErrorHandler;
 			}
 		}
-
+		
+		/**
+		 * List of fonts 
+		 * */
+		public var fontDataProvider:IList;
 		
 		public const LINK_SELECTED_CHANGE:String = "linkSelectedChange";
 		
@@ -349,6 +355,8 @@ package com.flexcapacitor.controls
 			if (instance == colorTool)
 			{
 				colorTool.addEventListener(ColorChangeEvent.CHOOSE, handleColorChoose, false, 0, true);
+				colorTool.addEventListener(ColorPickerEvent.CHANGE, handleColorChoose, false, 0, true);
+				//colorTool.addEventListener(Event.CLOSE, handleColorChoose, false, 0, true);
 				colorTool.toolTip = "Color";
 			}
 			
@@ -852,20 +860,19 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function getBulletSelectionState():SelectionState
-		{
-			if (richEditableText.textFlow)
-			{
+		private function getBulletSelectionState():SelectionState {
+			
+			if (richEditableText.textFlow) {
 				var selectionManager:ISelectionManager = richEditableText.textFlow.interactionManager;
 				var selectionState:SelectionState = selectionManager.getSelectionState();
 				var startleaf:FlowLeafElement = richEditableText.textFlow.findLeaf(selectionState.absoluteStart);
 				var endleaf:FlowLeafElement = richEditableText.textFlow.findLeaf(selectionState.absoluteEnd);
-				if (startleaf != null)
-				{
+				
+				if (startleaf != null) {
 					selectionState.absoluteStart = startleaf.getAbsoluteStart();
 				}
-				if (endleaf != null)
-				{
+				
+				if (endleaf != null) {
 					selectionState.absoluteEnd = endleaf.getAbsoluteStart() + endleaf.parentRelativeEnd - endleaf.parentRelativeStart;
 				}
 				return selectionState;
@@ -876,13 +883,16 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleAlignChange(e:Event):void
-		{
-			if (alignTool.selectedItem)
-			{
-				var txtLayFmt:TextLayoutFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-				txtLayFmt.textAlign = alignTool.selectedItem.value;
-				richEditableText.setFormatOfRange(txtLayFmt, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+		private function handleAlignChange(e:Event):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
+			
+			newFormat = new TextLayoutFormat();
+			
+			if (alignTool.selectedItem) {
+				//var txtLayFmt:TextLayoutFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				newFormat.textAlign = alignTool.selectedItem.value;
+				richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 				richEditableText.setFocus();
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
 				setEditorFocus();
@@ -892,11 +902,15 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleBoldClick(e:MouseEvent):void
-		{
-			var format:TextLayoutFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-			format.fontWeight = (format.fontWeight == FontWeight.BOLD) ? FontWeight.NORMAL : FontWeight.BOLD;
-			richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+		private function handleBoldClick(e:MouseEvent):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
+			
+			newFormat = new TextLayoutFormat();
+			
+			currentFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			newFormat.fontWeight = (currentFormat.fontWeight == FontWeight.BOLD) ? FontWeight.NORMAL : FontWeight.BOLD;
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 			richEditableText.setFocus();
 			richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
 			setEditorFocus();
@@ -1004,12 +1018,16 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleColorChoose(event:ColorChangeEvent):void {
-			var format:TextLayoutFormat;
+		private function handleColorChoose(event:Event):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
 			
-			format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-			format.color = event.color
-			richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			newFormat = new TextLayoutFormat();
+			
+			//format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			
+			newFormat.color = colorTool.selectedColor;
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 			richEditableText.setFocus();
 			richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
 			setEditorFocus();
@@ -1019,16 +1037,17 @@ package com.flexcapacitor.controls
 		 *  @private
 		 */
 		private function handleFontChange(event:Event):void {
-			var format:TextLayoutFormat;
+			var newFormat:TextLayoutFormat;
 			var font:Font;
 			var fontName:String;
 			var selectedItem:Object;
 			
 			if (fontTool.selectedItem) {
-				format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				//format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				newFormat = new TextLayoutFormat();
 				selectedItem = fontTool.selectedItem;
-				format.fontFamily = selectedItem is Font ? Font(selectedItem).fontName : selectedItem;
-				richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				newFormat.fontFamily = selectedItem is Font ? Font(selectedItem).fontName : selectedItem;
+				richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 				richEditableText.setFocus();
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
 				setEditorFocus();
@@ -1039,11 +1058,13 @@ package com.flexcapacitor.controls
 		 *  @private
 		 */
 		private function handleItalicClick(event:MouseEvent):void {
-			var format:TextLayoutFormat;
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
 			
-			format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-			format.fontStyle = (format.fontStyle == FontPosture.ITALIC) ? FontPosture.NORMAL : FontPosture.ITALIC;
-			richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			newFormat = new TextLayoutFormat();
+			currentFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			newFormat.fontStyle = (currentFormat.fontStyle == FontPosture.ITALIC) ? FontPosture.NORMAL : FontPosture.ITALIC;
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 			richEditableText.setFocus();
 			richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
 			setEditorFocus();
@@ -1262,8 +1283,12 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleSizeChange(e:Event):void
-		{
+		private function handleSizeChange(e:Event):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
+			
+			newFormat = new TextLayoutFormat();
+			
 			if (sizeTool.selectedItem)
 			{
 				/*var format:TextLayoutFormat = richEditableText.getFormatOfRange(fontSizeVector, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
@@ -1271,17 +1296,18 @@ package com.flexcapacitor.controls
 				richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 				*/
 				var newFontSize:Number = sizeTool.selectedItem;
-				var cf:TextLayoutFormat = new TextLayoutFormat();
 				
+				// ensure font size is valid
 				if (isNaN(newFontSize)) {
 					newFontSize = parseFloat(sizeTool.selectedItem);
 					
 					if (isNaN(newFontSize)) {
-						newFontSize = 12;
+						newFontSize = 12; // should we abort if not valid or throw error
 					}
 				}
-				cf.fontSize = Math.max(1, Math.min(newFontSize, 720));
-				IEditManager(richEditableText.textFlow.interactionManager).applyLeafFormat(cf);
+				
+				newFormat.fontSize = Math.max(1, Math.min(newFontSize, 720));
+				IEditManager(richEditableText.textFlow.interactionManager).applyLeafFormat(newFormat);
 				
 				richEditableText.setFocus();
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
@@ -1292,11 +1318,15 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleUnderlineClick(e:MouseEvent):void
-		{
-			var format:TextLayoutFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-			format.textDecoration = (format.textDecoration == TextDecoration.UNDERLINE) ? TextDecoration.NONE : TextDecoration.UNDERLINE;
-			richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+		private function handleUnderlineClick(e:MouseEvent):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
+			
+			newFormat = new TextLayoutFormat();
+			
+			currentFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			newFormat.textDecoration = (currentFormat.textDecoration == TextDecoration.UNDERLINE) ? TextDecoration.NONE : TextDecoration.UNDERLINE;
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 			richEditableText.setFocus();
 			richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
 			setEditorFocus();
@@ -1409,10 +1439,5 @@ package com.flexcapacitor.controls
 				//enterDebugger();
 			}
 		}
-		
-		/**
-		 * List of fonts 
-		 * */
-		public var fontDataProvider:IList;
 	}
 }

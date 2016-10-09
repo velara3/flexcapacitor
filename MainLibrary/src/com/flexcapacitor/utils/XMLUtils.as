@@ -690,22 +690,33 @@ package com.flexcapacitor.utils
 		public static function getChildNodeNamesNamespace(node:XML, includeNamespace:Boolean = true):Array {
 			var result:Array = [];
 			var name:String;
+			var nodeKind:String;
+			var namespaceValue:Namespace;
 			
 			for each (var childNode:XML in node.children()) {
+				namespaceValue = childNode.namespace();
 				
 				if (!includeNamespace) {
-					if (childNode.namespace()) {
+					if (namespaceValue) {
 						continue;
 					}
 				}
 				
-				if (childNode.namespace()) {
-					name = childNode.namespace();
+				if (namespaceValue) {
+					name = namespaceValue.toString();
 				}
 				
-				name = childNode.name().toString();
+				// nodeKind = childNode.nodeKind(); // text node 
 				
-				result.push(name);
+				//if (nodeKind) {
+					
+				//}
+				
+				name = childNode.name();
+				
+				if (name!=null) {
+					result.push(name);
+				}
 			}
 			
 			return result;
@@ -730,8 +741,11 @@ package com.flexcapacitor.utils
 			for each (var childNode:XML in node.children()) {
 				
 				if (childNode.namespace()) {
-					name = childNode.name().toString();
-					result.push(name);
+					name = childNode.name();
+					
+					if (name!=null) {
+						result.push(name);
+					}
 				}
 			}
 			
@@ -877,10 +891,17 @@ package com.flexcapacitor.utils
 		 * 
 		 * @param node XML item
 		 * */
-		public static function getChildNodesValueObject(node:XML, includeQualifiedNames:Boolean = true, toSimpleString:Boolean = true):Object {
+		public static function getChildNodesValueObject(node:XML, includeQualifiedNames:Boolean = true, toSimpleString:Boolean = true, ignoreWhitespace:Boolean = false):Object {
 			var result:Array = [];
 			var localName:String;
 			var qualifiedName:String;
+			var ignoreWhitespaceValue:Boolean;
+			var settings:Object;
+			
+			settings = XML.settings();
+			XML.ignoreWhitespace = ignoreWhitespace;
+			XML.prettyPrinting = ignoreWhitespace;
+			XML.ignoreProcessingInstructions = ignoreWhitespace;
 			
 			for each (var childNode:XML in node.children()) {
 				
@@ -888,11 +909,13 @@ package com.flexcapacitor.utils
 					qualifiedName = childNode.localName();
 				}
 				
-				localName = childNode.name().toString();
+				localName = childNode.name();
+				if (localName==null) {
+					continue;
+				}
 				
 				if (toSimpleString) {
 					if (includeQualifiedNames) {
-						//result[localName] = childNode.toString();
 						result[qualifiedName] = result[localName] = childNode.children().toString();
 					}
 					else {
@@ -901,7 +924,6 @@ package com.flexcapacitor.utils
 				}
 				else {
 					if (includeQualifiedNames) {
-						//result[nodeName] = childNode.toXMLString();
 						result[qualifiedName] = result[localName] = childNode.children().toXMLString();
 					}
 					else {
@@ -909,6 +931,8 @@ package com.flexcapacitor.utils
 					}
 				}
 			}
+			
+			XML.setSettings(settings);
 			
 			return result;
 		}
