@@ -64,6 +64,7 @@ package com.flexcapacitor.controls
 	import spark.components.RichEditableText;
 	import spark.components.TextSelectionHighlighting;
 	import spark.components.ToggleButton;
+	import spark.components.supportClasses.RichEditableTextContainerManager;
 	import spark.components.supportClasses.SkinnableComponent;
 	import spark.events.ColorChangeEvent;
 	import spark.events.IndexChangeEvent;
@@ -108,6 +109,7 @@ package com.flexcapacitor.controls
 	
 	/**
 	 * Component used to apply rich text formatting to a rich editable text field or text area
+	 * 
 	 * */
 	public class RichTextEditorBar extends SkinnableComponent {
 		
@@ -459,11 +461,7 @@ package com.flexcapacitor.controls
 				imageDetailsView.imageSourceInput.addEventListener(ClearButtonTextInput.CLEAR_TEXT, handleImageURLClearButton, false, 0, true);
 				
 				imageDetailsView.floatTypeList.addEventListener(Event.CHANGE, handleInlineGraphicFloatListChange, false, 0, true);
-				
-				if (imageDetailsView.loadErrorIcon) {
-					imageDetailsView.loadErrorIcon.visible = false;
-					imageDetailsView.loadErrorIcon.includeInLayout = false;
-				}
+				showImageErrorIcon(false);
 			}
 			
 			handleSelectionChange();
@@ -471,6 +469,7 @@ package com.flexcapacitor.controls
 		
 		protected function handleImageURLClearButton(event:Event):void
 		{
+			// http://www.gravatar.com/avatar/?d=retro&s=32
 			showImageErrorIcon(false);
 		}
 		
@@ -632,6 +631,7 @@ package com.flexcapacitor.controls
 				}
 			}
 			
+			showImageErrorIcon(false);
 		}
 		
 		protected function handleLinkTargetChange(event:IndexChangeEvent):void {
@@ -1115,6 +1115,10 @@ package com.flexcapacitor.controls
 				
 				editManager.updateAllControllers();
 				
+				if (inlineGraphicElement) {
+					TextFlowUtils.selectElement(inlineGraphicElement);
+				}
+				
 			}
 			
 			return inlineGraphicElement;
@@ -1223,6 +1227,9 @@ package com.flexcapacitor.controls
 				if (source && showImageSourceOnError) {
 					imageDetailsView.imageSourceInput.text = source;
 				}
+				
+				// we need to remove event listeners after error because error keeps get generated
+				// on all inline images that have href set to urls with a bad request
 			}
 			else {
 				showImageErrorIcon(false);
@@ -1275,9 +1282,16 @@ package com.flexcapacitor.controls
 		public function showImageErrorIcon(show:Boolean, message:String = ""):void {
 			
 			if (imageDetailsView.loadErrorIcon) {
-				imageDetailsView.loadErrorIcon.visible = show;
-				imageDetailsView.loadErrorIcon.includeInLayout = show;
-				imageDetailsView.loadErrorIcon.toolTip = message;
+				if (show && !imageDetailsView.loadErrorIcon.visible) {
+					imageDetailsView.loadErrorIcon.visible = show;
+					imageDetailsView.loadErrorIcon.includeInLayout = show;
+					imageDetailsView.loadErrorIcon.toolTip = message;
+				}
+				else if (!show && imageDetailsView.loadErrorIcon.visible) {
+					imageDetailsView.loadErrorIcon.visible = show;
+					imageDetailsView.loadErrorIcon.includeInLayout = show;
+					imageDetailsView.loadErrorIcon.toolTip = message;
+				}
 			}
 		}
 		
@@ -1644,6 +1658,8 @@ package com.flexcapacitor.controls
 				richEditableText.setFocus();
 				setEditorFocus();
 			}
+			
+			showImageErrorIcon(false);
 		}
 		
 		/**
@@ -1670,26 +1686,47 @@ package com.flexcapacitor.controls
 			setEditorFocus(true);
 		}
 		
-		public function updateInlineGraphicElementPadding(inlineGraphicElement:InlineGraphicElement):void
-		{
-			var imageFloat:String = inlineGraphicElement.float;
+		public function updateInlineGraphicElementPadding(inlineGraphicElement:InlineGraphicElement):void {
+			var absoluteStart:int;
+			var textContainerManager:RichEditableTextContainerManager;
+			var imageFloat:String;
 			var newFormat:TextLayoutFormat;
-			newFormat = new TextLayoutFormat();
+			var editManager:IEditManager;
+			var currentFormat:TextLayoutFormat;
+			var hasChange:Boolean;
+			
+			textContainerManager = richEditableText.mx_internal::textContainerManager as RichEditableTextContainerManager;
+			editManager = richEditableText.textFlow.interactionManager as IEditManager;
+			imageFloat = inlineGraphicElement.float;
+			absoluteStart = inlineGraphicElement.getAbsoluteStart();
+			//currentFormat = inlineGraphicElement.format;
+			currentFormat = new TextLayoutFormat();
+			currentFormat.paddingLeft = 1;
+			currentFormat.paddingRight = 1;
 			
 			if (imageFloat==Float.LEFT || imageFloat==Float.START) {
+				newFormat = new TextLayoutFormat();
+				hasChange = true;
 				newFormat.paddingRight = 5;
 				inlineGraphicElement.paddingRight = 5;
 			}
 			else if (imageFloat==Float.RIGHT || imageFloat==Float.END) {
+				newFormat = new TextLayoutFormat();
+				hasChange = true;
 				newFormat.paddingLeft = 5;
 				inlineGraphicElement.paddingLeft = 5;
 			}
 			else {
-				newFormat.paddingLeft = undefined;
-				newFormat.paddingRight = undefined;
+				editManager.clearFormat(currentFormat, null, null);
 			}
 			
-			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			// i don't like that this causes two operations 
+			if (hasChange) {
+				editManager.clearFormat(currentFormat, null, null);
+				textContainerManager.applyFormatOperation(newFormat, null, null, absoluteStart, absoluteStart+1);
+			}
+			
+			//richEditableText.setFormatOfRange(newFormat, absoluteStart, absoluteStart+1);
 			
 		}
 		

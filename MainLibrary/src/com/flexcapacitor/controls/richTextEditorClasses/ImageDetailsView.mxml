@@ -31,6 +31,8 @@ limitations under the License.
 			import mx.core.mx_internal;
 			import mx.events.FlexEvent;
 			
+			import flashx.textLayout.formats.Float;
+			
 			use namespace mx_internal;
 			
 			/**
@@ -61,7 +63,9 @@ limitations under the License.
 			
 			protected function hgroup1_creationCompleteHandler(event:FlexEvent):void
 			{
-				var floatOptions:Array = ["none","left","right","start","end"];
+				//var floatOptions:Array = [Float.NONE, Float.LEFT, Float.RIGHT, Float.START, Float.END, "both"];
+				var floatOptions:Array = [Float.NONE, Float.LEFT, Float.RIGHT, Float.START, Float.END];
+				//var floatOptions:Array = ["none","both", "left","right","start","end"];
 				floatTypeList.dataProvider = new ArrayList(floatOptions);
 				floatTypeList.selectedIndex = 0;
 			}
