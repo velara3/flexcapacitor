@@ -2242,6 +2242,7 @@ package com.flexcapacitor.utils {
 			var elementContainer:IVisualElementContainer = target.parent as IVisualElementContainer;
 			var elementIndex:int;
 			var childIndex:int;
+			var containsTarget:Boolean;
 			
 			if (target.parent && !(target is SystemManager)) {
 				
@@ -2262,7 +2263,11 @@ package com.flexcapacitor.utils {
 					}
 				}
 				else if (container && target is DisplayObject) {
-					childIndex = container.getChildIndex(target as DisplayObject) + 1;
+					containsTarget = container.contains(target as DisplayObject);
+					
+					if (containsTarget) {
+						childIndex = container.getChildIndex(target as DisplayObject) + 1;
+					}
 					
 					if (childIndex>-1 && childIndex<container.numChildren) {
 						target = container.getChildAt(childIndex);

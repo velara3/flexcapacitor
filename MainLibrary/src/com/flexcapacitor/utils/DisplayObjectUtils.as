@@ -252,9 +252,9 @@ else {
 			
 			if (element is IVisualElementContainer) {
 				var visualContainer:IVisualElementContainer = IVisualElementContainer(element);
-				var length:int = visualContainer.numElements;
+				var numberOfElements:int = visualContainer.numElements;
 				
-				for (var i:int;i<length;i++) {
+				for (var i:int;i<numberOfElements;i++) {
 					childElement = visualContainer.getElementAt(i);
 					item = new ComponentDescription(childElement);
 					item.parent = parentItem;
@@ -436,6 +436,60 @@ trace(ObjectUtil.toString(rootComponent));
 			}
 			
 		}
+		/**
+		 * Method to walk down into display list and run a function on each display object.<br/><br/>
+		 * 
+		 Usage:<br/>
+		 <pre>
+		 DisplayObjectUtils.walkDownTree(application as IVisualElement, traceTree);
+		 
+		 public function traceTree(element:Object):void {
+		 trace("element="+NameUtil.getUnqualifiedClassName(element));
+		 }
+		 
+		 // trace
+		 element=Application
+		 element=Group
+		 element=Button1
+		 element=Button2
+		 </pre>
+		 * 
+		 * */
+		public static function walkDownDisplayList(element:DisplayObject, procedure:Function, includeSkinnable:Boolean = false):void {
+			var visualElementContainer:IVisualElementContainer;
+			var displayObjectContainer:DisplayObjectContainer;
+			var skin:Skin;
+			
+			if (element) {
+				procedure(element);
+			}
+			
+			if (element is DisplayObjectContainer) {
+				visualElementContainer = element as IVisualElementContainer;
+				displayObjectContainer = element as DisplayObjectContainer;
+				
+				
+				if (displayObjectContainer) {
+					for (var i:int = 0; i < displayObjectContainer.numChildren; i++) {
+						walkDownDisplayList(displayObjectContainer.getChildAt(i), procedure);
+					}
+				}
+				
+				
+				if (visualElementContainer) {
+					for (i = 0; i < visualElementContainer.numElements; i++) {
+						walkDownDisplayList(visualElementContainer.getElementAt(i) as DisplayObject, procedure);
+					}
+				}
+			}
+			else if (includeSkinnable && element is SkinnableComponent)	{
+				skin = SkinnableComponent(element).skin as Skin;
+				if (skin) {
+					walkDownDisplayList(skin, procedure);
+				}
+			}
+			
+		}
 		
 		/**
 		 * Method to walk down into visual element and skinnable container tree and run a function on each element
@@ -477,39 +531,49 @@ trace(ObjectUtil.toString(rootComponent));
 		
 		/**
 		 * Method to walk down component tree and run a function. 
+		 * Pass in an object, not a primitive to keep a reference to it. 
 		
 		Usage:
-		<pre>
-		DisplayObjectUtils.walkDownComponentTree(componentDescription, traceTree);
-		
-		public function traceTree(description:ComponentDescription):void {
-			trace("component="+component.name);
-		}
-		</pre>
+<pre>
+var object:Object = {};
+object.count = 1;
+DisplayObjectUtils.walkDownComponentTree(componentDescription, traceTree, object);
+
+public function traceTree(description:ComponentDescription, object:Object):void {
+    object.count = int(object.count) + 1;
+	trace("component " + object.count + " = " + component.name);
+}
+</pre>
 		 * 
 		// trace
-		element=Application
-		element=SkinnableComponent
-		element=Button1
-		element=Button2
-		element=Group
+		element 1 = Application
+		element 2 = SkinnableComponent
+		element 3 = Button1
+		element 4 = Button2
+		element 5 = Group
 		 * 
 		 * */
-		public static function walkDownComponentTree(componentDescription:ComponentDescription, method:Function, args:Array = null):void {
+		public static function walkDownComponentTree(componentDescription:ComponentDescription, method:Function, args:Array = null):* {
+			var numberOfChildren:int;
+			var newArgs:Array;
+			var returnValue:*;
+			
 			if (args) {
-				var newArgs:Array = [componentDescription].concat(args);
-				method.apply(method, newArgs);
+				newArgs = [componentDescription].concat(args);
+				returnValue = method.apply(method, newArgs);
 			}
 			else {
-				method(componentDescription);
+				returnValue = method(componentDescription);
 			}
 			
-			var length:int = componentDescription.children ? componentDescription.children.length :0;
+			numberOfChildren = componentDescription.children ? componentDescription.children.length :0;
 			
 			
-			for (var i:int = 0; i < length; i++) {
+			for (var i:int = 0; i < numberOfChildren; i++) {
 				walkDownComponentTree(ComponentDescription(componentDescription.children.getItemAt(i)), method, args);
 			}
+			
+			return returnValue;
 		}
 		
 		/**
@@ -765,10 +829,10 @@ var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(
 		 * 
 		 * */
 		public static function setVisibilityFlag(component:ComponentDescription, visible:Boolean = false):void {
-			var length:int = component.children ? component.children.length : 0;
+			var numberOfChildren:int = component.children ? component.children.length : 0;
 			var item:ComponentDescription;
 			
-			for (var i:int; i < length; i++) {
+			for (var i:int; i < numberOfChildren; i++) {
 				item = component.children.getItemAt(i) as ComponentDescription;
 				
 				if (item) {
@@ -808,9 +872,9 @@ var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(
 			
 			if (element is IVisualElementContainer) {
 				var visualContainer:IVisualElementContainer = IVisualElementContainer(element);
-				var length:int = visualContainer.numElements;
+				var numberOfElements:int = visualContainer.numElements;
 				
-				for (var i:int;i<length;i++) {
+				for (var i:int;i<numberOfElements;i++) {
 					enableDragBehaviorOnDisplayList(visualContainer.getElementAt(i), enableDragBehavior, applicationGroups);
 				}
 			}
@@ -3201,5 +3265,28 @@ trace(size); // {width = 200, height = 100}
 			"luminosity"];
 		
 		public static var flexGroupBlendModes:Array = ["auto"].concat(flexBlendModes);
+		
+		
+		/**
+		 * Get distance of one display object to another.
+		 * If a button is nested 3 levels deep in a few groups and is visually is
+		 * 50 pixels from the edge of the container then this method
+		 * returns that value
+		 * */
+		public static function getDistanceBetweenDisplayObjects(source:Object, target:Object):Point {
+			var sourceRelativePoint:Point;
+			var sourceLocalToGlobalPoint:Point;
+			var containerLocalToGlobalPoint:Point;
+			var x:Number;
+			var y:Number;
+			
+			var zeroPoint:Point = new Point(0, 0);
+			sourceLocalToGlobalPoint = source.localToGlobal(zeroPoint);
+			containerLocalToGlobalPoint = target.localToGlobal(zeroPoint);
+			
+			var sourceDifference:Point = sourceLocalToGlobalPoint.subtract(containerLocalToGlobalPoint);
+			
+			return sourceDifference;
+		}
 	}
 }

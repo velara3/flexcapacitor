@@ -437,6 +437,8 @@
     <classEntry path="com.flexcapacitor.skins.CallOutSkin"/>
     <classEntry path="com.flexcapacitor.controls.RichTextEditorBarCallout"/>
     <classEntry path="com.flexcapacitor.controls.TabNavigator"/>
+    <classEntry path="com.flexcapacitor.utils.CursorUtils"/>
+    <classEntry path="com.flexcapacitor.utils.TextFlowUtils"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>

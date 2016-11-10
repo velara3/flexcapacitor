@@ -24,17 +24,31 @@ package com.flexcapacitor.controls
 	import com.flexcapacitor.controls.richTextEditorClasses.BulletTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.ClearFormattingTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.ColorTool;
+	import com.flexcapacitor.controls.richTextEditorClasses.FontSizeTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.FontTool;
+	import com.flexcapacitor.controls.richTextEditorClasses.ImageDetailsView;
+	import com.flexcapacitor.controls.richTextEditorClasses.ImageTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.ItalicTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.LinkButtonTool;
-	import com.flexcapacitor.controls.richTextEditorClasses.LinkTool;
-	import com.flexcapacitor.controls.richTextEditorClasses.SizeTool;
+	import com.flexcapacitor.controls.richTextEditorClasses.LinkDetailsView;
 	import com.flexcapacitor.controls.richTextEditorClasses.UnderlineTool;
+	import com.flexcapacitor.utils.TextFlowUtils;
 	
+	import flash.display.Bitmap;
+	import flash.display.DisplayObject;
+	import flash.display.Loader;
+	import flash.display.LoaderInfo;
+	import flash.display.Shape;
+	import flash.display.Sprite;
+	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.FocusEvent;
+	import flash.events.HTTPStatusEvent;
+	import flash.events.IOErrorEvent;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.events.ProgressEvent;
+	import flash.events.UncaughtErrorEvent;
 	import flash.text.Font;
 	import flash.text.engine.FontPosture;
 	import flash.text.engine.FontWeight;
@@ -42,11 +56,14 @@ package com.flexcapacitor.controls
 	import flash.utils.Dictionary;
 	
 	import mx.collections.IList;
+	import mx.core.UIComponent;
 	import mx.core.mx_internal;
 	import mx.events.ColorPickerEvent;
 	import mx.events.FlexEvent;
 	
 	import spark.components.RichEditableText;
+	import spark.components.TextSelectionHighlighting;
+	import spark.components.ToggleButton;
 	import spark.components.supportClasses.SkinnableComponent;
 	import spark.events.ColorChangeEvent;
 	import spark.events.IndexChangeEvent;
@@ -58,28 +75,36 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.edit.IEditManager;
 	import flashx.textLayout.edit.ISelectionManager;
 	import flashx.textLayout.edit.SelectionState;
+	import flashx.textLayout.elements.FlowElement;
 	import flashx.textLayout.elements.FlowGroupElement;
 	import flashx.textLayout.elements.FlowLeafElement;
+	import flashx.textLayout.elements.InlineGraphicElement;
 	import flashx.textLayout.elements.LinkElement;
 	import flashx.textLayout.elements.ListElement;
 	import flashx.textLayout.elements.ParagraphElement;
-	import flashx.textLayout.elements.SpanElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.events.FlowOperationEvent;
-	import flashx.textLayout.events.TextLayoutEvent;
+	import flashx.textLayout.formats.Float;
 	import flashx.textLayout.formats.TextDecoration;
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.operations.ApplyFormatOperation;
 	import flashx.textLayout.property.Property;
 
 	use namespace mx_internal;
-	
-	// for asdoc
-	[Event(name = "change", type = "mx.events.FlexEvent")]
+	 
+	[Event(name = FlexEvent.Change, type = "mx.events.FlexEvent")]
 	[Event(name = LINK_SELECTED_CHANGE, type = "flash.events.Event")]
+	[Event(name = IMAGE_ICON_CLICKED, type = "flash.events.Event")]
+	[Event(name = LINK_ICON_CLICKED, type = "flash.events.Event")]
 	
 	[Style(name = "borderColor", inherit = "no", type = "unit")]
 	[Style(name = "focusColor", inherit = "yes", type = "unit")]
+	
+	/*
+	[SkinState(name="normal", required="false")]
+	[SkinState(name="image", required="false")]
+	[SkinState(name="link", required="false")]
+	*/
 	
 	/**
 	 * Component used to apply rich text formatting to a rich editable text field or text area
@@ -89,9 +114,16 @@ package com.flexcapacitor.controls
 		public function RichTextEditorBar() {
 			super();
 			
-			this.textFlow = new TextFlow(); //Prevents a stack trace that happends when you try to access the textflow on click.
+			//addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeCompleteHandler);
+			//addEventListener(FlexEvent.STATE_CHANGE_COMPLETE, stateChangeCompleteHandler);
+			
+			textFlow = new TextFlow(); //Prevents a stack trace that happends when you try to access the textflow on click.
 			
 		}
+		
+		public static var LINK_VIEW:String = "linkView";
+		public static var IMAGE_VIEW:String = "imageView";
+		public static var NORMAL_VIEW:String = "normal";
 		
 		private var _defaultErrorHandler:Function;
 
@@ -119,6 +151,8 @@ package com.flexcapacitor.controls
 		public var fontDataProvider:IList;
 		
 		public const LINK_SELECTED_CHANGE:String = "linkSelectedChange";
+		public const IMAGE_ICON_CLICKED:String = "imageIconClicked";
+		public const LINK_ICON_CLICKED:String = "linkIconClicked";
 		
 		private var _htmlText:String;
 		private var _htmlTextChanged:Boolean = false;
@@ -152,35 +186,52 @@ package com.flexcapacitor.controls
 
 		[SkinPart(required="false")]
 		public var fontTool:FontTool;
+		
 		[SkinPart(required="false")]
-		public var sizeTool:SizeTool;
+		public var fontSizeTool:FontSizeTool;
+		
 		[SkinPart(required="false")]
 		public var boldTool:BoldTool;
+		
 		[SkinPart(required="false")]
 		public var italicTool:ItalicTool;
+		
 		[SkinPart(required="false")]
 		public var underlineTool:UnderlineTool;
+		
 		[SkinPart(required="false")]
 		public var colorTool:ColorTool;
+		
 		[SkinPart(required="false")]
 		public var alignTool:AlignTool;
+		
 		[SkinPart(required="false")]
 		public var bulletTool:BulletTool;
-		[SkinPart(required="false")]
-		public var linkTool:LinkTool;
-		[SkinPart(required="false")]
-		public var showLinkTool:LinkButtonTool;
-		[SkinPart(required="false")]
-		public var linkDialog:LinkTool;
+		
+		[SkinPart(required="true")]
+		public var linkButton:LinkButtonTool;
+		
+		[SkinPart(required="true")]
+		public var linkDetailsView:LinkDetailsView;
+		
 		[SkinPart(required="false")]
 		public var clearFormattingTool:ClearFormattingTool;
+		
+		[SkinPart(required="true")]
+		public var imageButton:ImageTool;
+		
+		[SkinPart(required="true")]
+		public var imageDetailsView:ImageDetailsView;
 		
 		/**
 		 * Set this to true to set focus on rich text editor on the next frame.
 		 * This helps solve an issue to maintain focus on the rich text field 
 		 * when the editor bar is in a pop up.  
+		 * Deprecated. Not sure if it is necessary. Look up active highlight selection? state on RET
 		 * */
 		public var setFocusLater:Boolean = true;
+		
+		public var deferredState:String;
 		
 		/**
 		 * Set to true to automatically add links to text that look like links
@@ -328,10 +379,10 @@ package com.flexcapacitor.controls
 				}
 			}
 			
-			if (instance == sizeTool)
+			if (instance == fontSizeTool)
 			{
-				sizeTool.addEventListener(IndexChangeEvent.CHANGE, handleSizeChange, false, 0, true);
-				sizeTool.toolTip = "Font Size";
+				fontSizeTool.addEventListener(IndexChangeEvent.CHANGE, handleSizeChange, false, 0, true);
+				fontSizeTool.toolTip = "Font Size";
 			}
 			
 			if (instance == boldTool)
@@ -370,61 +421,57 @@ package com.flexcapacitor.controls
 				bulletTool.toolTip = "Add List Items";
 			}
 			
-			if (instance == linkTool) {
-				linkTool.textDisplay.addEventListener(KeyboardEvent.KEY_DOWN, handleLinkKeydown, false, 0, true);
-				linkTool.textDisplay.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, handleLinkUpdate, false, 0, true);
-				linkTool.textDisplay.addEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput, false, 0, true);
-				linkTool.textDisplay.addEventListener(ClearButtonTextInput.CLEAR_TEXT, clearLinkUpdate, false, 0, true);
-				
-				linkTool.targetLocations.addEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput, false, 0, true);
-				linkTool.targetLocations.addEventListener(Event.CHANGE, handleLinkTargetChange, false, 0, true);
-			}
-			
 			if (instance == clearFormattingTool) {
 				clearFormattingTool.addEventListener(MouseEvent.CLICK, handleClearFormattingClick, false, 0, true);
 				clearFormattingTool.toolTip = "Clear Common Formatting";
 			}
 			
-			if (instance == showLinkTool) {
-				showLinkTool.addEventListener(MouseEvent.CLICK, showLinkDialogClick, false, 0, true);
-				showLinkTool.toolTip = "Show Link";
+			if (instance == linkButton) {
+				linkButton.addEventListener(MouseEvent.CLICK, showLinkDialogClick, false, 0, true);
+				linkButton.toolTip = "Show Link";
+				
+				if (instance is ToggleButton) {
+					toggles.push(instance);
+				}
+			}
+			
+			if (instance == imageButton) {
+				imageButton.addEventListener(MouseEvent.CLICK, showImageDialogClick, false, 0, true);
+				imageButton.toolTip = "Insert Image";
+				
+				if (instance is ToggleButton) {
+					toggles.push(instance);
+				}
+			}
+			
+			if (instance == linkDetailsView) {
+				linkDetailsView.textDisplay.addEventListener(KeyboardEvent.KEY_DOWN, handleLinkKeydown, false, 0, true);
+				linkDetailsView.textDisplay.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, handleLinkUpdate, false, 0, true);
+				linkDetailsView.textDisplay.addEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput, false, 0, true);
+				linkDetailsView.textDisplay.addEventListener(ClearButtonTextInput.CLEAR_TEXT, clearLinkUpdate, false, 0, true);
+				
+				linkDetailsView.targetLocations.addEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput, false, 0, true);
+				linkDetailsView.targetLocations.addEventListener(Event.CHANGE, handleLinkTargetChange, false, 0, true);
+			}
+			
+			if (instance == imageDetailsView) {
+				imageDetailsView.imageSourceInput.addEventListener(KeyboardEvent.KEY_DOWN, handleImageKeydown, false, 0, true);
+				imageDetailsView.imageSourceInput.addEventListener(ClearButtonTextInput.CLEAR_TEXT, handleImageURLClearButton, false, 0, true);
+				
+				imageDetailsView.floatTypeList.addEventListener(Event.CHANGE, handleInlineGraphicFloatListChange, false, 0, true);
+				
+				if (imageDetailsView.loadErrorIcon) {
+					imageDetailsView.loadErrorIcon.visible = false;
+					imageDetailsView.loadErrorIcon.includeInLayout = false;
+				}
 			}
 			
 			handleSelectionChange();
 		}
 		
-		protected function handleLinkTargetChange(event:IndexChangeEvent):void {
-			var linkElement:LinkElement;
-			var selectionStart:int;
-			var selectionEnd:int;
-			
-			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
-				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
-				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
-				
-				linkElement = getLinkElementFromRange(richEditableText.textFlow, selectionStart, selectionEnd);
-				
-				if (linkElement) {
-					linkElement.target = linkTool.targetLocations.selectedItem;
-				}
-			}
-		}
-		
-		protected function showLinkDialogClick(event:MouseEvent):void {
-			var linkVisible:Boolean;
-			
-			if (skin.currentState=="normal") {
-				skin.currentState = "linkDialog";
-				
-				/*
-				linkVisible = linkDialog.visible;
-				
-				linkDialog.visible = !linkVisible;
-				linkDialog.includeInLayout = !linkVisible;*/
-			}
-			else {
-				skin.currentState = "normal";
-			}
+		protected function handleImageURLClearButton(event:Event):void
+		{
+			showImageErrorIcon(false);
 		}
 		
 		/**
@@ -434,15 +481,15 @@ package com.flexcapacitor.controls
 			super.partRemoved(partName, instance);
 			
 			if (instance == richEditableText) {
-				removeTextArea(instance);
+				detachRichEditableText(instance);
 			}
 			
 			if (instance == fontTool) {
 				fontTool.removeEventListener(IndexChangeEvent.CHANGE, handleFontChange);
 			}
 			
-			if (instance == sizeTool) {
-				sizeTool.removeEventListener(IndexChangeEvent.CHANGE, handleSizeChange);
+			if (instance == fontSizeTool) {
+				fontSizeTool.removeEventListener(IndexChangeEvent.CHANGE, handleSizeChange);
 			}
 			
 			if (instance == boldTool) {
@@ -469,14 +516,208 @@ package com.flexcapacitor.controls
 				bulletTool.removeEventListener(MouseEvent.CLICK, handleBulletClick);
 			}
 			
-			if (instance == linkTool) {
-				linkTool.textDisplay.removeEventListener(KeyboardEvent.KEY_DOWN, handleLinkKeydown);
-				linkTool.textDisplay.removeEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, handleLinkUpdate);
-				linkTool.textDisplay.removeEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput);
-				linkTool.textDisplay.removeEventListener(ClearButtonTextInput.CLEAR_TEXT, clearLinkUpdate);
+			if (instance == linkDetailsView) {
+				linkDetailsView.textDisplay.removeEventListener(KeyboardEvent.KEY_DOWN, handleLinkKeydown);
+				linkDetailsView.textDisplay.removeEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, handleLinkUpdate);
+				linkDetailsView.textDisplay.removeEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput);
+				linkDetailsView.textDisplay.removeEventListener(ClearButtonTextInput.CLEAR_TEXT, clearLinkUpdate);
 				
-				linkTool.targetLocations.removeEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput);
-				linkTool.targetLocations.removeEventListener(Event.CHANGE, handleLinkTargetChange);
+				linkDetailsView.targetLocations.removeEventListener(FocusEvent.FOCUS_IN, handleFocusInLinkTextInput);
+				linkDetailsView.targetLocations.removeEventListener(Event.CHANGE, handleLinkTargetChange);
+			}
+			
+			if (instance == imageDetailsView) {
+				imageDetailsView.imageSourceInput.removeEventListener(KeyboardEvent.KEY_DOWN, handleImageKeydown);
+				imageDetailsView.floatTypeList.removeEventListener(Event.CHANGE, handleInlineGraphicFloatListChange);
+			}
+			
+			if (instance == imageButton) {
+				imageButton.removeEventListener(MouseEvent.CLICK, showImageDialogClick);
+				
+				if (instance is ToggleButton) {
+					if (toggles.indexOf(instance)!=-1) {
+						toggles.splice(toggles.indexOf(instance), 1);
+					}
+				}
+			}
+			
+			if (instance == linkButton) {
+				linkButton.removeEventListener(MouseEvent.CLICK, showImageDialogClick);
+				
+				if (instance is ToggleButton) {
+					if (toggles.indexOf(instance)!=-1) {
+						toggles.splice(toggles.indexOf(instance), 1);
+					}
+				}
+			}
+		}
+		
+		override protected function attachSkin():void {
+			super.attachSkin();
+			
+			if (skin) {
+				//skin.addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeCompleteHandler);
+				skin.addEventListener(FlexEvent.STATE_CHANGE_COMPLETE, stateChangeCompleteHandler);
+			}
+		}
+		
+		override protected function detachSkin():void {
+			super.detachSkin();
+			
+			if (skin) {
+				//skin.removeEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeCompleteHandler);
+				skin.removeEventListener(FlexEvent.STATE_CHANGE_COMPLETE, stateChangeCompleteHandler);
+			}
+		}
+		
+		/**
+		 * Array of toggle buttons that are selected in an open state in the skin
+		 * */
+		public var toggles:Array = [];
+		
+		/**
+		 * Deselects toggle buttons when going from one open skin state to another
+		 * */
+		public function deselectToggles(selectedToggle:Object=null):void {
+			var toggle:ToggleButton;
+			
+			for (var i:int = 0; i < toggles.length; i++)  {
+				toggle = toggles[i] as ToggleButton;
+				
+				if (toggle!=selectedToggle) {
+					toggle.selected = false;
+				}
+			}
+			
+		}
+		
+		/**
+		 *  Handle link set by applying the link to the selected text
+		 */
+		private function handleLinkUpdate(event:Event = null):void {
+			var urlText:String;
+			var targetText:String;
+			
+			urlText = linkDetailsView.selectedLink == defaultLinkText ? '' : linkDetailsView.selectedLink;
+			targetText = linkDetailsView.selectedTarget !="" ? linkDetailsView.selectedTarget : "_blank";
+			applyLink(urlText, targetText, true);
+			
+			//Set focus to textFlow
+			//richEditableText.textFlow.interactionManager.setFocus();
+			setEditorFocus(true);
+		}
+		
+		/**
+		 * Handle inline graphic float style
+		 * */
+		protected function handleInlineGraphicFloatListChange(event:Event):void {
+			var singleItemSelected:Boolean;
+			var inlineGraphicElement:InlineGraphicElement;
+			var inlineGraphicElementSelected:Boolean;
+			var floatValue:String;
+			
+			singleItemSelected = Math.abs(richEditableText.selectionAnchorPosition - richEditableText.selectionActivePosition)==1;
+			
+			if (singleItemSelected) {
+				inlineGraphicElement = TextFlowUtils.getInlineGraphicImageFromPosition(richEditableText.textFlow, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				
+				if (inlineGraphicElement) {
+					floatValue = imageDetailsView.floatValue;
+					
+					if (floatValue!=inlineGraphicElement.float) {
+						modifyInlineImage(inlineGraphicElement.source, inlineGraphicElement.width, inlineGraphicElement.height, floatValue)
+					}
+					
+					updateInlineGraphicElementPadding(inlineGraphicElement);
+				}
+			}
+			
+		}
+		
+		protected function handleLinkTargetChange(event:IndexChangeEvent):void {
+			var linkElement:LinkElement;
+			var selectionStart:int;
+			var selectionEnd:int;
+			
+			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
+				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				
+				linkElement = TextFlowUtils.getLinkElementFromPosition(richEditableText.textFlow, selectionStart, selectionEnd);
+				
+				if (linkElement) {
+					linkElement.target = linkDetailsView.targetLocations.selectedItem;
+				}
+			}
+		}
+		
+		protected function showLinkDialogClick(event:MouseEvent):void {
+			var linkVisible:Boolean;
+			var iconClickedEvent:Event;
+			
+			iconClickedEvent = new Event(LINK_ICON_CLICKED, false, true);
+			
+			dispatchEvent(iconClickedEvent);
+			
+			if (event.isDefaultPrevented()) {
+				return;
+			}
+			
+			if (skin.currentState!=LINK_VIEW) {
+				if (skin.currentState != NORMAL_VIEW) {
+					deferredState = LINK_VIEW;
+					skin.currentState = NORMAL_VIEW;
+					deselectToggles(event.currentTarget);
+					return;
+				}
+				
+				skin.currentState = LINK_VIEW;
+				
+				/*
+				linkVisible = linkDialog.visible;
+				
+				linkDialog.visible = !linkVisible;
+				linkDialog.includeInLayout = !linkVisible;*/
+			}
+			else {
+				skin.currentState = NORMAL_VIEW;
+			}
+		}
+		
+		protected function showImageDialogClick(event:MouseEvent):void {
+			var linkVisible:Boolean;
+			var iconClickedEvent:Event;
+			
+			iconClickedEvent = new Event(IMAGE_ICON_CLICKED, false, true);
+			
+			dispatchEvent(iconClickedEvent);
+			
+			if (event.isDefaultPrevented()) {
+				return;
+			}
+			
+			if (skin.currentState!=IMAGE_VIEW) {
+				
+				// go to normal state first then go to image view
+				if (skin.currentState != NORMAL_VIEW) {
+					deferredState = IMAGE_VIEW;
+					skin.currentState = NORMAL_VIEW;
+					deselectToggles(event.currentTarget);
+					return;
+				}
+				
+				skin.currentState = IMAGE_VIEW;
+			}
+			else {
+				skin.currentState = NORMAL_VIEW;
+			}
+		}
+		
+		protected function stateChangeCompleteHandler(event:Event):void
+		{
+			if (deferredState!=null) {
+				skin.currentState = deferredState;
+				deferredState = null;
 			}
 		}
 		
@@ -490,7 +731,7 @@ package com.flexcapacitor.controls
 				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
 				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
 				
-				linkElement = getLinkElementFromRange(richEditableText.textFlow, selectionStart, selectionEnd);
+				linkElement = TextFlowUtils.getLinkElementFromPosition(richEditableText.textFlow, selectionStart, selectionEnd);
 				
 				// if there is no selection and cursor is in a link element
 				// select the full link element when user places cursor in link editor field
@@ -501,45 +742,6 @@ package com.flexcapacitor.controls
 					//setEditorFocus();
 				}
 			}
-		}
-		
-		/**
-		 * Gets the parent LinkElement of a span or null if parent is not a link element
-		 * */
-		public static function getLinkElementFromRange(textFlow:TextFlow, selectionStart:int, selectionEnd:int):LinkElement {
-			var startElement:SpanElement;
-			var endElement:SpanElement;
-			var startLinkElement:LinkElement;
-			var endLinkElement:LinkElement;
-			var noSelection:Boolean = selectionStart==selectionEnd;
-			
-			if (textFlow==null) {
-				return null;
-			}
-			
-			startElement = textFlow.findLeaf(selectionStart) as SpanElement;
-			startLinkElement = startElement ? startElement.parent as LinkElement : null;
-			
-			// if there is no selection but cursor is in an element that has a parent link element
-			// return that link element
-			if (startLinkElement && noSelection) {
-				return startLinkElement;
-			}
-			
-			endElement = textFlow.findLeaf(selectionEnd-1) as SpanElement;
-			endLinkElement = endElement ? endElement.parent as LinkElement : null;
-			
-			// if we have a selection with two different links then return null
-			if (startLinkElement!=endLinkElement) {
-				return null;
-			}
-			
-			// user selected full link
-			if (startLinkElement==endLinkElement) {
-				return startLinkElement;
-			}
-			
-			return null;
 		}
 		
 		protected function handleClearFormattingClick(event:MouseEvent):void
@@ -613,13 +815,15 @@ package com.flexcapacitor.controls
 			
 			//instance.focusRect = null;
 			//instance.setStyle("focusAlpha", 0);
-			instance.clearUndoOnFocusOut = false;
+			instance.clearUndoOnFocusOut = false; // doesn't seem to work
 			
 			instance.addEventListener(TextOperationEvent.CHANGE, handleChange, false, 0, true);
 			instance.addEventListener(FlexEvent.SELECTION_CHANGE, handleSelectionChange, false, 0, true);
 			instance.addEventListener(KeyboardEvent.KEY_DOWN, handleKeyDown, false, 0, true);
 			instance.addEventListener(MouseEvent.CLICK, richEditableText_clickHandler, false, 0, true);
 			instance.addEventListener(FlowOperationEvent.FLOW_OPERATION_END, flowOperationHandler, false, 0, true);
+			
+			// could we listen on the textflow instead or is that too fragile?
 			instance.mx_internal::textContainerManager.addEventListener(FlowOperationEvent.FLOW_OPERATION_COMPLETE, 
 				flowOperationCompleteHandler, false, 0, true);
 			
@@ -638,6 +842,13 @@ package com.flexcapacitor.controls
 			
 			if (addToStage) {
 				
+			}
+			
+			if (selectionHighlighting) {
+				instance.selectionHighlighting = selectionHighlighting;
+			}
+			else {
+				instance.selectionHighlighting = TextSelectionHighlighting.WHEN_ACTIVE;
 			}
 		}
 		
@@ -706,7 +917,7 @@ package com.flexcapacitor.controls
 				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
 				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
 				
-				linkElement = getLinkElementFromRange(richEditableText.textFlow, selectionStart, selectionEnd);
+				linkElement = TextFlowUtils.getLinkElementFromPosition(richEditableText.textFlow, selectionStart, selectionEnd);
 				
 				//Set the link
 				if (operationState == null && linkElement != null) {
@@ -810,6 +1021,330 @@ package com.flexcapacitor.controls
 				//IEditManager(richEditableText.textFlow.interactionManager).applyFormat(currentFormat, currentFormat, currentFormat);
 			}
 		}
+		
+		/**
+		 * Insert an image
+		 * 
+		 * source is either 
+		 *    a String interpreted as a uri, 
+		 *    a Class interpreted as the class of an Embed DisplayObject, 
+		 *    a DisplayObject instance or 
+		 *    a URLRequest.
+		 * width, height is a number or percent
+		 * options - none 
+		 */
+		public function insertImage(source:Object, width:Object = null, height:Object = null, options:Object = null, operationState:SelectionState = null):InlineGraphicElement {
+			var inlineGraphicElement:InlineGraphicElement;
+			var currentFormat:TextLayoutFormat;
+			var selectionStart:int;
+			var selectionEnd:int;
+			var loader:Loader;
+			var displayObject:DisplayObject;
+			var sprite:Sprite;
+			var uicomponent:UIComponent;
+			var editManager:IEditManager;
+			
+			if (richEditableText && richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
+				
+				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				
+				if (operationState == null && _linkElement != null) {
+					operationState = new SelectionState(richEditableText.textFlow, _linkElement.getAbsoluteStart(), _linkElement.getAbsoluteStart() + _linkElement.textLength);
+				}
+				
+				editManager =  IEditManager(richEditableText.textFlow.interactionManager);
+				inlineGraphicElement = editManager.insertInlineGraphic(source, width, height, options, operationState);
+				
+				displayObject = inlineGraphicElement.graphic as DisplayObject;
+				loader = inlineGraphicElement.graphic as Loader;
+				sprite = inlineGraphicElement.graphic as Sprite;
+				uicomponent = inlineGraphicElement.graphic as UIComponent;
+				
+				if (loader) {
+					loader.contentLoaderInfo.addEventListener(Event.INIT, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(Event.COMPLETE, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(HTTPStatusEvent.HTTP_STATUS, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(Event.OPEN, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(Event.UNLOAD, inlineGraphicElementLoader_complete);
+					
+					loader.addEventListener(Event.ADDED, inlineGraphicElementLoader_complete);
+					loader.addEventListener(Event.ADDED_TO_STAGE, inlineGraphicElementLoader_complete);
+					
+					// add click handler after loaded
+					//loader.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick);
+					//loader.addEventListener(MouseEvent.MOUSE_OUT, inlineGraphicElementMouseOut);
+					loader.addEventListener(MouseEvent.MOUSE_MOVE, cursorObject_mouseMove);
+					loader.addEventListener(MouseEvent.ROLL_OVER, cursorObject_rollOver);
+					loader.addEventListener(MouseEvent.ROLL_OUT, cursorObject_rollOut);
+					//loader.addEventListener(MouseEvent.ROLL_OUT, inlineGraphicElementMouseOut);
+					
+					//loader.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+					displayObject = loader.parent; // may be null
+					
+					inlineGraphicElementsDictionary[loader] = inlineGraphicElement;
+					
+					if (displayObject) {
+						displayObjectsDictionary[displayObject] = inlineGraphicElement;
+					}
+				}
+				else if (displayObject) {
+					if (uicomponent) {
+						uicomponent.validateNow();
+					}
+					
+					if (displayObject is Shape) {
+						//addElement(button);
+						//editor.addChild(button);
+						//sprite = displayObject.parent as Sprite;
+						//sprite.addChild(button);
+						//removeElement(button);
+					}
+					
+					inlineGraphicElementsDictionary[displayObject] = inlineGraphicElement;
+				}
+				
+				//loader.contentLoaderInfo.addEventListener(Event.COMPLETE, inlineGraphicElementLoader_complete);
+				//loader.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+				
+				//displayObject = loader.parent;
+				
+				//imageElementsDictionary[displayObject] = inlineGraphicElement;
+				
+				editManager.updateAllControllers();
+				
+			}
+			
+			return inlineGraphicElement;
+		}
+		
+		/**
+		 * Modify the 
+		 * */
+		public function modifyInlineImage(source:Object, width:Object = null, height:Object= null, options:Object = null, operationState:SelectionState = null):InlineGraphicElement {
+			var inlineGraphicElement:InlineGraphicElement;
+			var interactionManager:IEditManager;
+			
+			if (richEditableText && richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
+				interactionManager = IEditManager(richEditableText.textFlow.interactionManager);
+				interactionManager.modifyInlineGraphic(source, width, height, options, operationState);
+			}
+			
+			return inlineGraphicElement;
+		}
+		
+		public var imageElementsDictionary:Dictionary = new Dictionary(true);
+		
+		/**
+		 * Determines when the text selection is highlighted.
+		 * 
+		 * @see spark.components.RichEditableText.selectionHighlighting
+		 * */
+		public var selectionHighlighting:String;
+		
+		/**
+		 * Handle inline graphics loaded
+		 * */
+		public function inlineGraphicElementLoader_complete(event:Event):void {
+			var inlineGraphicElement:InlineGraphicElement;
+			var displayObject:DisplayObject;
+			var loaderInfo:LoaderInfo;
+			var loader:Loader;
+			var sprite:Sprite;
+			var bitmap:Bitmap;
+			var actualWidth:int;
+			var actualHeight:int;
+			var graphicStatus:String;
+			var currentTarget:Object;
+			var eventType:String;
+			var drawGraphics:Boolean;
+			
+			currentTarget = event.currentTarget;
+			eventType = event.type;
+			
+			trace("\n" + currentTarget);
+			trace("Event: " +  event.type);
+			
+			
+			if (currentTarget is LoaderInfo) {
+				loader = currentTarget.loader as Loader;
+			}
+			else if (currentTarget is Loader) {
+				loader = currentTarget as Loader;
+			}
+			
+			displayObject = loader ? loader.parent : null;
+			sprite = displayObject ? displayObject as Sprite : null;
+			
+			
+			// show loading icon???
+			if (eventType==Event.OPEN && sprite) {
+				/*
+				var busyIndicator:BusyCursor = new BusyCursor();
+				var button:Button = new Button();
+				button.label="Test";
+				button.width = 100;
+				button.height = 22;
+				sprite.width = button.width;
+				sprite.height = button.height;
+				loader.width = button.width;
+				loader.height = button.height;
+				button.validateNow();
+				//sprite.addChild(button);
+				
+				//loader.addChild(button);
+				sprite.addChild(busyIndicator);
+				*/
+			}
+			
+			inlineGraphicElement = inlineGraphicElementsDictionary[loader];
+			
+			// add to dictionary since the display object may not have been created yet
+			if (displayObject && inlineGraphicElement && displayObjectsDictionary[displayObject]==null) {
+				displayObjectsDictionary[displayObject] = inlineGraphicElement;
+			}
+			
+			graphicStatus = inlineGraphicElement ? inlineGraphicElement.status : "inline graphic element not found";
+			
+			trace("Graphic status: " + graphicStatus);
+			
+			if (eventType==IOErrorEvent.IO_ERROR) {
+				trace("Error: " + event);
+				var errorText:String = IOErrorEvent(event).text;
+				//sprite.removeChildren();loader.removeChildren();
+			}
+			
+			if (graphicStatus=="error" || eventType==IOErrorEvent.IO_ERROR) {
+				showImageErrorIcon(true, errorText);
+				var source:String = inlineGraphicElement.source as String;
+				
+				if (source && showImageSourceOnError) {
+					imageDetailsView.imageSourceInput.text = source;
+				}
+			}
+			else {
+				showImageErrorIcon(false);
+			}
+			
+			if (eventType!=Event.ADDED_TO_STAGE) {
+				return;
+			}
+			
+			if (loader.content) {
+				bitmap = loader.content as Bitmap;
+				
+				if (bitmap) {
+					actualWidth = bitmap.width;
+					actualHeight = bitmap.height;
+				}
+			}
+			
+			if (sprite) {
+				sprite.buttonMode = true;
+				
+				if (drawGraphics) {
+					if (sprite.width==0 && actualWidth) {
+						sprite.width = actualWidth;
+						sprite.height = actualHeight;
+					}
+					
+					sprite.graphics.beginFill(0xff0000, .8);
+					sprite.graphics.drawCircle(0,0, 10);
+					sprite.graphics.endFill();
+				}
+			}
+			
+			if (displayObject) {
+				displayObject.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick, false, 0, true);
+				//displayObject.addEventListener(MouseEvent.CLICK, highPriorityInlineGraphicElementClickHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+			}
+			
+			// makes the graphic show up after loading
+			//richEditableText.textFlow.flowComposer.updateAllControllers();
+			
+			//target_mc.y = (stage.stageHeight - target_mc.height) / 2;
+			//target_mc.x = (stage.stageWidth - target_mc.width) / 2;
+		}
+		
+		public var inlineGraphicElementsDictionary:Dictionary = new Dictionary(true);
+		public var displayObjectsDictionary:Dictionary = new Dictionary(true);
+		public var showImageSourceOnError:Boolean;
+		
+		public function showImageErrorIcon(show:Boolean, message:String = ""):void {
+			
+			if (imageDetailsView.loadErrorIcon) {
+				imageDetailsView.loadErrorIcon.visible = show;
+				imageDetailsView.loadErrorIcon.includeInLayout = show;
+				imageDetailsView.loadErrorIcon.toolTip = message;
+			}
+		}
+		
+		protected function handleInlineGraphicElementClick(event:Event):void
+		{
+			//trace ("Clicked: " + event.currentTarget);
+			var inlineGraphicElement:InlineGraphicElement;
+			var currentTarget:Object = event.currentTarget;
+			var sprite:Sprite = currentTarget as Sprite;
+			var target:Object = event.target;
+			var loader:Loader = target as Loader;
+			var object:Object;
+			var startPosition:int;
+			
+			inlineGraphicElement = inlineGraphicElementsDictionary[currentTarget];
+			
+			if (inlineGraphicElement==null) {
+				inlineGraphicElement = displayObjectsDictionary[currentTarget];
+			}
+			
+			if (inlineGraphicElement==null) {
+				object = currentTarget;
+			}
+			
+			
+			while (inlineGraphicElement==null) {
+				
+				inlineGraphicElement = inlineGraphicElementsDictionary[object];
+				
+				if (inlineGraphicElement==null && object && "parent" in object) {
+					object = object.parent;
+				}
+				else {
+					break;
+				}
+			}
+			
+			if (inlineGraphicElement!=null) {
+				startPosition = inlineGraphicElement.getAbsoluteStart();
+				// we select it like this because findleaf uses earliest position to find leaf elements
+				// this makes the active position be the earliest position
+				richEditableText.selectRange(startPosition+1, startPosition);
+			}
+			else {
+				trace("could not find element");
+			}
+			
+		}
+		
+		private function uncaughtErrorHandler(event:UncaughtErrorEvent):void
+		{
+			if (event.error is Error)
+			{
+				var error:Error = event.error as Error;
+				// do something with the error
+			}
+			else if (event.error is ErrorEvent)
+			{
+				var errorEvent:ErrorEvent = event.error as ErrorEvent;
+				// do something with the error
+			}
+			else
+			{
+				// a non-Error, non-ErrorEvent type was thrown and uncaught
+			}
+		}
+		
 		/**
 		 *  @private
 		 *  Automatically add a link if the previous text looks like a link
@@ -1099,37 +1634,92 @@ package com.flexcapacitor.controls
 		}
 		
 		/**
-		 *  Handle link set by applying the link to the selected text
+		 *  @private
 		 */
-		private function handleLinkUpdate(e:Event = null):void {
-			var urlText:String;
+		private function handleImageKeydown(event:KeyboardEvent):void {
+			event.stopImmediatePropagation();
+			
+			if (event.keyCode == Keyboard.ENTER) {
+				handleImageUpdate();
+				richEditableText.setFocus();
+				setEditorFocus();
+			}
+		}
+		
+		/**
+		 * Handle image url entered into text field
+		 */
+		private function handleImageUpdate(event:Event = null):void {
+			var imageSource:String;
+			var imageFloat:String;
 			var targetText:String;
+			var inlineGraphicElement:InlineGraphicElement;
 			
-			urlText = linkTool.selectedLink == defaultLinkText ? '' : linkTool.selectedLink;
-			targetText = linkTool.selectedTarget !="" ? linkTool.selectedTarget : "_blank";
-			applyLink(urlText, targetText, true);
+			imageSource = imageDetailsView.imageSource;
+			imageFloat = imageDetailsView.floatValue;
 			
+			inlineGraphicElement = insertImage(imageSource, null, null, imageFloat);
+			
+			if (inlineGraphicElement) {
+				imageDetailsView.imageSourceInput.text = "";
+			}
+			
+			updateInlineGraphicElementPadding(inlineGraphicElement);
 			//Set focus to textFlow
 			//richEditableText.textFlow.interactionManager.setFocus();
 			setEditorFocus(true);
 		}
 		
+		public function updateInlineGraphicElementPadding(inlineGraphicElement:InlineGraphicElement):void
+		{
+			var imageFloat:String = inlineGraphicElement.float;
+			var newFormat:TextLayoutFormat;
+			newFormat = new TextLayoutFormat();
+			
+			if (imageFloat==Float.LEFT || imageFloat==Float.START) {
+				newFormat.paddingRight = 5;
+				inlineGraphicElement.paddingRight = 5;
+			}
+			else if (imageFloat==Float.RIGHT || imageFloat==Float.END) {
+				newFormat.paddingLeft = 5;
+				inlineGraphicElement.paddingLeft = 5;
+			}
+			else {
+				newFormat.paddingLeft = undefined;
+				newFormat.paddingRight = undefined;
+			}
+			
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			
+		}
+		
 		/**
 		 *  @private
 		 *  Handle link set by applying the link to the selected text
 		 */
-		public function clearLinkUpdate(e:Event = null):void
+		public function clearLinkUpdate(event:Event = null):void
 		{
-			linkTool.selectedLink = "";
+			linkDetailsView.selectedLink = "";
 			clearLink();
 			setEditorFocus(true);
 		}
 		
 		/**
+		 * Updates the editor formatting buttons and controls to reflect
+		 * selected text or cursor position. 
+		 * You usually call this if you make modifications to the text flow programmatically 
+		 * */
+		public function updateEditor():void {
+			handleSelectionChange();
+		}
+		
+		/**
 		 *  @private
 		 */
-		private function handleSelectionChange(e:FlexEvent = null):void {
+		private function handleSelectionChange(event:FlexEvent = null):void {
 			var format:TextLayoutFormat;
+			
+			// we call get selection state and get range multiple times - refactor
 			
 			if (richEditableText != null) {
 				
@@ -1139,33 +1729,41 @@ package com.flexcapacitor.controls
 				{ 
 					fontTool.selectedFontFamily = format.fontFamily;
 				}
-				if (sizeTool != null)
+				
+				if (fontSizeTool != null)
 				{ 
-					sizeTool.selectedFontSize = format.fontSize;
-				} 
+					fontSizeTool.selectedFontSize = format.fontSize;
+				}
+				
 				if (boldTool != null)
 				{  
 					boldTool.selectedFontWeight = format.fontWeight;
-				} 
+				}
+				
 				if (italicTool != null)
 				{ 
 					italicTool.selectedFontStyle = format.fontStyle;
-				} 
+				}
+				
 				if (underlineTool != null)
 				{ 
 					underlineTool.selectedTextDecoration = format.textDecoration;
-				} 
+				}
+				
 				if (colorTool != null)
 				{ 
 					colorTool.selectedTextColor = format.color;
-				} 
+				}
+				
 				if (alignTool != null)
 				{ 
 					alignTool.selectedTextAlign = format.textAlign;
-				} 
+				}
+				
+				// BULLET LIST
 				
 				if (bulletTool != null)
-				{ 
+				{
 					if (richEditableText.textFlow)
 					{
 						var willRemoveBulletsIfClicked:Boolean = false;
@@ -1191,7 +1789,10 @@ package com.flexcapacitor.controls
 						bulletTool.selected = willRemoveBulletsIfClicked;
 						
 					}
-				} 
+				}
+				
+				
+				// HYPERLINK 
 				
 				var bulletSelectionState:SelectionState;
 				var range:ElementRange;
@@ -1206,7 +1807,7 @@ package com.flexcapacitor.controls
 				var beginPara:ParagraphElement;
 				var newLinkSelected:Boolean;
 				
-				if (linkTool != null) { 
+				if (linkDetailsView != null) {
 					
 					bulletSelectionState = richEditableText.textFlow.interactionManager.getSelectionState();
 					
@@ -1252,8 +1853,8 @@ package com.flexcapacitor.controls
 								dispatchEvent(new Event(LINK_SELECTED_CHANGE));
 							}
 							
-							linkTool.selectedLink = linkString;
-							linkTool.selectedTarget = linkTargetString;
+							linkDetailsView.selectedLink = linkString;
+							linkDetailsView.selectedTarget = linkTargetString;
 							
 							_lastRange = range;
 						}
@@ -1263,8 +1864,39 @@ package com.flexcapacitor.controls
 					}
 					
 					linkEnabled = richEditableText.selectionAnchorPosition != richEditableText.selectionActivePosition || _linkSelected;
-					linkTool.textDisplay.enabled = linkEnabled;
-					linkTool.targetLocations.enabled = linkEnabled;
+					linkDetailsView.textDisplay.enabled = linkEnabled;
+					linkDetailsView.targetLocations.enabled = linkEnabled;
+				}
+				
+				
+				// INLINE GRAPHIC ELEMENT - IMAGE
+				
+				if (imageDetailsView != null) {
+					var singleItemSelected:Boolean;
+					var startPosition:int;
+					var inlineGraphicElement:InlineGraphicElement;
+					var flowElement:FlowElement;
+					var inlineGraphicElementSelected:Boolean;
+					
+					singleItemSelected = Math.abs(richEditableText.selectionAnchorPosition - richEditableText.selectionActivePosition)==1;
+					
+					if (singleItemSelected) {
+						selectionState = richEditableText.textFlow.interactionManager.getSelectionState();
+						range = ElementRange.createElementRange(selectionState.textFlow, selectionState.absoluteStart, selectionState.absoluteEnd);
+						inlineGraphicElement = range.firstLeaf as InlineGraphicElement;
+						
+						if (inlineGraphicElement) {
+							imageDetailsView.imageSource = inlineGraphicElement.source as String;
+							imageDetailsView.floatValue = inlineGraphicElement.float;
+							inlineGraphicElementSelected = true;
+						}
+					}
+					
+					if (!inlineGraphicElementSelected) {
+						imageDetailsView.imageSource = "";
+						imageDetailsView.floatValue = "none";
+					}
+					
 				}
 			}
 		}
@@ -1289,17 +1921,17 @@ package com.flexcapacitor.controls
 			
 			newFormat = new TextLayoutFormat();
 			
-			if (sizeTool.selectedItem)
+			if (fontSizeTool.selectedItem)
 			{
 				/*var format:TextLayoutFormat = richEditableText.getFormatOfRange(fontSizeVector, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 				format.fontSize = sizeTool.selectedItem;
 				richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
 				*/
-				var newFontSize:Number = sizeTool.selectedItem;
+				var newFontSize:Number = fontSizeTool.selectedItem;
 				
 				// ensure font size is valid
 				if (isNaN(newFontSize)) {
-					newFontSize = parseFloat(sizeTool.selectedItem);
+					newFontSize = parseFloat(fontSizeTool.selectedItem);
 					
 					if (isNaN(newFontSize)) {
 						newFontSize = 12; // should we abort if not valid or throw error
@@ -1434,9 +2066,71 @@ package com.flexcapacitor.controls
 				dispatchEvent(newEvent);
 			}*/
 			
-			//console.appendText(event.level + ": " + event.operation + "\n");
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
 			if (event.operation is ApplyFormatOperation) {
 				//enterDebugger();
+			}
+		}
+		
+		public function returnToDefaultState():void
+		{
+			var playAnimation:Boolean = true;
+			
+			if (skin && skin.currentState!=NORMAL_VIEW) {
+				deselectToggles();
+				skin.setCurrentState(NORMAL_VIEW, playAnimation);
+			}
+		}
+		
+		[Embed(source="../skins/richTextEditorClasses/icons/PointingHand.png")]
+		public static const PointerHand:Class;
+		public var useCursorManager:Boolean = true;
+		private var currentCursorIndex:int;
+		public var cursorManagerX:int = -6;
+		public var cursorManagerY:int = 0;
+		
+		protected function cursorObject_mouseMove(event:MouseEvent):void {
+			
+			//trace("\n"+event.type);
+			
+			if (useCursorManager) {
+				// when using flex cursor manager the cursor is updated
+				// at the framerate of the application. this makes it look 
+				// sluggish. calling updateAfterEvent forces a redraw
+				event.updateAfterEvent();
+			}
+			
+		}
+		
+		protected function cursorObject_rollOver(event:Event):void
+		{
+			
+			//trace("\n"+event.type);
+			
+			if (useCursorManager) {
+				//trace("using flex cursor manager");
+				currentCursorIndex = cursorManager.setCursor(PointerHand, 2, cursorManagerX, cursorManagerY);
+			}
+			
+			//Mouse.cursor = MouseCursor.AUTO;
+			//cursorManager.setBusyCursor();
+		}
+		
+		protected function cursorObject_rollOut(event:MouseEvent):void
+		{
+			//trace(event.type);
+			removeCustomCursor();
+		}
+		
+		public function removeCustomCursor():void {
+			
+			if (useCursorManager) {
+				//trace("removing flex cursor " + currentCursorIndex);
+				cursorManager.removeCursor(currentCursorIndex);
+				cursorManager.removeAllCursors();
 			}
 		}
 	}

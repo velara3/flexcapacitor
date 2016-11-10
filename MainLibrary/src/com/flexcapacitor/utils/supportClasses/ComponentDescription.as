@@ -1,4 +1,6 @@
 package com.flexcapacitor.utils.supportClasses {
+	import com.flexcapacitor.utils.DisplayObjectUtils;
+	
 	import flash.display.Sprite;
 	import flash.system.ApplicationDomain;
 	import flash.utils.Dictionary;
@@ -6,6 +8,7 @@ package com.flexcapacitor.utils.supportClasses {
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.ClassFactory;
+	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
@@ -468,6 +471,122 @@ package com.flexcapacitor.utils.supportClasses {
 			}
 			
 			return _eventNames;
+		}
+		
+		/**
+		 * Get number of elements or descendants. 
+		 * */
+		public function getNumberOfElements(descendants:Boolean = true):int {
+			var object:Object = {};
+			var result:String;
+			object.count = 0;
+			
+			if (children) {
+				
+				if (descendants) {
+					DisplayObjectUtils.walkDownComponentTree(this, getElementCount, [object]);
+					return parseInt(object.count);
+				}
+				
+				return children.length;
+			}
+			
+			return 0;
+		}
+		
+		/**
+		 * Function used to get the count of the number of elements. Use getNumberOfElements().
+		 * */
+		public function getElementCount(componentDescription:ComponentDescription, object:Object):Object {
+			
+			if (componentDescription.children) {
+				object.count = int(int(object.count) + componentDescription.children.length);
+			}
+			
+			return object;
+		}
+		
+		/**
+		 * Function used to get the count of the number of elements. Use getNumberOfElements().
+		 * */
+		public function getElementCount2(componentDescription:ComponentDescription, count:String):void {
+			
+			if (componentDescription.children) {
+				count = String(int(count) + componentDescription.children.length);
+			}
+			
+		}
+		
+		/**
+		 * Gets the component tree list starting at the given element. 
+		 * application as IVisualElement
+		 * 
+		 Usage:
+		 <pre>
+		 var rootComponent:ComponentDescriptor = getComponentDisplayList(FlexGlobals.topLevelApplication);
+		 
+		 trace(ObjectUtil.toString(rootComponent));
+		 </pre>
+		 * 		 
+		 * */
+		public static function getComponentDisplayList2(element:Object, parentItem:ComponentDescription = null, depth:int = 0, dictionary:Dictionary = null):ComponentDescription {
+			var item:ComponentDescription;
+			var childElement:IVisualElement;
+			
+			
+			if (!parentItem) {
+				if (dictionary && dictionary[element]) {
+					parentItem = dictionary[element];
+				}
+				else {
+					parentItem = new ComponentDescription(element);
+				}
+				
+				// reset the children bc could be different
+				parentItem.children = new ArrayCollection();
+				
+				return getComponentDisplayList2(element, parentItem, depth++, dictionary);
+			}
+			
+			
+			if (element is IVisualElementContainer) {
+				var visualContainer:IVisualElementContainer = IVisualElementContainer(element);
+				var numberOfElements:int = visualContainer.numElements;
+				
+				if (parentItem.children) {
+					//parentItem.children.removeAll(); // reseting above
+				}
+				
+				for (var i:int;i<numberOfElements;i++) {
+					childElement = visualContainer.getElementAt(i);
+					
+					if (dictionary && dictionary[childElement]) {
+						item = dictionary[childElement];
+					}
+					else {
+						item = new ComponentDescription(childElement);
+					}
+					
+					if (item.children) {
+						item.children.removeAll(); // removing old references
+					}
+					
+					// parent may be new - set parent here
+					item.parent = parentItem;
+					
+					parentItem.children.addItem(item);
+					
+					// check for IVisualElement
+					if (childElement is IVisualElementContainer && IVisualElementContainer(childElement).numElements>0) {
+						!item.children ? item.children = new ArrayCollection() : void;
+						getComponentDisplayList2(childElement, item, depth++, dictionary);
+					}
+					
+					
+				}
+			}
+			
+			return parentItem;
 		}
 	}
 }

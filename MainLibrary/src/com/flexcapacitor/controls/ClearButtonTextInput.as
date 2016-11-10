@@ -4,10 +4,8 @@ package com.flexcapacitor.controls
 	import flash.events.MouseEvent;
 	
 	import mx.controls.MXFTETextInput;
-	import mx.core.ITextInput;
 	import mx.core.IVisualElement;
 	
-	import spark.components.TextInput;
 	import spark.events.TextOperationEvent;
 	
 	//--------------------------------------
@@ -17,7 +15,7 @@ package com.flexcapacitor.controls
 	/**
 	 * Dispatched when the clear button is pressed. 
 	 * */ 
-	[Event(name="clearText",type="spark.events.TextOperationEvent")]
+	[Event(name=CLEAR_TEXT,type="spark.events.TextOperationEvent")]
 	
 	//--------------------------------------
 	//  Styles
@@ -42,6 +40,7 @@ package com.flexcapacitor.controls
 	 * Adds a search icon and a clear button to the right side of the text display.
 	 * Also adds rounded design look. 
 	 * Adds borderColor style
+	 * Extends MXFTETextInput (which extends Spark TextInput) to work in ColorPicker as a substitute text field
 	 * */
 	public class ClearButtonTextInput extends MXFTETextInput {
 		

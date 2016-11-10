@@ -6,10 +6,17 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import mx.events.FlexEvent;
 			import mx.events.FlexMouseEvent;
 			import mx.events.ResizeEvent;
 			
 			import spark.components.RichEditableText;
+			
+			/**
+			 * Hides the callout when the mouse clicked outside of the editor 
+			 * and outside of the rich editable text component.
+			 * */
+			public var hideOnMouseDownOutside:Boolean = true;
 			
 			private var _richEditableText:RichEditableText;
 
@@ -24,6 +31,9 @@
 			 * @private
 			 */
 			public function set richEditableText(value:RichEditableText):void {
+				
+				// this should probably move to a commit properties and use invalidation? 
+				
 				// remove previous rich editable text field
 				if (_richEditableText!=null && value!=_richEditableText) {
 					editorBar.detachRichEditableText(_richEditableText);
@@ -63,6 +73,7 @@
 			{
 				_showEditorOnFocusIn = value;
 				
+				// this should probably move to a commit properties and use invalidation? 
 				if (_showEditorOnFocusIn && richEditableText) {
 					richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler, false, 0, true);
 					richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler, false, 0, true);
@@ -73,12 +84,6 @@
 				}
 			}
 
-			
-			/**
-			 * Hides the callout when the mouse clicked outside of the editor 
-			 * and outside of the rich editable text component.
-			 * */
-			public var hideOnMouseDownOutside:Boolean = true;
 			
 			/**
 			 * This component shows the RichTextEditorBar in a call out.
@@ -109,9 +114,21 @@
 				}
 				
 				if (showEditorOnFocusIn && richEditableText) {
-					richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
-					richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
+					richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler, false, 0, true);
+					richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler, false, 0, true);
 				}
+				
+				richEditableText.addEventListener(Event.RESIZE, editorBar_resizeHandler, false, 0, true);
+				
+				/*
+				TypeError: Error #1009: Cannot access a property or method of a null object reference.
+				at flashx.textLayout.edit::ElementRange$/createElementRange()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/edit/ElementRange.as:359]
+				at com.flexcapacitor.controls::RichTextEditorBar/handleSelectionChange()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1885]
+				at com.flexcapacitor.controls::RichTextEditorBar/updateEditor()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1713]
+				*/
+				// error when calling the following
+				// editorBar.updateEditor();
+				callLater(editorBar.updateEditor);
 			}
 			
 			public function mouseDownOutsideHandler(event:MouseEvent):void {
@@ -143,6 +160,8 @@
 					removeEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler);
 				}
 				
+				editorBar.returnToDefaultState();
+				
 				super.close(commit, data);
 			}
 			
@@ -162,6 +181,15 @@
 				updatePopUpPosition();
 			}
 			
+			/**
+			 * Updates the editor formatting buttons and controls to reflect
+			 * selected text or cursor position. 
+			 * You usually call this once after you call open or if you make
+			 * modifications to the text flow programmatically 
+			 * */
+			public function updateEditor():void {
+				editorBar.updateEditor();
+			}
 		]]>
 	</fx:Script>
 	

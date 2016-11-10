@@ -1721,6 +1721,7 @@ package com.flexcapacitor.controls {
 				// THIS ERROR APPEARS TO HAPPEN ON APPLICATION CLOSE
 				// Error: The ace JavaScript variable was not found. Make sure to copy the directory, 'src-min-noconflict' to your project src directory and include a reference to it in the template page.
 				// Not sure what is going on here. Maybe an unload event
+				// or an application deactivate event. TODO Add listener for deactivate 
 				
 				if (!aceFound) {
 					errorMessage = "The ace JavaScript variable was not found. Make sure to copy the directory, ";

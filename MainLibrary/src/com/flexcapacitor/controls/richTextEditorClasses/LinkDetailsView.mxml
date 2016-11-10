@@ -20,6 +20,7 @@ limitations under the License.
 <s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
 			 xmlns:mx="library://ns.adobe.com/flex/mx" 
 			 xmlns:s="library://ns.adobe.com/flex/spark"
+			 
 			 mouseFocusEnabled="false"
 			 tabFocusEnabled="false" 
 			 xmlns:controls="com.flexcapacitor.controls.*"
@@ -29,9 +30,6 @@ limitations under the License.
 		<![CDATA[
 			import mx.collections.ArrayList;
 			import mx.core.mx_internal;
-			
-			import spark.components.supportClasses.ListBase;
-			import spark.events.TextOperationEvent;
 			
 			use namespace mx_internal;
 			
@@ -92,6 +90,7 @@ limitations under the License.
 	</fx:Declarations>
 	
 	<controls:ClearButtonTextInput id="textDisplay"
+								   roundCorners="true"
 				minWidth="100" 
 				width="100%"
 				prompt="Hyperlink"
@@ -100,5 +99,5 @@ limitations under the License.
 				toolTip="Hyperlink text" 
 				text="" />
 	
-	<s:ComboBox id="targetLocations" height="25" prompt="Target" minWidth="100" openOnInput="false"/>
+	<s:ComboBox id="targetLocations" prompt="Target" minWidth="100" openOnInput="false"/>
 </s:HGroup>

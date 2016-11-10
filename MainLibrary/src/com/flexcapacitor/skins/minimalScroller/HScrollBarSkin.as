@@ -137,7 +137,7 @@ public class HScrollBarSkin extends MinimalSkin
         {
             // We don't want a visible track so we set the skin to MobileSkin
             track = new Button();
-            track.setStyle("skinClass", MinimalSkin);
+            track.setStyle("skinClass", trackSkinClass);
             track.width = minWidth;
             track.height = minHeight;
             addChild(track);

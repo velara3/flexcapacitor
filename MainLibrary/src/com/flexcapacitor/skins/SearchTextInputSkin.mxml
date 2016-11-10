@@ -87,6 +87,7 @@
 			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
 				var roundCorners:Boolean;
 				var radius:Number;
+				var cornerRadius:Number;
 				
 				showSearchIcon = getStyle("showSearchIcon");
 				
@@ -96,13 +97,13 @@
 					
 					background.left = background.top = background.right = background.bottom = 1;
 					textDisplay.left = textDisplay.top = textDisplay.right = textDisplay.bottom = 1;
+					cornerRadius = getStyle("cornerRadius");
 					
-					
-					if (getStyle("roundCorners")!=undefined) {
+					if (getStyle("roundCorners")!=undefined || !isNaN(cornerRadius)) {
 						roundCorners = getStyle("roundCorners");
-						radius = height / 2;
+						radius = !isNaN(cornerRadius) ? cornerRadius : height / 2;
 						
-						if (roundCorners) {
+						if (roundCorners || !isNaN(cornerRadius)) {
 							background.radiusX 	= background.radiusY 	= radius;
 							background.radiusX 	= background.radiusY 	= radius;
 							border.radiusX 		= border.radiusY 		= radius;
@@ -310,7 +311,7 @@
 	<s:Button id="searchButton" 
 			  visible="{textDisplay.text=='' &amp;&amp; showSearchIcon}"
 			  includeInLayout="{textDisplay.text=='' &amp;&amp; showSearchIcon}"
-			  right="4" top="1" bottom="1"
+			  right="4" verticalCenter="0"
 			  width="{clearButton.height}" 
 			  focusEnabled="false" 
 			  skinClass="{searchButtonSkin}"
@@ -320,7 +321,7 @@
 	<!--- @private -->
 	<!--- clears the text input when pressed -->
 	<s:Button id="clearButton" 
-			  right="3" top="1" bottom="1"
+			  right="3" verticalCenter="0"
 			  visible="false"
 			  width="{clearButton.height}" 
 			  focusEnabled="false" 

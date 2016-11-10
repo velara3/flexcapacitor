@@ -20,7 +20,8 @@ limitations under the License.
 <s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		xmlns:mx="library://ns.adobe.com/flex/mx" 
-		xmlns:richTextEditorClasses="com.flexcapacitor.controls.richTextEditorClasses.*">
+		xmlns:r="com.flexcapacitor.controls.richTextEditorClasses.*"
+		>
 	
 	<!-- host component -->
 	<fx:Metadata>
@@ -33,14 +34,15 @@ limitations under the License.
 			
 			import flashx.textLayout.formats.TextAlign;
 			
-			[Embed(source = "richTextEditorClasses/tools/center.png")]
+			[Embed(source = "richTextEditorClasses/icons/center.png")]
 			private const CENTER:Class;
-			[Embed(source = "richTextEditorClasses/tools/justify.png")]
+			[Embed(source = "richTextEditorClasses/icons/justify.png")]
 			private const JUSTIFY:Class;
-			[Embed(source = "richTextEditorClasses/tools/left.png")]
+			[Embed(source = "richTextEditorClasses/icons/left.png")]
 			private const LEFT:Class;
-			[Embed(source = "richTextEditorClasses/tools/right.png")]
+			[Embed(source = "richTextEditorClasses/icons/right.png")]
 			private const RIGHT:Class;
+			
 			
 			override protected function createChildren():void
 			{
@@ -58,7 +60,7 @@ limitations under the License.
 				linkTargetLocations.addItem("_blank");
 				linkTargetLocations.addItem("_parent");
 				linkTargetLocations.addItem("_top");
-				linkTool.linkTargetLocations = linkTargetLocations;
+				linkDetailsView.linkTargetLocations = linkTargetLocations;
 				
 			}
 			
@@ -69,25 +71,54 @@ limitations under the License.
 	</fx:Declarations>
 	
 	<s:transitions>
+		
+		<s:Transition fromState="normal" toState="linkView" interruptionBehavior="stop" autoReverse="true">
+			<s:Sequence duration="250" 
+						effectStart="trace('normal to link view')"
+						>
+				<s:Resize target="{this}"/>
+				<s:AddAction target="{linkDetailsView}"/>
+				<s:Fade target="{linkDetailsView}"/>
+			</s:Sequence>
+		</s:Transition>
+		
+		<s:Transition fromState="normal" toState="imageView" interruptionBehavior="stop" autoReverse="true">
+			<s:Sequence duration="250" 
+						effectStart="trace('normal to image view')"
+						>
+				<s:Resize target="{this}"/>
+				<s:AddAction target="{imageDetailsView}"/>
+				<s:Fade target="{imageDetailsView}"/>
+			</s:Sequence>
+		</s:Transition>
+		<!--
 		<s:Transition fromState="normal" toState="*">
 			<s:Sequence duration="250">
 				<s:Resize target="{this}"/>
-				<s:AddAction target="{linkTool}"/>
-				<s:Fade target="{linkTool}"/>
+				<s:AddAction target="{linkDetailsTool}"/>
+				<s:Fade target="{linkDetailsTool}"/>
 			</s:Sequence>
 		</s:Transition>
-		<s:Transition fromState="linkDialog" toState="*">
+		
+		<s:Transition fromState="linkView" toState="*">
 			<s:Sequence duration="250">
-				<!--<s:RemoveAction target="{linkTool}"/>-->
-				<s:Fade target="{linkTool}"/>
+				<s:Fade target="{linkDetailsTool}"/>
 				<s:Resize target="{this}"/>
 			</s:Sequence>
 		</s:Transition>
+		
+		<s:Transition fromState="imageView" toState="*">
+			<s:Sequence duration="250">
+				<s:Fade target="{showImageTool}"/>
+				<s:Resize target="{this}"/>
+			</s:Sequence>
+		</s:Transition>-->
 	</s:transitions>
 	
 	<s:states>
 		<s:State name="normal"/>
-		<s:State name="linkDialog"/>
+		<s:State name="linkView"/>
+		<s:State name="imageView"/>
 	</s:states>
 	
 	<!-- SkinParts
@@ -105,38 +136,53 @@ limitations under the License.
 	
 	<s:VGroup width="100%">
 		<s:HGroup width="100%" >	
-			<richTextEditorClasses:FontTool id="fontTool" width="100%" maxWidth="180" minWidth="140"/>
-			<richTextEditorClasses:SizeTool id="sizeTool" width="60"/>
+			<r:FontTool id="fontTool" width="100%" maxWidth="180" minWidth="140" 
+						height="21" 
+						creationComplete="fontTool.openButton.height = fontTool.height"/>
+			<r:FontSizeTool id="fontSizeTool" width="48" height="21"
+							creationComplete="fontSizeTool.openButton.height = fontSizeTool.height"/>
 			<s:HGroup gap="0">
-				<richTextEditorClasses:BoldTool id="boldTool" width="20" icon="@Embed('richTextEditorClasses/tools/bold.png')"/>
-				<richTextEditorClasses:ItalicTool id="italicTool" width="20" icon="@Embed('richTextEditorClasses/tools/italic.png')"/>
-				<richTextEditorClasses:UnderlineTool id="underlineTool" width="20" icon="@Embed('richTextEditorClasses/tools/underline.png')"/>
+				<r:BoldTool id="boldTool" width="20" icon="@Embed('richTextEditorClasses/icons/bold.png')"/>
+				<r:ItalicTool id="italicTool" width="20" icon="@Embed('richTextEditorClasses/icons/italic.png')"/>
+				<r:UnderlineTool id="underlineTool" width="20" icon="@Embed('richTextEditorClasses/icons/underline.png')"/>
 			</s:HGroup>
-			<richTextEditorClasses:ColorTool id="colorTool" height="21" width="20"/>
+			<r:ColorTool id="colorTool" height="21" width="20"/>
 			<s:Line height="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#B3C2B8"/>
 				</s:stroke>
 			</s:Line>
-			<richTextEditorClasses:AlignTool id="alignTool" width="80" />
-			<richTextEditorClasses:BulletTool id="bulletTool" width="20" icon="@Embed('richTextEditorClasses/tools/bullet.png')"/>
+			<r:AlignTool id="alignTool" width="80" />
+			<r:BulletTool id="bulletTool" width="20" icon="@Embed('richTextEditorClasses/icons/bullet.png')"/>
 			<s:Line height="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#B3C2B8"/>
 				</s:stroke>
 			</s:Line>
-			<richTextEditorClasses:LinkButtonTool id="showLinkTool" width="23" icon="@Embed('richTextEditorClasses/tools/link.png')"/>
+			<r:LinkButtonTool id="linkButton" width="23" icon="@Embed('richTextEditorClasses/icons/link.png')"/>
 			<s:Line height="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#B3C2B8"/>
 				</s:stroke>
 			</s:Line>
-			<richTextEditorClasses:ClearFormattingTool id="clearFormattingTool" width="23" />
+			<r:ImageTool id="imageButton" width="24" height="21" 
+						 icon="@Embed('richTextEditorClasses/icons/image.png')"/>
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
+			<r:ClearFormattingTool id="clearFormattingTool" width="23" />
 		</s:HGroup>
-		<richTextEditorClasses:LinkTool id="linkTool" 
-										includeIn="linkDialog" 
-										itemCreationPolicy="immediate"
-										width="100%"/>
+		
+		<r:LinkDetailsView id="linkDetailsView" 
+					  includeIn="linkView" 
+					  itemCreationPolicy="immediate" width="100%"/>
+		
+		<r:ImageDetailsView id="imageDetailsView" 
+							includeIn="imageView" 
+							itemCreationPolicy="immediate"
+							width="100%"/>
 	</s:VGroup>
 
 </s:Skin>
