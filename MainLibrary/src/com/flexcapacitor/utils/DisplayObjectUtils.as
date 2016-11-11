@@ -616,6 +616,24 @@ public function traceTree(description:ComponentDescription, object:Object):void 
 		}
 		
 		/**
+		 * Find the class type that contains the display object 
+		 * */
+		public static function getTypeFromDisplayObject(displayObject:DisplayObject, classReference:Class):* {
+			
+			while (displayObject) {
+				
+				if (displayObject is classReference) {
+					return displayObject;
+				}
+				else {
+					displayObject = displayObject.parent;
+				}
+			}
+			
+			return displayObject;
+		}
+		
+		/**
 		 * Find the component that contains the display object 
 		 * AND is also on the component tree
 		 * */

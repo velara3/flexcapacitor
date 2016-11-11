@@ -85,6 +85,7 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.elements.ParagraphElement;
 	import flashx.textLayout.elements.TextFlow;
 	import flashx.textLayout.events.FlowOperationEvent;
+	import flashx.textLayout.events.StatusChangeEvent;
 	import flashx.textLayout.formats.Float;
 	import flashx.textLayout.formats.TextDecoration;
 	import flashx.textLayout.formats.TextLayoutFormat;
@@ -1062,23 +1063,23 @@ package com.flexcapacitor.controls
 				uicomponent = inlineGraphicElement.graphic as UIComponent;
 				
 				if (loader) {
-					loader.contentLoaderInfo.addEventListener(Event.INIT, inlineGraphicElementLoader_complete);
-					loader.contentLoaderInfo.addEventListener(Event.COMPLETE, inlineGraphicElementLoader_complete);
-					loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, inlineGraphicElementLoader_complete);
-					loader.contentLoaderInfo.addEventListener(HTTPStatusEvent.HTTP_STATUS, inlineGraphicElementLoader_complete);
-					loader.contentLoaderInfo.addEventListener(Event.OPEN, inlineGraphicElementLoader_complete);
-					loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, inlineGraphicElementLoader_complete);
-					loader.contentLoaderInfo.addEventListener(Event.UNLOAD, inlineGraphicElementLoader_complete);
+					loader.contentLoaderInfo.addEventListener(Event.INIT, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.contentLoaderInfo.addEventListener(Event.COMPLETE, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.contentLoaderInfo.addEventListener(HTTPStatusEvent.HTTP_STATUS, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.contentLoaderInfo.addEventListener(Event.OPEN, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.contentLoaderInfo.addEventListener(Event.UNLOAD, inlineGraphicElementLoader_complete, false, 0, true);
 					
-					loader.addEventListener(Event.ADDED, inlineGraphicElementLoader_complete);
-					loader.addEventListener(Event.ADDED_TO_STAGE, inlineGraphicElementLoader_complete);
-					
+					loader.addEventListener(Event.ADDED, inlineGraphicElementLoader_complete, false, 0, true);
+					loader.addEventListener(Event.ADDED_TO_STAGE, inlineGraphicElementLoader_complete, false, 0, true);
+					richEditableText.textFlow.addEventListener(StatusChangeEvent.INLINE_GRAPHIC_STATUS_CHANGE, inlineGraphicElementLoader_complete, false, 0, true);
 					// add click handler after loaded
 					//loader.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick);
 					//loader.addEventListener(MouseEvent.MOUSE_OUT, inlineGraphicElementMouseOut);
-					loader.addEventListener(MouseEvent.MOUSE_MOVE, cursorObject_mouseMove);
-					loader.addEventListener(MouseEvent.ROLL_OVER, cursorObject_rollOver);
-					loader.addEventListener(MouseEvent.ROLL_OUT, cursorObject_rollOut);
+					loader.addEventListener(MouseEvent.MOUSE_MOVE, cursorObject_mouseMove, false, 0, true);
+					loader.addEventListener(MouseEvent.ROLL_OVER, cursorObject_rollOver, false, 0, true);
+					loader.addEventListener(MouseEvent.ROLL_OUT, cursorObject_rollOut, false, 0, true);
 					//loader.addEventListener(MouseEvent.ROLL_OUT, inlineGraphicElementMouseOut);
 					
 					//loader.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
