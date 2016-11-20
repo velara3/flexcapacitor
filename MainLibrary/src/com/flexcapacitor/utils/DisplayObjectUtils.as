@@ -2072,7 +2072,7 @@ trace(size); // {width = 200, height = 100}
 		 *  - rasterize2
 		 * 
 		 * IGraphicElement
-		 *  - getGraphicElementSnapshot      - testing
+		 *  - getGraphicElementBitmapData      - testing
 		 *  - rasterize2                     - use IGraphicElement(target).displayObject
 		 * *******************************************************************/
 		

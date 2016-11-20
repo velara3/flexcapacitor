@@ -27,6 +27,8 @@ package com.flexcapacitor.model {
 		 * We may need to update the skin values
 		 * */
 		override public function unmarshall(item:XML, target:* = null, getValue:Boolean = true):void {
+			access = item.@access;
+			
 			super.unmarshall(item, target, getValue);
 			
 			if (item==null) return;
@@ -37,8 +39,6 @@ package com.flexcapacitor.model {
 			var keyValue:String;
 			var propertyValue:*;
 			var dataname:String;
-			
-			access = item.@access;
 			
 			// loop through metadata objects
 			outerloop:
