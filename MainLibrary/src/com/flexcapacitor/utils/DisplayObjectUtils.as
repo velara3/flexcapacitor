@@ -16,6 +16,7 @@ package com.flexcapacitor.utils {
 	import flash.display.Sprite;
 	import flash.display.StageQuality;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.MouseEvent;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
@@ -24,6 +25,7 @@ package com.flexcapacitor.utils {
 	import flash.geom.Rectangle;
 	import flash.net.URLLoader;
 	import flash.system.Capabilities;
+	import flash.system.ImageDecodingPolicy;
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
@@ -45,6 +47,7 @@ package com.flexcapacitor.utils {
 	import mx.graphics.codec.JPEGEncoder;
 	import mx.graphics.codec.PNGEncoder;
 	import mx.managers.ISystemManager;
+	import mx.managers.SystemManager;
 	import mx.styles.StyleManager;
 	import mx.utils.Base64Decoder;
 	import mx.utils.Base64Encoder;
@@ -1833,6 +1836,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var initialHeight:int = 100;
 			var colorspace:BitmapEncodingColorSpace= new BitmapEncodingColorSpace();
 			var quality:String;
+			var loaderContext:LoaderContext;
 			
 			
 			try {
@@ -1843,8 +1847,22 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				
 				// asyncronous
 				if (async) {
+					/*
+					loaderContext = new LoaderContext(); 
+					loaderContext.imageDecodingPolicy = ImageDecodingPolicy.ON_DEMAND;
+					*/
+					
 					loader = new Loader();
 					loader.loadBytes(byteArray, loaderContext);
+					
+					//var stage:Object = FlexGlobals.topLevelApplication.stage;
+					//	stage.addChild(loader);
+					
+					if (loader.content) {
+						var bitmap:Bitmap;
+						bitmap = loader.content as Bitmap;
+						return bitmap.bitmapData;
+					}
 					
 					loader.contentLoaderInfo.addEventListener(Event.INIT, function (event:Event):void {
 						var newBitmapData:BitmapData;
@@ -1855,10 +1873,16 @@ trace(result); // rgba(255, 0, 0, 0.3);
 							bitmap = LoaderInfo(event.currentTarget).loader.content as Bitmap;
 							newBitmapData = bitmap ? bitmap.bitmapData : null;
 							
+							// the bitmapData does not change size with any of these
 							if (newBitmapData) {
-								rectangle = new Rectangle(0, 0, newBitmapData.width, newBitmapData.height);
-								bitmapData.merge(newBitmapData, rectangle, new Point(), 0, 0, 0, 0);
-								bitmapData.drawWithQuality(newBitmapData, null, null, null, rectangle, false, quality);
+								//rectangle = new Rectangle(0, 0, newBitmapData.width, newBitmapData.height);
+								//bitmapData.merge(newBitmapData, rectangle, new Point(), 0, 0, 0, 0);
+								//bitmapData.drawWithQuality(newBitmapData, null, null, null, rectangle, false, quality);
+								bitmapData.drawWithQuality(newBitmapData, null, null, null, null, false, quality);
+								//bitmapData.drawWithQuality(LoaderInfo(event.currentTarget).loader, null, null, null, null, false, quality);
+								//bitmapData.copyPixels(newBitmapData, newBitmapData.rect, new Point());
+								//bitmapData = newBitmapData.clone();
+								//bitmapData.merge(newBitmapData, null, new Point(), 0, 0, 0, 0);
 							}
 						}
 					});
