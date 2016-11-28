@@ -36,18 +36,18 @@ package com.flexcapacitor.utils {
 		 * */
 		public static function padLeft(value:String="", digits:int = 2, character:String="0", isNumber:Boolean=false):String {
 			var padding:String = "";
-			var length:int = value.length;
+			var count:int = value.length;
 			var position:int;
 			
 			if (isNumber) {
 				position = value.lastIndexOf(".");
-				length = position!=-1 ? digits - position : digits - length;
+				count = position!=-1 ? digits - position : digits - count;
 			}
 			else {
-				length = digits - length;
+				count = digits - count;
 			}
 			
-			for (var i:int;i<length;i++) padding += character;
+			for (var i:int;i<count;i++) padding += character;
 			
 			return padding + value;
 		}
@@ -69,15 +69,15 @@ package com.flexcapacitor.utils {
 		/**
 		 * Adds a minimumn amount of spaces to a String if they don't have them.
 		 * */
-		public static function padString(value:String, length:int):String {
-			length = length - value.length;
+		public static function padString(value:String, amount:int):String {
+			amount = amount - value.length;
 			
-			for (var i:int;i<length;i++) {
+			for (var i:int;i<amount;i++) {
 				value += " ";
 			}
 			
-			if (length<0) {
-				value = value.substr(0, length);
+			if (amount<0) {
+				value = value.substr(0, amount);
 			}
 			return value;
 		}
@@ -115,16 +115,16 @@ package com.flexcapacitor.utils {
 			var propertyValue:String;
 			var property:String;
 			var token:String;
-			var length:int;
+			var count:int;
 			
 			if (tokenList==null || propertyList==null) { 
 				return value;
 			}
 			
-			length = tokenList.length;
+			count = tokenList.length;
 			
 			// loop through the tokens
-			for (var i:int=0;i<length;i++) {
+			for (var i:int=0;i<count;i++) {
 				
 				property = String(propertyList[i]).replace(propertyPattern, "$1");
 				token = tokenList[i];
@@ -171,10 +171,10 @@ package com.flexcapacitor.utils {
 		public static function prettifyCamelCase(value:String=""):String {
 			var value:String = '';
 		    var output:String = "";
-			var len:int = value.length;
+			var count:int = value.length;
 			var char:String;
 			
-		    for (var i:int;i<len;i++) {
+		    for (var i:int;i<count;i++) {
 				char = value.charAt(i);
 				
 		        if (i==0) {

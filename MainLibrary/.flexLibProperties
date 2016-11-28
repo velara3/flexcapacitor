@@ -439,6 +439,7 @@
     <classEntry path="com.flexcapacitor.controls.TabNavigator"/>
     <classEntry path="com.flexcapacitor.utils.CursorUtils"/>
     <classEntry path="com.flexcapacitor.utils.TextFlowUtils"/>
+    <classEntry path="com.flexcapacitor.utils.supportClasses.LogSettings"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>

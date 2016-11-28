@@ -5,25 +5,32 @@ package com.flexcapacitor.utils {
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
+	import flash.display.BitmapEncodingColorSpace;
 	import flash.display.BlendMode;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.display.IBitmapDrawable;
+	import flash.display.Loader;
+	import flash.display.LoaderInfo;
 	import flash.display.PixelSnapping;
 	import flash.display.Sprite;
 	import flash.display.StageQuality;
+	import flash.events.Event;
 	import flash.events.MouseEvent;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
+	import flash.net.URLLoader;
 	import flash.system.Capabilities;
+	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 	
 	import mx.collections.ArrayCollection;
+	import mx.controls.SWFLoader;
 	import mx.core.BitmapAsset;
 	import mx.core.FlexGlobals;
 	import mx.core.IFlexModuleFactory;
@@ -39,6 +46,7 @@ package com.flexcapacitor.utils {
 	import mx.graphics.codec.PNGEncoder;
 	import mx.managers.ISystemManager;
 	import mx.styles.StyleManager;
+	import mx.utils.Base64Decoder;
 	import mx.utils.Base64Encoder;
 	import mx.utils.MatrixUtil;
 	
@@ -91,6 +99,7 @@ else {
 		//import flash.display.PNGEncoderOptions;
 		
 		public static const HEXIDECIMAL_HASH_COLOR_TYPE:String = "hexidecimalHash";
+		public static const HEXIDECIMAL_PREFIX_COLOR_TYPE:String = "hexidecimalPrefix";
 		public static const HEXIDECIMAL_COLOR_TYPE:String = "hexidecimal";
 		public static const STRING_UINT_COLOR_TYPE:String = "stringUint";
 		public static const NUMBER_COLOR_TYPE:String = "number";
@@ -101,6 +110,12 @@ else {
 		public static const FLASH_MIME_TYPE:String = "application/x-shockwave-flash"
 		public static const JPEG_MIME_TYPE:String = "image/jpeg";
 		public static const GIF_MIME_TYPE:String = "image/gif";
+		
+		public static const PNG:String = "png";
+		public static const FLASH:String = "swf"
+		public static const JPG:String = "jpg";
+		public static const JPEG:String = "jpeg";
+		public static const GIF:String = "gif";
 		
 		/**
 		 * Blend modes from 
@@ -170,9 +185,19 @@ else {
 		public static var base64Encoder:Base64Encoder;
 		
 		/**
+		 * Used to decode images
+		 * */
+		public static var base64Decoder:Base64Decoder;
+		
+		/**
 		 * Alternative base 64 encoder based on Base64. You must set this to the class for it to be used.
 		 * */
 		public static var Base64Encoder2:Object;
+		
+		/**
+		 * Alternative base 64 decoder based on Base64. You must set this to the class for it to be used.
+		 * */
+		public static var Base64Decoder2:Object;
 		
 		/**
 		 * Used to create PNG images
@@ -1233,7 +1258,7 @@ trace(color); // #ff0000
 </pre>
 		 * 
 		 **/
-		public static function getColorInHex(color:uint, addHash:Boolean = false):String {
+		public static function getColorInHex(color:uint, addHash:Boolean = false, addPrefix:Boolean = false):String {
 			var red:String = extractRed(color).toString(16).toUpperCase();
 			var green:String = extractGreen(color).toString(16).toUpperCase();
 			var blue:String = extractBlue(color).toString(16).toUpperCase();
@@ -1252,9 +1277,22 @@ trace(color); // #ff0000
 				blue = zero.concat(blue);
 			}
 			
-			value = addHash ? "#" + red + green + blue : red + green + blue;
+			if (addHash) {
+				value = "#" + red + green + blue;
+			}
+			else if (addPrefix) {
+				value = "0x" + red + green + blue;
+			}
+			else {
+				value = red + green + blue;
+			}
 			
 			return value;
+		}
+		
+		public static function getColorInHexWithHash(color:uint):String {
+			
+			return getColorInHex(color, true);
 		}
 		
 		/**
@@ -1289,26 +1327,30 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * */
 		public static function getColorAsType(color:uint, type:String):Object {
 			
-				if (type==HEXIDECIMAL_HASH_COLOR_TYPE) {
-					return getColorInHex(color, true);
-				}
-				else if (type==HEXIDECIMAL_COLOR_TYPE) {
-					return getColorInHex(color, false);
-				}
-				else if (type==STRING_UINT_COLOR_TYPE) {
-					return String(color);
-				}
-				else if (type==NUMBER_COLOR_TYPE) {
-					return Number(color);
-				}
-				else if (type==UINT_COLOR_TYPE) {
-					return uint(color);
-				}
-				else if (type==INT_COLOR_TYPE) {
-					return int(color);
-				}
-				
-				return color;
+			// #FF0000
+			if (type==HEXIDECIMAL_HASH_COLOR_TYPE) {
+				return getColorInHex(color, true);
+			} // 0xFF0000
+			else if (type==HEXIDECIMAL_PREFIX_COLOR_TYPE) {
+				return getColorInHex(color, false, true);
+			} // FF0000
+			else if (type==HEXIDECIMAL_COLOR_TYPE) {
+				return getColorInHex(color, false, false);
+			} // "255"
+			else if (type==STRING_UINT_COLOR_TYPE) {
+				return String(color);
+			} // 255
+			else if (type==NUMBER_COLOR_TYPE) {
+				return Number(color);
+			} // 255
+			else if (type==UINT_COLOR_TYPE) {
+				return uint(color);
+			} // 255
+			else if (type==INT_COLOR_TYPE) {
+				return int(color);
+			}
+			
+			return color;
 		}
 		
 		/**
@@ -1443,27 +1485,31 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * Get data URI from object. 
 		 * 
 		 * Returns a string "data:image/png;base64,..." where ... is the image data. 
-		 * @see getBase64ImageDataString
+		 * @see #getBase64ImageData()
 		 * */
-		public static function getBase64ImageDataString(target:Object, type:String = "png", encoderOptions:Object = null, ignoreErrors:Boolean = false, color:Number = NaN):String {
+		public static function getBase64ImageDataString(target:Object, type:String = PNG, encoderOptions:Object = null, ignoreErrors:Boolean = false, color:Number = NaN, alpha:Number = 1, linebreaks:Boolean = false):String {
 			var hasJPEGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.JPEGEncoderOptions");
 			var hasPNGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.PNGEncoderOptions");
 			var output:String;
+			var message:String;
 			
 			if (!encoderOptions && !hasJPEGEncoderOptions && !hasPNGEncoderOptions && ignoreErrors==false) {
-				var message:String = "Your project must include a reference to the flash.display.JPEGEncoderOptions or ";
+				message = "Your project must include a reference to the flash.display.JPEGEncoderOptions or ";
 				message += "flash.display.PNGEncoderOptions in your project for this call to work. ";
 				message += "You may also need an newer version of Flash Player or AIR or set -swf-version equal to 16 or greater. ";
 				throw new Error(message);
 			}
 			
-			if (type.toLowerCase()=="jpg") {
-				type = "jpeg";
+			if (type==null || type=="") {
+				type = PNG;
+			}
+			else if (type.toLowerCase()==JPG) {
+				type = JPEG;
 			}
 			
 			// you have to be careful, if line breaks occur, the image data will not show
 			if (hasJPEGEncoderOptions || hasPNGEncoderOptions) {
-				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions, false, 80, color);
+				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions, false, 80, color, alpha, linebreaks);
 			}
 			else {
 				output = "data:image/" + type + ";base64," + "";
@@ -1488,10 +1534,9 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * 
 		 * Don't trust these numbers. Test it yourself. First runs are always longer than previous. 
 		 * 
-		 * This function gets called multiple times sometimes. We may be encoding more than we have too.
-		 * But is probably a bug somewhere.  
+		 * @see #getBase64ImageDataString()
 		 * */
-		public static function getBase64ImageData(target:Object, type:String = "png", encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1):String {
+		public static function getBase64ImageData(target:Object, type:String = PNG, encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1, linebreaks:Boolean = false):String {
 			var component:IUIComponent = target as IUIComponent;
 			var bitmapData:BitmapData;
 			var byteArray:ByteArray;
@@ -1503,6 +1548,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var base64Data:String;
 			var colorTransform:ColorTransform;
 			var tintType2:Boolean = true;
+			var time:int;
 			
 			
 			if (checkCache && base64BitmapCache[target]) {
@@ -1510,7 +1556,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			if (timeEvents) {
-				var time:int = getTimer();
+				time = getTimer();
 			}
 			
 			if (component) {
@@ -1551,14 +1597,14 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				time = getTimer();
 			}
 			
-			byteArray = getBitmapByteArray(bitmapData, null, useEncoder, type, fastCompression, quality, encoderOptions);
+			byteArray = getByteArrayFromBitmapData(bitmapData, null, useEncoder, type, fastCompression, quality, encoderOptions);
 			
 			if (timeEvents) {
 				trace ("encode to " + type + ". time=" + (getTimer()-time));
 				time = getTimer();
 			}
 			
-			base64Data = getBase64FromByteArray(byteArray, altBase64);
+			base64Data = getBase64FromByteArray(byteArray, altBase64, linebreaks);
 			//trace(base64.toString());
 			
 			if (timeEvents) {
@@ -1572,8 +1618,13 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		
 		/**
 		 * Returns a byte array from bitmap data
+		 * 
+		 * @param alternativeEncoder Set the static Base64Encoder2 property to an alternative encoder before calling this.
+		 * @see #getBitmapByteArray()
+		 * @see #getBase64ImageData()
+		 * @see #getBase64ImageDataString()
 		 * */
-		public static function getBase64FromByteArray(byteArray:ByteArray, alternativeEncoder:Boolean):String {
+		public static function getBase64FromByteArray(byteArray:ByteArray, alternativeEncoder:Boolean, insertLinebreaks:Boolean = false):String {
 			var results:String;
 			
 			if (!alternativeEncoder) {
@@ -1582,6 +1633,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				}
 				
 				base64Encoder.encodeBytes(byteArray);
+				base64Encoder.insertNewLines = insertLinebreaks;
 				
 				results = base64Encoder.toString();
 			}
@@ -1589,16 +1641,64 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				if (Base64Encoder2==null) {
 					throw new Error("Set the static alternative base encoder before calling this method");
 				}
+				
 				// Base64.encode(data:ByteArray);
 				results = Base64Encoder2.encode(byteArray);
+				
+				
+				// have to remove line breaks for background: url(datauri) to work in some environments
+				if (insertLinebreaks) {
+					results = results.replace(/\n/g, "");
+				}
 			}
-			
-			// have to remove line breaks for background: url(datauri) to work
-			results = results.replace(/\n/g, "");
 			
 			return results;
 		}
 		
+		/**
+		 * Returns a byte array from a base 64 string. Need to remove the header text, ie "data:image/png;base64,"
+		 * and possibly line breaks.
+		 * 
+		 * @param alternativeEncoder Set the static Base64Decoder2 property to an alternative decoder before calling this.
+		 * @see #getBitmapByteArray()
+		 * @see #getBase64ImageData()
+		 * @see #getBase64ImageDataString()
+		 * */
+		public static function getByteArrayFromBase64(encoded:String, alternativeDecoder:Boolean = false, removeHeader:Boolean = false):ByteArray {
+			var results:ByteArray;
+			
+			if (!alternativeDecoder) {
+				if (!base64Decoder) {
+					base64Decoder = new Base64Decoder();
+				}
+				
+				if (removeHeader) {
+					encoded = encoded.replace(/.*base64,/si, "");
+				}
+				
+				base64Decoder.reset();
+				base64Decoder.decode(encoded);
+				results = base64Decoder.toByteArray();
+			}
+			else {
+				if (Base64Decoder2==null) {
+					throw new Error("Set the static alternative base decoder before calling this method");
+				}
+				
+				Base64Decoder2.reset();
+				Base64Decoder2.decode(encoded);
+				results = Base64Decoder2.toByteArray();
+			}
+			
+			/*
+			Error: A partial block (3 of 4 bytes) was dropped. Decoded data is probably truncated!
+			at mx.utils::Base64Decoder/flush()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/utils/Base64Decoder.as:139]
+			at mx.utils::Base64Decoder/toByteArray()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/utils/Base64Decoder.as:173]
+			at com.flexcapacitor.utils::DisplayObjectUtils$/getByteArrayFromBase64()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/DisplayObjectUtils.as:1673]
+			*/
+			
+			return results as ByteArray;
+		}
 		
 		/**
 		 * Returns a byte array from bitmap data. <br/><br/>
@@ -1632,10 +1732,10 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * @see flash.display.BitmapData.encode()
 		 * @see http://help.adobe.com/en_US/as3/dev/WS4768145595f94108-17913eb4136eaab51c7-8000.html
 		 * */
-		public static function getBitmapByteArray(bitmapData:BitmapData, 
+		public static function getByteArrayFromBitmapData(bitmapData:BitmapData, 
 												  clipRectangle:Rectangle = null, 
 												  useEncoder:Boolean = false, 
-												  type:String = "png", 
+												  type:String = PNG, 
 												  fastCompression:Boolean = true, 
 												  quality:int = 80, 
 												  bitmapDataEncoderOptions:Object = null):ByteArray {
@@ -1662,7 +1762,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			// PNG
-			if (type && type.toLowerCase()=="png") {
+			if (type && type.toLowerCase()==PNG) {
 				
 				// using PNGEncoder
 				if (useEncoder) {
@@ -1687,7 +1787,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			}
 			
 			// JPG
-			else if (type && (type.toLowerCase()=="jpg" || type.toLowerCase()=="jpeg")) {
+			else if (type && (type.toLowerCase()==JPG || type.toLowerCase()==JPEG)) {
 				
 				
 				// using JPGEncoder
@@ -1718,6 +1818,82 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			return byteArray;
 		}
 		
+		public static var loader:Loader;
+		
+		/**
+		 * Get bitmap data from a byte array
+		 * */
+		public static function getBitmapDataFromByteArray(byteArray:ByteArray, loaderContext:LoaderContext = null):BitmapData {
+			var PNGEncoderOptionsClass:Object;
+			var bitmapData:BitmapData;
+			var value:Object;
+			var async:Boolean  = true;
+			var rectangle:Rectangle;
+			var initialWidth:int = 100;
+			var initialHeight:int = 100;
+			var colorspace:BitmapEncodingColorSpace= new BitmapEncodingColorSpace();
+			var quality:String;
+			
+			
+			try {
+				byteArray.position = 0;
+				bitmapData = new BitmapData(initialWidth,initialHeight,true,0xFFFFFFFF);
+				rectangle = new Rectangle(0,0,initialWidth,initialHeight);
+				//quality = StageQuality.HIGH_16X16_LINEAR;
+				
+				// asyncronous
+				if (async) {
+					loader = new Loader();
+					loader.loadBytes(byteArray, loaderContext);
+					
+					loader.contentLoaderInfo.addEventListener(Event.INIT, function (event:Event):void {
+						var newBitmapData:BitmapData;
+						var bitmap:Bitmap;
+						var rectangle:Rectangle;
+						
+						if (loader.content) {
+							bitmap = LoaderInfo(event.currentTarget).loader.content as Bitmap;
+							newBitmapData = bitmap ? bitmap.bitmapData : null;
+							
+							if (newBitmapData) {
+								rectangle = new Rectangle(0, 0, newBitmapData.width, newBitmapData.height);
+								bitmapData.merge(newBitmapData, rectangle, new Point(), 0, 0, 0, 0);
+								bitmapData.drawWithQuality(newBitmapData, null, null, null, rectangle, false, quality);
+							}
+						}
+					});
+					
+				}
+				else {
+					bitmapData.setPixels(rectangle, byteArray);
+				}
+			}
+			catch (error:*) {
+				
+			}
+			
+			return bitmapData;
+		}
+		
+		
+		/**
+		 * Get bitmap data from a base 64
+		 * */
+		public static function getBitmapDataFromBase64(encodedValue:String, loaderContext:LoaderContext = null):BitmapData {
+			var PNGEncoderOptionsClass:Object;
+			var bitmapData:BitmapData;
+			var loader:Loader;
+			var value:Object;
+			var byteArray:ByteArray;
+			
+			byteArray = getByteArrayFromBase64(encodedValue);
+			
+			if (byteArray) {
+				bitmapData = getBitmapDataFromByteArray(byteArray, loaderContext);
+			}
+			
+			return bitmapData;
+		}
 			
 		/**
 		 * Center the application or native window
@@ -1878,39 +2054,7 @@ DisplayObjectUtil.addDiagonalLines(displayObject, 10, 10);
 				spriteContainer.addChild(diagonalLinesSprite);
 			}
 			
-			
 			return spriteContainer;
-			
-			if (visualElementContainer) {
-				visualElementContainer.addElement(spriteContainer);
-			}
-			else if (displayObjectContainer) {
-				displayObjectContainer.addChild(spriteContainer);
-			}
-			
-			return null;
-			
-			//fillSprite.graphics.endFill();
-			
-			
-			var bitmapFill:BitmapFill = new BitmapFill();
-			bitmapFill.fillMode = BitmapFillMode.REPEAT;
-			bitmapFill.source = fillSprite;
-			
-			var rect:Rect = new Rect();
-			rect.fill = bitmapFill;
-			rect.width = width;
-			rect.height = height;
-			
-			var bitmapData:BitmapData = new BitmapData(width, height, true);
-			bitmapData.draw(diagonalLinesSprite);
-			
-			targetBitmap = new Bitmap(bitmapData);
-			//bitmapData.draw(rect, null, null, BlendMode.ERASE);
-			//bitmapData.draw(rect);
-			//addElement(spriteVE);
-			
-			return bitmapFill;
 		}
 		
 		/**

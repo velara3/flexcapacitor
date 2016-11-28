@@ -10,6 +10,7 @@ package com.flexcapacitor.utils
 	import flash.external.ExternalInterface;
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities;
+	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 	
 	
@@ -753,14 +754,28 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Returns true if node has attribute. Not handling namespaces.
+		 * Returns true if a node has attribute. Not handling namespaces.
 		 * 
 		 * @param node XML item
 		 * @return true if attribute exists
+		 * @see #hasAttributeDefined()
 		 * */
 		public static function hasAttribute(node:XML, attribute:String):Boolean {
 			var attributes:Array = node ? getAttributeNames(node) : [];
 			var exists:Boolean = (attributes.indexOf(attribute)!=-1);
+			
+			return exists;
+		}
+		
+		/**
+		 * Returns true if a node has attribute defined. Might be faster than hasAttribute()
+		 * 
+		 * @param node XML item
+		 * @return true if attribute exists
+		 * @see #hasAttribute()
+		 * */
+		public static function hasAttributeDefined(node:XML, attributeName:String):Boolean {
+			var exists:Boolean = node.@[attributeName]!==undefined;
 			
 			return exists;
 		}
@@ -778,7 +793,7 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Get list of attribute names from a node
+		 * Get list of attribute names defined on a node
 		 * 
 		 * @param node XML item
 		 * */
@@ -788,18 +803,6 @@ package com.flexcapacitor.utils
 			
 			for each (var attribute:XML in node.attributes()) {
 				attributeName = attribute.name().toString();
-				
-				/*
-				var a:Object = attribute.namespace().prefix     //returns prefix i.e. rdf
-				var b:Object = attribute.namespace().uri        //returns uri of prefix i.e. http://www.w3.org/1999/02/22-rdf-syntax-ns#
-				
-				var c:Object = attribute.inScopeNamespaces()   //returns all inscope namespace as an associative array like above
-				
-				//returns all nodes in an xml doc that use the namespace
-				var nsElement:Namespace = new Namespace(attribute.namespace().prefix, attribute.namespace().uri);
-				
-				var usageCount:XMLList = attribute..nsElement::*;
-				*/
 				
 				if (!includeNamespaceAttributes) {
 					// skip namespace attributes
@@ -937,6 +940,213 @@ package com.flexcapacitor.utils
 			return result;
 		}
 		
+		/**
+		 * Get XML node with namespaces added. <br/><br/>
+		 * 
+		 * If the XML is not valid and errors occurred a XMLValidationInfo object is returned with 
+		 * more info.<br/><br/>
+		 * 
+		 * Usage:  
+<pre>
+var code:String = '<?xml version="1.0" encoding="utf-8"?><node ></node>';
+var namespaces:Dictionary = MXMLDocumentConstants.getNamespaces(); // dictionary[prefix] = namespaceURI
+var xml:XML = XMLUtils.getXMLFromStringWithNamespaces(code, namespaces);
+</pre>
+		 * 
+		 * Usage:  
+<pre>
+var code:String = '<?xml version="1.0" encoding="utf-8"?><node xmlns="noprefix.com"></node>';
+var namespaces:String = 'xmlns:s="library://ns.adobe.com/flex/spark" xmlns:b="testnamespace.com"';
+var xml:XML = XMLUtils.getXMLFromStringWithNamespaces(code, namespaces);
+</pre>
+		 * @param string that is formatted as XML
+		 * @param namespaces a string of namespaces such as xmlns:s="library" or an object or dictionary 
+		 * containing a name value pair of prefix and namespace URI. 
+		 * */
+		public static function getXMLFromStringWithNamespaces(code:String, namespaces:Object):Object {
+			var settings:Object;
+			var isValid:Boolean;
+			var validationInfo:XMLValidationInfo;
+			var error:Error;
+			var xml:XML;
+			var root:String;
+			var updatedCode:String;
+			var rootNodeName:String = "ROOTNODENAMENOONEWILLEVERUSE";
+			var secondMethod:Boolean;
+			
+			if (code=="" || code==null) {
+				return null;
+			}
+			
+			// this method takes 3-4x as long as the second
+			if (!(namespaces is String)) {
+				updatedCode = addNamespacesToXMLString(code, namespaces);
+				isValid = XMLUtils.isValidXML(updatedCode);
+			}
+			else {
+				root = '<'+rootNodeName + " " + namespaces +'>\n';
+				updatedCode = root + code + "\n</"+rootNodeName+">";
+				isValid = XMLUtils.isValidXML(updatedCode);
+				secondMethod = true;
+			}
+			
+			settings = XML.settings();
+			
+			// don't modify the XML in any way
+			XML.ignoreWhitespace = false;
+			XML.prettyPrinting = false;
+			XML.ignoreProcessingInstructions = false;
+			
+			isValid = XMLUtils.isValidXML(updatedCode);
+			//error = XMLUtils.validationError;
+			
+			if (!isValid) {
+				validationInfo = XMLUtils.validateXML(code);
+				error = validationInfo.error;
+				
+				if (error is TypeError && error.errorID==1083) {
+					
+					if (isValid) {
+						xml = new XML(updatedCode);
+					}
+				}
+			}
+			else {
+				xml = new XML(updatedCode);
+			}
+			
+			XML.setSettings(settings);
+			
+			if (isValid) {
+				if (secondMethod) {
+					return xml.children()[0];
+				}
+				return xml;
+			}
+			
+			return validationInfo;
+		}
+		
+		/**
+		 * Get XML string with namespaces added to the first node
+		 * 
+		 * If the namespaces could not be added null is returned.<br/><br/>
+		 * 
+		 * Usage:  
+<pre>
+var code:String = '<?xml version="1.0" encoding="utf-8"?><node something xmlns:s = "library://ns.adobe.com/flex/spark" xmlns:b=\'testnamespace.com\' xmlns="noprefix.com"></node>';
+var namespaces:Dictionary = MXMLDocumentConstants.getNamespaces(); // dictionary[prefix] = namespaceURI
+var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
+</pre>
+		 * 
+		 * @param string that is formatted as XML
+		 * @param namespaces a string of namespaces such as xmlns:s="library" or an object or dictionary 
+		 * containing a name value pair of prefix and namespace URI. 
+		 * */
+		public static function addNamespacesToXMLString(code:String, namespaces:Object):String {
+			var simpleMethod:Boolean = true;
+			var match:Array;
+			var firstNode:String;
+			var firstTag:String;
+			var tagName:String;
+			var firstTagContents:String;
+			var isValid:Boolean;
+			var attributes:Array;
+			var original:String;
+			var attribute:String;
+			var attributeMatch:Array;
+			var namespaceURI:String;
+			var namespacePrefix:String;
+			var existingNamespaces:Array;
+			var newCode:String;
+			var namespacesToAdd:Array;
+			var newNode:String;
+			var xml:XML;
+			
+			
+			if (simpleMethod) {
+				match = code.match(/((<([\w|:]+) )(.*?)>)/);
+				
+				if (match) {
+					original = match[0];
+					firstNode = match[1];
+					firstTag = match[2];
+					tagName = match[3];
+					firstTagContents = match[4];
+					attributes = firstTagContents.split(/\s+(?!=|"|')/g);
+					//firstTagContents = firstTagContents.replace(/\s+=\s+|=\s+|\s+=/g,"");
+					//attributes = firstTagContents.split(/\s+(?!=|"|')/g);
+					existingNamespaces = [];
+					
+					for (var j:int = 0; j < attributes.length; j++) 
+					{
+						attribute = attributes[j];
+						
+						if (attribute.toLowerCase().indexOf("xmlns")==0 && attribute.indexOf("=")!=-1) {
+							attributeMatch = attribute.match(/(x.*?)\s*?=\s*?["|'](.*?)["|']/);
+							
+							if (attributeMatch) {
+								namespacePrefix = attributeMatch[1];
+								namespacePrefix = namespacePrefix.indexOf(":")!=-1 ? namespacePrefix.split(":").pop() : "";
+								namespaceURI 	= attributeMatch[2];
+								
+								existingNamespaces.push(namespaceURI);
+							}
+						}
+					}
+					
+					namespacesToAdd = getNamespacesArray(namespaces, true, existingNamespaces);
+					newNode 		= "<" + tagName + " " + namespacesToAdd.join(" ") + " " + firstTagContents + ">";
+					newCode 		= code.replace(original, newNode);
+				}
+			}
+			
+			return newCode;
+		}
+		
+		/**
+		 * Gets an array of namespaces or namespace attributes excluding any passed in
+		 * namespaceURI's. 
+		 * */
+		public static function getNamespacesArray(namespaces:Object, prefixed:Boolean = true, excludedNamespaceURIs:Array = null):Array {
+			var namespaceURI:String;
+			var uri:String;
+			var uriLowerCase:String;
+			var namespacesArray:Array = [];
+			var isFound:Boolean;
+			var xmlns:String = "xmlns";
+			
+			for (var prefix:String in namespaces) {
+				uri = namespaces[prefix];
+				uriLowerCase = uri.toLowerCase();
+				isFound = false;
+				
+				for (var i:int = 0; excludedNamespaceURIs && i < excludedNamespaceURIs.length; i++)  {
+					namespaceURI = excludedNamespaceURIs[i].toLowerCase();
+					
+					if (uriLowerCase==namespaceURI) {
+						isFound = true;
+						break;
+					}
+				}
+				
+				if (!isFound) {
+					if (prefixed) {
+						if (prefix==null || prefix=="") {
+							namespacesArray.push(xmlns + "=\"" + uri + "\"");
+						}
+						else {
+							namespacesArray.push(xmlns + ":" + prefix + "=\"" + uri + "\"");
+						}
+					}
+					else {
+						namespacesArray.push(uri);
+					}
+				}
+			}
+			
+			return namespacesArray;
+		}
 		
 		/**
 		 * Checks for a Byte-Order-Marker or BOM at the beginning of the text. This character is invisible in many text editors.
