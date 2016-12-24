@@ -19,21 +19,30 @@ package com.flexcapacitor.performance {
  // do something
  PerformanceMeter.stop("test"); // outputs to console 10ms
 </pre>
+	 * 
 	 * You can use the mark method to track the time that has elapsed since the 
-	 * last call to mark. 
+	 * last call to mark.<br/><br/> 
+	 * 
 	 * Usage:
 <pre>
- PerformanceMeter.mark("before bitmap resampling", true); // setting true resets the running timer
+ PerformanceMeter.mark("Before bitmap resampling", true);
  // code that runs for 10 milliseconds
- PerformanceMeter.mark("after bitmap resampling"); // traces "before bitmap resampling: 10ms"
+ PerformanceMeter.mark("After bitmap resampling");
  // more code that takes 5 milliseconds
- PerformanceMeter.mark("after more code"); // traces "after bitmap resampling: 5ms"
+ PerformanceMeter.mark("After more code");
  // more code 
- PerformanceMeter.mark("end of method"); // traces "after more code: 5ms"
+ PerformanceMeter.mark("End of method");
+ 
+ // outputs
+Performance Mark   Before bitmap resampling  :
+Performance Mark   After bitmap resampling   : +10
+Performance Mark   After more code           : +5
+Performance Mark   End of method             : +0
 </pre>
 	 * 
 	 Usage:
-		 * <b>Simple example:</b>
+	 * 
+     * <b>Simple example:</b>
 <pre>
 PerformanceMeter.start("test");
 // do something
@@ -210,14 +219,22 @@ Performance Mark   After xml validation      : +0
 		/**
 		 * Sets the minimum number of characters in for the test name in the trace console. Used for the alignment of values in the console window.  
 		 * */
-		public static var markNameMaxWidth:int = 26;
+		public static var markNameMaxWidth:int = 32;
 		
 		/**
 		 * Text to display in the console before a performance mark test result.
 		 * */
-		public static var performanceMarkText:String = "Performance Mark   ";
+		public static var performanceMarkText:String = "Profile Mark   ";
 		
-		public static var performanceTestText:String = "Performance Test   ";
+		/**
+		 * Text to display in the console before a performance mark test
+		 * */
+		public static var performanceTestText:String = "Profile Test   ";
+		
+		/**
+		 * Text to display in the console when a performance testing a method call
+		 * */
+		public static var performanceCallText:String = "Profile Call   ";
 		
 		/**
 		 * If buffer output is set to true then whatever was going to be traced to the console
@@ -454,6 +471,16 @@ PerformanceMeter.stop("test"); // outputs to console 10ms
 		 * Marks a point in time with the current value of the getTimer count. 
 		 * Also shows the difference since last mark.
 		 * 
+		 * Usage:
+<pre>
+PerformanceMeter.mark("before my test", true);
+// do something
+PerformanceMeter.stop("after my test");
+
+// outputs
+Performance Mark   BEFORE JPG size           :
+Performance Mark   AFTER JPG size            : +80
+</pre>
 		 * 
 		 * */
 		public static function mark(name:String="", resetRunningTimer:Boolean = false):void {
@@ -480,6 +507,37 @@ PerformanceMeter.stop("test"); // outputs to console 10ms
 				}
 			}
 		}
+		
+		/**
+		 * Find out how long a method takes by running it a specific number of times
+		 * */
+		public static function profileCall(name:String, repeatCount:int, method:Function, ...args):String {
+			var time:int = getTimer();
+			var average:Number;
+			
+			for (var i:int; i < repeatCount; i++) {
+				method.apply(null, args);
+			}
+			
+			time = getTimer()-time;
+			average = repeatCount>0? time/repeatCount:0;
+			
+			
+			if (traceMessages) {
+				lastMarkText = performanceCallText + padString(name, markNameMaxWidth) + ": " + average + "ms average (called " + repeatCount + "x)"; 
+				
+				if (traceMessages) {
+					trace(lastMarkText);
+				}
+				
+				if (bufferOutput) {
+					bufferedData.push(lastMarkText);
+				}
+			}
+			
+			return lastMarkText;
+		}
+		
 		
 		/**
 		 * Traces out buffered output

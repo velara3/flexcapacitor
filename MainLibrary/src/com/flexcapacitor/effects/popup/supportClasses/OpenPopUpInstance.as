@@ -11,6 +11,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
 	import flash.filters.DropShadowFilter;
+	import flash.system.ApplicationDomain;
 	import flash.ui.Keyboard;
 	
 	import mx.core.ClassFactory;
@@ -85,7 +86,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			
 			var action:OpenPopUp = OpenPopUp(effect);
 			var classFactory:ClassFactory;
-			var popUpType:Class = action.popUpType;
+			var popUpType:Object = action.popUpType;
 			var options:Object = action.popUpOptions;
 			var percentWidth:int = action.percentWidth;
 			var percentHeight:int = action.percentHeight;
@@ -109,10 +110,22 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			var closeOnEscapeKey:Boolean = action.closeOnEscapeKey;
 			var fitMaxSizeToApplication:Boolean = action.fitMaxSizeToApplication;
 			var useHardPercent:Boolean = action.useHardPercent;
+			var hasDefinition:Boolean;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
 			///////////////////////////////////////////////////////////
+			
+			if (popUpType==null && action.popUpType is String) {
+				hasDefinition = ApplicationDomain.currentDomain.hasDefinition(String(action.popUpType));
+				
+				if (hasDefinition) {
+					popUpType = ApplicationDomain.currentDomain.getDefinition(String(action.popUpType));
+				}
+				else {
+					dispatchErrorEvent("Please set the pop up class type to a class reference or qualified class name and ensure a reference to the class is included in your project");
+				}
+			}
 			
 			if (!popUpType) {
 				dispatchErrorEvent("Please set the pop up class type");
@@ -154,7 +167,7 @@ package com.flexcapacitor.effects.popup.supportClasses {
 			}
 			
 			classFactory = new ClassFactory();
-			classFactory.generator = popUpType;
+			classFactory.generator = popUpType as Class;
 			classFactory.properties = options;
 			
 			popUp = classFactory.newInstance();

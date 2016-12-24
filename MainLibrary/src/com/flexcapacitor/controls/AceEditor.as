@@ -54,19 +54,27 @@
   ***/
 package com.flexcapacitor.controls {
 
-	import com.flexcapacitor.controls.IAceEditor;
+	import com.flexcapacitor.utils.supportClasses.log;
 	
+	import flash.display.DisplayObject;
 	import flash.events.Event;
 	import flash.events.FocusEvent;
 	import flash.utils.getTimer;
 	
 	import mx.controls.HTML;
+	import mx.core.ClassFactory;
+	import mx.core.UIComponent;
 	import mx.events.FlexEvent;
+	import mx.utils.Platform;
 	
 	import spark.core.IDisplayText;
 	import spark.events.TextOperationEvent;
 	
 	import flashx.textLayout.operations.FlowOperation;
+	
+	//--------------------------------------
+	//  Events
+	//--------------------------------------
 	
 	/**
 	 *  Dispached when the editor has been created
@@ -74,6 +82,112 @@ package com.flexcapacitor.controls {
 	 *  @eventType flash.events.Event
 	 */
 	[Event(name="editorReady", type="flash.events.Event")]
+	
+	/**
+	 *  Dispatched after the last loading operation caused by
+	 *  setting the <code>location</code> or <code>htmlText</code>
+	 *  property has completed.
+	 *
+	 *  <p>This event is always dispatched asynchronously,
+	 *  after the JavaScript <code>load</code> event
+	 *  has been dispatched in the HTML DOM.</p>
+	 *
+	 *  <p>An event handler for this event may call any method
+	 *  or access any property of this control
+	 *  or its internal <code>htmlLoader</code>.</p>
+	 *
+	 *  @eventType flash.events.Event.COMPLETE
+	 * 
+	 *  @see location
+	 *  @see htmlText
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion AIR 1.1
+	 *  @productversion Flex 3
+	 */
+	[Event(name="complete", type="flash.events.Event")]
+	
+	/**
+	 *  Dispatched after the HTML DOM has been initialized
+	 *  in response to a loading operation caused by
+	 *  setting the <code>location</code> or <code>htmlText</code> property.
+	 *
+	 *  <p>When this event is dispatched,
+	 *  no JavaScript methods have yet executed.
+	 *  The <code>domWindow</code>and <code>domWindow.document</code>
+	 *  objects exist, but other DOM objects may not.
+	 *  You can use this event to set properties
+	 *  onto the <code>domWindow</code> and <code>domWindow.document</code>
+	 *  objects for JavaScript methods to later access.</p>
+	 *
+	 *  <p>A handler for this event should not set any properties
+	 *  or call any methods which start another loading operation
+	 *  or which affect the URL for the current loading operation;
+	 *  doing so causes either an ActionScript or a JavaScript exception.</p>
+	 *
+	 *  @eventType flash.events.Event.HTML_DOM_INITIALIZE
+	 * 
+	 *  @see location
+	 *  @see htmlText
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion AIR 1.1
+	 *  @productversion Flex 3
+	 */
+	[Event(name="htmlDOMInitialize", type="flash.events.Event")]
+	
+	/**
+	 *  Dispatched when this control's HTML content initially renders,
+	 *  and each time that it re-renders.
+	 *
+	 *  <p>Because an HTML control can dispatch many of these events,
+	 *  you should avoid significant processing in a <code>render</code>
+	 *  handler that might negatively impact performance.</p>
+	 *
+	 *  @eventType flash.events.Event.HTML_RENDER
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion AIR 1.1
+	 *  @productversion Flex 3
+	 */
+	[Event(name="htmlRender", type="flash.events.Event")]
+	
+	/**
+	 *  Dispatched when the <code>location</code> property changes.
+	 *
+	 *  <p>This event is always dispatched asynchronously.
+	 *  An event handler for this event may call any method
+	 *  or access any property of this control
+	 *  or its internal <code>htmlLoader</code>.</p>
+	 *
+	 *  @eventType flash.events.Event.LOCATION_CHANGE
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion AIR 1.1
+	 *  @productversion Flex 3
+	 */
+	[Event(name="locationChange", type="flash.events.Event")]
+	
+	/**
+	 *  Dispatched when an uncaught JavaScript exception occurs.
+	 *
+	 *  <p>This event is always dispatched asynchronously.
+	 *  An event handler for this event may call any method
+	 *  or access any property of this control
+	 *  or its internal <code>htmlLoader</code>.</p>
+	 *
+	 *  The actual event type is flash.events.HTMLUncaughtScriptExceptionEvent.UNCAUGHT_SCRIPT_EXCEPTION
+	 *  but then it won't find the class when running in the browser.
+	 *  
+	 *  VerifyError: Error #1014: Class flash.events::HTMLUncaughtScriptExceptionEvent could not be found.
+	 * 
+	 *  @eventType flash.events.Event
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion AIR 1.1
+	 *  @productversion Flex 3
+	 */
+	[Event(name="uncaughtScriptException", type="flash.events.Event")]
 	
 	/**
 	 *  Dispached when the user presses CTRL + S on Win and Linux or CMD + S on Mac
@@ -143,110 +257,120 @@ package com.flexcapacitor.controls {
 	
 	
 	/**
-	 * Ace editor for AIR apps. You must include the source files with this component. 
-	 * You need to copy the ace source code (src-min-noconflict) and ace.html page into your project.  
-	 * The ace.html page is included in this library and the ace source is available at 
-	 * http://ace.c9.io/ or on github.<br/><br/>
+	 * Ace editor for AIR apps. 
+	 * 
+	 * You must include the source files with this component.<br/> 
+	 * You need to copy the ace source code (src-min-noconflict) and ace.html page into your project src directory.
+	 *   
+	 * The ace.html page is included in this library in a sub directory and the ace source is available at 
+	 * http://ace.c9.io/ or on github (link further down).<br/><br/>
 	 * 
 	 * The editor automatically loads unless you set loadOnCreationComplete to false.
 	 * If it is false then call initializeEditor() when you want to load the editor. <br/><br/>
 	 * 
 	 * Only about 3/4ths of the API is supported at this time but you have references to the 
-	 * objects so you can add access additional API and events through them.<br/><br/>
+	 * objects so you can add or access additional API and events through them.
+	 * More instructions are at the http://ace.c9.io/ website.<br/><br/>
 	 * 
 	 * Use the editor.on() method to add listeners and editor.off() to remove them. <br/><br/>
 	 * 
 	 * Listening and dispatching events duration: Average:4ms with debug build.<br>
 	 * Not listening or dispatching events duration: Average:1ms with debug build.<br/><br/>
 	 * 
-	 * A "editorReady" event is dispatched when the editor is ready to use and the isEditorReady property 
-	 * is set to true. 
+	 * A "editorReady" event is dispatched when the editor is ready to use. The 
+	 * bindable isEditorReady property is also set to true when the editor is ready. <br/><br/>
+	 * 
+	 * There is a related AceTextInput that makes it easier to perform searches on 
+	 * an Ace editor instance.<br/><br/> 
+	 * 
+	 * You can also uncomment the search javascript file in the ace.html page to 
+	 * use the search input built into ace editor.<br/><br/> 
 	 * 
 	 * To use in MXML:<br/>
-	<pre>
-	&lt;local:AceEditor id="ace" height="100%" width="100%"
-			top="60" left="0" right="0" bottom="30" 
-			editorReady="aceEditorReadyHandler(event)"
-			selectionChange="ace_selectionChangeHandler(event)"
-			cursorChange="ace_cursorChangeHandler(event)"
-			mouseMoveOverEditor="ace_mouseMoveOverChangeHandler(event)"
-			pathToTemplate="app:/ace.html" editorReady="trace('can access ace.editor now')"/>
-			
-	&lt;s:TextInput id="searchInput" prompt="Search" 
-			change="searchInput_clickHandler(event)"
-			enter="searchInput_clickHandler(event)"/>
-	
-	
-	public function selectionChangeHandler(event:Object, editor:Object):void {
-		var type:String = event.type; // changeSelection
-		anchor = editor.anchor;
-		lead = editor.lead;
-	}
-	
-	protected function ace_cursorChangeHandler(event:Event):void {
-		var cursorPositionLabel:String = ace.row + ":" + ace.column;
-		var token:Object = ace.getTokenAt(ace.row, ace.column);
-		var tokenLabel:String = token ? token.type : "";
-	}
-	
-	protected function ace_mouseMoveOverEditorHandler(event:Event):void {
-		var position:Object = ace.mouseMoveEvent.getDocumentPosition();
-		var mousePositionLabel:String = position.row + ":" + position.column;
-		var token:Object = ace.getTokenAt(position.row, position.column);
-		var tokenLabel:String = token ? token.type : "";
-	}
-	
-	protected function aceEditorReadyHandler(event:Event):void {
-		ace.isEditorReady; // true when editor is ready
-		ace.setMode("ace/mode/html");
-		ace.setValue(myHTMLContent);
-	}
+<pre>
+&lt;local:AceEditor id="ace" height="100%" width="100%"
+		top="60" left="0" right="0" bottom="30" 
+		editorReady="aceEditorReadyHandler(event);trace('can access ace.editor now')"
+		selectionChange="ace_selectionChangeHandler(event)"
+		cursorChange="ace_cursorChangeHandler(event)"
+		mouseMoveOverEditor="ace_mouseMoveOverChangeHandler(event)"
+		pathToTemplate="app:/ace.html"/>
+		
+&lt;s:TextInput id="searchInput" prompt="Search" 
+		change="searchInput_clickHandler(event)"
+		enter="searchInput_clickHandler(event)"/>
 
-	private var lastSearchValue:String;
-			
-	protected function searchInput_clickHandler(event:Event):void {
-		var searchText:String = searchInput.text;
+
+public function selectionChangeHandler(event:Object, editor:Object):void {
+	var type:String = event.type; // changeSelection
+	anchor = editor.anchor;
+	lead = editor.lead;
+}
+
+protected function ace_cursorChangeHandler(event:Event):void {
+	var cursorPositionLabel:String = ace.row + ":" + ace.column;
+	var token:Object = ace.getTokenAt(ace.row, ace.column);
+	var tokenLabel:String = token ? token.type : "";
+}
+
+protected function ace_mouseMoveOverEditorHandler(event:Event):void {
+	var position:Object = ace.mouseMoveEvent.getDocumentPosition();
+	var mousePositionLabel:String = position.row + ":" + position.column;
+	var token:Object = ace.getTokenAt(position.row, position.column);
+	var tokenLabel:String = token ? token.type : "";
+}
+
+protected function aceEditorReadyHandler(event:Event):void {
+	ace.isEditorReady; // true when editor is ready
+	ace.setMode("ace/mode/html");
+	ace.setValue(myHTMLContent);
+}
+
+private var lastSearchValue:String;
 		
-		// enter key pressed
-		if (lastSearchValue==searchText) {
-			lastFocusedEditor.findNext(searchText);
-		}
-		// change event
-		else {
-			var selectionAnchor:Object = aceEditor.getSelectionAnchor();
-			var options:Object = {start:{row:selectionAnchor.row,column:selectionAnchor.column}};
-			var result:Object = aceEditor.find(searchInput.text, options);
-		}
-		
-		lastSearchValue = searchText;
+protected function searchInput_clickHandler(event:Event):void {
+	var searchText:String = searchInput.text;
+	
+	// enter key pressed
+	if (lastSearchValue==searchText) {
+		lastFocusedEditor.findNext(searchText);
+	}
+	// change event
+	else {
+		var selectionAnchor:Object = aceEditor.getSelectionAnchor();
+		var options:Object = {start:{row:selectionAnchor.row,column:selectionAnchor.column}};
+		var result:Object = aceEditor.find(searchInput.text, options);
 	}
 	
-	protected function searchInput_changeHandler(event:Event):void {
-		var searchText:String = searchInput.text;
+	lastSearchValue = searchText;
+}
+
+protected function searchInput_changeHandler(event:Event):void {
+	var searchText:String = searchInput.text;
+	
+	// enter key pressed
+	if (lastSearchValue==searchText) {
 		
-		// enter key pressed
-		if (lastSearchValue==searchText) {
-			
-			if (searchText!="") {
-				if (!shiftDown) {
-					lastFocusedEditor.findNext(null);
-				}
-				else {
-					lastFocusedEditor.findPrevious(null);
-				}
+		if (searchText!="") {
+			if (!shiftDown) {
+				lastFocusedEditor.findNext(null);
+			}
+			else {
+				lastFocusedEditor.findPrevious(null);
 			}
 		}
-		
-		// change event
-		else {
-			var options:Object = {};
-			options.skipCurrent = false;
-			var result:Object = lastFocusedEditor.find(searchInput.text, options);
-		}
-		
-		lastSearchValue = searchText;
 	}
-	</pre>
+	
+	// change event
+	else {
+		var options:Object = {};
+		options.skipCurrent = false;
+		var result:Object = lastFocusedEditor.find(searchInput.text, options);
+	}
+	
+	lastSearchValue = searchText;
+}
+</pre>
 	 * 
 	 * Ace Editor Website - http://ace.c9.io/<br>
 	 * Ace Editor Source Code - https://github.com/ajaxorg/ace/blob/master/lib/ace/editor.js<br>
@@ -254,28 +378,268 @@ package com.flexcapacitor.controls {
 	 * @see https://github.com/ajaxorg/ace/blob/master/lib/ace/editor.js
 	 * @see http://ace.c9.io/#nav=howto
 	 * */	
-	public class AceEditor extends HTML implements IAceEditor, IDisplayText {
+	public class AceEditor extends UIComponent implements IAceEditor, IDisplayText {
 		
 		public function AceEditor() {
 			super();
 			
+			if (debug) {
+				log();
+			}
+			
 			//htmlText = "<h1>loading</h1>";
 			
+			isBrowser = Platform.isBrowser;
+			isAIR = Platform.isAir;
+			isMobile = Platform.isMobile;
 			
-			addEventListener(FlexEvent.INITIALIZE, initializedHandler);
-			addEventListener(Event.COMPLETE, completeHandler);
-			addEventListener(FlexEvent.CREATION_COMPLETE, creationCompleteHandler);
 		}
 		
-		protected function creationCompleteHandler(event:FlexEvent):void
+		public static var UNCAUGHT_SCRIPT_EXCEPTION:String = "uncaughtScriptException";
+		
+		/**
+		 *  @private
+		 */
+		override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+			super.updateDisplayList(unscaledWidth, unscaledHeight);
+			
+			if (isAIR) {
+				airInstance.width = unscaledWidth;
+				airInstance.height = unscaledHeight;
+			}
+			else if (isBrowser) {
+				browserInstance.width = unscaledWidth;
+				browserInstance.height = unscaledHeight;
+			}
+			else if (isMobile) {
+				mobileInstance.width = unscaledWidth;
+				mobileInstance.height = unscaledHeight;
+			}
+		}
+		
+		/**
+		 * Class to use when running in the browser.
+		 * 
+		 * Typically you would set this to something like an iframe component
+		 * */
+		public var browserClass:Class;
+		public var mobileClass:Class;
+		
+		/**
+		 * Class to use when running in the desktop in AIR.
+		 * 
+		 * Typically you would set this to something like an HTML component
+		 * 
+		 * @see mx.controls.HTML
+		 * */
+		public var airClass:Class;
+		
+		public static var isBrowser:Boolean;
+		public static var isAIR:Boolean;
+		public static var isMobile:Boolean;
+		
+		public var browserInstance:Object;
+		public var airInstance:Object;
+		public var mobileInstance:Object;
+		
+		public var editorContainer:Object;
+		
+		public static var debug:Boolean = true;
+		
+		private var _location:String;
+
+		/**
+		 * Location or URL
+		 * */
+		public function get location():String {
+			
+			if (isAIR) {
+				return airInstance.location;
+			}
+			else if (isBrowser) {
+				return browserInstance.location;
+			}
+			else if (isMobile) {
+				return browserInstance.location;
+			}
+			
+			return _location;
+		}
+
+		/**
+		 * @private
+		 * */
+		public function set location(value:String):void {
+			if (debug) {
+				log();
+			}
+			
+			if (isAIR) {
+				airInstance.location = value;
+			}
+			else if (isBrowser) {
+				browserInstance.location = value;
+			}
+			else if (isMobile) {
+				browserInstance.location = value;
+			}
+			_location = value;
+		}
+		
+		/**
+		 *  @private
+		 */
+		override protected function createChildren():void
 		{
-			//trace("creationComplete");
+			super.createChildren();
+			
+			
+			if (isAIR) {
+				airInstance = new airClass();
+				airInstance.addEventListener(FlexEvent.INITIALIZE, initializedHandler, false, 0, true);
+				airInstance.addEventListener(Event.COMPLETE, completeHandler, false, 0, true);
+				//desktopInstance.addEventListener(FlexEvent.CREATION_COMPLETE, creationCompleteHandler, false, 0, true);
+				airInstance.addEventListener(Event.HTML_DOM_INITIALIZE, htmlDomInitializeHandler, false, 0, true);
+				airInstance.addEventListener(Event.HTML_RENDER, htmlRenderHandler, false, 0, true);
+				airInstance.addEventListener(Event.LOCATION_CHANGE, locationChangeHandler, false, 0, true);
+				airInstance.addEventListener(Event.HTML_BOUNDS_CHANGE, htmlBoundsChangeHandler, false, 0, true);
+				airInstance.addEventListener(Event.SCROLL, htmlScrollHandler, false, 0, true);
+				airInstance.addEventListener(UNCAUGHT_SCRIPT_EXCEPTION, uncaughtScriptExceptionHandler, false, 0, true);
+				addChild(airInstance as DisplayObject);
+			}
+			else if (isBrowser) {
+				browserInstance = new browserClass();
+				browserInstance.addEventListener(FlexEvent.INITIALIZE, initializedHandler);
+				browserInstance.addEventListener(Event.COMPLETE, completeHandler);
+				browserInstance.addEventListener(FlexEvent.CREATION_COMPLETE, creationCompleteHandler);
+				addChild(browserInstance as DisplayObject);
+			}
+			else if (isMobile) {
+				mobileInstance = new mobileClass();
+				mobileInstance.addEventListener(FlexEvent.INITIALIZE, initializedHandler);
+				mobileInstance.addEventListener(Event.COMPLETE, completeHandler);
+				mobileInstance.addEventListener(FlexEvent.CREATION_COMPLETE, creationCompleteHandler);
+				addChild(mobileInstance as DisplayObject);
+			}
+				
 		}
 		
+		protected function creationCompleteHandler(event:FlexEvent):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
+		}
+		
+		protected function htmlDomInitializeHandler(event:Event):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
+		}
+		
+		protected function htmlRenderHandler(event:Event):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
+		}
+		
+		/**
+		 *  @private
+		 */
+		protected function htmlBoundsChangeHandler(event:Event):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+		}
+		
+		protected function locationChangeHandler(event:Event):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
+		}
+		
+		protected function uncaughtScriptExceptionHandler(event:Event):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+		}
+		
+		/**
+		 *  @private
+		 */
+		protected function htmlScrollHandler(event:Event):void {
+			if (debug) {
+				log();
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+
+		}
+		
+		/**
+		 * Initialize event
+		 * */
 		public function initializedHandler(event:Event):void {
-			//trace("initialized");
+			if (debug) {
+				log();
+			}
+			
+			
+			if (isAIR) {
+				domWindow = airInstance.domWindow
+			}
+			else if (isBrowser) {
+				domWindow = browserInstance.window
+			}
+			else if (isMobile) {
+				domWindow = mobileInstance.window
+			} 
+				
 			if (loadOnCreationComplete) {
-				location = pathToTemplate;
+				
+				if (isAIR) {
+					airInstance.location = pathToTemplate;
+				}
+				else if (isBrowser) {
+					browserInstance.location = pathToTemplate;
+				}
+				else if (isMobile) {
+					mobileInstance.location = pathToTemplate;
+				}
+			}
+			
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
 			}
 		}
 		
@@ -298,10 +662,13 @@ package com.flexcapacitor.controls {
 		
 		// ACE uses event names such as changeSession instead of sessionChange
 		// this is different than ActionScript3 conventions which is sessionChange
-		private static const SESSION_CHANGE_SESSION:String = "changeSession";
-		private static const SESSION_CHANGE_SELECTION:String = "changeSelection";
-		private static const SESSION_CHANGE_CURSOR:String = "changeCursor";
-		private static const SESSION_MOUSE_MOVE:String = "mousemove";
+		public static const SESSION_CHANGE_SESSION:String = "changeSession";
+		public static const SESSION_CHANGE_SELECTION:String = "changeSelection";
+		public static const SESSION_CHANGE_CURSOR:String = "changeCursor";
+		public static const SESSION_MOUSE_MOVE:String = "mousemove";
+		
+		public static const BLUR:String = "blur";
+		public static const FOCUS:String = "focus";
 		
 		private var callBackAdded:Boolean;
 		
@@ -314,6 +681,11 @@ package com.flexcapacitor.controls {
 		 * Reference to the HTML document
 		 * */
 		public var pageDocument:Object;
+		
+		/**
+		 * Reference to ace editor config
+		 * */
+		public var config:Object;
 		
 		/**
 		 * Reference to the HTML document
@@ -361,6 +733,11 @@ package com.flexcapacitor.controls {
 		 * Reference to the ace language tools
 		 * */
 		public var languageTools:Object;
+		
+		/**
+		 * Reference to the dom window
+		 * */
+		public var domWindow:Object;
 		
 		/**
 		 * Reference to the ace beautify extension
@@ -1011,10 +1388,48 @@ package com.flexcapacitor.controls {
 		}
 		
 		/**
+		 * Indents all the rows, from the start row to the end row (inclusive)
+		 * by prefixing each row with the token in indentString.
+		 * */
+		public function indentRows(start:int, end:int, indentString:String = null):void {
+			session.indentRows(start, end, indentString);
+		}
+		
+		/**
+		 * Outdents rows. Object containing start and end row numbers.
+		 * */
+		public function outdentRows(range:Object):void {
+			session.outdentRows(range);
+		}
+		
+		/**
+		 * Returns true if the character at the position is a soft tab.
+		 * */
+		public function isTabStop(position:Object):Boolean {
+			return session.isTabStop(position);
+		}
+		
+		/**
 		 * Removes the range from the document
 		 * */
 		public function remove(range:Object):void {
 			session.remove(range);
+		}
+		
+		/**
+		 * Removes marker. Removes the marker with the specified ID. 
+		 * If this marker was in front, the 'changeFrontMarker' event is emitted. 
+		 * If the marker was in the back, the 'changeBackMarker' event is emitted.
+		 * */
+		public function removeMarker(markerId:int):void {
+			session.removeMarker(markerId);
+		}
+		
+		/**
+		 * Removes CSS className from the row.
+		 * */
+		public function removeGutterDecoration(row:int, cssClassName:String):void {
+			session.removeGutterDecoration(row, cssClassName);
 		}
 		
 		/**
@@ -1108,6 +1523,13 @@ package com.flexcapacitor.controls {
 		public function setTheme(value:String):void{
 			editor.setTheme(value);
 			_theme = value;
+		}
+		
+		/**
+		 * Sets tab size
+		 * */
+		public function setTabSize(tabSize:int):void{
+			editor.session.setTabSize(tabSize);
 		}
 		
 		private var _isReadOnly:Boolean;
@@ -1213,8 +1635,8 @@ package com.flexcapacitor.controls {
 					session.on(SESSION_CHANGE_SESSION, sessionChangeHandler);
 					session.selection.on(SESSION_CHANGE_SELECTION, selectionChangeHandler);
 					session.selection.on(SESSION_CHANGE_CURSOR, cursorChangeHandler);
-					session.on("blur", blurHandler);
-					session.on("focus", focusHandler);
+					session.on(BLUR, blurHandler);
+					session.on(FOCUS, focusHandler);
 					
 					/* ...too busy
 					session.on("changeSelectionStyle", changeHandler);
@@ -1227,8 +1649,8 @@ package com.flexcapacitor.controls {
 					editor.off(SESSION_MOUSE_MOVE, mouseMoveHandler);
 					session.off(EDITOR_CHANGE, changeHandler);
 					session.off(SESSION_CHANGE_SESSION, sessionChangeHandler);
-					session.off("blur", blurHandler);
-					session.off("focus", focusHandler);
+					session.off(BLUR, blurHandler);
+					session.off(FOCUS, focusHandler);
 					session.selection.off(SESSION_CHANGE_SELECTION, selectionChangeHandler);
 					session.selection.off(SESSION_CHANGE_CURSOR, cursorChangeHandler);
 					callBackAdded = false;
@@ -1303,6 +1725,21 @@ package com.flexcapacitor.controls {
 			if (showInvisiblesChanged) {
 				editor.setShowInvisibles(showInvisibles);
 				showInvisiblesChanged = false;
+			}
+			
+			if (autoCompleterPopUpSizeChanged) {
+				var popup:Object;
+				
+				if (editor.completer) {
+					popup = editor.completer.popup;
+					
+					if (popup) {
+						popup.container.style.width = autoCompleterPopUpSize + "px";
+						popup.resize();
+					}
+				}
+				
+				autoCompleterPopUpSizeChanged = false;
 			}
 			
 			if (fontSizeChanged) {
@@ -1433,6 +1870,13 @@ package com.flexcapacitor.controls {
 		/**
 		 * Maps to the session reset cache method
 		 * */
+		public function reset():void {
+			session.reset();
+		}
+		
+		/**
+		 * Maps to the session reset cache method
+		 * */
 		public function resetCaches():void {
 			session.resetCaches();
 		}
@@ -1471,6 +1915,25 @@ package com.flexcapacitor.controls {
 		}
 		
 		/**
+		 * Set breakpoint
+		 * Sets a breakpoint on the row number given by rows. This function also emites the 'changeBreakpoint' event.
+		 * */
+		public function setBreakpoint(row:int, cssClassName:String):void {
+			if (editor==null) return;
+			editor.getSession().setBreakpoint(row, cssClassName);
+		}
+		
+		/**
+		 * Set breakpoints
+		 * Sets a breakpoint on every row number given by rows. 
+		 * This function also emites the 'changeBreakpoint' event.
+		 * */
+		public function setBreakpoints(rows:Array):void {
+			if (editor==null) return;
+			editor.getSession().setBreakpoints(rows);
+		}
+		
+		/**
 		 * Set annotation
 		 * @param row row for annotation
 		 * @param column column of annotation
@@ -1489,6 +1952,7 @@ package com.flexcapacitor.controls {
 		
 		/**
 		 * Sets one or more annotations. See setAnnotation for object name value pairs.
+		 * Sets annotations for the EditSession. This functions emits the 'changeAnnotation' event.
 		 * @see setAnnotation
 		 * @param row row for annotation
 		 * @param column column of annotation
@@ -1505,6 +1969,24 @@ package com.flexcapacitor.controls {
 		public function clearAnnotations():void {
 			if (editor) {
 				editor.getSession().setAnnotations([]);
+			}
+		}
+		
+		/**
+		 * Clears breakpoint
+		 * */
+		public function clearBreakpoint(row:int):void {
+			if (editor) {
+				editor.getSession().clearBreakpoint(row);
+			}
+		}
+		
+		/**
+		 * Clears all breakpoint
+		 * */
+		public function clearBreakpoints():void {
+			if (editor) {
+				editor.getSession().clearBreakpoints();
 			}
 		}
 		
@@ -1565,7 +2047,57 @@ package com.flexcapacitor.controls {
 		}
 		
 		/**
-		 * Gets the total lines
+		 * Gets line
+		 * */
+		public function getLine(row:uint):String {
+			return editor.session.getLine(row);
+		}
+		
+		/**
+		 * Gets lines
+		 * */
+		public function getLines(start:uint, end:uint):String {
+			return editor.session.getLines(start, end);
+		}
+		
+		/**
+		 * Gets markers
+		 * */
+		public function getMarkers(inFront:Boolean):Array {
+			return editor.session.getMarkers(inFront);
+		}
+		
+		/**
+		 * Gets the current text mode
+		 * @return returns TextMode
+		 * */
+		public function getMode():Object {
+			return editor.session.getMode();
+		}
+		
+		/**
+		 * Gets new line mode
+		 * */
+		public function getNewLineMode():Object {
+			return editor.session.getNewLineMode();
+		}
+		
+		/**
+		 * Gets row length. Returns number of screenrows in a wrapped line
+		 * */
+		public function getRowLength(row:int):Object {
+			return editor.session.getRowLength(row);
+		}
+		
+		/**
+		 * Gets overwrite. Returns true if overwrites are enabled
+		 * */
+		public function getOverwrite():Object {
+			return editor.session.getOverwrite();
+		}
+		
+		/**
+		 * Gets the total lines. Same as getLength()
 		 * */
 		public function getTotalLines():int {
 			return editor.session.getLength();
@@ -1576,6 +2108,35 @@ package com.flexcapacitor.controls {
 		 * */
 		public function getTokenAt(row:uint, column:uint):Object {
 			return editor.session.getTokenAt(row, column);
+		}
+		
+		/**
+		 * Gets the annotations
+		 * */
+		public function getAnnotations():Object {
+			return editor.session.getAnnotations();
+		}
+		
+		/**
+		 * Gets breakpoints
+		 * */
+		public function getBreakpoints():int {
+			return editor.session.getBreakpoints();
+		}
+		
+		/**
+		 * Gets document
+		 * */
+		public function getDocument():int {
+			return editor.session.getDocument();
+		}
+		
+		/**
+		 * Gets the range of a word including its right whitespace
+		 * @return returns a range
+		 * */
+		public function getAWordRange(row:int, column:int):Object {
+			return editor.session.getAWordRange(row, column);
 		}
 		
 		/**
@@ -1686,7 +2247,7 @@ package com.flexcapacitor.controls {
 		}
 		
 		/**
-		 * Handles when editor is loaded. Happens earlier if it's a Friday night. 
+		 * Handles when page (the ace editor) is loaded. 
 		 * */
 		protected function completeHandler(event:Event):void {
 			//var isPrimaryApplication:Boolean = SystemManagerGlobals.topLevelSystemManagers[0] == systemManager;
@@ -1695,6 +2256,23 @@ package com.flexcapacitor.controls {
 			// this throws errors
 			if (aceFound && ignoreCloseErrors) {
 				return;
+			}
+			
+			// browser and desktop compatibility
+			if (isAIR) {
+				domWindow = airInstance.domWindow;
+				editorContainer = airInstance.domWindow;
+			}
+			else if (isBrowser) {
+				domWindow = browserInstance.domWindow;
+				editorContainer = browserInstance.domWindow;
+			}
+			else if (isMobile) {
+				domWindow = mobileInstance.domWindow;
+				editorContainer = mobileInstance.domWindow;
+			}
+			else {
+				throw new Error("Where are you running this at?");
 			}
 			
 			if (validateSources) {
@@ -1741,8 +2319,83 @@ package com.flexcapacitor.controls {
 			commitProperties();
 			setValue(text);
 			clearSelection();
+			addSearchBox();
 			
 			dispatchEvent(new Event(EDITOR_READY));
+		}
+		
+		public var searchModule:Object;
+		private function addSearchBox():void {
+			config.loadModule("ace/ext/searchbox", function(m:Object):void {
+				searchModule = m;
+				searchModule.Search(editor);
+				editor.searchBox.hide();
+			});
+		}
+		
+		/**
+		 * Shows the native search text input. 
+		 * @param value value to place in search input
+		 * @param show if set to true then show if set to false then hide
+		 * @param isReplace if set to true show search and replace field
+		 * */
+		public function showSearchInput(value:String = null, show:Boolean = true, isReplace:Boolean = false):void {
+			
+			if (editor.searchBox==null) {
+				searchModule.Search(editor);
+				editor.searchBox.hide();
+			}
+			
+			if (show) {
+				editor.searchBox.show(value, isReplace);
+			}
+			else {
+				editor.searchBox.hide();
+			}
+		}
+		
+		/**
+		 * Hide native search input
+		 * */
+		public function hideSearchInput():void {
+			
+			if (editor.searchBox==null) {
+				searchModule.Search(editor);
+			}
+			
+			editor.searchBox.hide();
+			
+		}
+		
+		/**
+		 * Toggles between showing and hiding native search input field
+		 * @return returns true if visible and false if not
+		 * */
+		public function toggleSearchField(fillWithSelection:Boolean = true):Boolean {
+			var isVisible:Boolean;
+			var selection:String;
+			
+			if (editor.searchBox==null) {
+				searchModule.Search(editor);
+				isVisible = true;
+				editor.searchBox.hide();
+			}
+			
+			
+			isVisible = editor.searchBox.element.style.display != "none";
+			
+			if (isVisible) {
+				hideSearchInput();
+			}
+			else {
+				if (fillWithSelection) {
+					selection = session.selection.getTextRange(editor.getSelectionRange());
+				}
+				
+				showSearchInput(selection);
+			}
+			
+			return !isVisible;
 		}
 		
 		/**
@@ -1755,11 +2408,13 @@ package com.flexcapacitor.controls {
 			pageStyleSheets = pageDocument.styleSheets;
 			aceManager = domWindow.ace;
 			editor = aceManager.edit(editorIdentity);
+			version	= aceManager.version;
 			element = editor.container;
 			languageTools = aceManager.require("ace/ext/language_tools");
 			beautify = aceManager.require("ace/ext/beautify");
 			session = editor.getSession();
 			selection = session.selection;
+			config = aceManager.config;
 			
 			// this is a hack because somewhere in ace javascript someone is calling console.log
 			// and there is no console in the AIR HTML component dom window
@@ -1780,16 +2435,35 @@ package com.flexcapacitor.controls {
 				name: 'save',
 				bindKey: {win: "Ctrl-S", "mac": "Cmd-S"},
 				exec: saveKeyboardHandler});
+			
 			editor.commands.addCommand({
 				name: 'blockComment',
 				bindKey: {win: "Ctrl-Shift-c", "mac": "Cmd-Shift-C"},
 				exec: blockCommentHandler});
+			
 			editor.commands.addCommand({
+				name: "find",
+				bindKey: {win:"Ctrl-F", mac: "Cmd-F"},
+				exec: searchInputHandler});
+			
+			editor.commands.addCommand({
+				name: "search",
+				bindKey: {"win":"Ctrl-B", "mac": "Cmd-B"},
+				exec: searchInputHandler});
+			
+			/*editor.commands.addCommand({
 				name: 'find',
 				bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
-				exec: findKeyboardHandler});
+				exec: findKeyboardHandler});*/
 			
 			isEditorReady = true;
+		}
+	
+		/**
+		 * Show native finder
+		 * */
+		public function searchInputHandler(editor:Object, event:Object):void {
+			showSearchInput();
 		}
 		
 		/**
@@ -1881,6 +2555,7 @@ editor.removeCommand({name: 'find'});
 			useWorkerChanged = true;
 			enableWrapBehaviorsChanged = true;
 			marginChanged = true;
+			autoCompleterPopUpSizeChanged = true;
 		}
 		
 		/**
@@ -2309,5 +2984,56 @@ editor.console = {log:trace, error:trace};
 		public function initializeEditor():void {
 			location = pathToTemplate;
 		}
+		
+		/**
+		 * Adds a function to help handle auto completion
+		 * 
+<pre>
+public function codeCompleter(editor, session, position, prefix, callback):void {
+	var row:int = position.row;
+	var column:int = position.column;
+	
+	if (prefix.length === 0) { 
+		callback(null, []);
+	}
+	
+	var suggestion:Object = {value:"TheWord", caption:"What user sees as they type", meta:"Suggestion", score:"100"};
+	callback(null, [suggestion]);
+}
+</pre>                
+         *
+		 * */
+		public function addCompleter(completerFunction:Function):void {
+			languageTools.addCompleter({getCompletions:completerFunction});
+		}
+		
+		/**
+		 * Sets a list of auto complete functions
+		 * 
+<pre>
+var completers = [snippetCompleter, textCompleter, keyWordCompleter];
+editor.setCompleters(completers);
+</pre>
+		 * @see https://github.com/ajaxorg/ace/blob/4c7e5eb3f5d5ca9434847be51834a4e41661b852/lib/ace/ext/language_tools.js
+		 * @see #addCompleter()
+		 * */
+		public function setCompleters(completers:Array):void {
+			languageTools.setCompleters(completers);
+		}
+		
+		private var autoCompleterPopUpSizeChanged:Boolean;
+		private var _autoCompleterPopUpSize:int = 320;
+
+		public function get autoCompleterPopUpSize():int {
+			return _autoCompleterPopUpSize;
+		}
+
+		public function set autoCompleterPopUpSize(value:int):void {
+			if (autoCompleterPopUpSizeChanged!=value) autoCompleterPopUpSizeChanged = true;
+			_autoCompleterPopUpSize = value;
+			invalidateProperties();
+		}
+		
+		public var version:String;
 	}
 }

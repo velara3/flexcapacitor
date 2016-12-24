@@ -76,6 +76,7 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.edit.IEditManager;
 	import flashx.textLayout.edit.ISelectionManager;
 	import flashx.textLayout.edit.SelectionState;
+	import flashx.textLayout.elements.Configuration;
 	import flashx.textLayout.elements.FlowElement;
 	import flashx.textLayout.elements.FlowGroupElement;
 	import flashx.textLayout.elements.FlowLeafElement;
@@ -87,6 +88,7 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.events.FlowOperationEvent;
 	import flashx.textLayout.events.StatusChangeEvent;
 	import flashx.textLayout.formats.Float;
+	import flashx.textLayout.formats.ListStyleType;
 	import flashx.textLayout.formats.TextDecoration;
 	import flashx.textLayout.formats.TextLayoutFormat;
 	import flashx.textLayout.operations.ApplyFormatOperation;
@@ -210,6 +212,9 @@ package com.flexcapacitor.controls
 		
 		[SkinPart(required="false")]
 		public var bulletTool:BulletTool;
+		
+		[SkinPart(required="false")]
+		public var orderedBulletTool:BulletTool;
 		
 		[SkinPart(required="true")]
 		public var linkButton:LinkButtonTool;
@@ -424,6 +429,11 @@ package com.flexcapacitor.controls
 				bulletTool.toolTip = "Add List Items";
 			}
 			
+			if (instance == orderedBulletTool) {
+				orderedBulletTool.addEventListener(MouseEvent.CLICK, handleBulletClick, false, 0, true);
+				orderedBulletTool.toolTip = "Add Ordered List Items";
+			}
+			
 			if (instance == clearFormattingTool) {
 				clearFormattingTool.addEventListener(MouseEvent.CLICK, handleClearFormattingClick, false, 0, true);
 				clearFormattingTool.toolTip = "Clear Common Formatting";
@@ -514,6 +524,10 @@ package com.flexcapacitor.controls
 			
 			if (instance == bulletTool) {
 				bulletTool.removeEventListener(MouseEvent.CLICK, handleBulletClick);
+			}
+			
+			if (instance == orderedBulletTool) {
+				orderedBulletTool.removeEventListener(MouseEvent.CLICK, handleBulletClick);
 			}
 			
 			if (instance == linkDetailsView) {
@@ -851,6 +865,15 @@ package com.flexcapacitor.controls
 			else {
 				instance.selectionHighlighting = TextSelectionHighlighting.WHEN_ACTIVE;
 			}
+			
+			var configuration:Configuration= textFlow.configuration as Configuration;
+			
+			// listen for bullet lists
+			if (configuration) {
+				configuration.manageTabKey = true;
+			}
+			
+			
 		}
 		
 		public function detachRichEditableText(instance:Object, removeFromStage:Boolean = false):void {
@@ -1499,69 +1522,107 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleBulletClick(e:MouseEvent):void {
+		private function handleBulletClick(event:MouseEvent):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
 			
-			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager)
-			{
+			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
 				var editManager:IEditManager = IEditManager(richEditableText.textFlow.interactionManager);
 				var doCreate:Boolean = true;
 				var selectionState:SelectionState = getBulletSelectionState();
 				var listElements:Array = richEditableText.textFlow.getElementsByTypeName("list");
+				var orderedButtonPressed:Boolean;
+				var listStyleType:String;
+				var listTypeChanged:Boolean;
 				
-				for each (var listElement:ListElement in listElements)
-				{
+				newFormat = new TextLayoutFormat();
+				
+				// use numbered list items
+				if (event.currentTarget==orderedBulletTool) {
+					orderedButtonPressed = true;
+					newFormat.listStyleType = ListStyleType.DECIMAL;
+				}
+				
+				for each (var listElement:ListElement in listElements) {
 					var start:int = listElement.getAbsoluteStart();
 					var end:int = listElement.getAbsoluteStart() + listElement.parentRelativeEnd - listElement.parentRelativeStart;
+					/*
+					listStyleType = listElement.listStyleType;
 					
-					if (selectionState.absoluteStart == start && selectionState.absoluteEnd == end)
-					{ //Same
+					// ordered button was pressed and list style is not ordered - change to ordered and exit
+					if (orderedButtonPressed && 
+						(listElement.listStyleType==undefined || newFormat.listStyleType!=newFormat.listStyleType)) {
+						listTypeChanged = true;
+						
+						if (listTypeChanged) {
+							editManager.applyFormatToElement(listElement, newFormat);
+							doCreate = false;
+							continue;
+						}
+					}
+					// list style is ordered and unordered button was pressed - change to unordered list and exit
+					else if (!orderedButtonPressed && 
+						(listElement.listStyleType==ListStyleType.DECIMAL)) {
+						newFormat.listStyleType = ListStyleType.DISC;
+						editManager.clearFormatOnElement(listElement, newFormat);
+						doCreate = false;
+						continue;
+					}*/
+					
+					// Same
+					if (selectionState.absoluteStart == start && selectionState.absoluteEnd == end) {
 						removeList(listElement);
 						doCreate = false;
 						break;
 					}
-					else if (selectionState.absoluteStart == start && selectionState.absoluteEnd <= end)
-					{ //Inside touching start
+					// Inside touching start (inside list at any position of first item?)
+					else if (selectionState.absoluteStart == start && selectionState.absoluteEnd <= end) {
+						
 						selectionState = new SelectionState(richEditableText.textFlow, end, selectionState.absoluteEnd);
 						removeList(listElement);
 						editManager.createList(null, null, selectionState);
 						doCreate = false;
 						break;
 					}
-					else if (selectionState.absoluteStart >= start && selectionState.absoluteEnd == end)
-					{ //Inside touching end
+					// Inside touching end (inside list at last position of last item?)
+					else if (selectionState.absoluteStart >= start && selectionState.absoluteEnd == end) {
 						selectionState = new SelectionState(richEditableText.textFlow, selectionState.absoluteStart, start);
 						removeList(listElement);
 						editManager.createList(null, null, selectionState);
 						doCreate = false;
 						break;
 					}
-					else if (selectionState.absoluteStart >= start && selectionState.absoluteEnd <= end)
-					{ //Inside
+					// Inside (inside list but not first item and not last item?)
+					else if (selectionState.absoluteStart >= start && selectionState.absoluteEnd <= end) {
 						var firstRange:SelectionState = new SelectionState(richEditableText.textFlow, selectionState.absoluteStart, start);
 						var secondRange:SelectionState = new SelectionState(richEditableText.textFlow, end, selectionState.absoluteEnd);
+						
 						removeList(listElement);
 						editManager.createList(null, null, firstRange);
 						editManager.createList(null, null, secondRange);
 						doCreate = false;
 						break;
+						
 					}
-					else if ((selectionState.absoluteStart >= start && selectionState.absoluteStart <= end) || (selectionState.absoluteEnd >= start && selectionState.absoluteEnd <= end))
-					{ //Overlap. Include this list in the selection
+					// Overlap. Include this list in the selection
+					else if ((selectionState.absoluteStart >= start && selectionState.absoluteStart <= end) || (selectionState.absoluteEnd >= start && selectionState.absoluteEnd <= end)) {
 						selectionState = new SelectionState(richEditableText.textFlow, Math.min(start, selectionState.absoluteStart), Math.max(end, selectionState.absoluteEnd));
 						removeList(listElement);
 					}
-					else if (selectionState.absoluteStart <= start && selectionState.absoluteEnd >= end)
-					{ //surround. Remove this list since it will get added back in, only expanded.
+					// surround. Remove this list since it will get added back in, only expanded.
+					else if (selectionState.absoluteStart <= start && selectionState.absoluteEnd >= end) {
 						removeList(listElement);
 					}
 				}
 				
 				if (doCreate) {
-					IEditManager(richEditableText.textFlow.interactionManager).createList(null, null, selectionState);
+					editManager.createList(null, newFormat, selectionState);
 				}
 				
-				richEditableText.textFlow.interactionManager.setFocus();
+				//richEditableText.textFlow.interactionManager.setFocus();
 				setEditorFocus(true);
+				
+				updateEditor();
 			}
 		}
 		
@@ -1800,31 +1861,39 @@ package com.flexcapacitor.controls
 				
 				// BULLET LIST
 				
-				if (bulletTool != null)
-				{
-					if (richEditableText.textFlow)
-					{
+				if (bulletTool != null || orderedBulletTool!=null) {
+					
+					if (richEditableText.textFlow) {
+						
 						var willRemoveBulletsIfClicked:Boolean = false;
 						var selectionState:SelectionState = getBulletSelectionState();
 						var listElements:Array = richEditableText.textFlow.getElementsByTypeName("list");
+						var orderedList:Boolean;
 						
-						for each (var listElement:ListElement in listElements)
-						{
+						for each (var listElement:ListElement in listElements) {
 							var start:int = listElement.getAbsoluteStart();
 							var end:int = listElement.getAbsoluteStart() + listElement.parentRelativeEnd - listElement.parentRelativeStart;
-							if (selectionState.absoluteStart == start && selectionState.absoluteEnd == end)
-							{ //Same
+							orderedList = listElement.listStyleType == ListStyleType.DECIMAL;
+							
+							// Same
+							if (selectionState.absoluteStart == start && selectionState.absoluteEnd == end) {
 								willRemoveBulletsIfClicked = true;
 								break;
 							}
-							else if (selectionState.absoluteStart >= start && selectionState.absoluteEnd <= end)
-							{ //Inside
+							// Inside
+							else if (selectionState.absoluteStart >= start && selectionState.absoluteEnd <= end) {
 								willRemoveBulletsIfClicked = true;
 								break;
 							}
 						}
 						
-						bulletTool.selected = willRemoveBulletsIfClicked;
+						if (bulletTool) {
+							bulletTool.selected = willRemoveBulletsIfClicked && !orderedList;
+						}
+						
+						if (orderedBulletTool) {
+							orderedBulletTool.selected = willRemoveBulletsIfClicked && orderedList;
+						}
 						
 					}
 				}

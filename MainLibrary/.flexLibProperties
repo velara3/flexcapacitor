@@ -440,6 +440,8 @@
     <classEntry path="com.flexcapacitor.utils.CursorUtils"/>
     <classEntry path="com.flexcapacitor.utils.TextFlowUtils"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.LogSettings"/>
+    <classEntry path="com.flexcapacitor.utils.supportClasses.ObjectDefinition"/>
+    <classEntry path="com.flexcapacitor.controls.supportClasses.AutoCompleteObject"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>

@@ -8,12 +8,15 @@ package com.flexcapacitor.utils.supportClasses {
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.ClassFactory;
+	import mx.core.ComponentDescriptor;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
 	
 	import spark.core.IGraphicElement;
+	import spark.layouts.BasicLayout;
+	import spark.layouts.supportClasses.LayoutBase;
 	
 	/**
 	 * Contains information about components that are
@@ -587,6 +590,37 @@ package com.flexcapacitor.utils.supportClasses {
 			}
 			
 			return parentItem;
+		}
+		
+		public function getFirstAncestorWithLayout(layoutType:Class, skipLockedItems:Boolean = true):ComponentDescription {
+			var layout:LayoutBase;
+			var possibleTarget:Object;
+			var componentDescription:ComponentDescription = this;
+			
+			while (componentDescription!=null) {
+				possibleTarget = componentDescription.instance;
+				layout = possibleTarget && "layout" in possibleTarget ? possibleTarget.layout : null;
+					
+				if (layout == null || possibleTarget==null) {
+					componentDescription = componentDescription.parent;
+				}
+				else if (layout is layoutType) {
+					
+					// exclude locked items 
+					if (componentDescription.locked && skipLockedItems) {
+						componentDescription = componentDescription.parent;
+						continue;
+					}
+					
+					break;
+				}
+				else {
+					componentDescription = componentDescription.parent;
+				}
+				
+			}
+			
+			return componentDescription;
 		}
 	}
 }

@@ -13,6 +13,8 @@ package com.flexcapacitor.utils
 	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 	
+	import mx.utils.StringUtil;
+	
 	
 	/**
 	 * A set of utilities for working with XML
@@ -181,7 +183,275 @@ package com.flexcapacitor.utils
 			return xml;
 		}
 		
+		/**
+		 * Removes node from the list.
+		 * */
+		public static function removeNodeFromXMLList(xmlList:XMLList, node:Object):Object {
+			//var parent:XML = xmlList.parent();
+			var deleted:Boolean; // always reports true :/
+			var index:int;
+			var numberOfItems:int = xmlList.length();
+			var numberOfItemsAfter:int;
+			var removed:Object;
+			
+			index = getItemIndex(xmlList, node);
+			numberOfItemsAfter = numberOfItems;
+			
+			if (index!=-1) {
+				removed = xmlList[index];
+				deleted = delete xmlList[index];
+				numberOfItemsAfter = xmlList.length();
+			}
+			
+			if (numberOfItems!=numberOfItemsAfter) {
+				return removed;
+			}
+			
+			/*
+			if (parent!=null) {
+				index = node.childIndex();
+				deleted = delete xmlList[index];
+			}
+			else {
+				parent = <node/>;
+				parent.appendChild(xmlList);
+				index = node.childIndex();
+				deleted = delete xmlList[index];
+				
+				/// we added a parent to delete an items in xmllist 
+				// but now how to do we delete the parent?
+				
+				//delete xmlList.parent();
+				// return parent.children().copy(); ?
+				//numberOfItems = xmlList.length();
+				
+				// answers in XMLListAdapter.removeItem();
+			}
+			*/
+			
+			return removed;
+		}
 		
+		/**
+		 * Get index of xml node
+		 * */
+		public static function getItemIndex(source:XMLList, item:Object):int
+		{
+			if (item is XML && source.contains(XML(item)))
+			{
+				var numberOfItems:int = source.length();
+				for (var i:int = 0; i < numberOfItems; i++)
+				{
+					var search:Object = source[i];
+					if (search === item)
+					{
+						return i;
+					}
+				}
+			}
+			
+			return -1;           
+		}
+		
+		
+		/**
+		 * Gets the XML that is not a property, style or event of the object
+		 * 
+		 * @param node XML item
+		 * */
+		public static function getDefaultPropertyValueObject(object:Object, 
+															 node:XML, 
+															 defaultProperty:Object, 
+															 includeQualifiedNames:Boolean = true, 
+															 ignoreWhitespace:Boolean = false, 
+															 excludedProperties:Array = null):Object {
+			var defaultPropertyName:String;
+			var defaultPropertyURI:String;
+			var memberNames:Array;
+			var attributes:XMLList;
+			var attributeNames:Array;
+			var childNodes:XMLList;
+			var childNodeNames:Array;
+			//var childNodes:XMLList;
+			var declaredAsAttribute:Boolean;
+			var declaredAsChild:Boolean;
+			var message:String;
+			var nodeName:String;
+			var error:Error;
+			var childNodeName:String;
+			var defaultPropertyChildren:XMLList;
+			var deleted:Boolean;
+			var result:Object;
+			var localName:String;
+			var fullNodeName:String;
+			var nodeKind:String;
+			var childNodeIndex:int;
+			var subtractionMethod:Boolean;
+			
+			
+			result = {};
+			
+			if (defaultProperty==null) {
+				return result;
+			}
+			else if (defaultProperty is QName) {
+				defaultPropertyName = QName(defaultProperty).localName;
+				defaultPropertyURI = QName(defaultProperty).uri;
+			}
+			else if (defaultProperty is String) {
+				defaultPropertyName = String(defaultProperty);
+			}
+			
+			//defaultProperty 	= object ? object : null;
+			
+			if (excludedProperties && excludedProperties.indexOf(defaultPropertyName)!=-1) {
+				return result;
+			}
+			
+			subtractionMethod = true;
+			
+			
+			var settings:Object;
+			
+			settings = XML.settings();
+			XML.ignoreWhitespace = ignoreWhitespace;
+			//XML.prettyPrinting = ignoreWhitespace;
+			//XML.ignoreProcessingInstructions = ignoreWhitespace;
+			
+			node = new XML(node);
+			
+			memberNames 		= ClassUtils.getMemberNames(object);
+			attributes 			= node.attributes();
+			attributeNames 		= XMLUtils.convertXMLListToArray(attributes);
+			
+			// check if default property is defined as an attribute
+			if (attributeNames.indexOf(defaultProperty)!=-1) {
+				declaredAsAttribute = true;
+			}
+			
+			childNodes			= node.children();
+			childNodeNames 		= XMLUtils.getChildNodeNames(node);
+			
+			// check if default property is defined as a child node
+			if (childNodeNames.indexOf(defaultProperty)!=-1) {
+				declaredAsChild = true;
+			}
+			
+			XML.setSettings(settings);
+			
+			if (declaredAsChild && declaredAsAttribute) {
+				nodeName = node.name().localName;
+				message = "Multiple initializers for property '{0}'. (note: '{0}' is the default property of '{1}')";
+				message = StringUtil.substitute(message, defaultProperty, nodeName);
+				error = new Error(message);
+				return error;
+			}
+			
+			// remove properties not part of the element 
+			if (subtractionMethod) {
+				// loop through child nodes and delete nodes that are properties of the element
+				//var tempParent:XML = <test/>;
+				//var namespaces:Array = node.inScopeNamespaces();
+				var copy:XML = node.copy();
+				
+				//tempParent.appendChild(copy);
+				var numberOfItems:int;
+				
+				for each (var childNode:XML in copy.*) {
+					/*
+					for each (var ns:Namespace in namespaces) {
+						childNode.setNamespace(ns);
+						break;
+					}*/
+					
+					localName = childNode.localName();
+					fullNodeName = childNode.name();
+					nodeKind = childNode.nodeKind();
+					childNodeIndex = childNode.childIndex();
+					
+					// node is null or comment
+					if (fullNodeName==null) {
+						continue;
+					}
+					
+					if (memberNames.indexOf(localName)!=-1) {
+						numberOfItems = copy.*.length();
+						deleted = delete copy.*[childNodeIndex];
+						
+						if (numberOfItems==copy.*.length()) {
+							deleted = delete copy.*[childNodeIndex];
+							if (numberOfItems==copy.*.length()) {
+								// couldn't delete the node for some reason
+							}
+						}
+					}
+				}
+				
+				numberOfItems = copy.*.length();
+				
+				if (numberOfItems) {
+					result[defaultPropertyName] = copy.*;
+				}
+				
+			}
+			// add each XML node that is not a property of the element
+			else {
+			
+				// alternatively loop through child nodes and create a new XMLList
+				var copy2:XMLList = childNodes.copy();
+				if (defaultPropertyChildren==null) {
+					defaultPropertyChildren = new XMLList();
+				}
+				
+				for each (var childNode1:XML in copy2) {
+					childNodeName = childNode1.name().localName;
+					
+					if (memberNames.indexOf(childNodeName)!=-1) {
+						defaultPropertyChildren += childNode1;
+					}
+				}
+				
+				if (defaultPropertyChildren.length()) {
+					result[defaultPropertyName] = defaultPropertyChildren;
+				}
+				
+			}
+			
+			return result;
+			
+			// get default property
+			// if no default property return null
+			
+			// get a list of all element members
+			// get a list of all attributes on node
+			// check if default property is defined as attribute
+			
+			// get a list of all child nodes
+			// check if it's also defined as child node
+			
+			// if defined as both throw error
+			
+			// filter all child nodes out that are part of the element
+			// 
+			
+			/*
+			var result:Array = [];
+			var localName:String;
+			var qualifiedName:String;
+			var ignoreWhitespaceValue:Boolean;
+			var settings:Object;
+			
+			settings = XML.settings();
+			XML.ignoreWhitespace = ignoreWhitespace;
+			XML.prettyPrinting = ignoreWhitespace;
+			XML.ignoreProcessingInstructions = ignoreWhitespace;
+			
+			
+			XML.setSettings(settings);
+			
+			return result;
+			*/
+		}
 		/**
 		 * Add a namespace to a XML node
 		 * */
@@ -666,6 +936,7 @@ package com.flexcapacitor.utils
 					name = childNode.name().toString();
 				}
 				else {
+					// we could also use childNode.name().localName (QName)
 					name = childNode.localName();
 				}
 				
@@ -852,7 +1123,7 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Get name value pair from attributes from a node
+		 * Get name value pair from attributes from a node. Decodes attribute values
 		 * 
 		 * @param node XML item
 		 * */
@@ -895,11 +1166,12 @@ package com.flexcapacitor.utils
 		 * @param node XML item
 		 * */
 		public static function getChildNodesValueObject(node:XML, includeQualifiedNames:Boolean = true, toSimpleString:Boolean = true, ignoreWhitespace:Boolean = false):Object {
-			var result:Array = [];
+			var result:Object = {};
 			var localName:String;
 			var qualifiedName:String;
 			var ignoreWhitespaceValue:Boolean;
 			var settings:Object;
+			var qname:QName;
 			
 			settings = XML.settings();
 			XML.ignoreWhitespace = ignoreWhitespace;
@@ -912,11 +1184,35 @@ package com.flexcapacitor.utils
 					qualifiedName = childNode.localName();
 				}
 				
+				qname = childNode.name();
+				
 				localName = childNode.name();
 				if (localName==null) {
 					continue;
 				}
 				
+				// http://www.morearty.com/blog/2007/03/13/common-e4x-pitfalls/
+				/*
+				E4X intentionally blurs the distinction between XML and XMLList. Any XMLList that 
+				contains exactly one element can be treated as if it were an XML.
+				
+				For example, another place where this blurring is evident is in the behavior of XMLList.toString(). 
+				As the Flex docs say:
+				
+				If the XML object has simple content, toString() returns the string contents of the XML object with the 
+				following stripped out: the start tag, attributes, namespace declarations, and end tag.
+				If the XML object has complex content, toString() returns an XML encoded string representing the entire 
+				XML object, including the start tag, attributes, namespace declarations, and end tag.
+				
+				So if an XMLList contains <node>hello</node>, then toString() will return "hello"; 
+				but if the list contains <node>hello</node><node>goodbye</node>, then toString() will return 
+				"<node>hello</node><node>goodbye</node>" (not "hellogoodbye"). 
+				
+				Presumably this decision was made in an effort to achieve “do what I mean” behavior, 
+				where the output would match what developers most often intended; 
+				but personally I find it a little confusing. If you really need the full XML version of an 
+				XMLList that contains simple content, use toXMLString() instead of toString().
+				*/
 				if (toSimpleString) {
 					if (includeQualifiedNames) {
 						result[qualifiedName] = result[localName] = childNode.children().toString();

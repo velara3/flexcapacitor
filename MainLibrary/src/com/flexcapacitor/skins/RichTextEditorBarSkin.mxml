@@ -154,6 +154,7 @@ limitations under the License.
 			</s:Line>
 			<r:AlignTool id="alignTool" width="80" />
 			<r:BulletTool id="bulletTool" width="20" icon="@Embed('richTextEditorClasses/icons/bullet.png')"/>
+			<r:BulletTool id="orderedBulletTool" width="20" icon="@Embed('richTextEditorClasses/icons/OrderedList.png')"/>
 			<s:Line height="100%">
 				<s:stroke>
 					<s:SolidColorStroke color="#B3C2B8"/>

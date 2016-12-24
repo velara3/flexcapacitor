@@ -88,7 +88,7 @@ package com.flexcapacitor.effects.window.supportClasses {
 				// 
 				// initialize, creationComplete or applicationComplete
 				if (!ignoreWindowSizeError && windowWidth==0 && windowHeight==0) {
-					dispatchErrorEvent("The window width and height are 0. Set ignoreWindowSizeError to true or ensure the width and height are not 0. Or wait until a later event.");
+					dispatchErrorEvent("The window or component width and height are 0. Set ignoreWindowSizeError to true or ensure the width and height are not 0. Or wait until a later event to run this effect. Also, check that this is running on the correct component or application.");
 				}
 			}
 			

@@ -29,6 +29,7 @@ package com.flexcapacitor.utils {
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
+	import flash.utils.Endian;
 	import flash.utils.getTimer;
 	
 	import mx.collections.ArrayCollection;
@@ -1651,23 +1652,28 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				
 				// have to remove line breaks for background: url(datauri) to work in some environments
 				if (insertLinebreaks) {
-					results = results.replace(/\n/g, "");
+					results = results.replace(lineEndingsGlobalPattern, "");
 				}
 			}
 			
 			return results;
 		}
 		
+		public static var removeBase64HeaderPattern:RegExp = /.*base64,/si;
+		public static var lineEndingsGlobalPattern:RegExp = /\n/g;
+		public static var JPEG_ENCODER_OPTIONS_CLASS_PATH:String = "flash.display.JPEGEncoderOptions";
+		public static var PNG_ENCODER_OPTIONS_CLASS_PATH:String = "flash.display.PNGEncoderOptions";
+		
 		/**
 		 * Returns a byte array from a base 64 string. Need to remove the header text, ie "data:image/png;base64,"
 		 * and possibly line breaks.
 		 * 
 		 * @param alternativeEncoder Set the static Base64Decoder2 property to an alternative decoder before calling this.
-		 * @see #getBitmapByteArray()
+		 * @see #getBitmapDataFromByteArray()
 		 * @see #getBase64ImageData()
 		 * @see #getBase64ImageDataString()
 		 * */
-		public static function getByteArrayFromBase64(encoded:String, alternativeDecoder:Boolean = false, removeHeader:Boolean = false):ByteArray {
+		public static function getByteArrayFromBase64(encoded:String, alternativeDecoder:Boolean = false, removeHeader:Boolean = true, removeLinebreaks:Boolean = true):ByteArray {
 			var results:ByteArray;
 			
 			if (!alternativeDecoder) {
@@ -1676,16 +1682,31 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				}
 				
 				if (removeHeader) {
-					encoded = encoded.replace(/.*base64,/si, "");
+					encoded = encoded.replace(removeBase64HeaderPattern, "");
+				}
+				
+				if (removeLinebreaks) {
+					encoded = encoded.replace(lineEndingsGlobalPattern, "");
 				}
 				
 				base64Decoder.reset();
 				base64Decoder.decode(encoded);
 				results = base64Decoder.toByteArray();
+				
+				// if you get the following error then try removing the header or line breaks
+				//    Error: A partial block (3 of 4 bytes) was dropped. Decoded data is probably truncated!
 			}
 			else {
 				if (Base64Decoder2==null) {
 					throw new Error("Set the static alternative base decoder before calling this method");
+				}
+				
+				if (removeHeader) {
+					encoded = encoded.replace(removeBase64HeaderPattern, "");
+				}
+				
+				if (removeLinebreaks) {
+					encoded = encoded.replace(lineEndingsGlobalPattern, "");
 				}
 				
 				Base64Decoder2.reset();
@@ -1744,10 +1765,11 @@ trace(result); // rgba(255, 0, 0, 0.3);
 												  bitmapDataEncoderOptions:Object = null):ByteArray {
 			
 			var PNGEncoderOptionsClass:Object;
+			var JPEGEncoderOptionsClass:Object;
 			var byteArray:ByteArray;
 			
-			var hasJPEGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.JPEGEncoderOptions");
-			var hasPNGEncoderOptions:Boolean = ClassUtils.hasDefinition("flash.display.PNGEncoderOptions");
+			var hasJPEGEncoderOptions:Boolean = ClassUtils.hasDefinition(JPEG_ENCODER_OPTIONS_CLASS_PATH);
+			var hasPNGEncoderOptions:Boolean = ClassUtils.hasDefinition(PNG_ENCODER_OPTIONS_CLASS_PATH);
 			
 			if (clipRectangle==null) {
 				clipRectangle = new Rectangle(0, 0, bitmapData.width, bitmapData.height);
@@ -1780,7 +1802,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				// using BitmapData.encode()
 					if (!pngEncoderOptions) {
 						// did you get an error here? include this class and set flash player swfversion to 19 or newer
-						PNGEncoderOptionsClass = ClassUtils.getDefinition("flash.display.PNGEncoderOptions");
+						PNGEncoderOptionsClass = ClassUtils.getDefinition(PNG_ENCODER_OPTIONS_CLASS_PATH);
 						// be sure to include this class in your project or library or else use the other encoder
 						pngEncoderOptions = new PNGEncoderOptionsClass(fastCompression);
 					}
@@ -1806,7 +1828,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				// using BitmapData.encode()
 					if (!jpegEncoderOptions) {
 						// to use JPEGXR pass in an instance of JPEGXREncoderOptions class
-						var JPEGEncoderOptionsClass:Object = ClassUtils.getDefinition("flash.display.JPEGEncoderOptions");
+						JPEGEncoderOptionsClass = ClassUtils.getDefinition(JPEG_ENCODER_OPTIONS_CLASS_PATH);
 						jpegEncoderOptions = new JPEGEncoderOptionsClass(quality);
 					}
 					
@@ -1826,7 +1848,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		/**
 		 * Get bitmap data from a byte array
 		 * */
-		public static function getBitmapDataFromByteArray(byteArray:ByteArray, loaderContext:LoaderContext = null):BitmapData {
+		public static function getBitmapDataFromByteArray(byteArray:ByteArray, loaderContext:LoaderContext = null, attemptToDetermineSize:Boolean = false):BitmapData {
 			var PNGEncoderOptionsClass:Object;
 			var bitmapData:BitmapData;
 			var value:Object;
@@ -1834,10 +1856,10 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var rectangle:Rectangle;
 			var initialWidth:int = 100;
 			var initialHeight:int = 100;
-			var colorspace:BitmapEncodingColorSpace= new BitmapEncodingColorSpace();
 			var quality:String;
 			var loaderContext:LoaderContext;
-			
+			var isPNG:Boolean;
+			var isJPG:Boolean;
 			
 			try {
 				byteArray.position = 0;
@@ -3474,5 +3496,277 @@ trace(size); // {width = 200, height = 100}
 			
 			return sourceDifference;
 		}
+		
+		
+		protected static const JPEG_SOF0:Array = [0xFF, 0xC0, 0x00, 0x11, 0x08];
+		
+		/**
+		 * Get the dimensions of a JPEG image from a base64 string. 
+		 * */
+		public static function getJPGImageDimensions(base64:String, removeLinebreaks:Boolean = true):Point {
+			var baseArray:Array;
+			var byteArray:ByteArray;
+			var base64Decoder:Base64Decoder;
+			var header:String;
+			var imageWidth:int;
+			var imageHeight:int;
+			var point:Point;
+			
+			point = new Point();
+			
+			if (base64==null || base64=="") {
+				return point;
+			}
+			
+			baseArray = base64.split(",");
+			
+			if (baseArray.length>0) {
+				header = String(baseArray[1]);
+			}
+			
+			// linebreaks cause problems for some renderers
+			if (removeLinebreaks) {
+				//trace("Base64 length A : " + base64.length);
+				header = header.replace(/\n/g, "");
+				//trace("Base64 length B : " + base64.length);
+			}
+			
+			//var header:String = base64.slice(0, 52); // 50 gave error later on
+			// we could try to get less of a string and that may be faster
+			header = header.slice(0, header.length);
+			
+			base64Decoder = new Base64Decoder();
+			base64Decoder.reset();
+			base64Decoder.decode(header);
+			
+			// base64Decoder.toByteArray();
+			//    Error: A partial block (2 of 4 bytes) was dropped. Decoded data is probably truncated!
+			// added the whole length (52 works as well)
+			byteArray = base64Decoder.toByteArray();
+			byteArray.position = 0;
+			
+			var bytesAvailable:int;
+			var byte:int; // should this be uint?
+			var hexValue:String;
+			var apps:Array;
+			var appCount:int = 16;
+			var startOfSearchIndex:uint; 
+			var position:int;
+			var match:Boolean;
+			var segmentLength:int;
+			var sizeFound:Boolean;
+			var frameLength:int;
+			
+			bytesAvailable = byteArray.length;
+			byteArray.endian = Endian.BIG_ENDIAN;
+			frameLength = JPEG_SOF0.length + 4;
+			
+			// get list of possible apps
+			if (apps==null) {
+				apps = [];
+				
+				for (var j:int; j < appCount; j++) {
+					apps[j] = [0xFF, 0xE0 + j];
+				}
+			}
+			
+			// find the start of jpeg frame that contains size information
+			while (bytesAvailable >= frameLength) {
+				match = false;
+				
+				byte = byteArray.readUnsignedByte();
+				position++;
+				
+				// skip apps data until we get to final start of frame
+				for each (var appArray:Array in apps) {
+					
+					if (byte == appArray[startOfSearchIndex]) {
+						match = true;
+						
+						if (startOfSearchIndex+1 >= appArray.length) {
+							
+							if (debug) {
+								trace("APP" + Number(byte - 0xE0).toString(16).toUpperCase() + " found at 0x" + position.toString(16).toUpperCase());
+							}
+							
+							// APP table found, skip it as it may contain thumbnails in JPG (we don’t want their SOF’s)
+							// this short contains the length of the app segment (thumbnail data) skip it 
+							// https://en.wikipedia.org/wiki/JPEG_File_Interchange_Format
+							segmentLength = byteArray.readUnsignedShort()-2;// -2 for the short we just read
+							
+							if (byteArray.bytesAvailable >= segmentLength ) {
+								
+								for ( var i:uint = 0; i < segmentLength; i++ ) {
+									byte = byteArray.readByte();
+									position++;
+								}
+								
+								if (debug) {
+									trace( "Position after segment: 0x" + Number(position).toString(16).toUpperCase());
+								}
+							}
+							else {
+								sizeFound = false;
+								break;
+							}
+								
+							segmentLength = 0;
+						}
+					}
+				}
+				
+				// Check for start of frame
+				if (byte == JPEG_SOF0[startOfSearchIndex]) {
+					match = true;
+					
+					if (startOfSearchIndex+1 >= JPEG_SOF0.length) {
+						
+						imageHeight = byteArray.readUnsignedShort();
+						imageWidth = byteArray.readUnsignedShort();
+						
+						sizeFound = true;
+						
+						break;
+					}
+				}
+				
+				if (match) {
+					startOfSearchIndex++;
+				} else {
+					startOfSearchIndex = 0;
+				}
+				
+				bytesAvailable = byteArray.bytesAvailable;
+			}
+			
+			if (sizeFound) {
+				point.x = imageWidth;
+				point.y = imageHeight;
+			}
+			
+			return point;
+		}
+		
+		/**
+		 * Get the size of a PNG from base64 information. 
+		 * 
+		 * @param base64 the base 64 string to parse
+		 * @param removeLinebreaks some renderers and parsers have problems with linebreaks. encoders use them to make the value more readable
+		 * @param parseHeadersCount gets the least amount of string to parse. should be faster. set to 0 to get the full byte array.
+		 * */
+		public static function getPNGImageDimensions(base64:String, removeLinebreaks:Boolean = false, parseHeadersCount:int = 52):Point {
+			var baseArray:Array;
+			var byteArray:ByteArray;
+			var base64Decoder:Base64Decoder;
+			var header:String;
+			var imageWidth:int;
+			var imageHeight:int;
+			var point:Point;
+			var trimLength:int;
+			
+			point = new Point();
+			
+			if (base64==null || base64=="") {
+				return point;
+			}
+			
+			baseArray = base64.split(",");
+			
+			if (baseArray.length>0) {
+				header = String(baseArray[1]);
+			}
+			else {
+				header = base64;
+			}
+			
+			//var header:String = base64.slice(0, 52); // 50 gave error later on
+			// we could try to get less of a string and that may be faster???
+			if (parseHeadersCount>0) {
+				header = header.slice(0, parseHeadersCount);
+			}
+			
+			// linebreaks cause problems for some renderers
+			if (removeLinebreaks) {
+				header = header.replace(/\n/g, "");
+			}
+			
+			base64Decoder = new Base64Decoder();
+			base64Decoder.reset();
+			base64Decoder.decode(header);
+			
+			// base64Decoder.toByteArray();
+			//    Error: A partial block (2 of 4 bytes) was dropped. Decoded data is probably truncated!
+			// added the whole length (52 works as well) - base64Decoder.decode(header);
+			byteArray = base64Decoder.toByteArray();
+			byteArray.position = 0;
+			
+			byteArray.position = 16;
+			imageWidth = byteArray.readUnsignedInt();
+			imageHeight = byteArray.readUnsignedInt();
+			
+			point.x = imageWidth;
+			point.y = imageHeight;
+			
+			return point;
+		}
+		
+		/**
+		 * Get size of image from base64 data string. Not implemented yet.
+		 * */
+		public static function getGIFImageDimensions(base64:String):Point {
+			throw new Error("getGIFImageDimensions is not implemented yet");
+			base64 = base64.split(',')[1];
+			return null;
+		}
+		
+		/**
+		 * Get size of image from base64 data string. Not implemented yet.
+		 * */
+		public static function getSWFImageDimensions(base64:String):Point {
+			throw new Error("getSWFImageDimensions is not implemented yet");
+			base64 = base64.split(',')[1];
+			return null;
+		}
+		
+		/**
+		 * Get size of image from base64 data string. 
+		 * Expects header like "data:image/png;base64,1234567890"
+		 * Then it parses the image type and returns a point with the 
+		 * size. If the data is corrupt and the size cannot be found
+		 * then null is returned.
+		 * 
+		 * @param base64 base64 string of bitmap data in format
+		 * @see #getPNGImageDimensions()
+		 * @see #getJPGImageDimensions()
+		 * @see #getGIFImageDimensions()
+		 * @see #getSWFImageDimensions()
+		 * */
+		public static function getBase64ImageDimensions(base64:String):Point {
+			var baseArray:Array = base64 ? base64.split(",") : [];
+			var baseInfo:String;
+			var point:Point;
+			
+			if (baseArray.length>1) {
+				baseInfo = String(baseArray[0]).toLowerCase();
+				
+				if (baseInfo.indexOf("png")!=-1) {
+					point = getPNGImageDimensions(base64);
+				}
+				else if (baseInfo.indexOf("jpeg")!=-1 || 
+					baseInfo.indexOf("jpg")!=-1) {
+					point = getJPGImageDimensions(base64);
+				}
+				else if (baseInfo.indexOf("gif")!=-1) {
+					point = getGIFImageDimensions(base64);
+				}
+				else if (baseInfo.indexOf("swf")!=-1) {
+					point = getSWFImageDimensions(base64);
+				}
+			}
+			
+			return point;
+		}
+		
+		public static var debug:Boolean;
 	}
 }

@@ -20,6 +20,8 @@
 package com.flexcapacitor.utils
 {
 
+import com.flexcapacitor.utils.supportClasses.log;
+
 import flash.display.DisplayObjectContainer;
 import flash.display.Sprite;
 import flash.events.Event;
@@ -59,10 +61,42 @@ public class LayoutDebugHelper extends Sprite {
     public function LayoutDebugHelper() {
         super();
         activeInvalidations = new Dictionary();
-        addEventListener("enterFrame", onEnterFrame);
+		
+		if (!automaticEnableDisable) {
+        	addEventListener("enterFrame", onEnterFrame);
+		}
 		
     }
 	
+	//--------------------------------------------------------------------------
+	//
+	//  Variables
+	//
+	//--------------------------------------------------------------------------
+	
+	/**
+	 *  
+	 */
+	public static var highlightDelay:Number = 500;
+	
+	/**
+	 *  @private
+	 */
+	public static var highlightColor:Number = 0xAA2211;
+	
+	/**
+	 *  @private
+	 */
+	public var activeInvalidations:Dictionary;
+	
+	/**
+	 *  @private
+	 */
+	private var lastUpdate:Number = 0;
+	
+	/**
+	 * This prevents the enter frame handler from running non stop
+	 * */
 	public static var automaticEnableDisable:Boolean = true;
 	
     /**
@@ -70,6 +104,8 @@ public class LayoutDebugHelper extends Sprite {
      *  The sole instance of this singleton class.
      */
     private static var instance:LayoutDebugHelper;
+	
+	public static var debug:Boolean;
 	
 	public static function getInstance():LayoutDebugHelper {
         if (!instance)
@@ -79,6 +115,10 @@ public class LayoutDebugHelper extends Sprite {
     }
 	
     public function enable():void {
+		if (debug) {
+			log();
+		}
+		
         if (!instance) {
             instance = getInstance();
 		}
@@ -91,11 +131,15 @@ public class LayoutDebugHelper extends Sprite {
 		if (automaticEnableDisable && !hasEventListener("enterFrame")) {
 			addEventListener("enterFrame", onEnterFrame);
 		}
-		trace("enabling layout debug helper");
+		//trace("enabling layout debug helper");
        // return instance;
     }
 	
     public function disable():void {
+		if (debug) {
+			log();
+		}
+		
         if (instance) {
             var sm:ISystemManager = SystemManagerGlobals.topLevelSystemManagers[0];
 			var index:int;
@@ -104,8 +148,25 @@ public class LayoutDebugHelper extends Sprite {
 				index = sm.getChildIndex(instance);
 			}
 			
-			if (index!=-1) {
-	            sm.removeChildAt(index);
+			if (index>0) {
+				try {
+	            	sm.removeChildAt(index);
+				}
+				catch (error:Error) {
+					
+					/*
+					this happend at startup - not sure why
+					RangeError: Error #2006: The supplied index is out of bounds.
+						at flash.display::DisplayObjectContainer/getChildAt()
+					at mx.managers::SystemManager/http://www.adobe.com/2006/flex/mx/internal::rawChildren_removeChildAt()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:2163]
+					at mx.managers::SystemManager/removeChildAt()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:1807]
+						at com.flexcapacitor.utils::LayoutDebugHelper/disable()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/LayoutDebugHelper.as:108]
+							at com.flexcapacitor.utils::LayoutDebugHelper/render()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/LayoutDebugHelper.as:223]
+								at com.flexcapacitor.utils::LayoutDebugHelper/onEnterFrame()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/LayoutDebugHelper.as:271]
+					*/
+					
+
+				}
 			}
         }
 		
@@ -113,36 +174,10 @@ public class LayoutDebugHelper extends Sprite {
 			removeEventListener("enterFrame", onEnterFrame);
 		}
 		
-		trace("disabling layout debug helper");
+		//trace("disabling layout debug helper");
        // return instance;
     }
 	
-    //--------------------------------------------------------------------------
-    //
-    //  Variables
-    //
-    //--------------------------------------------------------------------------
-    
-    /**
-     *  
-     */
-    public static const highlightDelay:Number = 2500;
-    
-    /**
-     *  @private
-     */
-    public static const highlightColor:Number = 0xFF00;
-    
-    /**
-     *  @private
-     */
-    public var activeInvalidations:Dictionary;
-    
-    /**
-     *  @private
-     */
-    private var lastUpdate:Number = 0;
-    
     //--------------------------------------------------------------------------
     //
     //  Methods
@@ -153,8 +188,11 @@ public class LayoutDebugHelper extends Sprite {
     /**
      *  @private
      */
-    public function addElement(item:ILayoutElement):void
-    {       
+    public function addElement(item:ILayoutElement):void {
+		if (debug) {
+			log();
+		}
+		
         activeInvalidations[item] = getTimer();
 		
 		if (hasItems() && automaticEnableDisable) {
@@ -173,8 +211,11 @@ public class LayoutDebugHelper extends Sprite {
     /**
      *  @private
      */
-    public function removeElement(item:ILayoutElement):void
-    {       
+    public function removeElement(item:ILayoutElement):void {
+		if (debug) {
+			log();
+		}
+		
         activeInvalidations[item] = null;
         delete activeInvalidations[item];
 		
@@ -188,12 +229,17 @@ public class LayoutDebugHelper extends Sprite {
     /**
      *  @private
      */
-    public function render():void
-    {       
+    public function render():void {
+		if (debug) {
+			log();
+		}
+		
         graphics.clear();
+		
         for (var item:* in activeInvalidations)
         {
             var lifespan:Number = getTimer() - activeInvalidations[item];
+			
             if (lifespan > highlightDelay) 
             {
                 removeElement(item);
@@ -218,6 +264,7 @@ public class LayoutDebugHelper extends Sprite {
                }
             }
         }
+		
 		if (automaticEnableDisable) {
 			if (!hasItems()) {
 				disable();
@@ -267,7 +314,9 @@ public class LayoutDebugHelper extends Sprite {
     {       
         if (getTimer() - lastUpdate >= 100)
         {
-			trace("rendering layout debug helper");
+			if (debug) {
+				trace("rendering layout debug helper");
+			}
             render();
             lastUpdate = getTimer();
         }

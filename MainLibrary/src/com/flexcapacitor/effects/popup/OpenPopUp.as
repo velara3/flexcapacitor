@@ -169,7 +169,7 @@ protected function openpopup_closeHandler(event:Event):void {
 		/**
 		 * Popup class
 		 * */
-		public var popUpType:Class;
+		public var popUpType:*;
 		
 		/**
 		 * Popup options. Object of name value pairs used by the ClassFactory properties object.

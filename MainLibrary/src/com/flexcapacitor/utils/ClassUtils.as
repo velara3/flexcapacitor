@@ -6,9 +6,12 @@ package com.flexcapacitor.utils {
 	
 	import com.flexcapacitor.model.AccessorMetaData;
 	import com.flexcapacitor.model.MetaData;
+	import com.flexcapacitor.model.MetaDataMetaData;
 	import com.flexcapacitor.model.StyleMetaData;
+	import com.flexcapacitor.utils.supportClasses.ObjectDefinition;
 	
 	import flash.events.IEventDispatcher;
+	import flash.sampler.getMemberNames;
 	import flash.system.ApplicationDomain;
 	import flash.utils.Dictionary;
 	import flash.utils.describeType;
@@ -130,12 +133,31 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Get fully qualified super class of the target object
+		 * Get fully qualified name of super class of the target object
 		 * */
 		public static function getSuperClass(element:Object):String {
 			var name:String = flash.utils.getQualifiedSuperclassName(element);
 			
 			return name;
+		}
+		
+		/**
+		 * Get fully qualified super class of the target object
+		 * */
+		public static function getSuperClassDefinition(element:Object, domain:ApplicationDomain = null):Object {
+			var name:String = flash.utils.getQualifiedSuperclassName(element);
+			var definition:Object;
+			
+			if (domain==null) {
+				domain = ApplicationDomain.currentDomain;
+			}
+			
+			if (domain.hasDefinition(name)) {
+				definition = domain.getDefinition(name);
+				return definition;
+			}
+			
+			return null;
 		}
 
 		/**
@@ -630,6 +652,55 @@ trace(name); // "mySuperButton"
 		}
 		
 		/**
+		 * Returns an array the super classes for the given object.<br/><br/>
+		 * 
+		 * For example, if you give it a Spark Button class it gets all the
+		 * classes it extends and so on until object.<br/><br/>
+		 * 
+		 * Usage:<br/>
+<pre>
+var superClasses:Array = getInheritedClasses(MyButton);
+trace(superClasses); // Button, ButtonBase, UIComponent, Object
+</pre>
+		 * 
+		 * @param object The object to inspect. Either string, object or class.
+		 * @param stopAt Stops at object with the given class name or Object if not defined
+		 * 
+		 * */
+		public static function getInheritedClasses(object:Object, stopAt:String = "Object", ignoreCache:Boolean = false):Array {
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var typeDescription:*;
+			var hasFactory:Boolean;
+			var extendsClass:XMLList;
+			var numberOfExtendedClasses:int;
+			var factory:XMLList;
+			var styleName:String;
+			var nextClass:String;
+			var classNames:Array;
+			
+			describedTypeRecord = mx.utils.DescribeTypeCache.describeType(object);
+			typeDescription = describedTypeRecord.typeDescription;
+			hasFactory = typeDescription.factory.length()>0;
+			extendsClass = hasFactory ? typeDescription.factory.extendsClass : typeDescription.extendsClass;
+			numberOfExtendedClasses = extendsClass.length();
+			
+			classNames = [];
+			
+			// add events from super classes
+			for (var i:int=0;i<numberOfExtendedClasses;i++) {
+				nextClass = String(extendsClass[i].@type);
+				
+				if (nextClass==stopAt) {
+					break;
+				}
+				
+				classNames.push(nextClass);
+			}
+			
+			return classNames;
+		}
+		
+		/**
 		 * Returns an array the methods for the given object including super class methods. 
 		 * Setting includeInherited to false is not yet implemented.<br/><br/>
 		 * 
@@ -947,6 +1018,45 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			
 			return members;
 		}
+		
+		/**
+		 * Get object information. It's similar to describe type but returns an object instead of XML
+		 * */
+		public static function getObjectInformation(object:Object, includeMethods:Boolean = false, ignoreCache:Boolean = false):ObjectDefinition {
+			var members:Array;
+			var events:Array;
+			var styles:Array;
+			var properties:Array;
+			var methods:Array;
+			var typeName:String;
+			var qualifiedName:String;
+			var unqualifiedName:String;
+			var objectDefinition:ObjectDefinition;
+			var sort:Boolean;
+			
+			if (object==null) return null;
+			
+			sort = true;
+			
+			members 		= getMemberNames(object, sort, includeMethods);
+			events 			= getEventNames(object);
+			styles 			= getStyleNames(object);
+			properties 		= getPropertyNames(object);
+			methods 		= includeMethods ? getMethodNames(object) : null;
+			
+			objectDefinition 				= new ObjectDefinition();
+			objectDefinition.name	 		= getClassName(object);
+			objectDefinition.qualifiedName 	= getQualifiedClassName(object);
+			objectDefinition.events 		= events;
+			objectDefinition.styles 		= styles;
+			objectDefinition.properties 	= properties;
+			objectDefinition.methods 		= methods;
+			objectDefinition.members 		= members;
+			objectDefinition.subclasses		= getInheritedClasses(object);
+			
+			return objectDefinition;
+		}
+		
 		
 		/**
 		 * Returns true if the object has the style defined somewhere in the style lookup.<br/><br/>
@@ -1496,6 +1606,196 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			[ "top", "left", "right", "bottom", 
 			"verticalCenter", "horizontalCenter", "baseline"];
 		
+		private static var metadataCache:Object = {};
+		
+		/**
+		 * Set cached metadata 
+		 * */
+		public static function setCachedMetaData(object:*, name:*, metadata:MetaData):void {
+			var className:String;
+			var cacheKey:String;
+			var metadataDictionary:Dictionary;
+			var weakKeys:Boolean;
+			
+			if (object is String) {
+				cacheKey = className = object;
+			}
+			else {
+				cacheKey = className = getQualifiedClassName(object);
+			}
+			
+			//Need separate entries for describeType(Foo) and describeType(myFoo)
+			if (object is Class) {
+				cacheKey += "$";
+			}
+			
+			// check if class is cached
+			if (!(cacheKey in metadataCache)) {
+				metadataCache[cacheKey] = null;
+			}
+			
+			// create dictionary if not created
+			if (metadataCache[cacheKey]==null) {
+				metadataDictionary = new Dictionary(weakKeys);
+				metadataCache[cacheKey] = metadataDictionary;
+			}
+			else {
+				metadataDictionary = metadataCache[cacheKey];
+			}
+				
+			// check if member is cached
+			if (metadataDictionary[name]==null) {
+				metadataDictionary[name] = metadata;
+			}
+			
+		}
+		
+		/**
+		 * Get cached metadata
+		 * */
+		public static function getCachedMetaData(object:*, name:*):MetaData {
+			var className:String;
+			var cacheKey:String;
+			var metadataDictionary:Dictionary;
+			var metaData:MetaData;
+			
+			if (object is String) {
+				cacheKey = className = object;
+			}
+			else {
+				cacheKey = className = getQualifiedClassName(object);
+			}
+			
+			//Need separate entries for describeType(Foo) and describeType(myFoo)
+			if (object is Class) {
+				cacheKey += "$";
+			}
+			
+			// check if class is cached
+			if (cacheKey in metadataCache) {
+				metadataDictionary = metadataCache[cacheKey];
+				
+				if (metadataDictionary[name]!=null) {
+					metaData = metadataDictionary[name];
+				}
+			}
+			
+			return metaData;
+		}
+		
+		/**
+		 * Get MetaData for the given metadata. 
+		 * 
+		 * Usage:<br/>
+<pre>
+var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty");
+</pre>
+		 * @returns an MetaData object
+		 * @param target Object that contains the metadata
+		 * @param name name of metadata
+		 * @param type if metadata is not defined on target class we check super class. used in recursive search. default null 
+		 * @param stopAt if we don't want to look all the way up to object we can set the class to stop looking at
+		 * 
+		 * @see #getMetaDataOfProperty()
+		 * */
+		public static function getMetaDataOfMetaData(target:Object, metaDataName:String, type:String = null, stopAt:String = null):MetaDataMetaData {
+			var describedTypeRecord:DescribeTypeCacheRecord;
+			var cachedMetaData:Object;
+			var metaDataMetaData:MetaDataMetaData;
+			var extendsClassList:XMLList;
+			var typeDescription:XML;
+			var found:Boolean;
+			var hasFactory:Boolean;
+			var matches:XMLList;
+			var factory:Object;
+			var node:XML;
+			
+			
+			cachedMetaData = getCachedMetaData(target, metaDataName);
+			
+			if (cachedMetaData) {
+				//MetaDataMetaData(cachedMetaData).updateValues(target, false);
+				return MetaDataMetaData(cachedMetaData);
+			}
+			
+			if (type) {
+				describedTypeRecord = DescribeTypeCache.describeType(type);
+			}
+			else {
+				describedTypeRecord = DescribeTypeCache.describeType(target);
+			}
+			
+			typeDescription = describedTypeRecord.typeDescription[0];
+			factory = typeDescription.factory;
+			hasFactory = factory.length()>0;
+			
+			if (hasFactory) {
+				matches = factory.metadata.(@name==metaDataName);
+			}
+			else {
+				matches = typeDescription.metadata.(@name==metaDataName);
+			}
+			
+			if (matches && matches.length()==0) {
+				
+				if (hasFactory) {
+					extendsClassList = factory.extendsClass;
+				}
+				else {
+					extendsClassList = typeDescription.extendsClass;
+				}
+				
+				var numberOfTypes:int = extendsClassList.length();
+				
+				for (var i:int;i<numberOfTypes;i++) {
+					type = extendsClassList[i].@type;
+					if (type==stopAt) return null;
+					if (type=="Class") return null;
+					
+					return getMetaDataOfMetaData(target, metaDataName, type);
+				}
+			}
+			
+			if (matches.length()>0) {
+				node = matches[0];
+				
+				if ("typeName" in typeDescription) {
+					node.@declaredBy = typeDescription.typeName;
+				}
+				else if (type) {
+					node.@declaredBy = type;
+				}
+				else if (typeDescription.hasOwnProperty("name")) {
+					node.@declaredBy = typeDescription.@name;
+				}
+				
+				metaDataMetaData = new MetaDataMetaData();
+				metaDataMetaData.unmarshall(node, target);
+				
+				// we want to cache meta data meta data
+				if (metaDataMetaData) {
+					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
+					//	Error$/throwError [no source]	
+					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
+					
+					setCachedMetaData(target, metaDataName, metaDataMetaData);
+					
+					/*
+					this doesn't seem to work for metadata or might need more work
+					DescribeTypeCache.registerCacheHandler(metaDataName, function (record:DescribeTypeCacheRecord):Object {
+						//if (relevantPropertyFacades.indexOf(style)!=-1) {
+						return metaDataMetaData;
+						//}
+					});
+					*/
+				}
+				
+				return metaDataMetaData;
+			}
+			
+			return null;
+		}
+		
 		/**
 		 * Get StyleMetaData data for the given style. 
 
@@ -1831,9 +2131,10 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * 
 		 * @returns an array of style names or an empty array
 		 * 
-		 * @see #getPropertiesFromArray()
+		 * @see #getObjectsPropertiesFromArray()
+		 * @see #getObjectsEventsFromArray()
 		 * */
-		public static function getStylesFromArray(object:Object, possibleStyles:Object):Array {
+		public static function getObjectsStylesFromArray(object:Object, possibleStyles:Object):Array {
 			var styleNames:Array = getStyleNames(object);
 			var result:Array = [];
 			var style:String;
@@ -1875,7 +2176,7 @@ var styles:Array = getStylesFromObject(myButton, {"color":10,"fontFamily":30,"ma
 			// get the properties on the value object
 			var propertiesNames:Array = getPropertyNames(valueObject);
 			
-			return getStylesFromArray(object, propertiesNames);
+			return getObjectsStylesFromArray(object, propertiesNames);
 		}
 		
 		/**
@@ -1896,7 +2197,7 @@ var properties:Array = getPropertiesFromObject(myButton, {"x":10,"apple":30,"wid
 		public static function getPropertiesFromObject(object:Object, valueObject:Object, removeConstraints:Boolean = false):Array {
 			var propertiesNames:Array = getPropertyNames(valueObject);
 			
-			return getPropertiesFromArray(object, propertiesNames, removeConstraints);
+			return getObjectsPropertiesFromArray(object, propertiesNames, removeConstraints);
 		}
 		
 		/**
@@ -1917,7 +2218,7 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 		public static function getEventsFromObject(object:Object, valueObject:Object):Array {
 			var propertiesNames:Array = getPropertyNames(valueObject);
 			
-			return getEventsFromArray(object, propertiesNames);
+			return getObjectsEventsFromArray(object, propertiesNames);
 		}
 		
 		public static var CONSTRAINTS:Array = ["baseline", "left", "top", "right", "bottom", "horizontalCenter", "verticalCenter"];
@@ -1938,9 +2239,10 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 		 * 
 		 * @returns an array of styles names or empty array
 		 * 
-		 * @see #getStylesFromArray()
+		 * @see #getObjectsStylesFromArray()
+		 * @see #getObjectsEventsFromArray()
 		 * */
-		public static function getPropertiesFromArray(object:Object, possibleProperties:Object, removeConstraints:Boolean = false):Array {
+		public static function getObjectsPropertiesFromArray(object:Object, possibleProperties:Object, removeConstraints:Boolean = false):Array {
 			var propertyNames:Array = getPropertyNames(object);
 			var result:Array = [];
 			var property:String;
@@ -1987,10 +2289,10 @@ var events:Array = getEventsFromObject(myButton, {"x":10,"apple":30,"click":myCl
 		 * 
 		 * @returns an array of event names or an empty array
 		 * 
-		 * @see #getStylesFromArray()
-		 * @see #getPropertiesFromArray()
+		 * @see #getObjectsStylesFromArray()
+		 * @see #getObjectsPropertiesFromArray()
 		 * */
-		public static function getEventsFromArray(object:Object, possibleEvents:Object):Array {
+		public static function getObjectsEventsFromArray(object:Object, possibleEvents:Object):Array {
 			var eventNames:Array = getEventNames(object);
 			var result:Array = [];
 			var eventName:String;

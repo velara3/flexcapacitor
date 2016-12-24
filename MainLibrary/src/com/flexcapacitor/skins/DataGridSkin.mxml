@@ -78,7 +78,7 @@ declarations define DataGrid skin parts except <code>headerColumnSeparator</code
     xmlns:s="library://ns.adobe.com/flex/spark" 
     xmlns:mx="library://ns.adobe.com/flex/mx"
     xmlns:fb="http://ns.adobe.com/flashbuilder/2009"
-	xmlns:supportClasses="com.flexcapacitor.skins.supportClasses.*"
+	xmlns:flexcapacitor="flexcapacitor.*"
 	xmlns:supportClasses1="com.flexcapacitor.controls.supportClasses.*" 
 	xmlns:skins="skins.*" 
 	

@@ -2,9 +2,12 @@ package com.flexcapacitor.utils {
 
 	import flash.data.EncryptedLocalStore;
 	import flash.utils.ByteArray;
+	
+	import mx.utils.Platform;
 
 	/**
-	 * Utility class to read and write values from encrypted local storage
+	 * Utility class to read and write values from encrypted local storage. 
+	 * 
 	 * Works in AIR only.
 	 * */
 	public class PersistentStorage {
@@ -15,9 +18,12 @@ package com.flexcapacitor.utils {
 		
 		/**
 		 * Returns if EncryptedLocalStore is supported. 
+		 * 
 		 * Same as EncryptedLocalStore.isSupported.
+		 * @copy #EncryptedLocalStore.isSupported
 		 * */
 		public static function get isSupported():Boolean {
+			if (Platform.isBrowser) return false;
 			return EncryptedLocalStore.isSupported;
 		}
 		
