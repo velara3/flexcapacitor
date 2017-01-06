@@ -10,9 +10,9 @@ package com.flexcapacitor.utils
 	import flash.external.ExternalInterface;
 	import flash.system.ApplicationDomain;
 	import flash.system.Capabilities;
-	import flash.utils.Dictionary;
 	import flash.utils.getDefinitionByName;
 	
+	import mx.utils.Platform;
 	import mx.utils.StringUtil;
 	
 	
@@ -76,6 +76,10 @@ package com.flexcapacitor.utils
 		public static var validationError:Error;
 		
 		public static var validationErrorMessage:String;
+		
+		public static var defaultHTMLClassName:String = "flash.html.HTMLLoader";
+		
+		public static var HTMLLoaderClass:Object;
 		
 		public static var htmlLoader:Object;
 		
@@ -696,17 +700,55 @@ package com.flexcapacitor.utils
 		 * @see #validateXML()
 		 * @see htmlLoaderLoaded
 		 * */
-		public static function initialize():void {
+		public static function initialize(htmlClassName:String = null):void {
+			var isAir:Boolean = Platform.isAir;
+			var isDesktop:Boolean = Platform.isDesktop;
 			
-			if (Capabilities.playerType == "Desktop") {
-				var htmlText:String = "<html><script>"+XMLUtils.browserXMLValidationScript+"</script><body></body></html>";
-				htmlLoader = HTMLUtils.createLoaderInstance();
-				htmlLoader.loadString(htmlText);
-				htmlLoader.addEventListener(Event.COMPLETE, function(e:Event):void {htmlLoaderLoaded = true;});
+			if (Platform.isAir) {
+				initializeInDesktop(htmlClassName);
 			}
 			else if (ExternalInterface.available) {
-				insertValidationScript();
+				initializeInBrowser();
 			}
+		}
+		
+		/**
+		 * Used to make validateXML work on the desktop or AIR
+		 * */
+		public static function initializeInDesktop(htmlClassName:String = null):void {
+			var playerType:String = Capabilities.playerType;
+			var htmlText:String;
+			
+			if (htmlClassName) {
+				if (ApplicationDomain.currentDomain.hasDefinition(htmlClassName)) {
+					HTMLLoaderClass = getDefinitionByName(htmlClassName);
+				}
+				else {
+					throw new Error("Could not find class for XML validation. Check the spelling and ensure to add a reference to include the class.");
+				}
+			}
+			else if (HTMLLoaderClass==null && Platform.isAir || Platform.isDesktop) {
+				htmlClassName = defaultHTMLClassName;
+				
+				if (ApplicationDomain.currentDomain.hasDefinition(htmlClassName)) {
+					HTMLLoaderClass = getDefinitionByName(htmlClassName);
+				}
+				else {
+					throw new Error("Could not find " + htmlClassName + " class for XML validation. Be sure to add a reference so the class is included");
+				}
+			}
+			
+			htmlText = "<html><script>"+XMLUtils.browserXMLValidationScript+"</script><body></body></html>";
+			htmlLoader = new HTMLLoaderClass();
+			htmlLoader.loadString(htmlText);
+			htmlLoader.addEventListener(Event.COMPLETE, function(e:Event):void {htmlLoaderLoaded = true;});
+		}
+		
+		/**
+		 * Used to make validateXML work in the browser
+		 * */
+		public static function initializeInBrowser():void {
+			insertValidationScript();
 		}
 		
 		/**

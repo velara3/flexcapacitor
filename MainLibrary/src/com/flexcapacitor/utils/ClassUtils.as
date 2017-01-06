@@ -926,13 +926,15 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 		 * @see #isStyleDefined()
 		 * */
 		public static function hasStyle(object:Object, styleName:String, checkFlexObjects:Boolean = false):Boolean {
+			var isClass:Boolean = object is Class;
+			var isStyleClient:Boolean = object is IStyleClient;
 			var styleClient:IStyleClient = object ? object as IStyleClient : null;
 			var found:Boolean;
 			var styles:Array;
 			
 			if (styleName==null || styleName=="") return false;
 			
-			if (!(object is String) && styleClient==null) return false; 
+			if (!(object is String) && !isClass && styleClient==null) return false; 
 			
 			// not sure if this is a valid way to tell if an object has a style
 			if (checkFlexObjects) {
@@ -952,7 +954,7 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			}
 			
 			
-			styles = getStyleNames(styleClient);
+			styles = getStyleNames(object);
 			
 			if (styles.indexOf(styleName)!=-1) {
 				return true;

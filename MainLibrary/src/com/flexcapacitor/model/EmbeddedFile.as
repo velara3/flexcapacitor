@@ -48,5 +48,8 @@ package com.flexcapacitor.model {
 			
 		}
 
+		override public function toString():String {
+			return value;
+		}
 	}
 }

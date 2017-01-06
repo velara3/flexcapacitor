@@ -9,6 +9,8 @@ package com.flexcapacitor.effects.window.supportClasses {
 	import flash.events.ErrorEvent;
 	import flash.system.Capabilities;
 	
+	import mx.core.FlexGlobals;
+	
 	
 	/**
 	 * @copy CenterWindow
@@ -64,9 +66,21 @@ package com.flexcapacitor.effects.window.supportClasses {
 			var action:CenterWindow = CenterWindow(effect);
 			var window:Object = action.window ? action.window : action.target;
 			var ignoreWindowSizeError:Boolean = action.ignoreWindowSizeError;
-			var windowWidth:int = window && "width" in window ? window.width : 0;
-			var windowHeight:int = window && "height" in window ? window.height : 0;
+			var windowWidth:int;
+			var windowHeight:int;
 			var isEmpty:Boolean = ClassUtils.isEmptyObject(window);
+			var centerApplicationByDefault:Boolean = action.centerApplicationByDefault;
+			var offsetY:Number;
+			
+			// pre
+			if (window==null || isEmpty) {
+				if (centerApplicationByDefault) {
+					window = FlexGlobals.topLevelApplication;
+				}
+			}
+			
+			windowWidth = window && "width" in window ? window.width : 0;
+			windowHeight = window && "height" in window ? window.height : 0;
 			
 			///////////////////////////////////////////////////////////
 			// Verify we have everything we need before going forward
@@ -75,7 +89,9 @@ package com.flexcapacitor.effects.window.supportClasses {
 			if (validate) {
 				
 				if (window==null || isEmpty) {
-					dispatchErrorEvent("The window is not set. Set the target or the window property to the window you want to center.");
+					if (!centerApplicationByDefault) {
+						dispatchErrorEvent("The window is not set. Set the target or the window property to the window you want to center.");
+					}
 				}
 				
 				if (!("width" in window) && !("height" in window)) {
@@ -98,7 +114,7 @@ package com.flexcapacitor.effects.window.supportClasses {
 			
 			
 			try {
-				var offsetY:Number = action.includeTitleBar ? action.offsetY + action.titleBarHeight : action.offsetY;
+				offsetY = action.includeTitleBar ? action.offsetY + action.titleBarHeight : action.offsetY;
 				DisplayObjectUtils.centerWindow(window, offsetY, action.offsetX);
 			}
 			catch (error:ErrorEvent) {

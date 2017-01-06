@@ -85,6 +85,7 @@ package com.flexcapacitor.utils.supportClasses
 		
 		if (LogSettings.messageShownCount>=LogSettings.maxMessageRepeat) {
 			if (!LogSettings.maxMessageShown) {
+				if (args && args.length && args[0]=="") args.shift();
 				args = args.concat(["."+functionName+"(...repeated more than " +LogSettings.maxMessageRepeat+"x)"]);
 				LogSettings.maxMessageShown = true;
 			}

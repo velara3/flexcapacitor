@@ -65,8 +65,23 @@ package com.flexcapacitor.effects.window {
 		 * */
 		public var offsetY:int;
 		
+		/**
+		 * Include title bar offset when centered
+		 * */
 		public var includeTitleBar:Boolean = true;
+		
+		/**
+		 * Height of title bar
+		 * */
 		public var titleBarHeight:Number = 32;
+		
+		/**
+		 * If the target or the window property is not set then we 
+		 * center the top level Application. If this is 
+		 * set to false and those target or window is not set then
+		 * an error is thrown. 
+		 * */
+		public var centerApplicationByDefault:Boolean = true;
 		
 	}
 }
