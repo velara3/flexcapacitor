@@ -54,15 +54,20 @@
   ***/
 package com.flexcapacitor.controls {
 
+	import com.flexcapacitor.events.AceEvent;
+	import com.flexcapacitor.utils.ClassUtils;
 	import com.flexcapacitor.utils.supportClasses.log;
 	
 	import flash.display.DisplayObject;
 	import flash.events.Event;
+	import flash.events.EventDispatcher;
 	import flash.events.FocusEvent;
+	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;
 	import flash.geom.Point;
 	import flash.net.URLRequest;
 	import flash.system.ApplicationDomain;
+	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 	
 	import mx.core.UIComponent;
@@ -213,14 +218,14 @@ package com.flexcapacitor.controls {
 	 *
 	 *  @eventType flash.events.Event
 	 */
-	[Event(name="mouseMoveOverEditor", type="flash.events.Event")]
+	[Event(name="mousemove", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispached after the cursor changes positions.
 	 *
 	 *  @eventType flash.events.Event
 	 */
-	[Event(name="cursorChange", type="flash.events.Event")]
+	[Event(name="changeCursor", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispached after the session has changed
@@ -232,7 +237,7 @@ package com.flexcapacitor.controls {
 	 *  @playerversion AIR 1.5
 	 *  @productversion Flex 4
 	 */
-	[Event(name="sessionChange", type="flash.events.Event")]
+	[Event(name="changeSession", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispached after the selection anchor position and/or
@@ -246,7 +251,7 @@ package com.flexcapacitor.controls {
 	 *  @playerversion AIR 1.5
 	 *  @productversion Flex 4
 	 */
-	[Event(name="selectionChange", type="flash.events.Event")]
+	[Event(name="changeSelection", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispatched after a user editing operation is complete.
@@ -258,7 +263,7 @@ package com.flexcapacitor.controls {
 	 *  @playerversion AIR 1.5
 	 *  @productversion Flex 4
 	 */
-	[Event(name="change", type="spark.events.TextOperationEvent")]
+	[Event(name="change", type="com.flexcapacitor.events.AceEvent")]
 	
 	
 	/**
@@ -385,6 +390,26 @@ protected function searchInput_changeHandler(event:Event):void {
 }
 </pre>
 	 * 
+	 * Marshalled Errors: 
+	 * 
+	 * Error: ReferenceError: object is not defined.
+	 * That means in the JavaScript function an object is not defined. The editor may not be created yet.  
+	 * 
+	 * Error: Error: Error calling method on NPObject!
+	 *		at flash.external::ExternalInterface$/_toAS()
+	 *		at flash.external::ExternalInterface$/call()
+	 * 
+	 * The listener you added is private or protected. It must be a public method
+	 * 
+	 * ReferenceError: method is not defined
+	 * The method is not defined on the application. Create a strong reference (store function). 
+	 * 
+	 * Error: Bad NPObject as private data!
+	 * The event passed from JS to AS is of an incompatible type. 
+	 * Flash expected an event with the same type as declared in events metadata but event is 
+	 * transfered typed as an object.
+	 * Or there are an incorrect number of arguments  
+	 * 
 	 * Ace Editor Website - http://ace.c9.io/<br>
 	 * Ace Editor Source Code - https://github.com/ajaxorg/ace/blob/master/lib/ace/editor.js<br>
 	 * 
@@ -395,17 +420,14 @@ protected function searchInput_changeHandler(event:Event):void {
 		
 		
 		public function AceEditor(airClassName:String = null, browserClassName:String = null) {
-			super();
+			isBrowser = Platform.isBrowser;
+			isAIR = Platform.isAir;
+			isMobile = Platform.isMobile;
 			
 			if (debug) {
 				log();
 			}
 			
-			//htmlText = "<h1>loading</h1>";
-			
-			isBrowser = Platform.isBrowser;
-			isAIR = Platform.isAir;
-			isMobile = Platform.isMobile;
 			
 			if (airClassName) {
 				airClass = ApplicationDomain.currentDomain.getDefinition(airClassName); 
@@ -415,10 +437,35 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			
 			
+			if (eventsDictionary==null) {
+				eventsDictionary = new Dictionary(true);
+				eventsDictionary[Event.COPY] 				= EDITOR;
+				eventsDictionary[Event.PASTE] 				= EDITOR;
+				eventsDictionary[SESSION_MOUSE_MOVE] 		= EDITOR;
+				
+				eventsDictionary[BLUR] 						= SESSION;
+				eventsDictionary[FOCUS] 					= SESSION;
+				eventsDictionary[EDITOR_CHANGE] 			= SESSION;
+				eventsDictionary[SESSION_CHANGE_SESSION] 	= SESSION;
+				
+				eventsDictionary[SESSION_CHANGE_SELECTION] 	= SELECTION;
+				eventsDictionary[SESSION_CHANGE_CURSOR] 	= SELECTION;
+			}
+			
+			super();
+			
 			// Desktop version
-			// Step 1. Create an HTMLLoader instance and add listeners for events
-			// Step 2. Listen for the initialize event and set the page.html
-			// Step 3. Create a reference to the ace editor
+			// Step 1. Create an HTMLLoader instance in createChildren and add listeners
+			// Step 2. Listen for the initialize event and set the location to the ace HTML page
+			// Step 3. After completeHandler page is loaded. Create a reference to the ace editor
+			// Step 4. Invalidate properties
+			// Step 5. In commitProperties set values on ace editor
+			
+			// Browser version
+			// Step 1. Flex calls createChildren and we create a div and editor in the browser  
+			// Step 2. In createChildren manually call completeHandler()
+			// Step 3. Invalidate properties
+			// Step 4. In commitProperties call methods that communicate with the browser
 		}
 		
 		public static var UNCAUGHT_SCRIPT_EXCEPTION:String = "uncaughtScriptException";
@@ -455,10 +502,10 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * 
 		 * Typically you would set this to something like an HTML component
 		 * 
-		 * @see flash.html.HTMLLoader
 		 * @see mx.core.FlexHTMLLoader
+		 * @see mx.controls.HTML
 		 * */
-		public var defaultAIRClassName:String = "mx.core.FlexHTMLLoader";
+		public var defaultAIRClassName:String = "mx.controls.HTML";
 		public var defaultBrowserClassName:String;
 		public var defaultMobileClassName:String;
 		
@@ -480,24 +527,32 @@ protected function searchInput_changeHandler(event:Event):void {
 		
 		public var editorContainer:Object;
 		
-		public static var editors:Object = {};
+		public static var editors:Object = new Dictionary(true);
 		
+		/**
+		 * Gets the editor by the editor id. Useful when using in the browser
+		 * and using multiple editors on the page. Pass in the editor id. 
+		 * The class has a editorIdentity that is unique for each editor instance. 
+		 * */
 		public static function addEditorById(id:String, instance:AceEditor):void {
 			if (editors[id]) {
 				throw new Error("Editor already created");
 			}
+			
 			editors[id] = instance;
 		}
+		
 		public static function removeEditorById(id:String):void {
 			if (editors[id]) {
 				delete editors[id];
 			}
 		}
+		
 		public static function getEditorById(id:String):AceEditor {
 			return editors[id];
 		}
 		
-		public static var debug:Boolean = true;
+		public static var debug:Boolean = false;
 		
 		private var _location:String;
 
@@ -549,12 +604,12 @@ protected function searchInput_changeHandler(event:Event):void {
 			if (isAIR) {
 				
 				if (airClass==null) {
-					var message:String;
-					message = "Ace Editor: There is no reference to the class " + defaultAIRClassName +". ";
-					message += "Set the airClass property to a reference or include a reference in your application. ";
-					message += "See example code on this class.";
 					
 					if (!ApplicationDomain.currentDomain.hasDefinition(defaultAIRClassName)) {
+						var message:String;
+						message = "Ace Editor: There is no reference to the class " + defaultAIRClassName +". ";
+						message += "Set the airClass property to a reference or include a reference in your application. ";
+						message += "See example code on this class.";
 						throw new Error(message);
 					}
 					
@@ -571,6 +626,7 @@ protected function searchInput_changeHandler(event:Event):void {
 				airInstance.addEventListener(Event.HTML_BOUNDS_CHANGE, htmlBoundsChangeHandler, false, 0, true);
 				airInstance.addEventListener(Event.SCROLL, htmlScrollHandler, false, 0, true);
 				airInstance.addEventListener(UNCAUGHT_SCRIPT_EXCEPTION, uncaughtScriptExceptionHandler, false, 0, true);
+				//addEventListener(MouseEvent.MOUSE_WHEEL, mouseWheelHandler, false, 0, true);
 				addChild(airInstance as DisplayObject);
 			}
 			else if (isBrowser) {
@@ -606,6 +662,11 @@ protected function searchInput_changeHandler(event:Event):void {
 						</xml>;
 					created = ExternalInterface.call(string, editorIdentity);
 					
+					if (!scriptAdded) {
+						created = ExternalInterface.call(removeReferences);
+						scriptAdded = true;
+					}
+					
 					if (created=="true") {
 						addEditorById(editorIdentity, this);
 						aceEditorFound = true;
@@ -640,7 +701,17 @@ protected function searchInput_changeHandler(event:Event):void {
 				mobileInstance.addEventListener(FlexEvent.CREATION_COMPLETE, creationCompleteHandler);
 				addChild(mobileInstance as DisplayObject);
 			}
+			
+			// listen for events once editor is created
+			var functionReference:Function;
+			
+			for (var eventName:String in deferredEventHandlers) {
+				functionReference = deferredEventHandlers[eventName];
 				
+				addEventListener(eventName, functionReference, false, 0, true);
+				//editorEventHandlers[eventName] = null;
+				//delete editorEventHandlers[eventName];
+			}
 		}
 		
 		/**
@@ -811,7 +882,11 @@ protected function searchInput_changeHandler(event:Event):void {
 				// THIS ERROR APPEARS TO HAPPEN ON APPLICATION CLOSE
 				// Error: The ace JavaScript variable was not found. Make sure to copy the directory, 'src-min-noconflict' to your project src directory and include a reference to it in the template page.
 				// Not sure what is going on here. Maybe an unload event
-				// or an application deactivate event. TODO Add listener for deactivate 
+				// or an application deactivate event. TODO Add listener for deactivate
+				
+				// UPDATE: 
+				// a new complete event is triggered by the location change to "about:blank"
+				// need to check for location change and handle this case
 				
 				if (!aceFound) {
 					errorMessage = "The ace JavaScript variable was not found. Make sure to copy the directory, ";
@@ -940,7 +1015,8 @@ protected function searchInput_changeHandler(event:Event):void {
 			keyBindingChanged = true;
 			listenForChangesChanged = false;
 			modeChanged = true;
-			marginChanged = true;scrollSpeedChanged = true;
+			marginChanged = true;
+			scrollSpeedChanged = true;
 			showInvisiblesChanged = true;
 			showIndentGuidesChanged = true;
 			showFoldWidgetsChanged = true;
@@ -1026,6 +1102,26 @@ protected function searchInput_changeHandler(event:Event):void {
 			
 		}
 		
+		/**
+		 *  @private
+		 */
+		protected function mouseWheelHandler(event:MouseEvent):void {
+			if (debug) {
+				log();
+			}
+			
+			if (isAIR && airInstance is EventDispatcher) {
+				//isDispatchingMouseWheel = true;
+				//airInstance.dispatchEvent(event);
+				//isDispatchingMouseWheel = false;
+			}
+			
+			if (hasEventListener(event.type)) {
+				dispatchEvent(event);
+			}
+			
+		}
+		
 		public var loadOnCreationComplete:Boolean = true;
 		
 		public static const INSERT_ACTION:String = "insert";
@@ -1037,7 +1133,6 @@ protected function searchInput_changeHandler(event:Event):void {
 		public static const SELECTION_CHANGE:String = "selectionChange";
 		public static const CURSOR_CHANGE:String = "cursorChange";
 		public static const MOUSE_MOVE_OVER_EDITOR:String = "mouseMoveOverEditor";
-		public static const FIND:String = "find";
 		
 		public static const EDITOR_READY:String = "editorReady";
 		public static const EDITOR_CHANGE:String = "change";
@@ -1084,6 +1179,13 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * Reference to the ace editor instance
 		 * */
 		public var editor:Object;
+		
+		/**
+		 * If the editor is not created yet we store event listeners until it is
+		 * and add them later
+		 * */
+		public var deferredEventHandlers:Object = {};
+		public var eventHandlers:Object = {};
 		
 		/**
 		 * Reference to the ace editor container element instance
@@ -1660,14 +1762,14 @@ protected function searchInput_changeHandler(event:Event):void {
 		/**
 		 * Get editor text
 		 * */
-		public function getText():String {
+		public function getValue():String {
 			var text:String;
 			
 			if (isBrowser && useExternalInterface) {
 				var string:String = <xml><![CDATA[
 				function (id) {
 					var editor = ace.edit(id);
-					return editor.text;
+					return editor.getValue();
 				}
 				]]></xml>;
 				text = ExternalInterface.call(string, editorIdentity);
@@ -1675,6 +1777,16 @@ protected function searchInput_changeHandler(event:Event):void {
 			else {
 				text = editor.text;
 			}
+			
+			return text;
+		}
+		
+		/**
+		 * Get editor text
+		 * @see #getValue()
+		 * */
+		public function getText():String {
+			var text:String = getValue();
 			
 			return text;
 		}
@@ -2277,17 +2389,62 @@ protected function searchInput_changeHandler(event:Event):void {
 		/**
 		 * Adds an event listener to the editor
 		 * */
-		public function on(name:String, handler:Function):void {
+		public function on(name:String, handler:Function, dispatcher:String = null, functionValue:String = null):void {
 			
 			if (isBrowser && useExternalInterface) {
-				var string:String = <xml><![CDATA[
-				function (id, name, handler) {
-					var editor = ace.edit(id);
-					editor.on(name, handler);
-					return true;
+				var callbackName:String;
+				var results:Object;
+				var string:String;
+				
+				if (dispatcher==null) {
+					dispatcher = EDITOR;
 				}
-				]]></xml>;
-				var results:String = ExternalInterface.call(string, editorIdentity, name, handler);
+				
+				callbackName = editorIdentity + "_" + name;
+				ExternalInterface.addCallback(callbackName, handler);
+				
+				if (functionValue) {
+					string = functionValue;
+				}
+				else {
+					// if the application has issues it's because you are trying to pass
+					// back an object with too many cyclic references
+					// pass back simple objects
+					string = <xml><![CDATA[
+					function (id, objectId, dispatcherType, eventName, callbackName) {
+						var application = this[objectId];
+						var editor = ace.edit(id);
+						var dispatcher;
+	
+						if (dispatcherType=="editor") dispatcher = editor;
+						else if (dispatcherType=="session") dispatcher = editor.session; 
+						else if (dispatcherType=="selection") dispatcher = editor.session.selection;
+	
+						if (application.methodHandlers==null) { application.methodHandlers = {}; }
+	
+						application.methodHandlers[callbackName] = function(event, instance) {
+							//console.log(event);
+
+							// only return objects one level deep to prevent recursion
+						    for (var key in event) {
+						      	if (event.hasOwnProperty(key) && (typeof key == 'object')) {
+									for (var subkey in key) {
+										if (key.hasOwnProperty(subkey) && (typeof subkey == 'object')) {
+											event[key][subkey] = null;
+										}
+						        	}
+						    	}
+						    }
+
+							application[callbackName](event, instance.container.id);
+						}
+						dispatcher.on(eventName, application.methodHandlers[callbackName]);
+						return true;
+					}
+					]]></xml>;
+				}
+				
+				results = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, dispatcher, name, callbackName);
 			}
 			else {
 				editor.on(name, handler);
@@ -2297,9 +2454,10 @@ protected function searchInput_changeHandler(event:Event):void {
 		/**
 		 * Removes event listener to the editor
 		 * */
-		public function off(name:String, handler:Function):void {
+		public function off(name:String, handler:Function, dispatcher:String = "editor", functionValue:String = null):void {
 			
 			if (isBrowser && useExternalInterface) {
+				
 				var string:String = <xml><![CDATA[
 				function (id, name, handler) {
 					var editor = ace.edit(id);
@@ -2343,14 +2501,14 @@ protected function searchInput_changeHandler(event:Event):void {
 				var string:String = <xml><![CDATA[
 				function (id) {
 					var editor = ace.edit(id);
-					editor.session.redo();
+					editor.session.getUndoManager().redo();
 					return true;
 				}
 				]]></xml>;
 				var results:String = ExternalInterface.call(string, editorIdentity);
 			}
 			else {
-				editor.session.redo();
+				editor.session.getUndoManager().redo();
 			}
 		}
 		
@@ -2363,14 +2521,14 @@ protected function searchInput_changeHandler(event:Event):void {
 				var string:String = <xml><![CDATA[
 				function (id) {
 					var editor = ace.edit(id);
-					editor.session.undo();
+					editor.session.getUndoManager().undo();
 					return true;
 				}
 				]]></xml>;
 				var results:String = ExternalInterface.call(string, editorIdentity);
 			}
 			else {
-				editor.session.undo();
+				editor.session.getUndoManager().undo();
 			}
 		}
 		
@@ -2756,13 +2914,13 @@ protected function searchInput_changeHandler(event:Event):void {
 		/**
 		 * Set scroll speed
 		 * */
-		public function setScrollSpeed(value:int):void {
+		public function setScrollSpeed(value:Number):void {
 			
 			if (isBrowser && useExternalInterface) {
 				var string:String = <xml><![CDATA[
 				function (id, value) {
 					var editor = ace.edit(id);
-					editor.scrollSpeed(value);
+					editor.setScrollSpeed(value);
 					return true;
 				}
 				]]></xml>;
@@ -3209,8 +3367,8 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
-		 * Set the show fold widgets on the editor
-		 * @see #showFoldWidgets
+		 * Set the show print margin in the editor
+		 * @see #showPrintMargin
 		 * */
 		public function setShowPrintMargin(value:Boolean):void {
 			
@@ -3407,11 +3565,11 @@ protected function searchInput_changeHandler(event:Event):void {
 		private var listenForChangesChanged:Boolean;
 		
 		
-		public const FIND:String = "find";
-		public const REPLACE:String = "replace";
-		public const EDITOR:String = "editor";
-		public const SESSION:String = "session";
-		public const SELECTION:String = "selection";
+		public static const FIND:String = "find";
+		public static const REPLACE:String = "replace";
+		public static const EDITOR:String = "editor";
+		public static const SESSION:String = "session";
+		public static const SELECTION:String = "selection";
 		
 		override protected function commitProperties():void {
 			super.commitProperties();
@@ -3462,19 +3620,19 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			
 			if (marginChanged) {
-				setMargin(theme);
+				setMargin(_margin);
 				marginChanged = false;
 			}
 			
 			if (themeChanged) {
-				setTheme(theme);
+				setTheme(_theme);
 				themeChanged = false;
 			}
 			
 			// there might be a bug where the snippets are not for the correct language if we enable
 			// snippets at a later time than at startup so we mark mode as changed
 			if (enableSnippetsChanged) {
-				setEnableSnippets(enableSnippets);
+				setEnableSnippets(_enableSnippets);
 				//options = aceEditor.getOptions();
 				enableSnippetsChanged = false;
 			}
@@ -3525,7 +3683,7 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			
 			if (showInvisiblesChanged) {
-				setShowInvisibles(showInvisibles);
+				setShowInvisibles(_showInvisibles);
 				showInvisiblesChanged = false;
 			}
 			
@@ -3688,10 +3846,22 @@ protected function searchInput_changeHandler(event:Event):void {
 							application[callbackName](object, object);
 						}
 						else {
-							if (event.domEvent != null) event.domEvent = null;
-							if (event.editor != null) event.editor = null;
 
-							application[callbackName](null, null);
+							// only return objects one level deep to prevent recursion
+							for (var key in event) {
+								value = event[key];
+
+							    if (event.hasOwnProperty(key) && (typeof value == 'object')) {
+							      for (var subkey in value) {
+							        if (value.hasOwnProperty(subkey) && (typeof value[subkey] == 'object')) {
+							          value[subkey] = null;
+							          delete value[subkey];
+							        }
+							      }
+							    }
+							}
+
+							application[callbackName](event, editorInstance.container.id);
 						}
 					}
 					dispatcher.on(eventName, application.methodHandlers[callbackName]);
@@ -3854,7 +4024,7 @@ protected function searchInput_changeHandler(event:Event):void {
 				var string:String = <xml><![CDATA[
 				function (id, value) {
 					var editor = ace.edit(id);
-					editor.session.bgTokenizer.lines.length = session.bgTokenizer.states.length = 0;
+					editor.session.bgTokenizer.lines.length = editor.session.bgTokenizer.states.length = 0;
 					return true;
 				}
 				]]></xml>;
@@ -3914,7 +4084,7 @@ protected function searchInput_changeHandler(event:Event):void {
 				var results:Object = ExternalInterface.call(string, editorIdentity, "\n" + text);
 			}
 			else {
-				session.insert({row: session.getLength(), column: 0}, "\n" + text);
+				editor.session.insert({row: session.getLength(), column: 0}, "\n" + text);
 			}
 		}
 		
@@ -5382,6 +5552,26 @@ editor.console = {log:trace, error:trace};
 		}
 		
 		/**
+		 * Resets the undo history
+		 * */
+		public function resetUndoHistory():void {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					editor.session.getUndoManager().reset()
+					return true;
+				}
+				]]></xml>;
+				var results:String = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				editor.session.getUndoManager().reset();
+			}
+		}
+		
+		/**
 		 * Attempts to center the selection on the screen
 		 * */
 		public function centerSelection():void {
@@ -5531,6 +5721,10 @@ editor.setCompleters(completers);
 			if (isAIR) {
 				airInstance.width = unscaledWidth;
 				airInstance.height = unscaledHeight;
+				if (airInstance is UIComponent) {
+					UIComponent(airInstance).invalidateDisplayList();
+				}
+				
 			}
 			else if (isBrowser) {
 				if (useExternalInterface) {
@@ -5554,27 +5748,337 @@ editor.setCompleters(completers);
 					browserInstance.width = unscaledWidth;
 					browserInstance.height = unscaledHeight;
 				}
-				
-				if (drawBackground) {
-					var cornerRadius:int = parseInt(getStyle("cornerRadius"));
-					var backgroundAlpha:Number = 0;
-					var backgroundColor:int;
-					
-					if (getStyle("backgroundColor")!==undefined) {
-						backgroundColor = getStyle("backgroundColor")!==undefined ? parseInt(getStyle("backgroundColor")) : 0xFFFFFF;
-						backgroundAlpha = parseFloat(getStyle("backgroundAlpha"));
-					}
-					
-					graphics.beginFill(backgroundColor, backgroundAlpha);
-					graphics.drawRoundRect(0, 0, unscaledWidth, unscaledHeight, cornerRadius);
-				}
 			}
 			else if (isMobile) {
 				mobileInstance.width = unscaledWidth;
 				mobileInstance.height = unscaledHeight;
 			}
+			
+			if (drawBackground) {
+				var cornerRadius:int = parseInt(getStyle("cornerRadius"));
+				var backgroundAlpha:Number = 0;
+				var backgroundColor:int;
+				
+				if (getStyle("backgroundColor")!==undefined) {
+					backgroundColor = getStyle("backgroundColor")!==undefined ? parseInt(getStyle("backgroundColor")) : 0xFFFFFF;
+					backgroundAlpha = parseFloat(getStyle("backgroundAlpha"));
+				}
+				
+				graphics.beginFill(backgroundColor, backgroundAlpha);
+				graphics.drawRoundRect(0, 0, unscaledWidth, unscaledHeight, cornerRadius);
+			}
 		}
+		
 		public const zeroPoint:Point = new Point();
 		public var drawBackground:Boolean;
+		
+		override public function setVisible(value:Boolean, noEvent:Boolean = false):void {
+			super.setVisible(value, noEvent);
+			
+			if (!initialized) {
+				return;
+			}
+			
+			if (isBrowser && useExternalInterface) {
+				
+				var string:String = <xml><![CDATA[
+				function (id, value) {
+					var editor = ace ? ace.edit(id) : null;
+					var element = editor ? editor.container : null;
+					var style = element ? element.style : null;
+					if (editor==null || editor==null) return false;
+					//style.display = value ? "block" : "none";
+					style.visibility = value ? "visible" : "hidden";
+					return true;
+				}
+				]]></xml>;
+				var results:String = ExternalInterface.call(string, editorIdentity, value);
+			}
+		}
+		
+		public static var events:Array;
+		public static var eventsDictionary:Dictionary;
+		public static var eventHandlerFunction:String;
+		
+		/**
+		 * Adds an event listener to the editor
+		 * */
+		override public function addEventListener(type:String, listener:Function, useCapture:Boolean=false, priority:int=0, useWeakReference:Boolean=false):void {
+			var editorEvent:Boolean;
+			var dispatcher:String;
+			
+			if (!initialized) {
+				//return;
+			}
+			
+			if (events==null) {
+				events = ClassUtils.getEventNames(this, true, UIComponent);
+				events.splice(events.indexOf("editorReady"), 1);
+				events.splice(events.indexOf("complete"), 1);
+				events.push("copy");
+				events.push("paste");
+			}
+			
+			super.addEventListener(type, listener, useCapture, priority, useWeakReference);
+			
+			if (events.indexOf(type)==-1) {
+				editorEvent = false;
+				return;
+			}
+			
+			dispatcher = eventsDictionary[type];
+			
+			if (dispatcher == null) {
+				dispatcher = EDITOR;
+			}
+			
+			if (isBrowser && useExternalInterface) {
+				
+				if (!aceEditorFound) {
+					deferredEventHandlers[type] = listener;
+					return;
+				}
+				//else {
+				//	eventHandlers[type] = listener;
+				//}
+				
+				var callbackName:String;
+				var results:Object;
+				var string:String;
+				
+				callbackName = editorIdentity + "_" + type;
+				ExternalInterface.addCallback(callbackName, browserCallbackHandler);
+				
+				if (eventHandlerFunction) {
+					string = eventHandlerFunction;
+				}
+				else {
+					// if the application has issues it's because you are trying to pass
+					// back an object with a circular reference
+					// pass back simple objects
+					// we use a basic circular reference function
+					// to write your own define your own eventHandlerFunction
+					string = <xml><![CDATA[
+					function (id, objectId, dispatcherType, eventName, callbackName, debug) {
+						var application = this[objectId];
+						var editor = ace.edit(id);
+						var dispatcher;
+	
+						if (dispatcherType=="editor") dispatcher = editor;
+						else if (dispatcherType=="session") dispatcher = editor.session; 
+						else if (dispatcherType=="selection") dispatcher = editor.session.selection;
+	
+						if (application.methodHandlers==null) { application.methodHandlers = {}; }
+	
+						application.methodHandlers[callbackName] = function(event, instance) {
+							//console.log(event);                 (object, maxDepth, depth, objects, clone, debug)
+							var clonedEvent;
+							if (event.type!="mousemove") {
+								clonedEvent = document.removeReferences(event, 1, null, null, true, debug);
+							}
+							else {
+								clonedEvent = document.removeReferences(event, 0, null, null, true, debug);
+							}
+
+							try {
+								//var isMethod = application[callbackName];
+								application[callbackName](callbackName, clonedEvent);
+							}
+							catch (error) {
+								console.log(error);
+							}
+						}
+
+						dispatcher.on(eventName, application.methodHandlers[callbackName]);
+						return true;
+					}
+					]]></xml>;
+				}
+				var jsDebug:Boolean = false;
+				results = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, dispatcher, type, callbackName, jsDebug);
+			}
+			else {
+				if (editor==null) {
+					deferredEventHandlers[type] = listener;
+				}
+				else {
+					if (dispatcher==EDITOR) {
+						editor.on(name, airCallbackHandler);
+					}
+					else if (dispatcher==SESSION) {
+						editor.session.on(name, airCallbackHandler);
+					}
+					else if (dispatcher==SELECTION) {
+						editor.session.selection.on(name, airCallbackHandler);
+					}
+				}
+			}
+		}
+		
+		/**
+		 * Helper method for handling browser events 
+		 * */
+		public function airCallbackHandler(event:Object, editor:Object):void {
+			var type:String = event.type;
+			
+			if (type==null && event.event!=null) {
+				type = event.event.type;
+			}
+			else if (type==null && event.action) {
+				type = "change";
+			}
+			
+			//if (hasEventListener(type)) {
+				var aceEvent:AceEvent = new AceEvent(type);
+				aceEvent.data = event;
+				dispatchEvent(aceEvent);
+			//}
+		}
+		
+		/**
+		 * Helper method for handling browser events 
+		 * */
+		public function browserCallbackHandler(callbackName:String, event:Object):void {
+			var type:String = callbackName.split("_")[1];
+			
+			//if (hasEventListener(type)) {
+				var aceEvent:AceEvent = new AceEvent(type);
+				aceEvent.data = event;
+				dispatchEvent(aceEvent);
+			//}
+		}
+		
+		public static var scriptAdded:Boolean;
+		public static var removeReferences:String = <xml><![CDATA[
+function () {
+				"use strict";
+				
+				// returns an object that removes circular references
+				document.removeReferences = function (object, maxDepth, depth, objects, clone, debug) {
+				  if (objects==null) { objects = []; }
+				  if (clone==true) { clone = {}; }
+				  maxDepth = maxDepth==null ? 10 : maxDepth;
+				  depth = depth==null ? 0 : depth;
+				  var padding = "";
+                  var value;
+				  
+				  if (debug) { for (var i=0;i<depth;i++) { padding += "  "; } };
+				
+				  if (debug && typeof object != 'function') {
+				    console.log(padding + "\nDepth:" + depth + " max depth:" + maxDepth);
+				  }
+				
+				  if (typeof object == 'object') {
+				    if (object!=null && objects.indexOf(object)==-1) {
+				      if (debug) console.log(padding+"caching object:"+object);
+				      objects.push(object);
+				    }
+				    else {
+				      if (debug) console.log(padding+"object found. skipping");
+				      return clone;
+				    }
+				
+				    for (var key in object) {
+				      value = object[key];
+				
+				      if (debug && typeof value!="function") {
+				        console.log(padding+""+key + ":" + typeof value);
+				      }
+				
+				      if (object.hasOwnProperty(key) && (typeof value == 'object')) {
+				
+				        // remove circular references
+				        if (objects.indexOf(value)!=-1) {
+				          if (debug) console.log(padding+"recursive object found. deleting:"+key);
+				
+				          if (clone==null) {
+				            delete object[key];
+				          }
+				          else {
+				            delete clone[key];
+				          }
+				          
+				          continue;
+				        }
+				
+				        if (depth>=maxDepth) {
+				          //object[key] = null;
+				
+				          if (clone==null) {
+				            if (debug) console.log(padding+"max object limit - deleting:"+key);
+				            delete object[key];
+				          }
+				          else {
+				
+				            if (typeof value=="array") {
+				              clone[key] = null;
+				            }
+				            else {
+				              clone[key] = null;
+				            }
+				            delete clone[key];
+				            if (debug) console.log(padding+"max object limit - not adding:"+key); 
+				          }
+				
+				        }
+				        else {
+				
+				          if (clone==null) {
+				            if (value!=null) {
+				              if (debug) console.log(padding+"diving into:"+key);
+				              document.removeReferences(value, maxDepth, depth+1, objects, null, debug);
+				            }
+				          }
+				          else {
+				            if (typeof value=="array") {
+				              clone[key] = value.slice();
+				            }
+				            else {
+				              clone[key] = value!=null ? {} : null;
+				            }
+				
+				            if (value!=null) {
+				              if (debug) console.log(padding+"diving into:"+key);
+				              document.removeReferences(value, maxDepth, depth+1, objects, clone[key], debug);
+				            }
+				          }
+				        }
+				      }
+				      else if (typeof value == 'function') {
+				          //object[key] = null;
+				          if (clone==null) {
+				            delete object[key];
+				          }
+				          else {
+				            
+				          }
+				      }
+				      else {
+				
+				        if (clone!=null) {
+				          if (debug) console.log(padding+" cloning key :"+key);
+				
+				          if (typeof value=="array") {
+				            clone[key] = value.slice();
+				          }
+				          else {
+				            clone[key] = value!=null ? value : null;
+				          }
+				        }
+				      }
+				    }
+				  }
+				
+				  if (clone!=null) {
+				    if (debug) console.log(padding+"return clone");
+				    return clone;
+				  }
+				
+				  if (debug) console.log(padding+"return object");
+				  return object;
+				}
+	return true;
+}
+				]]></xml>;
 	}
 }
