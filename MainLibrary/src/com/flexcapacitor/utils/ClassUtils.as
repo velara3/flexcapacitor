@@ -11,7 +11,6 @@ package com.flexcapacitor.utils {
 	import com.flexcapacitor.utils.supportClasses.ObjectDefinition;
 	
 	import flash.events.IEventDispatcher;
-	import flash.sampler.getMemberNames;
 	import flash.system.ApplicationDomain;
 	import flash.utils.Dictionary;
 	import flash.utils.describeType;
@@ -491,7 +490,7 @@ trace(name); // "mySuperButton"
 		 * @see #getMethodNames()
 		 * @see #getMemberNames()
 		 * */
-		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:String = "Object", existingItems:Array = null, isRoot:Boolean = true, ignoreCache:Boolean = false):Array {
+		public static function getEventNames(object:Object, sort:Boolean = true, stopAt:Object = "Object", existingItems:Array = null, isRoot:Boolean = true, ignoreCache:Boolean = false):Array {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var typeDescription:*;
 			var hasFactory:Boolean;
@@ -507,7 +506,9 @@ trace(name); // "mySuperButton"
 			var item:XML;
 			var typeName:String;
 			var isDynamic:Boolean;
+			var stopAtName:String;
 			
+			stopAtName = stopAt is String ? stopAt as String : getQualifiedClassName(stopAt);
 			
 			typeName = object is String ? String(object) : getQualifiedClassName(object);
 			
@@ -544,7 +545,7 @@ trace(name); // "mySuperButton"
 				for (i=0;i<numberOfExtendedClasses;i++) {
 					nextClass = String(extendsClass[i].@type);
 					
-					if (nextClass==stopAt) {
+					if (nextClass==stopAtName) {
 						break;
 					}
 					

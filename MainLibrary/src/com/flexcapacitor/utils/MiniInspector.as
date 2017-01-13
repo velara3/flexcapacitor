@@ -1801,6 +1801,7 @@ package com.flexcapacitor.utils {
 			if (event is KeyboardEvent) {
 				if (KeyboardEvent(event).shiftKey && KeyboardEvent(event).keyCode==Keyboard.ENTER) {
 					var currentTarget:Object = currentPopUpTarget;
+					trace("Press step over on the debugger");
 					enterDebugger();
 				}
 				else if (KeyboardEvent(event).keyCode==Keyboard.ENTER) {

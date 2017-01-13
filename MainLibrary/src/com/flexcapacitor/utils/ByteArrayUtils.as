@@ -16,7 +16,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Gets the position where either a single character or an array of hexidecimal values are found in a byte array
 		 * */
-		public function getIndexOfValueInByteArray(byteArray:ByteArray, value:*, startPosition:int = 0, endPosition:int = 0, endian:String = null):int {
+		public static function getIndexOfValueInByteArray(byteArray:ByteArray, value:*, startPosition:int = 0, endPosition:int = 0, endian:String = null):int {
 			var byte:uint;
 			var byteString:String;
 			var position:int;
