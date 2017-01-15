@@ -592,6 +592,8 @@ package com.flexcapacitor.utils
 			
 			try {
 				xml = new XML(value);
+				validationError = null;
+				validationErrorMessage = null;
 			}
 			catch (error:Error) {
 				// Usually: TypeError - Error #1088: The markup in the document following the root element must be well-formed.
@@ -904,9 +906,9 @@ package com.flexcapacitor.utils
 				
 				validationInfo.valid = false;
 				
-				var browserMessage:String = result.replace(/Location:.*:[\\n]/gs, "");
+				var browserMessage:String = result.replace(/Location:.*?Column.*?:/gs, "");
 				var index:int = browserMessage.lastIndexOf("\n");
-				browserMessage = index==browserMessage.length-1 ? browserMessage.substring(index-1,1) : browserMessage; 
+				//browserMessage = index==browserMessage.length-1 ? browserMessage.substring(index-1,1) : browserMessage; 
 				validationInfo.browserErrorMessage = browserMessage;
 				validationInfo.specificErrorMessage = specificError;
 				
@@ -1754,7 +1756,7 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 					var nam;
 					var value;
 					nam = n.nodeName;
-					console.log("Checking xml " + nam);
+					//console.log("Checking xml " + nam);
 					if (nam=="h3") {
 						if (h3OK==0) {
 							return;
@@ -1764,10 +1766,10 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 				
 					if (nam == "#text") {
 						value = n.nodeValue;
-						xt = xt + value + "\\n";
-						console.log(" depth " + depth);
-						console.log(" value " + value);
-						console.log(" value " + value.substring(value.indexOf(":")));
+						xt = xt + value + "\n";
+						//console.log(" depth " + depth);
+						//console.log(" value " + value);
+						//console.log(" value " + value.substring(value.indexOf(":")));
 					}
 				
 					l = n.childNodes.length
@@ -1803,10 +1805,10 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 						var parser = new DOMParser();
 						var text = txt;
 						var xmlDoc = parser.parseFromString(text, "text/xml");
-						console.log(xmlDoc);
+						//console.log(xmlDoc);
 					
 						if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
-							console.log(xmlDoc.getElementsByTagName("parsererror")[0]);
+							//console.log(xmlDoc.getElementsByTagName("parsererror")[0]);
 							checkErrorXML(xmlDoc.getElementsByTagName("parsererror")[0]);
 							return xt;
 						}

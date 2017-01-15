@@ -4773,9 +4773,22 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * */
 		public function get text():String {
 			
-			if (editor) {
-				return editor.getValue();
+			if (aceEditorFound) {
+				if (isBrowser && useExternalInterface) {
+					var string:String = <xml><![CDATA[
+					function (id) {
+						var editor = ace.edit(id);
+						return editor.getValue();
+					}
+					]]></xml>;
+					var results:String = ExternalInterface.call(string, editorIdentity);
+					return results;
+				}
+				else if (editor) {
+					return editor.getValue();
+				}
 			}
+			
 			return _text;
 		}
 		
