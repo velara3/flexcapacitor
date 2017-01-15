@@ -1764,6 +1764,27 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
+		 * Returns if mouse is down
+		 * */
+		public function isMouseDown():Boolean {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					return editor.$mouseHandler.isMousePressed;
+				}
+				]]></xml>;
+				var results:Boolean  = ExternalInterface.call(string, editorIdentity);
+				return results;
+			}
+			else {
+				return editor.$mouseHandler.isMousePressed;
+			}
+			
+		}
+		
+		/**
 		 * Get selected text
 		 * */
 		public function getTextRange():String {
@@ -4129,23 +4150,23 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * @param row row for annotation
 		 * @param column column of annotation
 		 * @param text text to display for annotation
-		 * @param type - type can be error, warning and information
+		 * @param type type can be "error", "warning" or "information"
 		 * */
-		public function setAnnotation(row:int, column:int = 0, text:String = null, type:String = null):void {
+		public function setAnnotation(row:int, column:int = 0, text:String = null, type:String = "error"):void {
 			var object:Object = {row: row, column: column, text: text, type: type};
 			
 			if (isBrowser && useExternalInterface) {
 				var string:String = <xml><![CDATA[
 				function (id, object) {
 					var editor = ace.edit(id);
-					editor.getSession().setAnnotations([object]);
+					editor.session.setAnnotations([object]);
 					return true;
 				}
 				]]></xml>;
 				var results:Object = ExternalInterface.call(string, editorIdentity, object);
 			}
 			else {
-				editor.getSession().setAnnotations([object]);
+				editor.session.setAnnotations([object]);
 			}
 			
 		}
@@ -5646,15 +5667,23 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 				function (id, objectId, completerName, toolTipName) {
 					var application = this[objectId];
 					var languageTools = ace.require("ace/ext/language_tools");
-					var completer = {};
+					var completer;
 
-					application.completer = completer;
-					application.completer.attributes = [];
+					if (application.completer==null) {
+						application.completer = {};
+						application.completer.classes = {};
+						application.completer.suggestions = [];
+					}
+
+					completer = application.completer;
 
 					completer.getCompletions = function (editor, session, position, prefix, callback) {
 						//application = this[objectId];
 						//console.log("test");
-						callback(null, application.completer.attributes);
+
+						console.log("1. code completion.application:"+application.completer);
+						console.log("autcomplete list length="+application.completer.suggestions.length);
+						callback(null, application.completer.suggestions);
 					};
 					
 					if (toolTipName!=null) {
@@ -5679,6 +5708,88 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 			}
 			
 			
+		}
+		
+		public function setCompleterValues(className:String, values:Array, property:String = null):void {
+			
+			if (isBrowser && useExternalInterface) {
+				
+				var string:String = <xml><![CDATA[
+				function (id, objectId, className, values, property) {
+					var application = this[objectId];
+					var completer;
+					var classes;
+					var classObject;
+					var autoCompleteList;
+					var propertyObject;
+
+					//if (values==null) values = [];
+
+					console.log("Setting completer suggestions:"+ className, property);
+					if (application.completer==null) {
+						application.completer = {};
+					}
+					
+					completer = application.completer;
+					classes = completer.classes;
+					classObject = classes[className];
+
+					console.log("1:" + property);
+					if (classObject==null) {
+						classObject = {};
+						classObject.properties = {};
+						classObject.members = [];
+						classes[className] = classObject;
+					}
+					else {
+						classObject = classes[className];
+					}
+
+					console.log("2");
+					
+					
+					if (property!=null) {
+						console.log("5. property:" + property);
+						console.log("typeof values:" + typeof values);
+						propertyObject = classObject.properties[property];
+
+						if (values==null) {
+							values = propertyObject!=null ? propertyObject : [];
+							console.log("getting cached property="+values.length);
+						}
+						else if (typeof values=="object" || typeof values=="array") {
+							classObject.properties[property] = values;
+						}
+
+						console.log("values length="+values.length);
+					}
+					else {
+						
+						console.log("6. typeof values:" + typeof values);
+						if (values==null) {
+							values = classObject.members!=null ? classObject.members : [];
+							console.log("getting cached members="+values.length);
+						}
+						else if (typeof values == "object" || typeof values == "array") {
+							console.log("values are being set");
+							console.log("values:"+ values);
+							classObject.members = values;
+						}
+						else 
+
+						console.log("values length="+values.length);
+						
+					}
+					console.log("3");
+					
+					application.completer.suggestions = values;
+					console.log("4 suggestions:" + application.completer.suggestions);
+
+					return true;
+				}
+				]]></xml>;
+				var results:String = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, className, values, property);
+			}
 		}
 		
 		/**
@@ -5708,25 +5819,6 @@ editor.setCompleters(completers);
 				languageTools.setCompleters(completers);
 			}
 			
-		}
-		
-		public function setCompleterValues(values:Array = null):void {
-			
-			if (isBrowser && useExternalInterface) {
-				
-				var string:String = <xml><![CDATA[
-				function (id, objectId, values) {
-					var application = this[objectId];
-					if (application.completers==null) {
-						application.completers = {};
-					}
-					application.completer.attributes = values;
-
-					return true;
-				}
-				]]></xml>;
-				var results:String = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, values);
-			}
 		}
 		
 		private var autoCompleterPopUpSizeChanged:Boolean;

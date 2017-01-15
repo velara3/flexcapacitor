@@ -70,6 +70,7 @@ package com.flexcapacitor.utils
 		public static const ELEMENT:String = "element";
 		
 		public static var addedXMLValidationToPage:Boolean;
+		public static var autoInitialize:Boolean = true;
 		
 		public static var notInitializedMessage:String = "The validateXML() call was invalid. You must call initialize() a few frames before calling validateXML().";
 		
@@ -653,13 +654,21 @@ package com.flexcapacitor.utils
 		 * @return An array with the original value in the first item and any errors in the proceeding items
 		 * @see isValid
 		 */
-		public static function validateXML(value:*, useFlashParser:Boolean = true, useBrowserParser:Boolean = true):XMLValidationInfo {
+		public static function validateXML(value:*, useFlashParser:Boolean = false, useBrowserParser:Boolean = true):XMLValidationInfo {
 			var validationInfo:XMLValidationInfo;
 			var result:String;
 			
 			if (value==null) value = "";
 			
 			if (ExternalInterface.available) {
+				if (addedXMLValidationToPage==false) {
+					if (autoInitialize) {
+						initializeInBrowser();
+					}
+					if (addedXMLValidationToPage==false) {
+						throw new Error("You must call initialize() before calling this method");
+					}
+				}
 				result = ExternalInterface.call("validateXML", value);
 				validationInfo = parseValidationResult(result, value);
 			}
@@ -738,7 +747,7 @@ package com.flexcapacitor.utils
 				}
 			}
 			
-			htmlText = "<html><script>"+XMLUtils.browserXMLValidationScript+"</script><body></body></html>";
+			htmlText = "<html><script>"+XMLUtils.browserXMLValidationScriptDesktop+"</script><body></body></html>";
 			htmlLoader = new HTMLLoaderClass();
 			htmlLoader.loadString(htmlText);
 			htmlLoader.addEventListener(Event.COMPLETE, function(e:Event):void {htmlLoaderLoaded = true;});
@@ -818,7 +827,7 @@ package com.flexcapacitor.utils
 							trace("Error:" + error.toString());
 						});
 						var out:String = ""
-						instance.loadURL("javascript:"+XMLUtils.browserXMLValidationScript);
+						instance.loadURL("javascript:"+XMLUtils.browserXMLValidationScriptDesktop);
 						var output:String = "javascript:validateXMLWebView(\""+JSON.stringify(xml)+"\")";
 						instance.loadURL(output);
 					}
@@ -895,8 +904,9 @@ package com.flexcapacitor.utils
 				
 				validationInfo.valid = false;
 				
-				var browserMessage:String = result.replace(/Location:.*/g, "");
-				
+				var browserMessage:String = result.replace(/Location:.*:[\\n]/gs, "");
+				var index:int = browserMessage.lastIndexOf("\n");
+				browserMessage = index==browserMessage.length-1 ? browserMessage.substring(index-1,1) : browserMessage; 
 				validationInfo.browserErrorMessage = browserMessage;
 				validationInfo.specificErrorMessage = specificError;
 				
@@ -1604,14 +1614,9 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 		 * Adds the JavaScript method in the browser web page to validate XML. 
 		 * Must be called before the JavaScript validation calls will work
 		 * */
-		public static function insertValidationScript():void {
-			//ExternalInterface.addCallback("universalCallback", universalCallback);
-			insertScript(); // may need to call later callLater()
-		}
-		
-		private static function insertScript():void {
-			ExternalInterface.call("eval", browserXMLValidationScript);
-			addedXMLValidationToPage = true;
+		private static function insertValidationScript():void {
+			var results:Boolean = ExternalInterface.call("document.insertScript = function() { " + browserXMLValidationScript + "; return true;}");
+			addedXMLValidationToPage = results;
 		}
 		
 		/**
@@ -1627,7 +1632,7 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 		 * This is written to the HTML page on load
 		 * Note: wherever we have linebreaks we have to escape them - \n -> \\n
 		 * */
-		public static var browserXMLValidationScript:XML = <root><![CDATA[
+		public static var browserXMLValidationScriptDesktop:XML = <root><![CDATA[
 				var xt = "";
 				var h3OK = 1;
 				
@@ -1715,6 +1720,110 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 					document.location = JSON.stringify({event:"result", method:"result","result":result});
 				}
 				]]></root>
-	
+		
+		/**
+		 * Function used to validate XML 
+		 * can also use "application/xml", image/svg+xml, text/html
+		 * 
+	     * https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
+		 * 
+		 * enum SupportedType {
+		 *	  "text/html",
+		 *    "text/xml",
+		 *    "application/xml",
+		 *    "application/xhtml+xml",
+		 *    "image/svg+xml"
+		 * }
+		 * 
+		 * https://w3c.github.io/DOM-Parsing/
+		 * */
+		public static var browserXMLValidationScript:String = <xml><![CDATA[
+				xt = "";
+				h3OK = 1;
+				errorObject = {};
+				
+				checkErrorXML = function checkErrorXML(x) {
+					xt = ""
+					h3OK = 1
+					checkXML(x, 0)
+				}
+				
+				checkXML = function (n, depth) {
+					var l;
+					var i;
+					var nam;
+					var value;
+					nam = n.nodeName;
+					console.log("Checking xml " + nam);
+					if (nam=="h3") {
+						if (h3OK==0) {
+							return;
+						}
+						h3OK = 0;
+					}
+				
+					if (nam == "#text") {
+						value = n.nodeValue;
+						xt = xt + value + "\\n";
+						console.log(" depth " + depth);
+						console.log(" value " + value);
+						console.log(" value " + value.substring(value.indexOf(":")));
+					}
+				
+					l = n.childNodes.length
+				
+					for (i = 0; i < l; i++) {
+						checkXML(n.childNodes[i], depth+1)
+					}
+				
+				}
+				
+				validateXML = function (txt, type) {
+				    if (type==null) type = "text/xml";
+
+					// code for IE
+					if (window.ActiveXObject) {
+						var xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+						xmlDoc.async = "false";
+						xmlDoc.loadXML(txt);
+						
+						if (xmlDoc.parseError.errorCode != 0) {
+							txt = "Error Code: " + xmlDoc.parseError.errorCode + "\\n";
+							txt = txt + "Error Reason: " + xmlDoc.parseError.reason;
+							txt = txt + "Error Line: " + xmlDoc.parseError.line;
+							return txt;
+						}
+						else {
+							return "No errors found";
+						}
+					}
+				
+					// code for Mozilla, Firefox, Opera, etc.
+					else if (document.implementation.createDocument) {
+						var parser = new DOMParser();
+						var text = txt;
+						var xmlDoc = parser.parseFromString(text, "text/xml");
+						console.log(xmlDoc);
+					
+						if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
+							console.log(xmlDoc.getElementsByTagName("parsererror")[0]);
+							checkErrorXML(xmlDoc.getElementsByTagName("parsererror")[0]);
+							return xt;
+						}
+						else {
+							return "No errors found";
+						}
+					}
+					else {
+						return "Your browser cannot handle the truth. I mean XML validation";
+					}
+				}
+
+				validateXMLWebView = function(txt) {
+					var result = validateXML(txt);
+					document.location = JSON.stringify({event:"result", method:"result","result":result});
+				}
+				]]></xml>;
+
 	}
 }
