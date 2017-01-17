@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<flexLibProperties includeAllClasses="true" useMultiPlatformConfig="false" version="3">
+<flexLibProperties includeAllClasses="false" useMultiPlatformConfig="false" version="3">
   <includeClasses>
     <classEntry path="com.flexcapacitor.controls.AceEditor"/>
     <classEntry path="com.flexcapacitor.controls.AceSearchTextInput"/>
@@ -333,7 +333,9 @@
     <classEntry path="com.flexcapacitor.effects.text.supportingClasses.ResizeTextToFitInstance"/>
     <classEntry path="com.flexcapacitor.effects.window.CenterWindow"/>
     <classEntry path="com.flexcapacitor.effects.window.supportClasses.CenterWindowInstance"/>
+    <classEntry path="com.flexcapacitor.events.AceEvent"/>
     <classEntry path="com.flexcapacitor.events.EffectEvent"/>
+    <classEntry path="com.flexcapacitor.events.HTMLDragEvent"/>
     <classEntry path="com.flexcapacitor.events.InspectorEvent"/>
     <classEntry path="com.flexcapacitor.events.IssueDataEvent"/>
     <classEntry path="com.flexcapacitor.filters.BlackAndWhiteFilter"/>
@@ -387,6 +389,7 @@
     <classEntry path="com.flexcapacitor.services.WPServiceBase"/>
     <classEntry path="com.flexcapacitor.services.WPServiceEvent"/>
     <classEntry path="com.flexcapacitor.skins.BeveledImageButtonSkin"/>
+    <classEntry path="com.flexcapacitor.skins.BeveledImageToggleButtonSkin"/>
     <classEntry path="com.flexcapacitor.skins.BorderContainerSkin"/>
     <classEntry path="com.flexcapacitor.skins.CallOutSkin"/>
     <classEntry path="com.flexcapacitor.skins.ClearButtonSkin"/>
@@ -394,13 +397,17 @@
     <classEntry path="com.flexcapacitor.skins.DataGridSkin2"/>
     <classEntry path="com.flexcapacitor.skins.FrameSkin"/>
     <classEntry path="com.flexcapacitor.skins.ImageButtonSkin"/>
+    <classEntry path="com.flexcapacitor.skins.MenuBarButtonSkin"/>
+    <classEntry path="com.flexcapacitor.skins.MenuItemSkin"/>
     <classEntry path="com.flexcapacitor.skins.MinimalScrollerSkin"/>
     <classEntry path="com.flexcapacitor.skins.PanelSkin"/>
+    <classEntry path="com.flexcapacitor.skins.PopUpButtonSkin"/>
     <classEntry path="com.flexcapacitor.skins.PropertiesDataGridSkin"/>
     <classEntry path="com.flexcapacitor.skins.RichTextAreaEditorBarSkin"/>
     <classEntry path="com.flexcapacitor.skins.RichTextEditorBarSkin"/>
     <classEntry path="com.flexcapacitor.skins.SearchButton"/>
     <classEntry path="com.flexcapacitor.skins.SearchTextInputSkin"/>
+    <classEntry path="com.flexcapacitor.skins.SmallToggleButtonSkin"/>
     <classEntry path="com.flexcapacitor.skins.SolidFillButtonBarSkin"/>
     <classEntry path="com.flexcapacitor.skins.SolidFillButtonSkin"/>
     <classEntry path="com.flexcapacitor.skins.SolidFillCheckBoxSkin"/>
@@ -439,6 +446,7 @@
     <classEntry path="com.flexcapacitor.utils.AceEditorUtils"/>
     <classEntry path="com.flexcapacitor.utils.AnimatedSprite"/>
     <classEntry path="com.flexcapacitor.utils.ArrayUtils"/>
+    <classEntry path="com.flexcapacitor.utils.ByteArrayUtils"/>
     <classEntry path="com.flexcapacitor.utils.ClassUtils"/>
     <classEntry path="com.flexcapacitor.utils.ClassUtils2"/>
     <classEntry path="com.flexcapacitor.utils.CollectionFilter"/>
@@ -453,6 +461,7 @@
     <classEntry path="com.flexcapacitor.utils.FindText"/>
     <classEntry path="com.flexcapacitor.utils.FontUtils"/>
     <classEntry path="com.flexcapacitor.utils.GetSingleton"/>
+    <classEntry path="com.flexcapacitor.utils.HTMLDragManager"/>
     <classEntry path="com.flexcapacitor.utils.HTMLUtils"/>
     <classEntry path="com.flexcapacitor.utils.InspectorUtils"/>
     <classEntry path="com.flexcapacitor.utils.LayoutDebugHelper"/>
@@ -476,6 +485,7 @@
     <classEntry path="com.flexcapacitor.utils.VectorUtils"/>
     <classEntry path="com.flexcapacitor.utils.XMLFileUtil"/>
     <classEntry path="com.flexcapacitor.utils.XMLUtils"/>
+    <classEntry path="com.flexcapacitor.utils.supportClasses.FileData"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.CSSStyleDeclarationItem"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.ComponentDefinition"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.ComponentDescription"/>
@@ -494,8 +504,6 @@
     <classEntry path="com.flexcapacitor.validators.BitmapDataValidator"/>
     <classEntry path="ru.inspirit.net.MultipartURLLoader"/>
     <classEntry path="ru.inspirit.net.events.MultipartURLLoaderEvent"/>
-    <classEntry path="com.flexcapacitor.utils.ByteArrayUtils"/>
-    <classEntry path="com.flexcapacitor.events.AceEvent"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>

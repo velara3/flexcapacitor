@@ -60,13 +60,13 @@ package com.flexcapacitor.utils {
 			}
 			
 			while (byteArray.bytesAvailable) {
-				byte = byteArray.readByte();
+				byte = byteArray.readUnsignedByte();
 				
 				if (!compareAsString && byte==firstByte) {
 					debug ? trace("Byte:0x" + byte.toString(16) + " " + String.fromCharCode(byte)):void;
 					
 					for (var j:int = 1; j < searchArrayLength; j++) {
-						byte = byteArray.readByte();
+						byte = byteArray.readUnsignedByte();
 						searchByte = searchArray[j];
 						
 						debug ? trace("Byte:0x" + byte.toString(16) + " " + String.fromCharCode(byte)):void;

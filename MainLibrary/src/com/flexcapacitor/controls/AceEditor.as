@@ -265,6 +265,10 @@ package com.flexcapacitor.controls {
 	 */
 	[Event(name="change", type="com.flexcapacitor.events.AceEvent")]
 	
+	/**
+	 * Font family
+	 * */
+	[Style(name="fontFamily", type="String", inherit="yes")]
 	
 	/**
 	 * Ace editor for AIR apps. For this to work you must do the following things. <br/><br/>
@@ -673,7 +677,8 @@ protected function searchInput_changeHandler(event:Event):void {
 						aceEditorFound = true;
 						aceFound = true;
 						isEditorReady = true;
-						callLater(completeHandler, [null]);
+						//callLater(completeHandler, [null]);
+						completeHandler();
 					}
 					
 					ExternalInterface.marshallExceptions = marshallExceptions;
@@ -807,10 +812,27 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * 
 		 * Step 2. When the page is loaded then we can get the ace editor instance 
 		 * */
-		protected function completeHandler(event:Event):void {
+		protected function completeHandler(event:Event = null):void {
 			if (debug) {
 				log();
 			}
+			
+			// AN ERROR APPEARS TO HAPPEN ON APPLICATION CLOSE
+			// Error is our own. Error: The ace JavaScript variable was not found. 
+			// Make sure to copy the directory, 'src-min-noconflict' to your project src directory and include a reference to it in the template page.
+			// Not sure what is going on here. Maybe an unload event
+			// or an application deactivate event. TODO Add listener for deactivate
+			
+			// UPDATE: 
+			// a second complete event is triggered by the location change to "about:blank"
+			// this happens when exiting an air app. the webview loads an about:blank page
+			// right before exit. this was causing errors to be thrown below
+			// so we need to check for location change and exit testing below
+			// 
+			if (isAIR && location=="about:blank" && aceFound) {
+				return;
+			}
+			
 			//var isPrimaryApplication:Boolean = SystemManagerGlobals.topLevelSystemManagers[0] == systemManager;
 			
 			// somehow the editor is getting reloaded on exit of application
@@ -848,7 +870,7 @@ protected function searchInput_changeHandler(event:Event):void {
 						var editorFound = element!=null && element.env!=null && element.env.editor!=null;
 						var aceFound = ace!=null;
 						var results = {};
-						results.divFound = divFound;
+						results.editorContainerFound = divFound;
 						results.editorFound = editorFound;
 						results.aceFound = aceFound;
 						return results;
@@ -859,7 +881,7 @@ protected function searchInput_changeHandler(event:Event):void {
 					
 					aceFound = results.aceFound;
 					aceEditorFound = results.editorFound;
-					aceEditorContainerFound = results.divFound;
+					aceEditorContainerFound = results.editorContainerFound;
 				}
 				else {
 					aceFound = window.ace ? true : false;
@@ -874,23 +896,13 @@ protected function searchInput_changeHandler(event:Event):void {
 						// would have hoped it returned null
 						// using old fashioned method
 						var element:Object = window.document.getElementById(editorIdentity);
-						var localName:String = element ? element.nodeName : null;
-						
-						aceEditorFound = (element && localName && localName.toLowerCase()=="div");
+						aceEditorFound = element!=null && element.env!=null && element.env.editor!=null;
+						aceEditorContainerFound = element!=null && element.nodeName!=null && element.nodeName.toLowerCase()=="div";
 					}
 				}
 				catch (e:Error) {
 					aceEditorFound = false;
 				}
-				
-				// THIS ERROR APPEARS TO HAPPEN ON APPLICATION CLOSE
-				// Error: The ace JavaScript variable was not found. Make sure to copy the directory, 'src-min-noconflict' to your project src directory and include a reference to it in the template page.
-				// Not sure what is going on here. Maybe an unload event
-				// or an application deactivate event. TODO Add listener for deactivate
-				
-				// UPDATE: 
-				// a new complete event is triggered by the location change to "about:blank"
-				// need to check for location change and handle this case
 				
 				if (!aceFound) {
 					errorMessage = "The ace JavaScript variable was not found. Make sure to copy the directory, ";
@@ -1013,6 +1025,7 @@ protected function searchInput_changeHandler(event:Event):void {
 			enableLiveAutoCompletionChanged = true;
 			enableWrapBehaviorsChanged = true;
 			fontSizeChanged = true;
+			fontFamilyChanged = true;
 			highlightActiveLineChanged = true;
 			highlightGutterLineChanged = true;
 			highlightSelectedWordChanged = true;
@@ -3026,7 +3039,7 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
-		 * Set the mode of the editor
+		 * Set the mode of the editor. Usually ace/mode/text, ace/mode/xml, etc
 		 * @see #mode
 		 * */
 		public function setMode(value:String):void {
@@ -3035,14 +3048,14 @@ protected function searchInput_changeHandler(event:Event):void {
 				var string:String = <xml><![CDATA[
 				function (id, value) {
 					var editor = ace.edit(id);
-					editor.getSession().setMode(value);
+					editor.session.setMode(value);
 					return true;
 				}
 				]]></xml>;
 				var results:String = ExternalInterface.call(string, editorIdentity, value);
 			}
 			else {
-				session.setMode(value);
+				editor.session.setMode(value);
 			}
 			
 			_mode = value;
@@ -3232,6 +3245,31 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			
 			setStyle("fontSize", value);
+		}
+		
+		/**
+		 * Set the editor to font family
+		 * @see #fontSize
+		 * @see #setFontSize()
+		 * */
+		public function setFontFamily(value:String):void {
+			var object:Object = {"fontFamily":value};
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, value) {
+					var editor = ace.edit(id);
+					editor.setOptions(value);
+					return true;
+				}	
+				]]></xml>;
+				var results:String = ExternalInterface.call(string, editorIdentity, object);
+			}
+			else {
+				editor.setOptions(object);
+			}
+			
+			setStyle("fontFamily", value);
 		}
 		
 		/**
@@ -3709,6 +3747,18 @@ protected function searchInput_changeHandler(event:Event):void {
 				fontSizeChanged = false;
 			}
 			
+			if (fontFamilyChanged) {
+				
+				// only allow font name when set inline
+				// because we can't change inherit on font family
+				// we are getting non-fixed width fonts from parent containers
+				if (styleDeclaration && styleName in styleDeclaration.overrides) {
+					setFontFamily(getStyle("fontFamily"));
+				}
+				
+				fontFamilyChanged = false;
+			}
+			
 			if (showIndentGuidesChanged) {
 				setDisplayIndentGuides(_showIndentGuides);
 				showIndentGuidesChanged = false;
@@ -3981,8 +4031,15 @@ protected function searchInput_changeHandler(event:Event):void {
 			
 			super.styleChanged(styleProp);
 			
-			if (allStyles || styleProp == "fontSize") {
+			if (allStyles) {
+				invalidateProperties();
+			}
+			else if (styleProp == "fontSize") {
 				fontSizeChanged = true;
+				invalidateProperties();
+			}
+			else if (styleProp == "fontFamily") {
+				fontFamilyChanged = true;
 				invalidateProperties();
 			}
 		}
@@ -4068,14 +4125,14 @@ protected function searchInput_changeHandler(event:Event):void {
 				var string:String = <xml><![CDATA[
 				function (id, position, text) {
 					var editor = ace.edit(id);
-					return editor.insert(position, text);
+					return editor.session.insert(position, text);
 				}
 				]]></xml>;
 				var results:Object = ExternalInterface.call(string, editorIdentity, position, text);
 				return results;
 			}
 			else {
-				return editor.insert(position, text);
+				return editor.session.insert(position, text);
 			}
 		}
 		
@@ -4088,8 +4145,8 @@ protected function searchInput_changeHandler(event:Event):void {
 				function (id, text) {
 					var editor = ace.edit(id);
 					var session = editor.session;
-					var object = {row: session.getLength(), column: 0},
-					editor.insert(position, text);
+					var position = {row: session.getLength(), column: 0};
+					editor.session.insert(position, text);
 					return true;
 				}
 				]]></xml>;
@@ -5130,6 +5187,7 @@ editor.removeCommand({name: 'find'});
 		private var enableReplaceChanged:Boolean;
 		private var showInvisiblesChanged:Boolean;
 		private var fontSizeChanged:Boolean;
+		private var fontFamilyChanged:Boolean;
 		private var textChanged:Boolean;
 		private var showIndentGuidesChanged:Boolean;
 		private var enableBasicAutoCompletionChanged:Boolean;

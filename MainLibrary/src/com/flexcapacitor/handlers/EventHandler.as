@@ -19,7 +19,8 @@ package com.flexcapacitor.handlers {
 	
 	
 	/**
-	 * Event dispatched at the start of the event handling
+	 * Event dispatched at the start of the event handling. 
+	 * You can listen for this event and call prevent default to prevent the handler from running
 	 * @see effectsStart
 	 * */
 	[Event(name="eventStart", type="flash.events.Event")]
@@ -227,7 +228,7 @@ MyOtherComponent.mxml,<br/>
 		//--------------------------------------------------------------------------
 		
 		/**
-		 * Event dispatched at the start of the event handling
+		 * Event dispatched at the start of the event handling. Can be used to prevent handling.
 		 * */
 		public static const EVENT_START:String = "eventStart";
 		
@@ -1477,7 +1478,17 @@ MyOtherComponent.mxml,<br/>
 			
 			// dispatch start event
 			if (hasEventListener(EVENT_START)) {
-				dispatchEvent(new Event(EVENT_START, bubbles, cancelable));
+				var startEvent:Event = new Event(EVENT_START, bubbles, true);
+				
+				dispatchEvent(startEvent);
+				
+				if (startEvent.isDefaultPrevented()==true) {
+					
+					if (debugHandlers) {
+						trace("Event Handler: " + eventName + " prevented");
+					}
+					return;
+				}
 			}
 			
 			// redispatch before running any effects

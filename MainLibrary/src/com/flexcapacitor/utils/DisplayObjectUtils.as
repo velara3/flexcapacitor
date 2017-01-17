@@ -5,7 +5,6 @@ package com.flexcapacitor.utils {
 	
 	import flash.display.Bitmap;
 	import flash.display.BitmapData;
-	import flash.display.BitmapEncodingColorSpace;
 	import flash.display.BlendMode;
 	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
@@ -23,9 +22,7 @@ package com.flexcapacitor.utils {
 	import flash.geom.Matrix3D;
 	import flash.geom.Point;
 	import flash.geom.Rectangle;
-	import flash.net.URLLoader;
 	import flash.system.Capabilities;
-	import flash.system.ImageDecodingPolicy;
 	import flash.system.LoaderContext;
 	import flash.utils.ByteArray;
 	import flash.utils.Dictionary;
@@ -33,7 +30,6 @@ package com.flexcapacitor.utils {
 	import flash.utils.getTimer;
 	
 	import mx.collections.ArrayCollection;
-	import mx.controls.SWFLoader;
 	import mx.core.BitmapAsset;
 	import mx.core.FlexGlobals;
 	import mx.core.IFlexModuleFactory;
@@ -48,7 +44,6 @@ package com.flexcapacitor.utils {
 	import mx.graphics.codec.JPEGEncoder;
 	import mx.graphics.codec.PNGEncoder;
 	import mx.managers.ISystemManager;
-	import mx.managers.SystemManager;
 	import mx.styles.StyleManager;
 	import mx.utils.Base64Decoder;
 	import mx.utils.Base64Encoder;
@@ -62,7 +57,6 @@ package com.flexcapacitor.utils {
 	import spark.core.IGraphicElement;
 	import spark.core.SpriteVisualElement;
 	import spark.primitives.BitmapImage;
-	import spark.primitives.Rect;
 	import spark.primitives.supportClasses.GraphicElement;
 	import spark.skins.IHighlightBitmapCaptureClient;
 	
@@ -91,7 +85,7 @@ else {
 }
 </pre>
 	 * */
-	public class DisplayObjectUtils {
+	public class DisplayObjectUtils extends EventDispatcher {
 		
 		public function DisplayObjectUtils() {
 			
@@ -1855,8 +1849,8 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var value:Object;
 			var async:Boolean = true;
 			var rectangle:Rectangle;
-			var initialWidth:int = size ? size.x : 10;
-			var initialHeight:int = size ? size.y : 10;
+			var initialWidth:int = size ? size.x : 100;
+			var initialHeight:int = size ? size.y : 100;
 			var quality:String;
 			var loaderContext:LoaderContext;
 			var isPNG:Boolean;
@@ -3574,12 +3568,6 @@ trace(size); // {width = 200, height = 100}
 				byteArray.position = 0;
 			}
 			
-			// base64Decoder.toByteArray();
-			//    Error: A partial block (2 of 4 bytes) was dropped. Decoded data is probably truncated!
-			// added the whole length (52 works as well)
-			byteArray = base64Decoder.toByteArray();
-			byteArray.position = 0;
-			
 			var bytesAvailable:int;
 			var byte:int; // should this be uint?
 			var hexValue:String;
@@ -3678,6 +3666,9 @@ trace(size); // {width = 200, height = 100}
 				point.x = imageWidth;
 				point.y = imageHeight;
 			}
+			else {
+				point = null;
+			}
 			
 			return point;
 		}
@@ -3760,10 +3751,75 @@ trace(size); // {width = 200, height = 100}
 		/**
 		 * Get size of image from base64 data string. Not implemented yet.
 		 * */
-		public static function getGIFImageDimensions(imageData:Object):Point {
-			throw new Error("getGIFImageDimensions is not implemented yet");
-			imageData = imageData.split(',')[1];
-			return null;
+		public static function getGIFImageDimensions(imageData:Object, removeLinebreaks:Boolean = false, parseHeadersCount:int = 22):Point {
+			var baseArray:Array;
+			var byteArray:ByteArray;
+			var base64Decoder:Base64Decoder;
+			var header:String;
+			var imageWidth:int;
+			var imageHeight:int;
+			var point:Point;
+			var trimLength:int;
+			
+			point = new Point();
+			
+			if (imageData is String) {
+				
+				if (imageData==null || imageData=="") {
+					return point;
+				}
+				
+				baseArray = imageData.split(","); // could use indexof -  could be faster
+				
+				if (baseArray.length>0) {
+					header = String(baseArray[1]);
+				}
+				else {
+					header = imageData as String;
+				}
+				
+				//var header:String = base64.slice(0, 52); // 50 gave error later on
+				// we could try to get less of a string and that may be faster???
+				if (parseHeadersCount>0) {
+					header = header.slice(0, parseHeadersCount);
+				}
+				
+				// linebreaks cause problems for some renderers
+				if (removeLinebreaks) {
+					header = header.replace(/\n/g, "");
+				}
+				
+				base64Decoder = new Base64Decoder();
+				base64Decoder.reset();
+				base64Decoder.decode(header);
+				
+				// base64Decoder.toByteArray();
+				//    Error: A partial block (2 of 4 bytes) was dropped. Decoded data is probably truncated!
+				// added the whole length (52 works as well) - base64Decoder.decode(header);
+				byteArray = base64Decoder.toByteArray();
+				byteArray.position = 0;
+			}
+			else {
+				byteArray = imageData as ByteArray;
+				
+				if (imageData==null) {
+					return point;
+				}
+				
+				byteArray.position = 0;
+			}
+			
+			byteArray.position = 6;
+			
+			imageWidth = byteArray.readUnsignedByte();
+			imageWidth += byteArray.readUnsignedByte() << 8;
+			imageHeight = byteArray.readUnsignedByte();
+			imageHeight += byteArray.readUnsignedByte() << 8;
+			
+			point.x = imageWidth;
+			point.y = imageHeight;
+			
+			return point;
 		}
 		
 		/**
@@ -3782,7 +3838,7 @@ trace(size); // {width = 200, height = 100}
 		 * size. If the data is corrupt and the size cannot be found
 		 * then null is returned.
 		 * 
-		 * @param base64 base64 string of bitmap data in format
+		 * @param base64 string of bitmap data in base64 format
 		 * @see #getPNGImageDimensions()
 		 * @see #getJPGImageDimensions()
 		 * @see #getGIFImageDimensions()
@@ -3796,17 +3852,17 @@ trace(size); // {width = 200, height = 100}
 			if (baseArray.length>1) {
 				baseInfo = String(baseArray[0]).toLowerCase();
 				
-				if (baseInfo.indexOf("png")!=-1) {
+				if (baseInfo.indexOf(PNG)!=-1) {
 					point = getPNGImageDimensions(base64);
 				}
-				else if (baseInfo.indexOf("jpeg")!=-1 || 
-					baseInfo.indexOf("jpg")!=-1) {
+				else if (baseInfo.indexOf(JPEG)!=-1 || 
+					baseInfo.indexOf(JPG)!=-1) {
 					point = getJPGImageDimensions(base64);
 				}
-				else if (baseInfo.indexOf("gif")!=-1) {
+				else if (baseInfo.indexOf(GIF)!=-1) {
 					point = getGIFImageDimensions(base64);
 				}
-				else if (baseInfo.indexOf("swf")!=-1) {
+				else if (baseInfo.indexOf(SWF)!=-1) {
 					point = getSWFImageDimensions(base64);
 				}
 			}
@@ -3839,6 +3895,10 @@ trace(size); // {width = 200, height = 100}
 			}
 			
 			point = new Point();
+			
+			if (imageType!=null && imageType.indexOf("/")!=-1) {
+				imageType = imageType.split("/")[1];
+			}
 			
 			if (imageType==PNG) {
 				point = getPNGImageDimensions(byteArray);
