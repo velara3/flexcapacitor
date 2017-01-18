@@ -1,6 +1,5 @@
 
 package com.flexcapacitor.utils {
-	import com.flexcapacitor.model.ValuesObject;
 	import com.flexcapacitor.utils.supportClasses.ComponentDescription;
 	import com.flexcapacitor.utils.supportClasses.GroupOptions;
 	
@@ -1930,25 +1929,25 @@ trace(result); // rgba(255, 0, 0, 0.3);
 public var bitmapDictionary:Dictionary = new Dictionary(true);
 public function parseBase64BitmapData(base64:String):Boolean {
 	var bitmapData:BitmapData = DisplayObjectUtils.getBitmapDataFromBase64(bitmapDataString);
-	var contentLoader:LoaderInfo; = DisplayObjectUtils.loader.contentLoaderInfo;
+	var contentLoaderInfo:LoaderInfo; = DisplayObjectUtils.loader.contentLoaderInfo;
 	// we may need to save a reference to the loader info so it doesn't get garbage collected
-	bitmapDictionary[contentLoader] = bitmapData;
-	contentLoader.addEventListener(Event.INIT, handleLoadingImages, false, 0, true);
+	bitmapDictionary[contentLoaderInfo] = bitmapData;
+	contentLoaderInfo.addEventListener(Event.INIT, handleLoadingImages, false, 0, true);
 }
 
 public function handleLoadingImages(event:Event):void {
 	var newBitmapData:BitmapData;
 	var bitmap:Bitmap;
-	var contentLoader:LoaderInfo = event.currentTarget as LoaderInfo;
-	var componentDescription:Object = bitmapDictionary[contentLoader];
+	var contentLoaderInfo:LoaderInfo = event.currentTarget as LoaderInfo;
+	var originalBitmapData:BitmapData = bitmapDictionary[contentLoaderInfo];
 	
-	if (contentLoader.loader.content) {
-		bitmap = contentLoader.loader.content as Bitmap;
+	if (contentLoaderInfo.loader.content) {
+		bitmap = contentLoaderInfo.loader.content as Bitmap;
 		newBitmapData = bitmap ? bitmap.bitmapData : null;
 	}
-	contentLoader.removeEventListener(Event.INIT, handleLoadingImages);
-	bitmapDictionary[contentLoader] = null;
-	delete bitmapDictionary[contentLoader];
+	contentLoaderInfo.removeEventListener(Event.INIT, handleLoadingImages);
+	bitmapDictionary[contentLoaderInfo] = null;
+	delete bitmapDictionary[contentLoaderInfo];
 }
 </pre>
 		 * 

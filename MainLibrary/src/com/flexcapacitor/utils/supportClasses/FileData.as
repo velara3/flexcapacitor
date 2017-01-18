@@ -17,7 +17,7 @@ package com.flexcapacitor.utils.supportClasses {
 		public var dataURI:String;
 		public var data:Object;
 		
-		public function unmarshall(object:Object):void {
+		public function unmarshall(object:Object):FileData {
 			if ("name" in object) {
 				name = object.name;
 			}
@@ -30,6 +30,8 @@ package com.flexcapacitor.utils.supportClasses {
 			if ("data" in object) {
 				data = object.data;
 			}
+			
+			return this;
 		}
 	}
 }
