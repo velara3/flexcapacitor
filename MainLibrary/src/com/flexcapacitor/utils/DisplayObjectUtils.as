@@ -1,5 +1,6 @@
 
 package com.flexcapacitor.utils {
+	import com.flexcapacitor.model.ValuesObject;
 	import com.flexcapacitor.utils.supportClasses.ComponentDescription;
 	import com.flexcapacitor.utils.supportClasses.GroupOptions;
 	
@@ -1920,7 +1921,37 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		
 		
 		/**
-		 * Get bitmap data from a base 64
+		 * Get bitmap data from a base 64. Since this fails to find the image size in some images
+		 * we can listen for the load complete event and update the bitmap data: 
+		 * 
+		 * Example:
+		 * 
+<pre>
+public var bitmapDictionary:Dictionary = new Dictionary(true);
+public function parseBase64BitmapData(base64:String):Boolean {
+	var bitmapData:BitmapData = DisplayObjectUtils.getBitmapDataFromBase64(bitmapDataString);
+	var contentLoader:LoaderInfo; = DisplayObjectUtils.loader.contentLoaderInfo;
+	// we may need to save a reference to the loader info so it doesn't get garbage collected
+	bitmapDictionary[contentLoader] = bitmapData;
+	contentLoader.addEventListener(Event.INIT, handleLoadingImages, false, 0, true);
+}
+
+public function handleLoadingImages(event:Event):void {
+	var newBitmapData:BitmapData;
+	var bitmap:Bitmap;
+	var contentLoader:LoaderInfo = event.currentTarget as LoaderInfo;
+	var componentDescription:Object = bitmapDictionary[contentLoader];
+	
+	if (contentLoader.loader.content) {
+		bitmap = contentLoader.loader.content as Bitmap;
+		newBitmapData = bitmap ? bitmap.bitmapData : null;
+	}
+	contentLoader.removeEventListener(Event.INIT, handleLoadingImages);
+	bitmapDictionary[contentLoader] = null;
+	delete bitmapDictionary[contentLoader];
+}
+</pre>
+		 * 
 		 * */
 		public static function getBitmapDataFromBase64(encodedValue:String, loaderContext:LoaderContext = null, parseBitmapSize:Boolean = true, imageType:String = null):BitmapData {
 			var PNGEncoderOptionsClass:Object;
