@@ -504,6 +504,8 @@
     <classEntry path="com.flexcapacitor.validators.BitmapDataValidator"/>
     <classEntry path="ru.inspirit.net.MultipartURLLoader"/>
     <classEntry path="ru.inspirit.net.events.MultipartURLLoaderEvent"/>
+    <classEntry path="com.flexcapacitor.utils.ClassRegistry"/>
+    <classEntry path="com.flexcapacitor.utils.ClassLoader"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>

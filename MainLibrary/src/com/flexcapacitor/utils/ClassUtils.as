@@ -386,6 +386,7 @@ trace(name); // "mySuperButton"
 			return null
 		}
 		
+		public static var objectDefinitionsCache:Dictionary = new Dictionary(true);
 		public static var membersNamesCache:Dictionary = new Dictionary(true);
 		public static var eventNamesCache:Dictionary = new Dictionary(true);
 		public static var propertyNamesCache:Dictionary = new Dictionary(true);
@@ -1039,6 +1040,13 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			
 			if (object==null) return null;
 			
+			
+			// check cache first
+			if (objectDefinitionsCache[object] && !ignoreCache) {
+				// create a copy so it's not modified elsewhere
+				return objectDefinitionsCache[object];
+			}
+			
 			sort = true;
 			
 			members 		= getMemberNames(object, sort, includeMethods);
@@ -1056,6 +1064,11 @@ var hasProperty:Boolean = ClassUtils.hasProperty(myButton, "width"); // true
 			objectDefinition.methods 		= methods;
 			objectDefinition.members 		= members;
 			objectDefinition.subclasses		= getInheritedClasses(object);
+			
+			// save results in a cache for next time
+			if (typeName && typeName!="Object") {
+				objectDefinitionsCache[object] = objectDefinition;
+			}
 			
 			return objectDefinition;
 		}

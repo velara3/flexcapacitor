@@ -73,7 +73,7 @@ package com.flexcapacitor.utils {
 	 * and find one that works or just document things more but haven't had the 
 	 * time. I've come across numerous methods the Flex and Flash engineers used
 	 * to capture screenshots and added and referenced some of them here.
-	 * These include, spark.utils.BitmapUtil. <br/><br/>
+	 * These include, spark.utils.BitmapUtil and now ImageSnapshot.<br/><br/>
 	 * 
 	 * Official display object snapshot methods (Oct 2015):  
 <pre>

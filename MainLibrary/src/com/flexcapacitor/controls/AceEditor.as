@@ -474,6 +474,13 @@ protected function searchInput_changeHandler(event:Event):void {
 		
 		public static var UNCAUGHT_SCRIPT_EXCEPTION:String = "uncaughtScriptException";
 		
+		
+		public static const FIND:String = "find";
+		public static const REPLACE:String = "replace";
+		public static const EDITOR:String = "editor";
+		public static const SESSION:String = "session";
+		public static const SELECTION:String = "selection";
+		
 		/**
 		 * Version of ace core version
 		 * */
@@ -645,10 +652,15 @@ protected function searchInput_changeHandler(event:Event):void {
 					
 					var string:String = <xml><![CDATA[
 						function(id) {
-							var div = document.createElement("div");
-							div.id = id;
-							div.style.position = "absolute";
-							document.body.appendChild(div);
+							var element = document.getElementById(id);
+							if (element==null) {
+								element = document.createElement("div");
+								element.id = id;
+							}
+							element.style.position = "absolute";
+							if (element.parent==null) {
+								document.body.appendChild(element);
+							}
 							return true;
 						}]]>
 						</xml>;
@@ -681,6 +693,9 @@ protected function searchInput_changeHandler(event:Event):void {
 						completeHandler();
 					}
 					
+					// listen for events once editor is created
+					addDeferredEventListeners()
+					
 					ExternalInterface.marshallExceptions = marshallExceptions;
 				}
 				else {
@@ -711,7 +726,10 @@ protected function searchInput_changeHandler(event:Event):void {
 				addChild(mobileInstance as DisplayObject);
 			}
 			
-			// listen for events once editor is created
+		}
+		
+		protected function addDeferredEventListeners():void {
+			
 			var functionReference:Function;
 			
 			for (var eventName:String in deferredEventHandlers) {
@@ -859,6 +877,12 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			
 			if (validateSources) {
+				aceLibraryNotFoundErrorMessage = "The ace JavaScript variable was not found. Make sure to copy the directory, ";
+				aceLibraryNotFoundErrorMessage += "'src-min-noconflict' to your project src directory and include a reference ";
+				aceLibraryNotFoundErrorMessage += "to it in the template page.";
+				
+				aceEditorElementNotFoundMessage = "The ace editor div was not found. Make sure the template page ";
+				aceEditorElementNotFoundMessage += "has a div with an id of '" + editorIdentity + "'.";
 				
 				if (isBrowser && useExternalInterface) {
 					var results:Object;
@@ -882,9 +906,21 @@ protected function searchInput_changeHandler(event:Event):void {
 					aceFound = results.aceFound;
 					aceEditorFound = results.editorFound;
 					aceEditorContainerFound = results.editorContainerFound;
+					
+					if (!aceFound) {
+						throw new Error(aceLibraryNotFoundErrorMessage);
+					}
+					else if (!aceEditorFound) {
+						throw new Error(aceEditorElementNotFoundMessage);
+					}
 				}
-				else {
+				
+				if (isAIR) {
 					aceFound = window.ace ? true : false;
+					
+					if (!aceFound) {
+						throw new Error(aceLibraryNotFoundErrorMessage);
+					}
 				}
 				
 				try {
@@ -895,43 +931,30 @@ protected function searchInput_changeHandler(event:Event):void {
 						// domWindow.ace.edit(id);
 						// would have hoped it returned null
 						// using old fashioned method
+						
+						// the editor is not create yet in AIR 
+						/*
 						var element:Object = window.document.getElementById(editorIdentity);
 						aceEditorFound = element!=null && element.env!=null && element.env.editor!=null;
 						aceEditorContainerFound = element!=null && element.nodeName!=null && element.nodeName.toLowerCase()=="div";
+						*/
 					}
 				}
 				catch (e:Error) {
 					aceEditorFound = false;
 				}
-				
-				if (!aceFound) {
-					errorMessage = "The ace JavaScript variable was not found. Make sure to copy the directory, ";
-					errorMessage += "'src-min-noconflict' to your project src directory and include a reference ";
-					errorMessage += "to it in the template page.";
-					throw new Error(errorMessage);
-				}
-				else if (!aceEditorFound) {
-					errorMessage = "The ace editor div was not found. Make sure the template page ";
-					errorMessage += "has a div with an id of '" + editorIdentity + "'.";
-					throw new Error(errorMessage);
-				}
 			}
 			
-			if (isAIR) {
-				createHTMLReferences();
-				setEditorProperties();
-				commitProperties();
-				setValue(text);
-				clearSelection();
-				addSearchBox();
-			}
-			else if (isBrowser && useExternalInterface) {
-				setEditorProperties();
-				commitProperties();
-				setValue(text);
-				clearSelection();
-				addSearchBox();
-			}
+			createEditor();
+			setEditorProperties();
+			commitProperties();
+			setValue(text);
+			clearSelection();
+			addSearchBox();
+		
+			version	= getVersion();
+			
+			isEditorReady = true;
 			
 			dispatchEvent(new Event(EDITOR_READY));
 		}
@@ -940,7 +963,7 @@ protected function searchInput_changeHandler(event:Event):void {
 		/**
 		 * Creates references we will use to reference the ace editor
 		 * */
-		private function createHTMLReferences():void {
+		private function createEditor():void {
 			if (debug) {
 				log();
 			}
@@ -955,9 +978,12 @@ protected function searchInput_changeHandler(event:Event):void {
 				languageTools = ace.require("ace/ext/language_tools");
 				beautify = ace.require("ace/ext/beautify");
 				language = ace.require("ace/lib/lang");
+				ace.require("ace/ext/searchbox"); // search box set later
 				editor = ace.edit(editorIdentity);
-				version	= ace.version;
 				element = editor.container;
+				
+				aceEditorFound = element!=null && element.env!=null && element.env.editor!=null;
+				aceEditorContainerFound = element!=null && element.nodeName!=null && element.nodeName.toLowerCase()=="div";
 				//session = editor.getSession();
 				selection = session.selection;
 				config = ace.config;
@@ -976,35 +1002,36 @@ protected function searchInput_changeHandler(event:Event):void {
 					//domWindow.console.log("hello");
 					//domWindow.console.error("hello error");
 				}
+				
+				addCommand({
+					name: 'save',
+					bindKey: {win: "Ctrl-S", mac: "Cmd-S"},
+					exec: saveKeyboardHandler});
+				
+				addCommand({
+					name: 'blockComment',
+					bindKey: {win: "Ctrl-Shift-c", mac: "Cmd-Shift-C"},
+					exec: blockCommentHandler});
+				
+				// doesnt seem to work - air is catching it. 
+				// but we can catch keyboard events to component, parent or application if we want to
+				// using ctrl+b seems to show it works 
+				addCommand({
+					name: "find",
+					bindKey: {win:"Ctrl-F", mac: "Cmd-F"},
+					exec: searchInputHandler});
+				
+				addCommand({
+					name: "search",
+					bindKey: {win:"Ctrl-B", mac: "Cmd-B"},
+					exec: searchInputHandler});
+				
+				addDeferredEventListeners();
+			}
+			else if (isBrowser && useExternalInterface) {
+				// do nothing
 			}
 			
-			editor.commands.addCommand({
-				name: 'save',
-				bindKey: {win: "Ctrl-S", mac: "Cmd-S"},
-				exec: saveKeyboardHandler});
-			
-			editor.commands.addCommand({
-				name: 'blockComment',
-				bindKey: {win: "Ctrl-Shift-c", mac: "Cmd-Shift-C"},
-				exec: blockCommentHandler});
-			
-			// doesnt seem to work - air is catching it. add to component, parent or application
-			editor.commands.addCommand({
-				name: "find",
-				bindKey: {win:"Ctrl-F", mac: "Cmd-F"},
-				exec: searchInputHandler});
-			
-			editor.commands.addCommand({
-				name: "search",
-				bindKey: {win:"Ctrl-B", mac: "Cmd-B"},
-				exec: searchInputHandler});
-			
-			/*editor.commands.addCommand({
-			name: 'find',
-			bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
-			exec: findKeyboardHandler});*/
-			
-			isEditorReady = true;
 		}
 		
 		/**
@@ -1369,7 +1396,9 @@ protected function searchInput_changeHandler(event:Event):void {
 		
 		/**
 		 * Mode of the editor as a path to the mode files.
-		 * Default is "ace/mode/html"
+		 * Default is "ace/mode/xml"
+		 * Others include html,text,svg,php
+		 * More listed at https://ace.c9.io/build/kitchen-sink.html
 		 * */
 		public function get mode():String {
 			return _mode;
@@ -3649,12 +3678,27 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		
-		
-		public static const FIND:String = "find";
-		public static const REPLACE:String = "replace";
-		public static const EDITOR:String = "editor";
-		public static const SESSION:String = "session";
-		public static const SELECTION:String = "selection";
+		/**
+		 * Get editor version
+		 * */
+		public function getVersion():String {
+			var text:String;
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					return ace.version;
+				}
+				]]></xml>;
+				text = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				text = ace.version;
+			}
+			
+			return text;
+		}
 		
 		override protected function commitProperties():void {
 			super.commitProperties();
@@ -4462,6 +4506,30 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
+		 * Gets the cursor string
+		 * */
+		public function getCursorString(value:Object = null):Object {
+			
+			if (value) {
+				return value.row + ":" + value.column;
+			}
+			else if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					return editor.selection.getCursor();
+				}
+				]]></xml>;
+				value = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				value = editor.selection.getCursor();
+			}
+			
+			return value.row + ":" + value.column;
+		}
+		
+		/**
 		 * Gets the range
 		 * */
 		public function getRange():Object {
@@ -4755,12 +4823,33 @@ protected function searchInput_changeHandler(event:Event):void {
 				function (id, position) {
 					var editor = ace.edit(id);
 					editor.moveCursorToPosition(position);
+					return true;
 				}
 				]]></xml>;
-				var results:Object = ExternalInterface.call(string, editorIdentity, position);
+				var results:String = ExternalInterface.call(string, editorIdentity, position);
 			}
 			else {
 				editor.moveCursorToPosition(position);
+			}
+		}
+		
+		/**
+		 * Moves the cursor by the number of rows and characters
+		 * */
+		public function moveCursorBy(rows:int, characters:int):void {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, rows, characters) {
+					var editor = ace.edit(id);
+					editor.selection.moveCursorBy(position);
+					return true;
+				}
+				]]></xml>;
+				var results:String = ExternalInterface.call(string, editorIdentity, rows, characters);
+			}
+			else {
+				editor.selection.moveCursorBy(rows, characters);
 			}
 		}
 		
@@ -4775,9 +4864,10 @@ protected function searchInput_changeHandler(event:Event):void {
 				function (id, row, column, keepDesiredColumn) {
 					var editor = ace.edit(id);
 					editor.moveCursorTo(row, column, keepDesiredColumn);
+					return true;
 				}
 				]]></xml>;
-				ExternalInterface.call(string, editorIdentity, row, column, keepDesiredColumn);
+				var result:String = ExternalInterface.call(string, editorIdentity, row, column, keepDesiredColumn);
 			}
 			else {
 				editor.moveCursorTo(row, column, keepDesiredColumn);
@@ -4885,7 +4975,8 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		
-		public var errorMessage:String;
+		public var aceLibraryNotFoundErrorMessage:String;
+		public var aceEditorElementNotFoundMessage:String;
 		
 		/**
 		 * Returns an editor that has an id. This will error out here if the div
@@ -5065,9 +5156,10 @@ editor.addCommand({
 				function (id, command) {
 					var editor = ace.edit(id);
 					editor.commands.addCommand(command);
+					return true;
 				}
 				]]></xml>;
-				ExternalInterface.call(string, editorIdentity, command);
+				var results:String = ExternalInterface.call(string, editorIdentity, command);
 			}
 			else {
 				editor.commands.addCommand(command);
@@ -5735,7 +5827,7 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 			if (isBrowser && useExternalInterface) {
 				
 				var string:String = <xml><![CDATA[
-				function (id, objectId, completerName, toolTipName) {
+				function (id, objectId, completerName, toolTipName, debug) {
 					var application = this[objectId];
 					var languageTools = ace.require("ace/ext/language_tools");
 					var completer;
@@ -5752,8 +5844,7 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 						//application = this[objectId];
 						//console.log("test");
 
-						console.log("1. code completion.application:"+application.completer);
-						console.log("autcomplete list length="+application.completer.suggestions.length);
+						if (debug) console.log("Code completion list length="+application.completer.suggestions.length);
 						callback(null, application.completer.suggestions);
 					};
 					
@@ -5765,7 +5856,7 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 					return true;
 				}
 				]]></xml>;
-				var results:String = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, completerFunction, toolTipFunction);
+				var results:String = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, completerFunction, toolTipFunction, debug);
 			}
 			else {
 				completer = {};
@@ -5786,7 +5877,7 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 			if (isBrowser && useExternalInterface) {
 				
 				var string:String = <xml><![CDATA[
-				function (id, objectId, className, values, property) {
+				function (id, objectId, className, values, property, debug) {
 					var application = this[objectId];
 					var completer;
 					var classes;
@@ -5796,7 +5887,7 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 
 					//if (values==null) values = [];
 
-					console.log("Setting completer suggestions:"+ className, property);
+					if (debug) console.log("Setting completer suggestions:"+ className, property);
 					if (application.completer==null) {
 						application.completer = {};
 					}
@@ -5805,7 +5896,7 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 					classes = completer.classes;
 					classObject = classes[className];
 
-					console.log("1:" + property);
+					if (debug) console.log("1:" + property);
 					if (classObject==null) {
 						classObject = {};
 						classObject.properties = {};
@@ -5816,50 +5907,51 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 						classObject = classes[className];
 					}
 
-					console.log("2");
+					if (debug) console.log("2");
 					
 					
 					if (property!=null) {
-						console.log("5. property:" + property);
-						console.log("typeof values:" + typeof values);
+						if (debug) console.log("5. property:" + property);
+						if (debug) console.log("typeof values:" + typeof values);
 						propertyObject = classObject.properties[property];
 
 						if (values==null) {
 							values = propertyObject!=null ? propertyObject : [];
-							console.log("getting cached property="+values.length);
+							if (debug) console.log("getting cached property="+values.length);
 						}
 						else if (typeof values=="object" || typeof values=="array") {
 							classObject.properties[property] = values;
 						}
 
-						console.log("values length="+values.length);
+						if (debug) console.log("values length="+values.length);
 					}
 					else {
 						
-						console.log("6. typeof values:" + typeof values);
+						if (debug) console.log("6. typeof values:" + typeof values);
 						if (values==null) {
 							values = classObject.members!=null ? classObject.members : [];
-							console.log("getting cached members="+values.length);
+							if (debug) console.log("getting cached members="+values.length);
 						}
 						else if (typeof values == "object" || typeof values == "array") {
-							console.log("values are being set");
-							console.log("values:"+ values);
+							if (debug) console.log("values are being set");
+							if (debug) console.log("values:"+ values);
 							classObject.members = values;
 						}
 						else 
 
-						console.log("values length="+values.length);
+						if (debug) console.log("values length="+values.length);
 						
 					}
-					console.log("3");
+					if (debug) console.log("3");
 					
 					application.completer.suggestions = values;
-					console.log("4 suggestions:" + application.completer.suggestions);
+					if (debug) console.log("4 suggestions:" + application.completer.suggestions);
 
 					return true;
 				}
 				]]></xml>;
-				var results:String = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, className, values, property);
+				var results:String = ExternalInterface.call(
+									string, editorIdentity, ExternalInterface.objectID, className, values, property, debug);
 			}
 		}
 		
@@ -6097,13 +6189,13 @@ editor.setCompleters(completers);
 				}
 				else {
 					if (dispatcher==EDITOR) {
-						editor.on(name, airCallbackHandler);
+						editor.on(type, airCallbackHandler);
 					}
 					else if (dispatcher==SESSION) {
-						editor.session.on(name, airCallbackHandler);
+						editor.session.on(type, airCallbackHandler);
 					}
 					else if (dispatcher==SELECTION) {
-						editor.selection.on(name, airCallbackHandler);
+						editor.selection.on(type, airCallbackHandler);
 					}
 				}
 			}
