@@ -5,7 +5,6 @@ package com.flexcapacitor.utils
 	import flash.utils.getQualifiedClassName;
 	
 	import mx.rpc.xml.Schema;
-	import mx.rpc.xml.SchemaTypeRegistry;
 
 	/**
 	 * Takes a XML document and registers the classes under their namespace URI
@@ -57,7 +56,18 @@ package com.flexcapacitor.utils
 			_namespaces = value;
 		}
 
-		
+		/**
+		 * Adds multiple namespaces in an object. The object contains 
+		 * a list of keys that are the prefix for the namespace instance
+		 * 
+		 * For example, 
+<pre>
+classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/spark")});
+</pre>
+		 * 
+		 * @see #namespaces
+		 * @see #addNamespace()
+		 * */
 		public function addNamespaces(map:Object):void {
 			
 			for (var prefix:String in map) {
@@ -66,6 +76,17 @@ package com.flexcapacitor.utils
 			}
 		}
 		
+		/**
+		 * Adds a namespace to the registered namespaces dictionary
+		 * For example, you can register "new Namespace("s", "library://ns.adobe.com/flex/spark");"
+		 * 
+		 * Existing values will be overwritten. 
+		 * 
+		 * @see #namespaces
+		 * @see #addNamespaces()
+		 * @see #getNamespaceByPrefix()
+		 * @see #getNamespaceByURI()
+		 * */
 		public function addNamespace(ns:Namespace):void {
 			var prefix:String = ns.prefix;
 			var uri:String = ns.uri;
@@ -80,6 +101,59 @@ package com.flexcapacitor.utils
 					namespaces[prefix] = ns;
 				}
 			}
+		}
+		
+		/**
+		 * Gets the namespace by prefix. If you pass in "s" and you have a namespace
+		 * registered with the prefix "s" then it returns that namespace instance
+		 * or null if not found.
+		 * 
+		 * @see #getNamespaceByURI()
+		 * @see #getPrefixForNamespace()
+		 * */
+		public function getNamespaceByPrefix(prefix:String):Namespace {
+			var ns:Namespace;
+			
+			if (namespaces[prefix]!=null) {
+				ns = namespaces[prefix];
+			}
+			
+			return ns;
+		}
+		
+		/**
+		 * Gets the namespace by URI. If you pass in "library://ns.adobe.com/flex/spark" 
+		 * and you have a namespace with a matching URI then it returns that namespace instance
+		 * or null if not found.
+		 * 
+		 * @see #getNamespaceByPrefix()
+		 * @see #getPrefixForNamespace()
+		 * */
+		public function getNamespaceByURI(uri:String):Namespace {
+			
+			for each (var ns:Namespace in _namespaces) {
+				if (ns.uri==uri) {
+					return ns;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get prefix for URI or null if not found
+		 * 
+		 * @see #getNamespaceByPrefix()
+		 * @see #getNamespaceByURI()
+		 * */
+		public function getPrefixForNamespace(uri:String):String {
+			var ns:Namespace = getNamespaceByURI(uri);
+			
+			if (ns) {
+				return ns.prefix;
+			}
+			
+			return null;
 		}
 		
 		/**
@@ -191,6 +265,57 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Get the prefix from a key. If key is library://ns.adobe.com/flex/spark::spark.controls.Button
+		 * and "library://ns.adobe.com/flex/spark" is registered with the "s" namespace prefix
+		 * then the value returned is "s:Button". 
+		 * 
+		 * @see #addNamespace()
+		 * @see #addNamespaces()
+		 * */
+		public function getPrefixedNameFromKey(key:String):String {
+			var qname:QName;
+			
+			// Separate into prefix and local name
+			var prefix:String;
+			var uri:String;
+			var localName:String;
+			var uriIndex:int = key.lastIndexOf("::");// could also use "::"
+			
+			if (uriIndex > 0) {
+				uri = key.substr(0, uriIndex);
+				localName = key.substr(uriIndex + 2);
+			} else {
+				localName = key;
+			}
+			
+			if (uri) {
+				prefix = getPrefixForNamespace(uri);
+				
+				if (prefix!=null) {
+					return prefix + ":" + localName;
+				}
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get an array of class names with prefixes
+		 * */
+		public function getPrefixedClassNames():Array {
+			var classNames:Array = [];
+			
+			for (var key:String in classMap) {
+				var prefixedName:String = getPrefixedNameFromKey(key);
+				if (prefixedName!=null) {
+					classNames.push(prefixedName);
+				}
+			}
+			
+			return classNames;
+		}
+		
+		/**
 		 * Returns the Schema that was last used to retrieve a definition.
 		 *  
 		 *  @langversion 3.0
@@ -227,6 +352,7 @@ package com.flexcapacitor.utils
 		
 		/**
 		 * Looks for a registered Class for the given type.
+		 * 
 		 * @param type The QName or String representing the type name.
 		 * @return Returns the Class for the given type, or null of the type
 		 * has not been registered.

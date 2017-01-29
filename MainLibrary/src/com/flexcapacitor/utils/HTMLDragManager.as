@@ -5,7 +5,7 @@ package com.flexcapacitor.utils
 	import flash.events.EventDispatcher;
 	import flash.external.ExternalInterface;
 	
-	import mx.utils.NameUtil;
+	import mx.core.IMXMLObject;
 
 	
 	/**
@@ -30,16 +30,28 @@ package com.flexcapacitor.utils
 	[Event(name="dragOver", type="com.flexcapacitor.events.HTMLDragEvent")]
 	
 	/**
-	 *  Dispached after a drag exit event
+	 *  Dispached after a drag drop event
 	 *
 	 *  @eventType flash.events.Event
 	 */
-	[Event(name="dragExit", type="com.flexcapacitor.events.HTMLDragEvent")]
+	[Event(name="dragDrop", type="com.flexcapacitor.events.HTMLDragEvent")]
 	
 	/**
 	 * Adds basic support for dragging files into the browser
+	 * 
+<pre>
+ 
+public function dragDropHandler(event:HTMLDragEvent):void {
+	var fileObject:Object = event.data;
+
+	if (!(fileObject is String)) {
+		trace("Dropped " + fileObject.name);
+		trace(file.dataURI);
+	}
+}
+</pre>
 	 * */
-	public class HTMLDragManager extends EventDispatcher {
+	public class HTMLDragManager extends EventDispatcher implements IMXMLObject {
 		
 		/**
 		 * Constructor
@@ -56,6 +68,9 @@ package com.flexcapacitor.utils
 		public static const DRAG_DROP:String = "dragDrop";
 		public static const DRAG_START:String = "dragStart";
 		public static const DRAG_END:String = "dragEnd";
+		
+		public static const APPLICATION_XV_XML:String = "data:application/xv+xml";
+		public static const APPLICATION_TEXT_PLAIN:String = "data:text/plain";
 		
 		/**
 		 * Identity of draggable element on the page.
@@ -406,6 +421,12 @@ package com.flexcapacitor.utils
 				results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID, eventName, callbackName);
 			}
 		}
+		
+		/**
+		 * Called when MXML document is initialized
+		 * */
+		public function initialized(document:Object, id:String):void {
 			
+		}
 	}
 }

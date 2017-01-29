@@ -76,11 +76,8 @@ package com.flexcapacitor.controls {
 	import mx.utils.Platform;
 	
 	import spark.core.IDisplayText;
-	import spark.events.TextOperationEvent;
 	
 	import avmplus.getQualifiedClassName;
-	
-	import flashx.textLayout.operations.FlowOperation;
 	
 	//--------------------------------------
 	//  Events
@@ -3068,7 +3065,8 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
-		 * Set the mode of the editor. Usually ace/mode/text, ace/mode/xml, etc
+		 * Set the mode of the editor. 
+		 * Usually ace/mode/text, ace/mode/xml, ace/mode/actionscript, etc
 		 * @see #mode
 		 * */
 		public function setMode(value:String):void {
@@ -3474,11 +3472,11 @@ protected function searchInput_changeHandler(event:Event):void {
 					var editor = ace.edit(id);
 					var popup;
 					
-					if (editor.completer) {
+					if (editor.completer!=null) {
 						popup = editor.completer.popup;
 						
-						if (popup) {
-							popup.container.style.width = autoCompleterPopUpSize + "px";
+						if (popup!=null) {
+							popup.container.style.width = value + "px";
 							popup.resize();
 						}
 					}
@@ -4506,14 +4504,121 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
+		 * Gets the tag name
+		 * */
+		public function getTagName(row:int = 0, column:int = 0):Object {
+			var token:Object;
+			var line:String;
+			var type:String;
+			var value:String;
+			var found:Boolean;
+			var qname:QName;
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, row, column) {
+					var editor = ace.edit(id);
+					var session = editor!=null ? editor.session : null;
+					var token;
+					var line;
+					var type;
+					var value;
+					var found;
+					
+					const XML_TAG_NAME = "meta.tag.tag-name.xml";
+					
+					for (; row > -1; row--) {
+						line = session.getLine(row);
+						column = line.length;
+						
+						for (; column>-1; column--) {
+							token = session.getTokenAt(row, column);
+							type = token ? token.type : "";
+							
+							if (type==XML_TAG_NAME) {
+								value = token.value;
+								found = true;
+								break;
+							}
+						}
+						
+						if (found) break;
+					}
+					
+					return token;
+				}
+				]]></xml>;
+				
+				var results:Object = ExternalInterface.call(string, editorIdentity, row, column);
+				
+				if (results) {
+					qname = new QName("", results.value);
+				}
+				
+				return qname;
+			}
+			else {
+				
+				for (; row > -1; row--) {
+					line = session.getLine(row);
+					column = line.length;
+					
+					for (; column>-1; column--) {
+						token = session.getTokenAt(row, column);
+						type = token ? token.type : "";
+						
+						if (type=="meta.tag.tag-name.xml") {
+							value = token.value;
+							found = true;
+							break;
+						}
+					}
+					
+					if (found) break;
+				}
+				
+				if (found) {
+					qname = new QName("", value);
+				}
+				
+				return qname;
+			}
+			
+		}
+		
+		/**
+		 * Gets the position based on the cursor position
+		 * */
+		public function getIndex(position:Object = null, startRow:int = 0):int {
+			
+			if (position==null) {
+				position = getCursor();
+			}
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, position, startRow) {
+					var editor = ace.edit(id);
+					return editor.session.doc.positionToIndex(position, startRow);
+				}
+				]]></xml>;
+				var results:int = ExternalInterface.call(string, editorIdentity, position, startRow);
+				return results;
+			}
+			else {
+				return editor.session.doc.positionToIndex(position, startRow);
+			}
+			
+		}
+		
+		/**
 		 * Gets the cursor string
 		 * */
-		public function getCursorString(value:Object = null):Object {
+		public function getCursorString(value:Object = null, pad:int = 2):String {
+			var row:String;
+			var column:String;
 			
-			if (value) {
-				return value.row + ":" + value.column;
-			}
-			else if (isBrowser && useExternalInterface) {
+			if (value==null && isBrowser && useExternalInterface) {
 				var string:String = <xml><![CDATA[
 				function (id) {
 					var editor = ace.edit(id);
@@ -4522,11 +4627,17 @@ protected function searchInput_changeHandler(event:Event):void {
 				]]></xml>;
 				value = ExternalInterface.call(string, editorIdentity);
 			}
-			else {
+			else if (value==null) {
 				value = editor.selection.getCursor();
 			}
 			
-			return value.row + ":" + value.column;
+			row = value.row; 
+			column = value.column;
+			
+			while (row.length < pad) { row = "0" + row; }
+			while (column.length < pad) { column = "0" + column; }
+			
+			return row + ":" + column;
 		}
 		
 		/**
@@ -5101,31 +5212,141 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
+		 * Returns if search box is visible
+		 * */
+		public function isSearchBoxVisible():Boolean {
+			var isVisible:Boolean;
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					var isVisible;
+
+					if (editor.searchBox==null) {
+						return false;
+					}
+					
+					isVisible = editor.searchBox.element.style.display != "none";
+					return isVisible;
+				}
+				]]></xml>;
+				isVisible = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				
+				if (editor.searchBox==null) {
+					return false;
+				}
+				
+				isVisible = editor.searchBox.element.style.display != "none";
+			}
+			
+			return isVisible;
+		}
+		
+		/**
+		 * Returns if replace field in a search box is visible
+		 * */
+		public function isReplaceBoxVisible():Boolean {
+			var isVisible:Boolean;
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					var isVisible;
+
+					if (editor.searchBox==null) {
+						return false;
+					}
+					
+					if (editor.searchBox.element.style.display != "none" && 
+						editor.searchBox.isReplace) {
+						return true;
+					}
+					return false;
+				}
+				]]></xml>;
+				isVisible = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				
+				if (editor.searchBox==null) {
+					return false;
+				}
+				
+				if (editor.searchBox.element.style.display != "none" && 
+					editor.searchBox.isReplace) {
+					isVisible = true;
+				}
+				else {
+					isVisible = false;
+				}
+			}
+			
+			return isVisible;
+		}
+		
+		/**
 		 * Toggles between showing and hiding native search input field
 		 * @return returns true if visible and false if not
 		 * */
-		public function toggleSearchField(fillWithSelection:Boolean = true):Boolean {
+		public function toggleSearchField(populateWithSelection:Boolean = true, showReplace:Boolean = false):Boolean {
 			var isVisible:Boolean;
 			var selection:String;
 			
-			if (editor.searchBox==null) {
-				searchModule.Search(editor);
-				isVisible = true;
-				editor.searchBox.hide();
-			}
-			
-			
-			isVisible = editor.searchBox.element.style.display != "none";
-			
-			if (isVisible) {
-				hideSearchInput();
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, populateWithSelection, showReplace) {
+					var editor = ace.edit(id);
+					var isVisible;
+					var selection;
+					
+					if (editor.searchBox==null) {
+						searchModule.Search(editor);
+						isVisible = true;
+						editor.searchBox.hide();
+					}
+					
+					isVisible = editor.searchBox.element.style.display != "none";
+					
+					if (isVisible) {
+						editor.searchBox.element.style.display = "none";
+					}
+					else {
+						if (populateWithSelection) {
+							selection = editor.session.getTextRange(editor.getSelectionRange());
+						}
+					
+						editor.searchBox.show(selection, showReplace);
+					}
+					
+					return !isVisible;
+				}
+				]]></xml>;
+				isVisible = ExternalInterface.call(string, editorIdentity, populateWithSelection, showReplace);
 			}
 			else {
-				if (fillWithSelection) {
-					selection = session.getTextRange(editor.getSelectionRange());
+				if (editor.searchBox==null) {
+					searchModule.Search(editor);
+					isVisible = true;
+					editor.searchBox.hide();
 				}
 				
-				showSearchInput(selection);
+				isVisible = isSearchBoxVisible();
+				
+				if (isVisible) {
+					hideSearchInput();
+				}
+				else {
+					if (populateWithSelection) {
+						selection = session.getTextRange(editor.getSelectionRange());
+					}
+					
+					editor.searchBox.show(selection, showReplace);
+				}
+				
 			}
 			
 			return !isVisible;
@@ -5885,8 +6106,6 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 					var autoCompleteList;
 					var propertyObject;
 
-					//if (values==null) values = [];
-
 					if (debug) console.log("Setting completer suggestions:"+ className, property);
 					if (application.completer==null) {
 						application.completer = {};
@@ -5894,58 +6113,74 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 					
 					completer = application.completer;
 					classes = completer.classes;
-					classObject = classes[className];
 
 					if (debug) console.log("1:" + property);
-					if (classObject==null) {
-						classObject = {};
-						classObject.properties = {};
-						classObject.members = [];
-						classes[className] = classObject;
+
+					if (className!=null) {
+						classObject = classes[className];
+
+						if (classObject==null) {
+							classObject = {};
+							classObject.properties = {};
+							classObject.members = [];
+							classes[className] = classObject;
+						}
+						else {
+							classObject = classes[className];
+						}
 					}
 					else {
-						classObject = classes[className];
+						if (debug) console.log("1.1 no class name. setting raw values");
+						
+						application.completer.suggestions = values;
+
+						if (debug) console.log("1.2 values set");
+
+						return;
 					}
 
 					if (debug) console.log("2");
 					
 					
 					if (property!=null) {
-						if (debug) console.log("5. property:" + property);
+						if (debug) console.log("3. property:" + property);
 						if (debug) console.log("typeof values:" + typeof values);
 						propertyObject = classObject.properties[property];
 
 						if (values==null) {
 							values = propertyObject!=null ? propertyObject : [];
-							if (debug) console.log("getting cached property="+values.length);
+							if (debug) console.log("4. getting cached property="+values.length);
 						}
 						else if (typeof values=="object" || typeof values=="array") {
 							classObject.properties[property] = values;
 						}
 
-						if (debug) console.log("values length="+values.length);
+						if (debug) console.log("5. values length="+values.length);
 					}
 					else {
 						
 						if (debug) console.log("6. typeof values:" + typeof values);
+
+						// check for cached values
 						if (values==null) {
 							values = classObject.members!=null ? classObject.members : [];
-							if (debug) console.log("getting cached members="+values.length);
+							if (debug) console.log("7. getting cached members="+values.length);
 						}
 						else if (typeof values == "object" || typeof values == "array") {
-							if (debug) console.log("values are being set");
-							if (debug) console.log("values:"+ values);
+							if (debug) console.log("8. values are being set");
+							if (debug) console.log("9. values:"+ values);
 							classObject.members = values;
 						}
-						else 
 
-						if (debug) console.log("values length="+values.length);
+						if (debug) console.log("10. values length="+values.length);
 						
 					}
-					if (debug) console.log("3");
+
+					if (debug) console.log("11.");
 					
 					application.completer.suggestions = values;
-					if (debug) console.log("4 suggestions:" + application.completer.suggestions);
+
+					if (debug) console.log("12. suggestions:" + application.completer.suggestions);
 
 					return true;
 				}

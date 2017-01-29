@@ -214,15 +214,18 @@ package com.flexcapacitor.services {
 		 * @private
 		 */
 		public function set url(value:String):void {
+			var path:String;
 			
 			if (usePermalinks) {
-				var path:String = permalinkPath.lastIndexOf("/")==permalinkPath.length-1 ? permalinkPath : permalinkPath + "/";
+				path = permalinkPath.lastIndexOf("/")==permalinkPath.length-1 ? permalinkPath : permalinkPath + "/";
 				value = value.replace(/&/, "?"); // replace first & with ?
 				value = path + value;
 			}
 			else {
 				value = value.replace(/\?/, "&"); // replace first ? since we will be using it
-				value = "?json=" + value;
+				if (value.indexOf("?json=")==-1) {
+					value = "?json=" + value;
+				}
 			}
 			
 			_url = host + site + value;
@@ -318,7 +321,13 @@ package com.flexcapacitor.services {
 		 * @see query
 		 * */
 		public function send(controller:String = "core", method:String = "get_recent_posts", query:String="", post:Object = null):void {
-			url = "?json=" + controller + "/" + method + query;
+			if (query==null) query = "";
+			if (usePermalinks) {
+				url = "?json=" + controller + "/" + method + query;
+			}
+			else {
+				url = controller + "/" + method + query;
+			}
 			request.method = URLRequestMethod.POST;
 			request.data = post;
 			request.url = url;

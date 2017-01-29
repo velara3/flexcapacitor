@@ -129,13 +129,15 @@ package com.flexcapacitor.utils
 		public var urlLoaders:Dictionary = new Dictionary(true);
 		
 		private var classRegistry:ClassRegistry;
+		public var componentsList:XMLList;
+		public var componentsArray:Array;
 		
 		protected function manifestLoadingHandler(event:Event):void {
 			var namespaceURI:String;
-			var componentsList:XMLList;
 			var componentName:String;
 			var componentClass:String;
 			var urlLoader:URLLoader;
+			var namespaceLoaded:Event;
 			var componentQName:QName;
 			var result:String;
 			var xml:XML;
@@ -147,6 +149,7 @@ package com.flexcapacitor.utils
 			result = urlLoader.data;
 			xml = new XML(result);
 			componentsList = xml.descendants(COMPONENT);
+			componentsArray = [];
 			
 			if (debug) trace("Loaded:" + namespaceURI);
 			
@@ -158,13 +161,13 @@ package com.flexcapacitor.utils
 				componentClass = component.attribute(CLASS);
 				componentQName = new QName(namespaceURI, componentName);
 				classRegistry.registerClass(componentQName, componentClass);
-				
+				componentsArray.push(componentQName);
 				if (debug) trace(" Registering:" + componentClass);
-				
-				if (hasEventListener(NAMESPACE_LOADED)) {
-					var namespaceLoaded:Event = new Event(NAMESPACE_LOADED);
-					dispatchEvent(namespaceLoaded);
-				}
+			}
+			
+			if (hasEventListener(NAMESPACE_LOADED)) {
+				namespaceLoaded = new Event(NAMESPACE_LOADED);
+				dispatchEvent(namespaceLoaded);
 			}
 			
 			urlLoaders[urlLoader] = null;

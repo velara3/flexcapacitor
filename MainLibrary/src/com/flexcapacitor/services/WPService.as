@@ -551,7 +551,7 @@ if ( !empty($values["custom"]) ) {
 		/**
 		 * Get post by ID
 		 * */
-		public function getPostById(id:String, count:int = 10):void {
+		public function getPostById(id:String):void {
 			url = getPostURL + "&id=" + id;
 			call = WPServiceEvent.GET_POST;
 			request.method = URLRequestMethod.GET;
@@ -562,7 +562,7 @@ if ( !empty($values["custom"]) ) {
 		/**
 		 * Get page by ID
 		 * */
-		public function getPageById(id:String, count:int = 10):void {
+		public function getPageById(id:String):void {
 			url = getPageURL + "&id=" + id;
 			call = WPServiceEvent.GET_PAGE;
 			request.method = URLRequestMethod.GET;

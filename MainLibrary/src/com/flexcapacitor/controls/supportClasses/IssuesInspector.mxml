@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:views="com.flexcapacitor.views.*"
+		 xmlns:renderers="com.flexcapacitor.views.renderers.*"
+		 xmlns:c="com.flexcapacitor.controls.*"
+		 
+		 width="100%" height="100%"
+		 creationComplete="group1_creationCompleteHandler(event)" xmlns:ns="http://flex.apache.org/experimental/ns"
+		 >
+	
+	<fx:Metadata>
+		[Event(name="change", type="com.flexcapacitor.events.IssueDataEvent")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.events.IssueDataEvent;
+			import com.flexcapacitor.model.IssueData;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.FlexEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			
+			public var errorsBranch:Object = {label:"Errors"};
+			public var warningsBranch:Object = {label:"Warnings"};
+			public var rootObject:Object = {label:"Whatever"};
+			
+			[Bindable]
+			public var errorsCollection:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var warningsCollection:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var listCollection:ArrayCollection = new ArrayCollection();
+			
+			private var _target:*;
+			
+			public function get target():* {
+				return _target;
+			}
+			
+			[Bindable]
+			public function set target(value:*):void {
+				_target = value;
+			}
+			
+			
+			private function labelFunction(data:Object):String {
+				return data.label + "\n" + data.description;
+			}
+			
+			/**
+			 * Update problems and warnings tree
+			 * */
+			public function updateIssuesTree(errors:Array = null, warnings:Array = null):void {
+				
+				errorsCollection.source = errors;
+				warningsCollection.source = warnings;
+				
+				if (tree && tree.dataProvider==null) {
+					errorsBranch.children = errorsCollection;
+					warningsBranch.children = warningsCollection;
+					
+					rootObject.children = new ArrayCollection([errorsBranch, warningsBranch]);
+					
+					tree.dataProvider = rootObject;
+				}
+				
+				if (errors && warnings) {
+					listCollection.source = errors.concat(warnings);
+				}
+				else if (errors) {
+					listCollection.source = errors;
+				}
+				else if (warnings) {
+					listCollection.source = warnings;
+				}
+				else {
+					listCollection.source = null;
+				}
+				
+				if (list && list.dataProvider==null) {
+					list.dataProvider = listCollection;
+				}
+			}
+			
+			/**
+			 * Open all items
+			 * */
+			public function openAllItems():void {
+				
+				if (rootObject==null || rootObject.children==null) {
+					return;
+				}
+				
+				for (var i:int;i<rootObject.children.length;i++) {
+					tree.expandChildrenOf(rootObject.children[i], true);
+					tree.validateNow();
+				}
+				
+			}
+			
+			/**
+			 * Close all items
+			 * */
+			public function closeAllItems():void {
+				
+				
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				
+				if (tree && tree.dataProvider==null) {
+					errorsBranch.children = errorsCollection;
+					warningsBranch.children = warningsCollection;
+					
+					rootObject.children = new ArrayCollection([errorsBranch, warningsBranch]);
+					
+					tree.dataProvider = rootObject;
+				}
+				
+				if (list && list.dataProvider==null) {
+					list.dataProvider = listCollection;
+				}
+			}
+			
+			protected function list_changeHandler(event:IndexChangeEvent):void
+			{
+				var issueData:IssueData = list.selectedItem;
+				var numberOfItems:int = list.dataProvider.length;
+				
+				if (issueData) {
+					var issueEvent:IssueDataEvent = new IssueDataEvent(Event.CHANGE);
+					issueEvent.label = issueData.label;
+					issueEvent.description = issueData.description;
+					issueEvent.issueData = issueData;
+					dispatchEvent(issueEvent);
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:states>
+		<s:State name="list"/>
+		<s:State name="tree"/>
+	</s:states>
+	
+	<s:layout>
+		<s:VerticalLayout gap="0"/>
+	</s:layout>
+	
+	<ns:InlineScroller id="scroller" 
+				width="100%" 
+				height="100%"
+				top="0" 
+				bottom="0" includeIn="tree">
+		<s:Group >
+			<mx:Tree id="tree" 
+					 width="100%"
+					 height="100%"
+					 focusAlpha="0"
+					 minHeight="50"
+					 labelFunction="labelFunction"
+					 verticalScrollPolicy="off"
+					 horizontalScrollPolicy="auto"
+					 rollOverColor="#ffffff"
+					 selectionColor="#d8d8d8"
+					 useRollOver="false"
+					 borderVisible="false"
+					 indentation="16"
+					 showRoot="false"
+					 variableRowHeight="true">
+				
+			</mx:Tree>
+		</s:Group>
+	</ns:InlineScroller>
+	
+	<s:List id="list" 
+			width="100%"
+			height="100%"
+			focusAlpha="0"
+			minHeight="50"
+			labelFunction="labelFunction"
+			horizontalScrollPolicy="off"
+			rollOverColor="#ffffff"
+			selectionColor="#d8d8d8"
+			borderVisible="false"
+			includeIn="list"
+			verticalScrollPolicy="auto"
+			change="list_changeHandler(event)"
+			>
+		<s:itemRenderer>
+			<fx:Component>
+				<s:ItemRenderer width="100%">
+					<fx:Script>
+						<![CDATA[
+							import com.flexcapacitor.model.IssueData;
+							import com.flexcapacitor.model.WarningData;
+							import com.flexcapacitor.model.ErrorData;
+							
+							public var errorLight:Class;
+							public var warningLight:Class;
+							public var info:Class;
+							
+							override public function set data(value:Object):void {
+								super.data = value;
+								
+								if (value is ErrorData) {
+									icon.source = errorLight;
+								}
+								else if (value is WarningData) {
+									icon.source = warningLight;
+								}
+								else if (value is IssueData) {
+									icon.source = info;
+								}
+								else {
+									icon.source = null;
+								}
+								/*
+								if (value is IssueData) {
+									moreLabelDisplay.text = IssueData(value).description;
+								}
+								else {
+									moreLabelDisplay.text = "";
+								}*/
+							}
+						]]>
+					</fx:Script>
+					
+					<s:layout>
+						<s:HorizontalLayout verticalAlign="middle" />
+					</s:layout>
+					
+					<s:Image id="icon" />
+					<s:VGroup width="100%" 
+							  paddingTop="6" 
+							  paddingLeft="6" 
+							  paddingRight="6" 
+							  paddingBottom="6">
+						<s:Label id="labelDisplay" width="100%"/>
+					</s:VGroup>
+				</s:ItemRenderer>
+			</fx:Component>
+		</s:itemRenderer>
+	</s:List>
+</s:Group>

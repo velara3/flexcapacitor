@@ -3,6 +3,8 @@ package com.flexcapacitor.utils {
 	import flash.utils.ByteArray;
 	
 	import mx.utils.ArrayUtil;
+	import mx.utils.Base64Decoder;
+	import mx.utils.Base64Encoder;
 
 	public class ByteArrayUtils {
 		
@@ -138,5 +140,90 @@ package com.flexcapacitor.utils {
 			
 			return matchIndex;
 		}
+		
+		
+		/**
+		 * Used to encode data
+		 * */
+		public static var base64Encoder:Base64Encoder;
+		
+		/**
+		 * Used to decode data
+		 * */
+		public static var base64Decoder:Base64Decoder;
+		
+		/**
+		 * Alternative base 64 encoder based on Base64. You must set this to the class for it to be used.
+		 * */
+		public static var Base64Encoder2:Object;
+		
+		/**
+		 * Alternative base 64 decoder based on Base64. You must set this to the class for it to be used.
+		 * */
+		public static var Base64Decoder2:Object;
+		
+		public static var removeBase64HeaderPattern:RegExp = /.*base64,/si;
+		public static var lineEndingsGlobalPattern:RegExp = /\n/g;
+		
+		/**
+		 * Returns a byte array from a base 64 string. Need to remove the header text, ie "data:image/png;base64,"
+		 * and possibly line breaks.
+		 * 
+		 * @param alternativeEncoder Set the static Base64Decoder2 property to an alternative decoder before calling this.
+		 * @see #getBitmapDataFromByteArray()
+		 * @see #getBase64ImageData()
+		 * @see #getBase64ImageDataString()
+		 * */
+		public static function getByteArrayFromBase64(encoded:String, alternativeDecoder:Boolean = false, removeHeader:Boolean = true, removeLinebreaks:Boolean = true):ByteArray {
+			var results:ByteArray;
+			
+			if (!alternativeDecoder) {
+				if (!base64Decoder) {
+					base64Decoder = new Base64Decoder();
+				}
+				
+				if (removeHeader) {
+					encoded = encoded.replace(removeBase64HeaderPattern, "");
+				}
+				
+				if (removeLinebreaks) {
+					encoded = encoded.replace(lineEndingsGlobalPattern, "");
+				}
+				
+				base64Decoder.reset();
+				base64Decoder.decode(encoded);
+				results = base64Decoder.toByteArray();
+				
+				// if you get the following error then try removing the header or line breaks
+				//    Error: A partial block (3 of 4 bytes) was dropped. Decoded data is probably truncated!
+			}
+			else {
+				if (Base64Decoder2==null) {
+					throw new Error("Set the static alternative base decoder before calling this method");
+				}
+				
+				if (removeHeader) {
+					encoded = encoded.replace(removeBase64HeaderPattern, "");
+				}
+				
+				if (removeLinebreaks) {
+					encoded = encoded.replace(lineEndingsGlobalPattern, "");
+				}
+				
+				Base64Decoder2.reset();
+				Base64Decoder2.decode(encoded);
+				results = Base64Decoder2.toByteArray();
+			}
+			
+			/*
+			Error: A partial block (3 of 4 bytes) was dropped. Decoded data is probably truncated!
+			at mx.utils::Base64Decoder/flush()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/utils/Base64Decoder.as:139]
+			at mx.utils::Base64Decoder/toByteArray()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/utils/Base64Decoder.as:173]
+			at com.flexcapacitor.utils::DisplayObjectUtils$/getByteArrayFromBase64()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/DisplayObjectUtils.as:1673]
+			*/
+			
+			return results as ByteArray;
+		}
+		
 	}
 }

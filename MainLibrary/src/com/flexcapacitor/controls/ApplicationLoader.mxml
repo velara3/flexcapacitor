@@ -4,6 +4,7 @@
 		 xmlns:mx="library://ns.adobe.com/flex/mx" 
 		 
 		 width="400" height="300"
+		 
 		 creationComplete="creationComplete()"
 		 resize="projectLoader_resizeHandler(event)"
 		 complete="project_completeHandler(event)"
@@ -22,12 +23,45 @@
 		[Event(name="uncaughtErrorEvent", type="flash.events.UncaughtErrorEvent")]
 	</fx:Metadata>
 	
+	<!-- ERRORS 
+	
+	TypeError: Error #1009: Cannot access a property or method of a null object reference.
+	at mx.managers.systemClasses::MarshallingSupport/get swfBridgeGroup()
+	at mx.managers.systemClasses::MarshallingSupport/hasSWFBridges()
+	at mx.managers.systemClasses::MarshallingSupport/addEventListener()
+	at mx.managers.systemClasses::MarshallingSupport/addEventListenerHandler()
+	at flash.events::EventDispatcher/dispatchEventFunction()
+	at flash.events::EventDispatcher/dispatchEvent()
+	at mx.managers::SystemManager/addEventListener()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:1550]
+	at flash.display::InteractiveObject/set contextMenu()
+	at spark.components::Application/initContextMenu()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/spark/src/spark/components/Application.as:1853]
+	at spark.components::Application/initialize()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/spark/src/spark/components/Application.as:1385]
+	at application/initialize()
+	at mx.managers.systemClasses::ChildManager/childAdded()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/systemClasses/ChildManager.as:197]
+	at mx.managers.systemClasses::ChildManager/initializeTopLevelWindow()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/systemClasses/ChildManager.as:367]
+	at mx.managers::SystemManager/initializeTopLevelWindow()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:3065]
+	at mx.managers::SystemManager/http://www.adobe.com/2006/flex/mx/internal::kickOff()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:2851]
+	at mx.managers::SystemManager/http://www.adobe.com/2006/flex/mx/internal::preloader_completeHandler()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/managers/SystemManager.as:2731]
+	at flash.events::EventDispatcher/dispatchEventFunction()
+	at flash.events::EventDispatcher/dispatchEvent()
+	at mx.preloaders::Preloader/timerHandler()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/preloaders/Preloader.as:572]
+	at flash.utils::Timer/_timerDispatch()
+	at flash.utils::Timer/tick()
+
+	Solution
+	Add marshalling compiler argument
+	-includes=mx.managers.systemClasses.MarshallingSupport 
+	
+	-->
+	
+	
 	<fx:Script>
 		<![CDATA[
 			import mx.events.FlexEvent;
 			import mx.events.ResizeEvent;
 			import mx.managers.SystemManager;
 			import mx.utils.NameUtil;
+			import mx.utils.Platform;
 			
 			/**
 			 * When embedded without mimetype:
@@ -75,6 +109,9 @@
 			private var _url:String = "application.swf";
 			
 			public var isDesktop:Boolean;
+			public var loadedContent:Object;
+			
+			public var loadedLoaderInfo:LoaderInfo;
 
 			/**
 			 * 
@@ -170,6 +207,14 @@
 				creationComplete();
 			}
 			
+			public function resetApplication():void {
+				
+				if (targetApplication) {
+					targetApplication.removeAllElements();
+					targetApplication.validateNow();
+				}
+			}
+			
 			/**
 			 * STEP 1. 
 			 * 
@@ -182,7 +227,7 @@
 				var embeddedApplication:Object;
 				var isByteArray:Boolean;
 				
-				isDesktop = Capabilities.playerType=="Desktop";
+				isDesktop = Platform.isDesktop;
 				
 				// SecurityError: Error #3207: Application-sandbox content cannot access this feature.
 				// this is not necessary on AIR since AIR can access all content
@@ -204,9 +249,11 @@
 				//context.applicationDomain = new ApplicationDomain();
 				context.applicationDomain = ApplicationDomain.currentDomain;
 				
-				trustContent = trustContent;
-				maintainAspectRatio = maintainAspectRatio;
-				scaleContent = scaleContent;
+				//trustContent = trustContent;
+				//trace("Load for compatibility:"+loadForCompatibility);
+				//loadForCompatibility = loadForCompatibility;
+				//maintainAspectRatio = maintainAspectRatio;
+				//scaleContent = scaleContent;
 				
 				// if not on server context throws errors
 				if (Security.sandboxType == Security.REMOTE) {
@@ -227,13 +274,14 @@
 						loaderContext = context;
 						embeddedApplication = new EmbeddedSparkApplication();
 						isByteArray = embeddedApplication is ByteArray;
-						
+						//addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
 						source = embeddedApplication;
 						validateProperties();
 						//project_completeHandler(null);
 					}
 					else {
-						source = "assets/applications/" + url;
+						//source = "assets/applications/" + url;
+						source = _url;
 					}
 				}
 				
@@ -278,8 +326,6 @@
 				//stage.addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);
 			}
 			
-			public var loadedLoaderInfo:LoaderInfo;
-			
 			/**
 			 * STEP 2. 
 			 * 
@@ -299,9 +345,11 @@
 				
 				var loaderClassName:String;
 				var isFromEmbedded:Boolean;
-				var content:Object;
 				
 				
+				if (isDesktop) {
+					
+				}
 				if (loaderInfo) {
 					loadedLoaderInfo = loaderInfo;
 				}
@@ -315,30 +363,34 @@
 				}
 				
 				if (isFromEmbedded) {
-					content = loadedLoaderInfo.content;
-					loaderClassName = NameUtil.getUnqualifiedClassName(loadedLoaderInfo.content);
+					loadedContent = content;
+					//loaderClassName = NameUtil.getUnqualifiedClassName(loadedLoaderInfo.content);
+					loaderClassName = NameUtil.getUnqualifiedClassName(content);
 				}
 				else {
-					content = content
+					loadedContent = content;
 					loaderClassName = NameUtil.getUnqualifiedClassName(content);
 				}
 				
 				
-				if (content is DisplayObject) {
+				if (loadedContent is DisplayObject) {
 					//parentAllowsChild.selected = b.parentAllowsChild;
 					//childAllowsParent.selected = b.childAllowsParent;
-					targetSystemManager = content as SystemManager;
+					targetSystemManager = loadedContent as SystemManager;
 					
 					if (targetSystemManager==null) {
-						targetSystemManager = content.topLevelSystemManager as SystemManager;
+						targetSystemManager = loadedContent.topLevelSystemManager as SystemManager;
 					}
 					
 					if (targetSystemManager) {
+						//targetSystemManager.addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
+						targetSystemManager.addEventListener(FlexEvent.CREATION_COMPLETE, contentCreationComplete);
 						targetSystemManager.addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
 					}
 					else {
-						content.addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
+						loadedContent.addEventListener(FlexEvent.APPLICATION_COMPLETE, applicationComplete);
 					}
+					
 					//LoaderInfo(targetApplication.loaderInfo).uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
 				}
 				
@@ -366,59 +418,10 @@
 				targetSystemManager = loader as SystemManager;
 				targetApplication = loader.application;
 				
+				//dispatchEvent(new Event(Event.COMPLETE));
 				applicationReady = true;
 				dispatchEvent(event);
 				
-				// 8.5 x 11 at 72dpi is 612x792
-				//targetApplication.width = 800;//Radiate.DEFAULT_DOCUMENT_WIDTH;
-				//targetApplication.height = 792;//Radiate.DEFAULT_DOCUMENT_HEIGHT;
-				
-				/*
-				drawBackgroundGrid();
-				updateBackgroundSize();
-				
-				iDocument.instance = targetApplication;
-				iDocument.addComponentDescription(targetApplication);
-				
-				//radiate.setDocument(iDocument);
-				//radiate.setTarget(targetApplication);
-				
-				//codeAvailable = true;
-				//Radiate.info("Document container app complete");
-				if (iDocument.source) {
-					validateNow();
-					Radiate.parseSource(iDocument);
-					iDocument.resetSaveStatus();
-					updateBackgroundSize();
-					
-				}
-				
-				
-				radiate.addEventListener(RadiateEvent.SCALE_CHANGE, scaleChange, false, 0, true);
-				radiate.addEventListener(RadiateEvent.DOCUMENT_SIZE_CHANGE, sizeChange, false, 0, true);
-				radiate.addEventListener(RadiateEvent.PROPERTY_CHANGED, propertyChange, false, 0, true);
-				
-				radiate.selectDocument(iDocument);
-				radiate.setTarget(targetApplication);
-				//updateAppScrollPosition();
-				
-				//setTimeout(updateAppScrollPosition, 10);
-				//setTimeout(updateAppScrollPosition, 100);
-				//setTimeout(updateAppScrollPosition, 500);
-				
-				hideBusyIndicators();
-				
-				applicationReady = true;
-				
-				radiate.centerApplication(true, true, true);
-				
-				radiate.dispatchDocumentOpenEvent(iDocument);
-				//Radiate.info("Application Complete");
-				
-				
-				dispatchEvent(event);
-				applicationReady = true;
-				*/
 			}
 			
 			/**
@@ -508,7 +511,9 @@
 			 * */
 			protected function project_ioErrorHandler(event:IOErrorEvent):void {
 				//trace("ioerror");
-				dispatchEvent(event);
+				if (hasEventListener(event.type)) {
+					dispatchEvent(event);
+				}
 				hideBusyIndicators();
 			}
 			
@@ -616,6 +621,12 @@
 				//trace("open");
 				showBusyIndicators();
 			}
+			
+			protected function contentCreationComplete(event:Event):void
+			{
+				trace("creation complete");
+			}
+			
 		]]>
 	</fx:Script>
 	

@@ -110,6 +110,11 @@ controls|SearchTextInput {
 	borderColorMobile: #CCCCCC;
 }
 
+controls|AceSearchTextInput {
+	skinClass: ClassReference("com.flexcapacitor.skins.SearchTextInputSkin");
+	borderColorMobile: #CCCCCC;
+}
+
 controls|RichTextEditorBar {
 	skinClass: ClassReference("com.flexcapacitor.skins.RichTextEditorBarSkin");
 }
