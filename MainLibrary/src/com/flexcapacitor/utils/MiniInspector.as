@@ -1447,6 +1447,8 @@ package com.flexcapacitor.utils {
 		public var popUpIsDisplaying:Boolean;
 		public var popUpBackgroundTransparentGrid:Boolean = true;
 		
+		private var lastPropertyInputValue:String;
+		
 		/**
 		 * Displays an outline of the display object recursively up the component display list. 
 		 **/
@@ -1566,6 +1568,10 @@ package com.flexcapacitor.utils {
 				popUpValueInput.prompt = "Value";
 				popUpPropertyInput.tabIndex = 0;
 				popUpValueInput.tabIndex = 1;
+				
+				if (lastPropertyInputValue!=null && lastPropertyInputValue!="") {
+					popUpPropertyInput.text = lastPropertyInputValue;
+				}
 				
 				showInputControls(false);
 				popUpPropertyInput.addEventListener(KeyboardEvent.KEY_UP, propertyInputEnterHandler, false, 0, true);
@@ -2174,6 +2180,10 @@ package com.flexcapacitor.utils {
 			popUpValueInput.includeInLayout = popUpValueInput.visible = value;
 			popUpPropertyInput.validateNow();
 			popUpPropertyInput.setFocus();
+			
+			if (value==false) {
+				lastPropertyInputValue = popUpPropertyInput.text;
+			}
 		}
 		
 		/**

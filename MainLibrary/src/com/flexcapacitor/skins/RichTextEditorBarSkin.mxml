@@ -74,7 +74,6 @@ limitations under the License.
 		
 		<s:Transition fromState="normal" toState="linkView" interruptionBehavior="stop" autoReverse="true">
 			<s:Sequence duration="250" 
-						effectStart="trace('normal to link view')"
 						>
 				<s:Resize target="{this}"/>
 				<s:AddAction target="{linkDetailsView}"/>
@@ -84,7 +83,6 @@ limitations under the License.
 		
 		<s:Transition fromState="normal" toState="imageView" interruptionBehavior="stop" autoReverse="true">
 			<s:Sequence duration="250" 
-						effectStart="trace('normal to image view')"
 						>
 				<s:Resize target="{this}"/>
 				<s:AddAction target="{imageDetailsView}"/>

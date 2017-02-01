@@ -4,7 +4,6 @@ package com.flexcapacitor.utils
 	import com.flexcapacitor.controls.supportClasses.AutoCompleteObject;
 	import com.flexcapacitor.controls.supportClasses.TokenInformation;
 	import com.flexcapacitor.model.MetaData;
-	import com.flexcapacitor.performance.PerformanceMeter;
 	import com.flexcapacitor.utils.supportClasses.ObjectDefinition;
 	
 	import flash.external.ExternalInterface;
@@ -25,13 +24,20 @@ package com.flexcapacitor.utils
 		}
 		
 		public static var XML_TEXT:String 				= "text.xml";
-		public static var XML_TAG_NAME:String 			= "meta.tag.tag-name.xml";
-		public static var XML_TAG_OPEN:String 			= "meta.tag.punctuation.tag-open.xml";
-		public static var XML_TAG_CLOSE:String 			= "meta.tag.punctuation.tag-close.xml";
-		public static var XML_END_TAG_OPEN:String 		= "meta.tag.punctuation.end-tag-open.xml";
-		public static var XML_ATTRIBUTE_NAME:String 	= "entity.other.attribute-name.xml";
-		public static var XML_ATTRIBUTE_VALUE:String 	= "string.attribute-value.xml";
-		public static var XML_ATTRIBUTE_EQUALS:String 	= "keyword.operator.attribute-equals.xml";
+		
+		/**
+		 * Whitespace inside of a tag. Where you type attribute names
+		 * <Tag     attribute=""   |  />
+		 */
+		public static var XML_TAG_WHITESPACE:String				= "text.tag-whitespace.xml";
+		public static var XML_TAG_OPEN:String 					= "text.tag-open.xml";
+		public static var XML_TAG_NAME:String 					= "meta.tag.tag-name.xml";
+		public static var XML_TAG_PUNCTUATION_TAG_OPEN:String 	= "meta.tag.punctuation.tag-open.xml";
+		public static var XML_TAG_PUNCTUATION_TAG_CLOSE:String 	= "meta.tag.punctuation.tag-close.xml";
+		public static var XML_END_TAG_OPEN:String 				= "meta.tag.punctuation.end-tag-open.xml";
+		public static var XML_ATTRIBUTE_NAME:String 			= "entity.other.attribute-name.xml";
+		public static var XML_ATTRIBUTE_VALUE:String 			= "string.attribute-value.xml";
+		public static var XML_ATTRIBUTE_EQUALS:String 			= "keyword.operator.attribute-equals.xml";
 		
 		public static var STYLE:String = "style";
 		public static var EVENT:String = "event";
@@ -185,6 +191,30 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Get an array of auto complete suggestions for an attribute
+		 * */
+		public static function getAttributeValueSuggestions(memberMetaData:MetaData):Array {
+			var enumeration:Array = memberMetaData ? memberMetaData.enumeration : [];
+			var choicesObjects:Array = [];
+			var type:String = memberMetaData ? memberMetaData.type: null;
+			
+			if (memberMetaData==null) {
+				return [];
+			}
+			
+			if (enumeration) {
+				choicesObjects = getObjectsFromArray(enumeration, "Enumeration", memberMetaData.declaredBy);
+			}
+			else if (type=="Boolean") {
+				choicesObjects = getObjectsFromArray(["true","false"], "Boolean", memberMetaData.declaredBy);
+			}
+			
+			choicesObjects.sortOn("value", [Array.CASEINSENSITIVE]);
+			
+			return choicesObjects;
+		}
+		
+		/**
 		 * Get an array of auto complete objects for an attribute
 		 * */
 		public static function getAttributeValueSuggestionListFromObject(object:Object, attributeName:QName):Array {
@@ -257,13 +287,165 @@ package com.flexcapacitor.utils
 		
 		public static var tokenInformation:TokenInformation;
 		
+		public static function getTokenInformation(aceEditor:AceEditor):TokenInformation {
+			var cursor:Object = aceEditor.getCursor();
+			var token:Object = aceEditor.getTokenAt(cursor.row, cursor.column);
+			var tokenType:String = token ? token.type : null;
+			var prefixedClassName:String = "";
+			var classFound:Boolean;
+			var uriQName:QName;
+			var classObject:Object;
+			var tagQName:QName;
+			var attributeQName:QName;
+			var qualifiedClassName:String;
+			var classRegistry:ClassRegistry;
+			var tokenInfo:TokenInformation;
+			
+			tokenInfo = new TokenInformation();
+			
+			classRegistry = ClassRegistry.getInstance();
+			
+			tagQName = getTagName(aceEditor, cursor.row, cursor.column);
+			
+			tokenInfo.cursor = cursor;
+			tokenInfo.token = token;
+			tokenInfo.tagName = tagQName;
+			tokenInfo.tokenType = tokenType;
+			
+			if (tagQName!=null) {
+				prefixedClassName = tagQName.localName; // returns "s:Button"
+				// from "s:Button" it returns "new QName("library://ns.adobe.com/flex/spark", "Button")"
+				uriQName = classRegistry.getQNameForPrefixedName(prefixedClassName);
+				classObject = classRegistry.getClass(uriQName);
+				qualifiedClassName = classRegistry.getClassName(uriQName);
+				
+				tokenInfo.uriTagName = uriQName;
+				tokenInfo.entity = prefixedClassName;
+				tokenInfo.classFound = classObject!=null;
+				tokenInfo.classObject = classObject;
+				tokenInfo.qualifiedClassName = qualifiedClassName;
+				
+				//PerformanceMeter.mark("After getQNameForPrefixedName");
+				
+				// if in or next to an attribute gets the meta data of the attribute
+				if (tokenType==XML_ATTRIBUTE_VALUE || tokenType==XML_ATTRIBUTE_EQUALS || tokenType==XML_ATTRIBUTE_NAME) {
+					attributeQName = getAttributeName(aceEditor, cursor.row, cursor.column);
+					
+					if (classObject) {
+						tokenInfo.attributeMetaData = ClassUtils.getMetaDataOfMember(classObject, attributeQName.localName);
+					}
+					else {
+						tokenInfo.attributeMetaData = null;
+					}
+					//PerformanceMeter.mark("After getXMLAttributeQNameFromCursorPosition");
+					
+					tokenInfo.attributeName = attributeQName;
+					//tokenInfo.qualifiedClassName = null;
+				}
+				else if (tokenType==XML_TEXT) {
+					// if in empty text (white space) gets the class of the parent node
+					//qualifiedClassName = getQualifiedClassName(FlexGlobals.topLevelApplication);
+					
+					if (cachedClassValues[qualifiedClassName]==null) {
+						///suggestions = classRegistry.getPrefixedClassNames();
+						/// suggestions = getObjectsFromArray(suggestions, "Classes", null, false, true);
+						//PerformanceMeter.mark("After getObjectsFromArray");
+						///cachedClassValues[qualifiedClassName] = suggestions;
+						///aceEditor.setCompleterValues(qualifiedClassName, suggestions);
+					}
+					else {
+						///suggestions = cachedClassValues[qualifiedClassName];
+						//aceEditor.setCompleterValues(qualifiedClassName, null);
+					}
+					
+					tokenInfo.attributeName = null;
+					tokenInfo.qualifiedClassName = qualifiedClassName;
+					
+					return tokenInfo;
+				}
+				
+			}
+			
+			return tokenInfo;
+		}
+		
+		public static function getSuggestionList(tokenInfo:TokenInformation, aceEditor:AceEditor = null):Array {
+			var qualifiedClassName:String;
+			var classRegistry:ClassRegistry;
+			var suggestions:Array;
+			var tokenType:String;
+			var classObject:Object;
+			
+			if (tokenInfo==null) {
+				return [];
+			}
+			
+			tokenType = tokenInfo.tokenType;
+			classObject = tokenInfo.classObject;
+			
+			classRegistry = ClassRegistry.getInstance();
+			
+			// List Class names
+			//if (tokenType==XML_TEXT || tokenType==XML_TAG_OPEN) {
+			if (tokenType==XML_TEXT) {
+				// for now we are using the top level application to cache suggestions
+				qualifiedClassName = getQualifiedClassName(FlexGlobals.topLevelApplication);
+				
+				// check cache
+				if (cachedClassValues[qualifiedClassName]==null) {
+					suggestions = classRegistry.getPrefixedClassNames();
+					suggestions = getObjectsFromArray(suggestions, "Classes", null, false, true);
+					//PerformanceMeter.mark("After getObjectsFromArray");
+					cachedClassValues[qualifiedClassName] = suggestions;
+					aceEditor.setCompleterValues(qualifiedClassName, suggestions);
+				}
+				else {
+					suggestions = cachedClassValues[qualifiedClassName];
+					aceEditor.setCompleterValues(qualifiedClassName, null);
+				}
+				
+				//tokenInformation.attributeName = null;
+				//tokenInformation.qualifiedClassName = qualifiedClassName;
+				
+				return suggestions;
+			}
+			
+			if (tokenInfo.classFound) {
+				qualifiedClassName = tokenInfo.qualifiedClassName;
+				
+				// List for Attribute values
+				if (tokenInfo.attributeName && (tokenType==XML_ATTRIBUTE_VALUE || tokenType==XML_ATTRIBUTE_EQUALS)) {
+					suggestions = getAttributeValueSuggestions(tokenInfo.attributeMetaData);
+					aceEditor.setCompleterValues(tokenInfo.qualifiedClassName, suggestions, tokenInfo.attributeName.localName);
+				}
+				else {
+					
+					// List members of Class - check chache
+					if (cachedClassValues[qualifiedClassName]==null) {
+						suggestions = getMemberSuggestionListFromObject(classObject);
+						aceEditor.setCompleterValues(qualifiedClassName, suggestions);
+						cachedClassValues[qualifiedClassName] = suggestions;
+					}
+					else {
+						suggestions = cachedClassValues[qualifiedClassName];
+						aceEditor.setCompleterValues(qualifiedClassName, null);
+					}
+				}
+			}
+			else {
+				suggestions = [];
+			}
+			
+			return suggestions;
+		}
+		
 		public static function getAutoCompleteList(aceEditor:AceEditor):Array {
 			var cursor:Object = aceEditor.getCursor();
 			var token:Object = aceEditor.getTokenAt(cursor.row, cursor.column);
 			var type:String = token ? token.type : null;
 			var entity:String = "";
 			var classFound:Boolean;
-			var updatedQName:QName;
+			var prefixedQName:QName;
 			var classObject:Object;
 			var tagQName:QName;
 			var attributeQName:QName;
@@ -280,7 +462,7 @@ package com.flexcapacitor.utils
 			tagQName = getTagName(aceEditor, cursor.row, cursor.column);
 			//PerformanceMeter.mark("After AceUtils.getTagName");
 			
-			tagQName = aceEditor.getTagName(cursor.row, cursor.column) as QName;
+			//tagQName = aceEditor.getTagName(cursor.row, cursor.column) as QName;
 			
 			//PerformanceMeter.mark("After aceEditor.getTagName");
 			
@@ -290,18 +472,26 @@ package com.flexcapacitor.utils
 			tokenInformation.type = type;
 			
 			if (tagQName!=null) {
-				updatedQName = classRegistry.getQNameForPrefixedName(tagQName.localName);
+				prefixedQName = classRegistry.getQNameForPrefixedName(tagQName.localName);
 				entity = tagQName.localName;
-				classObject = classRegistry.getClass(updatedQName);
+				classObject = classRegistry.getClass(prefixedQName);
 				
-				tokenInformation.prefixedTagName = updatedQName;
+				tokenInformation.uriTagName = prefixedQName;
 				tokenInformation.entity = entity;
 				tokenInformation.classFound = classObject!=null;
+				tokenInformation.classObject = classObject;
 				//PerformanceMeter.mark("After getQNameForPrefixedName");
 				
 				
-				if (type==XML_ATTRIBUTE_VALUE || type==XML_ATTRIBUTE_EQUALS) {
+				if (type==XML_ATTRIBUTE_VALUE || type==XML_ATTRIBUTE_EQUALS || type==XML_ATTRIBUTE_NAME) {
 					attributeQName = getAttributeName(aceEditor, cursor.row, cursor.column);
+					
+					if (classObject) {
+						tokenInformation.attributeMetaData = ClassUtils.getMetaDataOfMember(classObject, attributeQName.localName);
+					}
+					else {
+						tokenInformation.attributeMetaData = null;
+					}
 					//PerformanceMeter.mark("After getXMLAttributeQNameFromCursorPosition");
 					
 					tokenInformation.attributeName = attributeQName;
@@ -332,9 +522,10 @@ package com.flexcapacitor.utils
 					classFound = true;
 					qualifiedClassName = getQualifiedClassName(classObject);
 					tokenInformation.qualifiedClassName = qualifiedClassName;
+					//tokenInformation.classMetaData;
 					
-					
-					if (attributeQName) {
+					if (attributeQName && type==XML_ATTRIBUTE_VALUE) {
+						tokenInformation.attributeMetaData = ClassUtils.getMetaDataOfMember(classObject, attributeQName.localName);
 						suggestions = getAttributeValueSuggestionListFromObject(classObject, attributeQName);
 						//PerformanceMeter.mark("After getAttributeValueSuggestionListFromObject");
 						//lastSelectedAttributeQName = attributeName;

@@ -157,8 +157,17 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		}
 		
 		/**
+		 * Clears the registered namespaces
+		 * */
+		public function clearNamespaces():void {
+			namespaces = {};
+		}
+		
+		/**
 		 * Resolves a prefixed name back into a QName based on the prefix to
 		 * namespace mappings.
+		 * 
+		 * For example, if passed in "s:Button" it returns "new QName("library://ns.adobe.com/flex/spark", "Button")"
 		 * 
 		 * @param prefixedName The name to be resolved. Can be prefixed or unqualified.
 		 * @param parent The XML node where prefixedName appears. Allows local xmlns
@@ -265,7 +274,9 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		}
 		
 		/**
-		 * Get the prefix from a key. If key is library://ns.adobe.com/flex/spark::spark.controls.Button
+		 * Get the prefix from a key. 
+		 * 
+		 * If key is "library://ns.adobe.com/flex/spark::spark.controls.Button"
 		 * and "library://ns.adobe.com/flex/spark" is registered with the "s" namespace prefix
 		 * then the value returned is "s:Button". 
 		 * 
@@ -302,7 +313,7 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		/**
 		 * Get an array of class names with prefixes
 		 * */
-		public function getPrefixedClassNames():Array {
+		public function getPrefixedClassNames(sort:Boolean = true):Array {
 			var classNames:Array = [];
 			
 			for (var key:String in classMap) {
@@ -310,6 +321,11 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 				if (prefixedName!=null) {
 					classNames.push(prefixedName);
 				}
+			}
+			
+			if (sort) {
+				//classNames.sortOn("value", [Array.CASEINSENSITIVE]);
+				classNames.sort(Array.CASEINSENSITIVE);
 			}
 			
 			return classNames;
@@ -381,6 +397,26 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 					c = domain.getDefinition(definitionName) as Class;
 			}
 			return c;
+		}
+		
+		/**
+		 * Get qualified class name from QName
+		 **/
+		public function getClassName(qname:QName, uri:String = null):String {
+			var key:String;
+			var definitionName:String;
+			
+			if (qname != null) {
+				if (uri!=null) {
+					qname = new QName(uri, qname.localName);
+				}
+				
+				key = getKey(qname);
+				definitionName = classMap[key] as String;
+				
+			}
+			
+			return definitionName;
 		}
 		
 		/**

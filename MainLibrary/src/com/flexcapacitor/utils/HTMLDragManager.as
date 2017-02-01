@@ -70,7 +70,13 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		public static const DRAG_END:String = "dragEnd";
 		
 		public static const APPLICATION_XV_XML:String = "data:application/xv+xml";
-		public static const APPLICATION_TEXT_PLAIN:String = "data:text/plain";
+		public static const TEXT_PLAIN:String = "data:text/plain";
+		public static const IMAGE_JPEG:String = "data:image/jpeg";
+		public static const IMAGE_JPG:String = "data:image/jpg";
+		public static const IMAGE_PNG:String = "data:image/png";
+		public static const IMAGE_GIF:String = "data:image/gif";
+		public static const IMAGE:String = "data:image/";
+		//public static const IMAGE_SWF:String = "data:image/";
 		
 		/**
 		 * Identity of draggable element on the page.
@@ -312,17 +318,21 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 							event.stopPropagation();
 							
 							var droppedFiles = event.dataTransfer.files;
+							var numberOfFiles = droppedFiles.length;
 							var files = {};
+							var fileObject = {};
 							var reader;
+
+							if (debug) console.log( "Drop. File count:" + droppedFiles.length);
+							if (debug) console.log( event);
 							
-							for (var i = 0; i < droppedFiles.length; i++) {
+							for (var i = 0; i < numberOfFiles; i++) {
 								files[i] = droppedFiles[i];
 								if (debug) console.log("Loading file: " + files[i].name + " " + files[i].size);
 								reader = new FileReader();
 								reader.file = files[i];
 								
 								reader.addEventListener("loadend", function (e) {
-									var fileObject = {};
 									var currentReader = e.target;
 									
 									loadedFile = currentReader.file;
@@ -332,12 +342,21 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 									
 									if (debug) console.log( "File loaded:" + fileObject.name);
 									if (debug) console.log(" Calling:"+callbackName);
+
 									application[callbackName](fileObject);
+
 									//application.dragAndDropReaders[currentReader] = null;
 									//delete application.dragAndDropReaders[currentReader];
 								});
 								
 								reader.readAsDataURL(files[i]);
+							}
+
+							if (numberOfFiles==0) {
+								fileObject.name = null;
+								fileObject.type = "invalid";
+								fileObject.dataURI = null;
+								application[callbackName](fileObject);
 							}
 						}
 

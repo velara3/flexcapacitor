@@ -3594,6 +3594,31 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
+		 * Set border of the editor
+		 * @see #border
+		 * */
+		public function setBorder(value:String):void {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, value) {
+					var editor = ace.edit(id);
+					editor.container.style.boxSizing = "border-box";
+					editor.container.style.border = value;
+					return true;
+				}
+				]]></xml>;
+				var results:String = ExternalInterface.call(string, editorIdentity, value);
+			}
+			else {
+				editor.container.style.boxSizing = "border-box";
+				editor.container.style.border = value;
+			}
+			
+			_border = value;
+		}
+		
+		/**
 		 * Set enable snippets of the editor
 		 * @see #enableSnippets
 		 * */
@@ -3714,6 +3739,11 @@ protected function searchInput_changeHandler(event:Event):void {
 			if (marginChanged) {
 				setMargin(_margin);
 				marginChanged = false;
+			}
+			
+			if (borderChanged) {
+				setBorder(_border);
+				borderChanged = false;
 			}
 			
 			if (themeChanged) {
@@ -4397,6 +4427,26 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			else {
 				editor.setSelectionTo(row, column);
+			}
+		}
+		
+		/**
+		 * Moves the cursor to the indicated row and column.
+		 * */
+		public function moveTo(row:Number, column:Number):void {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, row, column) {
+					var editor = ace.edit(id);
+					editor.selection.moveTo(row, column);
+					return true;
+				}
+				]]></xml>;
+				var results:Object = ExternalInterface.call(string, editorIdentity, row, column);
+			}
+			else {
+				editor.selection.moveTo(row, column);
 			}
 		}
 		
@@ -5085,6 +5135,24 @@ protected function searchInput_changeHandler(event:Event):void {
 			invalidateProperties();
 		}
 		
+		private var _border:String;
+		
+		public function get border():String {
+			return _border;
+		}
+		
+		/**
+		 * Sets the margin around the editor. This is useful for scrolling
+		 * beyond the boundries of the editor. Also works around some mouse issues
+		 * Set to values such as "20px 0". This will add 20px of space around the 
+		 * top and bottom of the editor. Default is 0.  
+		 * */
+		public function set border(value:String):void {
+			if (_border!=value) borderChanged = true;
+			_border = value;
+			invalidateProperties();
+		}
+		
 		
 		public var aceLibraryNotFoundErrorMessage:String;
 		public var aceEditorElementNotFoundMessage:String;
@@ -5514,6 +5582,7 @@ editor.removeCommand({name: 'find'});
 		private var enableWrapBehaviorsChanged:Boolean;
 		private var enableSnippetsChanged:Boolean;
 		private var marginChanged:Boolean;
+		private var borderChanged:Boolean;
 		
 		/**
 		 * Reference to the anchor of the last changeSelection event
