@@ -1798,6 +1798,10 @@ package com.flexcapacitor.utils {
 			if (event.keyCode==Keyboard.ENTER) {
 				setPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text, popUpValueInput.text);
 			}
+			if (event.shiftKey && event.keyLocation==Keyboard.TAB) {
+				popUpPropertyInput.setFocus();
+				popUpPropertyInput.selectAll();
+			}
 		}
 		
 		/**
@@ -1821,6 +1825,8 @@ package com.flexcapacitor.utils {
 				popUpValueInput.setFocus();
 				popUpValueInput.selectAll();
 			}
+			
+			lastPropertyInputValue = popUpPropertyInput.text;
 		}
 		
 		/**

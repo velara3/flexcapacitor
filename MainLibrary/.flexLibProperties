@@ -510,10 +510,14 @@
     <classEntry path="ru.inspirit.net.events.MultipartURLLoaderEvent"/>
     <classEntry path="com.flexcapacitor.utils.MXMLDocumentImporterNext"/>
     <classEntry path="com.flexcapacitor.utils.MXMLDocumentImporterBase"/>
+    <classEntry path="com.flexcapacitor.utils.ObjectUtils"/>
+    <classEntry path="com.flexcapacitor.events.HistoryEvent"/>
+    <classEntry path="com.flexcapacitor.controls.supportClasses.AceCommand"/>
+    <classEntry path="com.flexcapacitor.utils.WebNotification"/>
   </includeClasses>
   <includeResources>
-    <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>
     <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>
+    <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>
     <resourceEntry destPath="design.xml" sourcePath="design.xml"/>
     <resourceEntry destPath="com/flexcapacitor/controls/supportClasses/ace.html" sourcePath="com/flexcapacitor/controls/supportClasses/ace.html"/>
     <resourceEntry destPath="defaults.css" sourcePath="defaults.css"/>

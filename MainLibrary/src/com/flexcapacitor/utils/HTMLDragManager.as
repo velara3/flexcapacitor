@@ -50,6 +50,20 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 	}
 }
 </pre>
+	 * 
+	 * Errors: 
+	 * 
+	 * SecurityError: Error #2060: Security sandbox violation: ExternalInterface caller file:///Users/me/Documents/projects/myproject/MyApp/bin-debug/MyApp.swf cannot access file:///Users/me/Documents/projects/myproject/MyApp/bin-debug/MyApp.html.
+		at flash.external::ExternalInterface$/_initJS()
+		at flash.external::ExternalInterface$/call()
+		at com.flexcapacitor.utils::HTMLDragManager$/isSupported()[/Users/me/Documents/projects/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/HTMLDragManager.as:114]
+	 * 
+	 * Possible Solutions: 
+	 * Run clean and try again. 
+	 * Restart FB or your browser and launch again
+	 * Instead of running the page on file:// use http:// 
+	 * In your wrapper page set allowscriptaccess: "always"
+	 * http://stackoverflow.com/questions/26921469/swf-sandbox-violation-error-2060-in-chrome
 	 * */
 	public class HTMLDragManager extends EventDispatcher implements IMXMLObject {
 		

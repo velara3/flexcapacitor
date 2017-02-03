@@ -21,6 +21,7 @@
 		[Event(name="securityError", type="flash.events.SecurityErrorEvent")]
 		[Event(name="ioError", type="flash.events.IOErrorEvent")]
 		[Event(name="uncaughtErrorEvent", type="flash.events.UncaughtErrorEvent")]
+		[Event(name="reset", type="flash.events.Event")]
 	</fx:Metadata>
 	
 	<!-- ERRORS 
@@ -89,6 +90,7 @@
 			[Embed(source="com/flexcapacitor/controls/supportClasses/applications/application.swf", mimeType="application/octet-stream")]
 			public var EmbeddedSparkApplication:Class;
 			
+			public static const RESET:String = "reset";
 			/**
 			 * System manager of the target application
 			 * */
@@ -212,6 +214,7 @@
 				if (targetApplication) {
 					targetApplication.removeAllElements();
 					targetApplication.validateNow();
+					callLater(dispatchResetEvent);
 				}
 			}
 			
@@ -625,6 +628,18 @@
 			protected function contentCreationComplete(event:Event):void
 			{
 				trace("creation complete");
+			}
+			
+			/**
+			 * 
+			 * */
+			protected function dispatchResetEvent():void {
+				var resetEvent:Event;
+				
+				if (hasEventListener(RESET)) {
+					resetEvent = new Event(RESET);
+					dispatchEvent(resetEvent);
+				}
 			}
 			
 		]]>

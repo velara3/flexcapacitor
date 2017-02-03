@@ -54,6 +54,7 @@
   ***/
 package com.flexcapacitor.controls {
 
+	import com.flexcapacitor.controls.supportClasses.AceCommand;
 	import com.flexcapacitor.events.AceEvent;
 	import com.flexcapacitor.utils.ClassUtils;
 	import com.flexcapacitor.utils.supportClasses.log;
@@ -195,6 +196,14 @@ package com.flexcapacitor.controls {
 	 *  @productversion Flex 3
 	 */
 	[Event(name="uncaughtScriptException", type="flash.events.Event")]
+	
+	/**
+	 * Dispached when a command is executed in the browser. 
+	 * When running on the desktop the callback function is called directly. 
+	 *
+	 * @eventType flash.events.Event
+	 */
+	[Event(name="command", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispached when the user presses CTRL + S on Win and Linux or CMD + S on Mac
@@ -391,16 +400,19 @@ protected function searchInput_changeHandler(event:Event):void {
 }
 </pre>
 	 * 
-	 * Marshalled Errors: 
+	 * Errors: 
 	 * 
 	 * Error: ReferenceError: object is not defined.
 	 * That means in the JavaScript function an object is not defined. The editor may not be created yet.  
 	 * 
-	 * Error: Error: Error calling method on NPObject!
+	 * Error: Error: Error calling method on NPObject
 	 *		at flash.external::ExternalInterface$/_toAS()
 	 *		at flash.external::ExternalInterface$/call()
 	 * 
-	 * The listener you added is private or protected. It must be a public method
+	 * The listener you added is private or protected or there are the incorrect number or type of arguments.
+	 * It must be an accessible method or part of the class. It must also have the correct number of 
+	 * arguments and the arguments must be of the correct type. You may have to specify a return
+	 * value and not null. 
 	 * 
 	 * ReferenceError: method is not defined
 	 * The method is not defined on the application. Create a strong reference (store function). 
@@ -799,7 +811,7 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * */
 		protected function htmlRenderHandler(event:Event):void {
 			if (debug) {
-				log();
+				//log();
 			}
 			
 			
@@ -1000,10 +1012,9 @@ protected function searchInput_changeHandler(event:Event):void {
 					//domWindow.console.error("hello error");
 				}
 				
-				addCommand({
-					name: 'save',
-					bindKey: {win: "Ctrl-S", mac: "Cmd-S"},
-					exec: saveKeyboardHandler});
+				
+				/*
+				addCommand(new AceCommand("save", {win: "Ctrl-S", mac: "Cmd-S"}, saveKeyboardHandler));
 				
 				addCommand({
 					name: 'blockComment',
@@ -1022,6 +1033,7 @@ protected function searchInput_changeHandler(event:Event):void {
 					name: "search",
 					bindKey: {win:"Ctrl-B", mac: "Cmd-B"},
 					exec: searchInputHandler});
+				*/
 				
 				addDeferredEventListeners();
 			}
@@ -1227,7 +1239,11 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * and add them later
 		 * */
 		public var deferredEventHandlers:Object = {};
-		public var eventHandlers:Object = {};
+		
+		/**
+		 * Used to store references to commands when used in the browser
+		 * */
+		public var commandHandlers:Object = {};
 		
 		/**
 		 * Reference to the ace editor container element instance
@@ -5428,27 +5444,72 @@ protected function searchInput_changeHandler(event:Event):void {
 		}
 		
 		/**
+		 * Creates a unique call back name for commands in the browser. 
+		 * Example is 
+		 * "AceEditor45_command_save"
+		 * */
+		public function getCommandHandlerName(name:String):String {
+			var commandHandlerName:String = editorIdentity + "_" + "command"+ "_" + name;
+			
+			return commandHandlerName;
+		}
+		
+		/**
 		 * Use to add commands to the editor<br ><br >
 		 * 
 		 * Example: 
 <pre>
 editor.addCommand({
-	name: 'find',
+	name: "find",
 	bindKey: {win: "Ctrl-F", "mac": "Cmd-F"},
 	exec: findKeyboardHandler});
 </pre>
 		 * */
-		public function addCommand(command:Object):void {
+		public function addCommand(command:AceCommand):void {
+			var callbackName:String;
 			
 			if (isBrowser && useExternalInterface) {
+				if (!aceEditorFound) {
+					//deferredEventHandlers[type] = listener;
+					//return;
+				}
+				
+				// "AceEditor45_command_save" call back is routed to browserCallbackHandler
+				callbackName = getCommandHandlerName(command.name);
+				ExternalInterface.addCallback(callbackName, browserKeyboardCommandHandler);
+				
+				commandHandlers[callbackName] = command;
+				command.execName = callbackName;
+				
 				var string:String = <xml><![CDATA[
-				function (id, command) {
+				function (id, objectId, command, debug) {
+					var application = document.getElementById(objectId);
 					var editor = ace.edit(id);
+					var callbackName = command.execName;
+
+					if (debug) console.log("Adding command: " + callbackName);
+					if (debug) console.log(command);
+
+					if (application.commandHandlers==null) { application.commandHandlers = {}; }
+					
+					application.commandHandlers[callbackName] = function(instance) {
+						if (debug) console.log("Command: " + callbackName);
+						
+						try {
+							application[callbackName](callbackName);
+						}
+						catch (error) {
+							console.log(error);
+						}
+					}
+					
+					command.exec = application.commandHandlers[callbackName];
 					editor.commands.addCommand(command);
+					
 					return true;
 				}
 				]]></xml>;
-				var results:String = ExternalInterface.call(string, editorIdentity, command);
+				var results:String = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, command, debug);
 			}
 			else {
 				editor.commands.addCommand(command);
@@ -5464,16 +5525,33 @@ editor.addCommand({
 editor.removeCommand({name: 'find'});
 </pre>
 		 * */
-		public function removeCommand(command:Object):void {
+		public function removeCommand(command:AceCommand):void {
+			var callbackName:String;
 			
 			if (isBrowser && useExternalInterface) {
+				
+				callbackName = getCommandHandlerName(command.name);
+				ExternalInterface.addCallback(callbackName, null);
+				
+				command = commandHandlers[callbackName];
+				
 				var string:String = <xml><![CDATA[
-				function (id, command) {
+				function (id, objectId, command, debug) {
+					var application = document.getElementById(objectId);
+					var callbackName = command.execName;
 					var editor = ace.edit(id);
+					
+					if (application.commandHandlers==null) { return true; }
 					editor.commands.removeCommand(command);
+					
+					application.commandHandlers[callbackName] = null;
+					delete application.commandHandlers[callbackName];
 				}
 				]]></xml>;
-				ExternalInterface.call(string, editorIdentity, command);
+				var results:Boolean = ExternalInterface.call(string, editorIdentity, ExternalInterface.objectID, command, debug);
+				
+				commandHandlers[callbackName] = null;
+				delete commandHandlers[callbackName];
 			}
 			else {
 				editor.commands.removeCommand(command);
@@ -6442,11 +6520,11 @@ editor.setCompleters(completers);
 					// if the application has issues it's because you are trying to pass
 					// back an object with a circular reference
 					// pass back simple objects
-					// we use a basic circular reference function
+					// we use a basic circular reference remove function
 					// to write your own define your own eventHandlerFunction
 					string = <xml><![CDATA[
 					function (id, objectId, dispatcherType, eventName, callbackName, debug) {
-						var application = this[objectId];
+						var application = document.getElementById(objectId);
 						var editor = ace.edit(id);
 						var dispatcher;
 	
@@ -6640,6 +6718,23 @@ editor.setCompleters(completers);
 			var aceEvent:AceEvent = new AceEvent(type);
 			aceEvent.data = event;
 			dispatchEvent(aceEvent);
+		}
+		
+		/**
+		 * Helper method for handling keyboard commands in the browser 
+		 * */
+		public function browserKeyboardCommandHandler(keyboardCommand:String):void {
+			var command:AceCommand = commandHandlers[keyboardCommand];
+			
+			if (command.exec is Function) {
+				command.exec();
+			}
+			
+			if (hasEventListener(AceEvent.COMMAND)) {
+				var aceEvent:AceEvent = new AceEvent(AceEvent.COMMAND);
+				aceEvent.data = command;
+				dispatchEvent(aceEvent);
+			}
 		}
 		
 		/**

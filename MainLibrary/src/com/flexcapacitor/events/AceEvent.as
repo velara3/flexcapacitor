@@ -10,6 +10,12 @@ package com.flexcapacitor.events
 		}
 		
 		/**
+		 * Event dispatched when command is executed. 
+		 * Only dispatches if listeners are added for it
+		 * */
+		public static const COMMAND:String = "command";
+		
+		/**
 		 * Event data
 		 * */
 		public var data:Object;
