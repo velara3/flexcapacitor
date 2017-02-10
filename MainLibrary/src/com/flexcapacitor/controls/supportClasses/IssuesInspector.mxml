@@ -5,9 +5,10 @@
 		 xmlns:views="com.flexcapacitor.views.*"
 		 xmlns:renderers="com.flexcapacitor.views.renderers.*"
 		 xmlns:c="com.flexcapacitor.controls.*"
+		 xmlns:ns="http://flex.apache.org/experimental/ns"
 		 
 		 width="100%" height="100%"
-		 creationComplete="group1_creationCompleteHandler(event)" xmlns:ns="http://flex.apache.org/experimental/ns"
+		 creationComplete="group1_creationCompleteHandler(event)" 
 		 >
 	
 	<fx:Metadata>
@@ -28,6 +29,9 @@
 			public var errorsBranch:Object = {label:"Errors"};
 			public var warningsBranch:Object = {label:"Warnings"};
 			public var rootObject:Object = {label:"Whatever"};
+			
+			[Bindable]
+			public var borderVisible:Boolean;
 			
 			[Bindable]
 			public var errorsCollection:ArrayCollection = new ArrayCollection();
@@ -173,7 +177,7 @@
 					 rollOverColor="#ffffff"
 					 selectionColor="#d8d8d8"
 					 useRollOver="false"
-					 borderVisible="false"
+					 borderVisible="{borderVisible}"
 					 indentation="16"
 					 showRoot="false"
 					 variableRowHeight="true">
@@ -191,7 +195,7 @@
 			horizontalScrollPolicy="off"
 			rollOverColor="#ffffff"
 			selectionColor="#d8d8d8"
-			borderVisible="false"
+			borderVisible="{borderVisible}"
 			includeIn="list"
 			verticalScrollPolicy="auto"
 			change="list_changeHandler(event)"

@@ -806,6 +806,7 @@ package com.flexcapacitor.utils
 				}
 				else {
 					var stageWebView:String = "flash.media.StageWebView";
+					
 					if (ApplicationDomain.currentDomain.hasDefinition(stageWebView)) {
 						var definition:Object = getDefinitionByName(stageWebView);
 						var instance:Object = new definition();
