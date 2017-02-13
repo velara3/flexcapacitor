@@ -93,6 +93,13 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		//public static const IMAGE_SWF:String = "data:image/";
 		
 		/**
+		 * Value that is returned if the dropped file is not of an accepted type
+		 * For example, if a user drops an image or a url from another browser window
+		 * there is no file to process. 
+		 * */
+		public static const INVALID:String = "invalid";
+		
+		/**
 		 * Identity of draggable element on the page.
 		 * */
 		public var elementIdentity:String = "body";

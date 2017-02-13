@@ -6110,7 +6110,7 @@ editor.console = {log:trace, error:trace};
 				var string:String = <xml><![CDATA[
 				function (id) {
 					var editor = ace.edit(id);
-					editor.session.getUndoManager().reset()
+					editor.session.getUndoManager().reset();
 					return true;
 				}
 				]]></xml>;
@@ -6125,7 +6125,20 @@ editor.console = {log:trace, error:trace};
 		 * Attempts to center the selection on the screen
 		 * */
 		public function centerSelection():void {
-			editor.centerSelection();
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					editor.centerSelection();
+					return true;
+				}
+				]]></xml>;
+				var results:Boolean = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				editor.centerSelection();
+			}
 		}
 		
 		/**
@@ -6133,29 +6146,33 @@ editor.console = {log:trace, error:trace};
 		 * Returns how fast a mode can tokenize the whole document. 
 		 * */
 		public function measureTokenizePerformance():int {
-			// reset cache
-			var linesCount:uint = session ? session.getLength() : 0;
-			var time:uint = getTimer();
 			
-			for (var i:int; i < linesCount; i++) {
-				session.getTokens(i);
-			}
-			
-			/*
-			if (editor.$highlightTagPending == true) {
-				editor.$highlightTagPending = false;
-				editor.$highlightPending = false;
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					var session = editor.session;
+					var linesCount = session ? session.getLength() : 0;
+					var time = performance.now();
+					
+					for (var i:int; i < linesCount; i++) {
+						session.getTokens(i);
+					}
+					return performance.now()-time;
+				}
+				]]></xml>;
+				var results:int = ExternalInterface.call(string, editorIdentity);
+				return results;
 			}
 			else {
-				session.removeMarker(session.$tagHighlight);
-				session.$tagHighlight = null;
-				session.removeMarker(session.$bracketHighlight);
-				session.$bracketHighlight = null;
-				editor.$highlightTagPending = true;
-				editor.$highlightPending = true;
-			}*/
-			
-			
+				// reset cache
+				var linesCount:uint = session ? session.getLength() : 0;
+				var time:uint = getTimer();
+				
+				for (var i:int; i < linesCount; i++) {
+					session.getTokens(i);
+				}
+			}
 			
 			return getTimer() - time;
 		}
@@ -6358,6 +6375,12 @@ editor.setCompleters(completers);
 					return true;
 				}
 				]]></xml>;
+				
+				// If you get the following error: 
+				// Error: TypeError: undefined is not an object (evaluating 'languageTools.setCompleters')
+				//  at flash.external::ExternalInterface$/_toAS()
+				// You need to make sure the language tools js is included on your page: 
+				// <script src="src-min-noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
 				var results:String = ExternalInterface.call(string, editorIdentity, completers);
 			}
 			else {

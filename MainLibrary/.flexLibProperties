@@ -520,10 +520,12 @@
     <classEntry path="com.flexcapacitor.validators.BitmapDataValidator"/>
     <classEntry path="ru.inspirit.net.MultipartURLLoader"/>
     <classEntry path="ru.inspirit.net.events.MultipartURLLoaderEvent"/>
+    <classEntry path="com.flexcapacitor.utils.SecureRedirect"/>
+    <classEntry path="com.flexcapacitor.events.RedirectEvent"/>
   </includeClasses>
   <includeResources>
-    <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>
+    <resourceEntry destPath="com/flexcapacitor/utils/StoreLogin.js" sourcePath="com/flexcapacitor/utils/StoreLogin.js"/>
     <resourceEntry destPath="design.xml" sourcePath="design.xml"/>
     <resourceEntry destPath="com/flexcapacitor/controls/supportClasses/ace.html" sourcePath="com/flexcapacitor/controls/supportClasses/ace.html"/>
     <resourceEntry destPath="defaults.css" sourcePath="defaults.css"/>

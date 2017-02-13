@@ -687,7 +687,7 @@ package com.flexcapacitor.utils
 				
 				if (htmlLoader.window && htmlLoader.window.validateXML) {
 					result = htmlLoader.window.validateXML(value);
-					validationInfo = XMLUtils.parseValidationResult(result, value);
+					validationInfo = parseValidationResult(result, value);
 				}
 				
 			}
@@ -698,7 +698,10 @@ package com.flexcapacitor.utils
 			
 			if (useFlashParser) {
 				isValid = isValidXML(value);
-				validationInfo.valid = isValid;
+				// browser catches a few additional errors - so ignore if already invalid
+				if (validationInfo.valid==false) {
+					validationInfo.valid = isValid;
+				}
 				validationInfo.internalErrorMessage = validationErrorMessage;
 				validationInfo.error = validationError;
 			}
@@ -860,7 +863,7 @@ package com.flexcapacitor.utils
 		public static function parseValidationResult(result:String, value:String):XMLValidationInfo {
 			var validationInfo:XMLValidationInfo = new XMLValidationInfo();
 			var isMozilla:Boolean;
-			var isChrome:Boolean; // by chrome we may mean webkit
+			var isWebkit:Boolean; // by chrome we may mean webkit
 			var characterCount:int;
 			var lastLine:String;
 			var isValid:Boolean;
@@ -871,14 +874,16 @@ package com.flexcapacitor.utils
 			var row:int;
 			var errorLines:Array;
 			var specificError:String;
+			var browserMessage:String;
+			var index:int;
 			
 			if (result) {
 				isMozilla = (result.indexOf("XML Parsing Error:") != -1);
-				isChrome = (result.indexOf("This page contains the following errors:") != -1);
+				isWebkit = (result.indexOf("This page contains the following errors:") != -1);
 			}
 			
 			// error - xml is not valid
-			if (isChrome || isMozilla) {
+			if (isWebkit || isMozilla) {
 				
 				// get row and column
 				if (isMozilla) {
@@ -892,7 +897,7 @@ package com.flexcapacitor.utils
 						specificError = StringUtils.trim(lines.slice(2).join(":"));
 					}
 				}
-				else if (isChrome) {
+				else if (isWebkit) {
 					lines = result.match(/line\s+(\d+)\s+at\s+column\s+(\d+):/i);
 					row = lines.length > 1 ? lines[1] : 0;
 					column = lines.length > 2 ? lines[2] : 0;
@@ -907,9 +912,11 @@ package com.flexcapacitor.utils
 				
 				validationInfo.valid = false;
 				
-				var browserMessage:String = result.replace(/Location:.*?Column.*?:/gs, "");
-				var index:int = browserMessage.lastIndexOf("\n");
-				//browserMessage = index==browserMessage.length-1 ? browserMessage.substring(index-1,1) : browserMessage; 
+				browserMessage = result.replace(/Location:.*?Column.*?:/gs, "");
+				index = browserMessage.lastIndexOf("\\n");
+				browserMessage = index==browserMessage.length-2 ? browserMessage.substring(0, index) : browserMessage; 
+				index = specificError.lastIndexOf("\\n");
+				specificError = index==specificError.length-2 ? specificError.substring(0, index) : specificError; 
 				validationInfo.browserErrorMessage = browserMessage;
 				validationInfo.specificErrorMessage = specificError;
 				
