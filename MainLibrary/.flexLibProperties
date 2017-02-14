@@ -339,7 +339,6 @@
     <classEntry path="com.flexcapacitor.events.AceEvent"/>
     <classEntry path="com.flexcapacitor.events.EffectEvent"/>
     <classEntry path="com.flexcapacitor.events.HTMLDragEvent"/>
-    <classEntry path="com.flexcapacitor.events.HistoryEvent"/>
     <classEntry path="com.flexcapacitor.events.ImportEvent"/>
     <classEntry path="com.flexcapacitor.events.InspectorEvent"/>
     <classEntry path="com.flexcapacitor.events.IssueDataEvent"/>
@@ -522,6 +521,7 @@
     <classEntry path="ru.inspirit.net.events.MultipartURLLoaderEvent"/>
     <classEntry path="com.flexcapacitor.utils.SecureRedirect"/>
     <classEntry path="com.flexcapacitor.events.RedirectEvent"/>
+    <classEntry path="com.flexcapacitor.utils.XMLComparison"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>

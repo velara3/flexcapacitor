@@ -2,9 +2,9 @@ package com.flexcapacitor.events {
 	import flash.events.Event;
 	
 
-	public class HistoryEvent extends Event {
+	public class HistoryEventEvent extends Event {
 		
-		public function HistoryEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false) {
+		public function HistoryEventEvent(type:String, bubbles:Boolean=false, cancelable:Boolean=false) {
 			super(type, bubbles, cancelable);
 		}
 		
