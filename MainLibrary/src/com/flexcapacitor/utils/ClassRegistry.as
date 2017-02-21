@@ -7,23 +7,31 @@ package com.flexcapacitor.utils
 	import mx.rpc.xml.Schema;
 
 	/**
-	 * Takes a XML document and registers the classes under their namespace URI
+	 * Manages classes and namespaces in an XML document
+	 * 
 	 * Merges SchemaTypeRegistry.xml.rpc.mx
 	 * Merges SchemaManager
-	 * We merge because the compiler was not stepping through the class correctly
+	 * We merged SchemaManager because the compiler was not stepping through the class correctly
 	 * */
 	public class ClassRegistry {
 		
-		public function ClassRegistry(domain:ApplicationDomain = null) {
+		public function ClassRegistry(domain:ApplicationDomain = null, defaultNamespace:QName = null) {
 			
 			if (domain) {
 				this.domain = domain;
 			}
+			
 			initialScope = [];
 			schemaStack = [];
+			initialScope.push(<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
+					   targetNamespace="library://ns.adobe.com/flex/spark"
+					   xmlns="library://ns.adobe.com/flex/spark"
+					   elementFormDefault="qualified"/>);
+			this.defaultNamespace = defaultNamespace;
 		}
 		
 		private static var _instance:ClassRegistry;
+		
 		/**
 		 * Returns the sole instance of this singleton class, creating it if it
 		 * does not already exist.
@@ -62,17 +70,41 @@ package com.flexcapacitor.utils
 		 * 
 		 * For example, 
 <pre>
-classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/spark")});
+// add as object with namespaces
+var object:Object = {};
+object.s = new Namespace("s", "library://ns.adobe.com/flex/spark");
+classRegistry.addNamespaces(object);
+
+// add as xml
+classRegistry.addNamespaces(xml);
+
+// add as array
+classRegistry.addNamespaces(xml.namespaceDeclarations());
 </pre>
 		 * 
 		 * @see #namespaces
 		 * @see #addNamespace()
 		 * */
 		public function addNamespaces(map:Object):void {
+			var ns:Namespace;
+			var numberOfNamespaces:int;
 			
-			for (var prefix:String in map) {
-				var ns:Namespace = map[prefix] as Namespace;
-				namespaces[prefix] = ns;
+			if (map is XML) {
+				map = XML(map).namespaceDeclarations();
+			}
+			
+			if (map is Array) {
+				numberOfNamespaces = map.length;
+				for (var i:int; i < numberOfNamespaces; i++) {
+					ns = map[i];
+					addNamespace(ns);
+				}
+			}
+			else {
+				for (var prefix:String in map) {
+					ns = map[prefix] as Namespace;
+					addNamespace(ns);
+				}
 			}
 		}
 		
@@ -146,10 +178,10 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 * @see #getNamespaceByPrefix()
 		 * @see #getNamespaceByURI()
 		 * */
-		public function getPrefixForNamespace(uri:String):String {
+		public function getPrefixForURI(uri:String):String {
 			var ns:Namespace = getNamespaceByURI(uri);
 			
-			if (ns) {
+			if (ns!=null) {
 				return ns.prefix;
 			}
 			
@@ -167,7 +199,7 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 * Resolves a prefixed name back into a QName based on the prefix to
 		 * namespace mappings.
 		 * 
-		 * For example, if passed in "s:Button" it returns "new QName("library://ns.adobe.com/flex/spark", "Button")"
+		 * For example, if you pass in "s:Button" it returns "new QName("library://ns.adobe.com/flex/spark", "Button")"
 		 * 
 		 * @param prefixedName The name to be resolved. Can be prefixed or unqualified.
 		 * @param parent The XML node where prefixedName appears. Allows local xmlns
@@ -188,22 +220,21 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */ 
-		public function getQNameForPrefixedName(prefixedName:String, parent:XML=null,
-												qualifyToTargetNamespace:Boolean=false):QName
-		{
+		public function getQNameForPrefixedName(prefixedName:String, 
+												parent:XML=null, 
+												qualifyToTargetNamespace:Boolean=false):QName {
 			var qname:QName;
 			
 			// Separate into prefix and local name
 			var prefix:String;
 			var localName:String;
 			var prefixIndex:int = prefixedName.indexOf(":");
-			if (prefixIndex > 0)
-			{
+			
+			if (prefixIndex > 0) {
 				prefix = prefixedName.substr(0, prefixIndex);
 				localName = prefixedName.substr(prefixIndex + 1);
 			}
-			else
-			{
+			else {
 				localName = prefixedName;
 			}
 			
@@ -211,28 +242,25 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 			
 			// First, map unqualified names to the target namespace, if the flag
 			// is explicitly set. (Used when looking up unqualified names by "ref")
-			if (prefix == null && qualifyToTargetNamespace == true && currentSchema)
-			{
+			if (prefix == null && qualifyToTargetNamespace == true && currentSchema) {
 				ns = currentSchema.targetNamespace;
 			}
 			
 			// Otherwise, assume that unqualified names are in the default namespace.
-			if (prefix == null)
-			{
+			if (prefix == null) {
 				prefix = "";
 			}
 			
 			// First, check if a parent XML has a local definition for this
 			// namespace...
-			if (ns == null)
-			{
-				if (parent != null)
-				{
+			if (ns == null) {
+				
+				if (parent != null) {
 					var localNamespaces:Array = parent.inScopeNamespaces();
-					for each (var localNS:Namespace in localNamespaces)
-					{
-						if (localNS.prefix == prefix)
-						{
+					
+					for each (var localNS:Namespace in localNamespaces) {
+						
+						if (localNS.prefix == prefix) {
 							ns = localNS;
 							break;
 						}
@@ -241,19 +269,16 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 			}
 			
 			// Next, check top level namespaces
-			if (ns == null)
-			{
+			if (ns == null) {
 				ns = namespaces[prefix];
 			}
 			
 			// Next, check current schema namespaces
-			if (ns == null && currentSchema)
-			{
+			if (ns == null && currentSchema) {
 				ns = currentSchema.namespaces[prefix];
 			}
 			
-			if (ns == null)
-			{
+			if (ns == null) {
 				// Check if parent XML node is in the default namespace
 				var parentNS:Namespace = (parent != null) ? parent.namespace() : null;
 				if (parentNS != null && parentNS.prefix == "") {
@@ -265,10 +290,169 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 				}
 			}
 			
-			if (ns != null)
+			if (ns != null) {
 				qname = new QName(ns.uri, localName);
-			else
+			}
+			else {
 				qname = new QName("", localName);
+			}
+			
+			return qname;
+		}
+		
+		/**
+		 * Gets the qname for the type. 
+		 * If you pass a Spark Button or "spark.controls.Button" it returns 
+		 * new QName("s", "library://ns.adobe.com/flex/spark").
+		 * 
+		 * @param type Type can be an class or a string
+		 * @param qualifyToTargetNamespace A switch controlling the behavior for
+		 * unqualified names. If false, unqualified names are assumed to be prefixed
+		 * by "" and a xmlns="..." declaration is looked up. If no xmlns=".."
+		 * declaration is in scope, and the parent node is in the default namespace,
+		 * the prefixedName is resolved to the default namespace. Otherwise, it is
+		 * resolved to the targetNamespace of the current schema. If qualifyToTargetNamespace
+		 * is true, unqualified names are assumed to be in the target namespace of
+		 * the current schema, regardless of declarations for unprefixed namespaces.
+		 * qualifyToTargetNamespace should be true when resolving names coming from
+		 * the following schema attributes: name, ref.
+		 * */
+		public function getQNameForType(object:Object, qualifyToTargetNamespace:Boolean=false):QName {
+			var qualifiedClassName:String;
+			var qname:QName;
+			var key:String;
+			
+			qualifiedClassName = getQualifiedClassName(object);
+			
+			key = definitionNameMap[qualifiedClassName];
+			qname = getQNameFromKey(key);
+			
+			return qname;
+		}
+		
+		/**
+		 * Returns a prefixed name from an object or a string. 
+		 * 
+		 * If you pass a Spark Button it returns s:Button.
+		 * 
+		 * @param type Type can be an class or a string
+		 * @param qualifyToTargetNamespace A switch controlling the behavior for
+		 * unqualified names. If false, unqualified names are assumed to be prefixed
+		 * by "" and a xmlns="..." declaration is looked up. If no xmlns=".."
+		 * declaration is in scope, and the parent node is in the default namespace,
+		 * the prefixedName is resolved to the default namespace. Otherwise, it is
+		 * resolved to the targetNamespace of the current schema. If qualifyToTargetNamespace
+		 * is true, unqualified names are assumed to be in the target namespace of
+		 * the current schema, regardless of declarations for unprefixed namespaces.
+		 * qualifyToTargetNamespace should be true when resolving names coming from
+		 * the following schema attributes: name, ref.
+		 * */
+		public function getPrefixedNameForType(object:Object, parent:XML = null, qualifyToTargetNamespace:Boolean=false):String {
+			var qualifiedClassName:String;
+			var qname:QName;
+			var prefixedName:String;
+			var key:String;
+			var ns:Namespace;
+			var localNamespaces:Array;
+			
+			qualifiedClassName = getQualifiedClassName(object);
+			
+			key = definitionNameMap[qualifiedClassName];
+			
+			// First, map unqualified names to the target namespace, if the flag
+			// is explicitly set. (Used when looking up unqualified names by "ref")
+			if (key == null && qualifyToTargetNamespace == true && currentSchema) {
+				ns = currentSchema.targetNamespace;
+			}
+			
+			if (ns) {
+				key = getKey(new QName(ns.uri, key));
+				key = definitionNameMap[qualifiedClassName];
+			}
+			
+			// First, check if a parent XML has a local definition for this
+			// namespace...
+			if (ns == null) {
+				
+				if (parent != null) {
+					localNamespaces = parent.inScopeNamespaces();
+					
+					for each (var localNS:Namespace in localNamespaces) {
+						break; // not implemented
+						//if (localNS.prefix == prefix) {
+							ns = localNS;
+							break;
+						//}
+					}
+				}
+			}
+			
+			if (key) {
+				prefixedName = getPrefixedNameFromKey(key);
+			}
+			
+			return prefixedName;
+		}
+		
+		/**
+		 * Returns a class name from an object or a string. 
+		 * 
+		 * If you pass a Spark Button or "spark.controls.Button" it returns Button.
+		 * 
+		 * @param type Type can be an class or a string
+		 * @param qualifyToTargetNamespace A switch controlling the behavior for
+		 * unqualified names. If false, unqualified names are assumed to be prefixed
+		 * by "" and a xmlns="..." declaration is looked up. If no xmlns=".."
+		 * declaration is in scope, and the parent node is in the default namespace,
+		 * the prefixedName is resolved to the default namespace. Otherwise, it is
+		 * resolved to the targetNamespace of the current schema. If qualifyToTargetNamespace
+		 * is true, unqualified names are assumed to be in the target namespace of
+		 * the current schema, regardless of declarations for unprefixed namespaces.
+		 * qualifyToTargetNamespace should be true when resolving names coming from
+		 * the following schema attributes: name, ref.
+		 * */
+		public function getClassNameForType(object:Object, qualifyToTargetNamespace:Boolean=false):String {
+			var qualifiedClassName:String;
+			var qname:QName;
+			var className:String;
+			var key:String;
+			
+			qualifiedClassName = getQualifiedClassName(object);
+			
+			key = definitionNameMap[qualifiedClassName];
+			className = getClassNameFromKey(key);
+			
+			return className;
+		}
+		
+		/**
+		 * Get a qname from a key. That is it returns the prefix and the namespace URI as a QName.
+		 * 
+		 * If key is "library://ns.adobe.com/flex/spark::spark.controls.Button"
+		 * and "library://ns.adobe.com/flex/spark" is registered with the "s" namespace prefix
+		 * then the QName returned is new QName("s", "library://ns.adobe.com/flex/spark"). 
+		 * */
+		public function getQNameFromKey(key:String):QName {
+			var qname:QName;
+			
+			// Separate into prefix and local name
+			var prefix:String;
+			var uri:String;
+			var uriIndex:int = key.lastIndexOf("::");
+			var qualifiedClassName:String;
+			
+			if (uriIndex > 0) {
+				uri = key.substr(0, uriIndex);
+			}
+			else {
+				qualifiedClassName = key;
+			}
+			
+			if (uri) {
+				prefix = getPrefixForURI(uri);
+			}
+			
+			qname = new QName(prefix, uri);
 			
 			return qname;
 		}
@@ -300,7 +484,7 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 			}
 			
 			if (uri) {
-				prefix = getPrefixForNamespace(uri);
+				prefix = getPrefixForURI(uri);
 				
 				if (prefix!=null) {
 					return prefix + ":" + localName;
@@ -311,13 +495,38 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		}
 		
 		/**
-		 * Get an array of class names with prefixes
+		 * Get the class name from a key. 
+		 * 
+		 * If key is "library://ns.adobe.com/flex/spark::spark.controls.Button"
+		 * then the value returned is "Button". 
+		 * */
+		public function getClassNameFromKey(key:String):String {
+			var localName:String;
+			var uriIndex:int = key.lastIndexOf("::");
+			
+			if (uriIndex > 0) {
+				localName = key.substr(uriIndex + 2);
+			} else {
+				localName = key;
+			}
+			
+			return localName;
+		}
+		
+		/**
+		 * Get an array of all class names with prefixes. 
+		 * 
+		 * Returns ["s:Button", "s:Label", "s:List"];
 		 * */
 		public function getPrefixedClassNames(sort:Boolean = true):Array {
-			var classNames:Array = [];
+			var classNames:Array;
+			var prefixedName:String;
+			
+			classNames = [];
 			
 			for (var key:String in classMap) {
-				var prefixedName:String = getPrefixedNameFromKey(key);
+				prefixedName = getPrefixedNameFromKey(key);
+				
 				if (prefixedName!=null) {
 					classNames.push(prefixedName);
 				}
@@ -379,24 +588,26 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 *  @productversion Flex 3
 		 */
 		public function getClass(type:Object, uri:String = null):Class {
-			var c:Class;
+			var classe:Class;
 			var key:String;
 			var qname:QName;
 			var definitionName:String;
 			
 			if (type != null) {
-				if (key is String && uri!=null) {
-					qname = new QName(uri, key);
+				if (type is String && uri!=null) {
+					type = new QName(uri, type);
 				}
 				
 				key = getKey(type);
 				definitionName = classMap[key] as String;
 				
-				if (definitionName != null && domain.hasDefinition(definitionName))
-					// c = getDefinitionByName(definitionName) as Class;
-					c = domain.getDefinition(definitionName) as Class;
+				if (definitionName != null && domain.hasDefinition(definitionName)) {
+					// classe = getDefinitionByName(definitionName) as Class;
+					classe = domain.getDefinition(definitionName) as Class;
+				}
 			}
-			return c;
+			
+			return classe;
 		}
 		
 		/**
@@ -433,24 +644,33 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public function getCollectionClass(type:Object):Class
-		{
-			var c:Class;
-			if (type != null)
-			{
+		public function getCollectionClass(type:Object):Class {
+			var classe:Class;
+			
+			if (type != null) {
 				var key:String = getKey(type);
 				var definitionName:String = collectionMap[key] as String;
 				
-				if (definitionName != null)
-					c = getDefinitionByName(definitionName) as Class;
+				if (definitionName != null) {
+					classe = getDefinitionByName(definitionName) as Class;
+				}
 			}
-			return c;
+			
+			return classe;
 		}
 		
 		/**
 		 * Maps a type QName to a Class definition. The definition can be a String
 		 * representation of the fully qualified class name or an instance of the
 		 * Class itself.
+		 * 
+<pre>
+namespaceURI = "library://ns.adobe.com/flex/spark";
+component = <component id="Button" class="spark.components.Button"/>
+componentClass = component.attribute("class");
+componentQName = new QName(namespaceURI, componentName);
+classRegistry.registerClass(componentQName, componentClass);
+</pre>
 		 * @param type The QName or String representation of the type name.
 		 * @param definition The Class itself or class name as a String.
 		 *  
@@ -459,8 +679,7 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 *  @playerversion AIR 1.1
 		 *  @productversion Flex 3
 		 */
-		public function registerClass(type:Object, definition:Object):void
-		{
+		public function registerClass(type:Object, definition:Object):void {
 			register(type, definition, classMap);
 		}
 		
@@ -530,26 +749,28 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		}
 		
 		/**
-		 * @private
 		 * Converts the given type name into a consistent String representation
 		 * that serves as the key to the type map.
+		 * 
 		 * @param type The QName or String representation of the type name.
 		 */
-		private function getKey(type:Object):String
-		{
+		protected function getKey(type:Object):String {
 			var key:String;
-			if (type is QName)
-			{
+			
+			if (type is QName) {
 				var typeQName:QName = type as QName;
-				if (typeQName.uri == null || typeQName.uri == "")
+				
+				if (typeQName.uri == null || typeQName.uri == "") {
 					key = typeQName.localName;
-				else
+				}
+				else {
 					key = typeQName.toString();
+				}
 			}
-			else
-			{
+			else {
 				key = type.toString();
 			}
+			
 			return key;
 		}
 		
@@ -558,14 +779,21 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		 */
 		private function register(type:Object, definition:Object, map:Object):void
 		{
-			var key:String = getKey(type);
+			var key:String;
 			var definitionName:String;
-			if (definition is String)
+			
+			key = getKey(type);
+			
+			if (definition is String) {
 				definitionName = definition as String;
-			else
+			}
+			else {
 				definitionName = getQualifiedClassName(definition);
+			}
 			
 			map[key] = definitionName;
+			
+			definitionNameMap[definitionName] = key;
 		}
 		
 		//--------------------------------------------------------------------------
@@ -574,6 +802,7 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		// 
 		//--------------------------------------------------------------------------
 		
+		private var definitionNameMap:Object = {};
 		private var prefixMap:Object = {};
 		private var classMap:Object = {};
 		private var collectionMap:Object = {};
@@ -591,6 +820,8 @@ classRegistry.addNamespaces({s:new Namespace("s", "library://ns.adobe.com/flex/s
 		private var schemaStack:Array;
 		private var initialScope:Array;
 		private var _domain:ApplicationDomain;
+		
+		public var defaultNamespace:QName;
 
 		public function get domain():ApplicationDomain
 		{

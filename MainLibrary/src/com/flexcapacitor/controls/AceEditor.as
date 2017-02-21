@@ -550,13 +550,18 @@ protected function searchInput_changeHandler(event:Event):void {
 		public static var editors:Object = new Dictionary(true);
 		
 		/**
+		 * If the editor id set explicitly then we can reuse the same editor
+		 * */
+		public static var allowEditorReuse:Boolean = true;
+		
+		/**
 		 * Gets the editor by the editor id. Useful when using in the browser
 		 * and using multiple editors on the page. Pass in the editor id. 
 		 * The class has a editorIdentity that is unique for each editor instance. 
 		 * */
 		public static function addEditorById(id:String, instance:AceEditor):void {
-			if (editors[id]) {
-				throw new Error("Editor already created");
+			if (editors[id] && !allowEditorReuse) {
+				throw new Error("Editor " + id + " already created");
 			}
 			
 			editors[id] = instance;
@@ -666,10 +671,14 @@ protected function searchInput_changeHandler(event:Event):void {
 								element = document.createElement("div");
 								element.id = id;
 							}
+
 							element.style.position = "absolute";
+							element.style.display = "block";
+
 							if (element.parent==null) {
 								document.body.appendChild(element);
 							}
+
 							return true;
 						}]]>
 						</xml>;
@@ -930,6 +939,11 @@ protected function searchInput_changeHandler(event:Event):void {
 					if (!aceFound) {
 						throw new Error(aceLibraryNotFoundErrorMessage);
 					}
+					
+					if (aceFound) {
+						languageToolsFound = window.ace.languageTools
+						//throw new Error(aceLibraryNotFoundErrorMessage);
+					}
 				}
 				
 				try {
@@ -978,10 +992,10 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			
 			if (isAIR) {
-				pageDocument = window.document;
-				pagePlugins = pageDocument.plugins;
-				pageScripts = pageDocument.scripts;
-				pageStyleSheets = pageDocument.styleSheets;
+				//pageDocument = window.document;
+				//pagePlugins = pageDocument.plugins;
+				//pageScripts = pageDocument.scripts;
+				//pageStyleSheets = pageDocument.styleSheets;
 				
 				ace = window.ace;
 				languageTools = ace.require("ace/ext/language_tools");
@@ -993,6 +1007,7 @@ protected function searchInput_changeHandler(event:Event):void {
 				
 				aceEditorFound = element!=null && element.env!=null && element.env.editor!=null;
 				aceEditorContainerFound = element!=null && element.nodeName!=null && element.nodeName.toLowerCase()=="div";
+				languageToolsFound = languageTools!=null;
 				//session = editor.getSession();
 				selection = session.selection;
 				config = ace.config;
@@ -3721,7 +3736,7 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * Get editor version
 		 * */
 		public function getVersion():String {
-			var text:String;
+			var result:String;
 			
 			if (isBrowser && useExternalInterface) {
 				var string:String = <xml><![CDATA[
@@ -3730,13 +3745,13 @@ protected function searchInput_changeHandler(event:Event):void {
 					return ace.version;
 				}
 				]]></xml>;
-				text = ExternalInterface.call(string, editorIdentity);
+				result = ExternalInterface.call(string, editorIdentity);
 			}
 			else {
-				text = ace.version;
+				result = ace.version;
 			}
 			
-			return text;
+			return result;
 		}
 		
 		override protected function commitProperties():void {
@@ -5726,6 +5741,7 @@ editor.console = {log:trace, error:trace};
 		 * */
 		public var aceFound:Boolean;
 		public var aceEditorContainerFound:Boolean;
+		public var languageToolsFound:Boolean;
 		
 		/**
 		 * This is set to true when the editor is found and ready to use
@@ -6117,7 +6133,9 @@ editor.console = {log:trace, error:trace};
 				var results:String = ExternalInterface.call(string, editorIdentity);
 			}
 			else {
-				editor.session.getUndoManager().reset();
+				if (editor) {
+					editor.session.getUndoManager().reset();
+				}
 			}
 		}
 		
@@ -6384,6 +6402,11 @@ editor.setCompleters(completers);
 				var results:String = ExternalInterface.call(string, editorIdentity, completers);
 			}
 			else {
+				// If you get the following error: 
+				// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+				// You need to make sure the language tools js is included on your page: 
+				// <script src="src-min-noconflict/ext-language_tools.js" type="text/javascript" charset="utf-8"></script>
+				//languageTools = ace.require("ace/ext/language_tools");
 				languageTools.setCompleters(completers);
 			}
 			
@@ -6777,6 +6800,7 @@ editor.setCompleters(completers);
 					return true;
 				}
 				]]></xml>;
+				var display:Boolean = stage!=null;
 				var results:String = ExternalInterface.call(string, editorIdentity, false);
 			}
 		}
@@ -6798,7 +6822,8 @@ editor.setCompleters(completers);
 					return true;
 				}
 				]]></xml>;
-				var results:String = ExternalInterface.call(string, editorIdentity, true);
+				var display:Boolean = stage!=null;
+				var results:String = ExternalInterface.call(string, editorIdentity, display);
 			}
 		}
 		

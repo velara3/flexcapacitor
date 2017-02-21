@@ -612,7 +612,7 @@ package com.flexcapacitor.utils
 		
 		/**
 		 * Checks whether the specified string is valid and well formed XML. Uses the Flash Player
-		 * XML parser.  
+		 * XML parser. 
 		 *
 		 * @param data The string that is being checked to see if it is valid XML.
 		 *
@@ -623,12 +623,15 @@ package com.flexcapacitor.utils
 		 */
 		public static function getValidationXML(value:String):Object {
 			var xml:XML;
-			var object:Object = {};
+			var object:Object;
+			
+			object = {};
 			object.isValid = false;
 			
 			try {
 				xml = new XML(value);
 				object.isValid = true;
+				object.xml = xml;
 			}
 			catch (error:Error) {
 				// Usually: TypeError - Error #1088: The markup in the document following the root element must be well-formed.

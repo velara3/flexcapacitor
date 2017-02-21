@@ -339,9 +339,11 @@
     <classEntry path="com.flexcapacitor.events.AceEvent"/>
     <classEntry path="com.flexcapacitor.events.EffectEvent"/>
     <classEntry path="com.flexcapacitor.events.HTMLDragEvent"/>
+    <classEntry path="com.flexcapacitor.events.HistoryEventEvent"/>
     <classEntry path="com.flexcapacitor.events.ImportEvent"/>
     <classEntry path="com.flexcapacitor.events.InspectorEvent"/>
     <classEntry path="com.flexcapacitor.events.IssueDataEvent"/>
+    <classEntry path="com.flexcapacitor.events.RedirectEvent"/>
     <classEntry path="com.flexcapacitor.filters.BlackAndWhiteFilter"/>
     <classEntry path="com.flexcapacitor.filters.BorderStrokeFilter"/>
     <classEntry path="com.flexcapacitor.filters.TextShadowFilter"/>
@@ -366,11 +368,14 @@
     <classEntry path="com.flexcapacitor.model.EmbeddedFile"/>
     <classEntry path="com.flexcapacitor.model.ErrorData"/>
     <classEntry path="com.flexcapacitor.model.ExportOptions"/>
+    <classEntry path="com.flexcapacitor.model.FileInfo"/>
+    <classEntry path="com.flexcapacitor.model.HTMLExportOptions"/>
     <classEntry path="com.flexcapacitor.model.HistoryEventData"/>
     <classEntry path="com.flexcapacitor.model.HistoryEventItem"/>
     <classEntry path="com.flexcapacitor.model.ImportOptions"/>
     <classEntry path="com.flexcapacitor.model.IssueData"/>
     <classEntry path="com.flexcapacitor.model.Item"/>
+    <classEntry path="com.flexcapacitor.model.MXMLImportOptions"/>
     <classEntry path="com.flexcapacitor.model.MenuItem"/>
     <classEntry path="com.flexcapacitor.model.MenuItemDataDescriptor"/>
     <classEntry path="com.flexcapacitor.model.MetaData"/>
@@ -487,6 +492,7 @@
     <classEntry path="com.flexcapacitor.utils.PersistentStorage"/>
     <classEntry path="com.flexcapacitor.utils.RandomData"/>
     <classEntry path="com.flexcapacitor.utils.RegisterSingleton"/>
+    <classEntry path="com.flexcapacitor.utils.SecureRedirect"/>
     <classEntry path="com.flexcapacitor.utils.SharedObjectUtils"/>
     <classEntry path="com.flexcapacitor.utils.SimpleXMLEncoder"/>
     <classEntry path="com.flexcapacitor.utils.StateUtils"/>
@@ -498,6 +504,7 @@
     <classEntry path="com.flexcapacitor.utils.TypeUtils"/>
     <classEntry path="com.flexcapacitor.utils.VectorUtils"/>
     <classEntry path="com.flexcapacitor.utils.WebNotification"/>
+    <classEntry path="com.flexcapacitor.utils.XMLComparison"/>
     <classEntry path="com.flexcapacitor.utils.XMLFileUtil"/>
     <classEntry path="com.flexcapacitor.utils.XMLUtils"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.CSSStyleDeclarationItem"/>
@@ -519,9 +526,6 @@
     <classEntry path="com.flexcapacitor.validators.BitmapDataValidator"/>
     <classEntry path="ru.inspirit.net.MultipartURLLoader"/>
     <classEntry path="ru.inspirit.net.events.MultipartURLLoaderEvent"/>
-    <classEntry path="com.flexcapacitor.utils.SecureRedirect"/>
-    <classEntry path="com.flexcapacitor.events.RedirectEvent"/>
-    <classEntry path="com.flexcapacitor.utils.XMLComparison"/>
   </includeClasses>
   <includeResources>
     <resourceEntry destPath="manifest.xml" sourcePath="manifest.xml"/>
