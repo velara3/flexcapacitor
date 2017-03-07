@@ -37,6 +37,7 @@ limitations under the License.
 				   filters.down="{buttonDownFilters}"
 				   filters.downAndSelected="{buttonDownFilters}"
 				   filters.upAndSelected="{buttonDownFilters}"
+				   filters.overAndSelected="{buttonDownFilters}"
 				   buttonMode="true"
 				   >
 	

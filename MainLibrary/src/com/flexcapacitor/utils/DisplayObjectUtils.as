@@ -39,6 +39,7 @@ package com.flexcapacitor.utils {
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.core.mx_internal;
+	import mx.events.SandboxMouseEvent;
 	import mx.graphics.BitmapFill;
 	import mx.graphics.BitmapFillMode;
 	import mx.graphics.codec.JPEGEncoder;
@@ -1794,7 +1795,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				}
 				else {
 				
-				// using BitmapData.encode()
+					// using BitmapData.encode()
 					if (!pngEncoderOptions) {
 						// did you get an error here? include this class and set flash player swfversion to 19 or newer
 						PNGEncoderOptionsClass = ClassUtils.getDefinition(PNG_ENCODER_OPTIONS_CLASS_PATH);
@@ -1820,7 +1821,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				}
 				else {
 					
-				// using BitmapData.encode()
+					// using BitmapData.encode()
 					if (!jpegEncoderOptions) {
 						// to use JPEGXR pass in an instance of JPEGXREncoderOptions class
 						JPEGEncoderOptionsClass = ClassUtils.getDefinition(JPEG_ENCODER_OPTIONS_CLASS_PATH);
@@ -3511,7 +3512,38 @@ trace(size); // {width = 200, height = 100}
 			"luminosity"];
 		
 		public static var flexGroupBlendModes:Array = ["auto"].concat(flexBlendModes);
+		public static const zeroPoint:Point = new Point(0, 0);
 		
+		/**
+		 * Gets the global or relative position of the display object.
+		 * If the offset is a point that value is subtracted from the absolute position
+		 * If the offset is a mouse event the stage X and Y are subtracted from the absolute position
+		 * 
+		 * So if an object is absolute position 100x100 then it's global position is 100x100. 
+		 * If it is nested in a container positioned at 100x100 then it's global position is 200x200.
+		 * If it is then moved to 10x10 inside the container it's global position is 210x210.
+		 * If you pass in the mouse event the position returned is 10x10. It is relative to it's container.
+		 * If you pass in a container then the position returned is 10x10 relative to the container.
+		 * */
+		public static function getDisplayObjectPosition(source:DisplayObject, offset:Object = null):Point {
+			var absolutePosition:Point = source.localToGlobal(zeroPoint);
+			
+			if (offset==null) {
+				return absolutePosition;
+			}
+			else if (offset is Point) {
+				absolutePosition = absolutePosition.subtract(offset as Point);
+			}
+			else if (offset is MouseEvent || offset is SandboxMouseEvent) {
+				absolutePosition = new Point(offset.stageX, offset.stageY).subtract(absolutePosition);
+				
+			}
+			else if ("localToGlobal" in offset) {
+				absolutePosition = absolutePosition.subtract(offset.localToGlobal(zeroPoint));
+			}
+			
+			return absolutePosition;
+		}
 		
 		/**
 		 * Get distance of one display object to another.

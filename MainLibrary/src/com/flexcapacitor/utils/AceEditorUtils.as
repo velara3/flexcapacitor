@@ -30,12 +30,45 @@ package com.flexcapacitor.utils
 		 * <Tag     attribute=""   |  />
 		 */
 		public static var XML_TAG_WHITESPACE:String				= "text.tag-whitespace.xml";
+		
+		/**
+		 * Not sure
+		 * */
 		public static var XML_TAG_OPEN:String 					= "text.tag-open.xml";
+		
+		/**
+		 * The node name
+		 * <s:Button />
+		 * The value would be "s:Button"
+		 * */
 		public static var XML_TAG_NAME:String 					= "meta.tag.tag-name.xml";
+		
+		/**
+		 * First character in a node
+		 * <Button
+		 * The value would be "<".  
+		 * */
 		public static var XML_TAG_PUNCTUATION_TAG_OPEN:String 	= "meta.tag.punctuation.tag-open.xml";
+		
+		/**
+		 * Last character in a node's open tag
+		 * <div>hello world</div>
+		 * The value would be the ">" after the "<div". 
+		 * */
 		public static var XML_TAG_PUNCTUATION_TAG_CLOSE:String 	= "meta.tag.punctuation.tag-close.xml";
+		
+		/**
+		 * First less than sign in closing tag
+		 * </s:Button>
+		 * */
 		public static var XML_END_TAG_OPEN:String 				= "meta.tag.punctuation.end-tag-open.xml";
 		public static var XML_ATTRIBUTE_NAME:String 			= "entity.other.attribute-name.xml";
+		
+		/**
+		 * Attribute value including any surrounding quotes
+		 * <Tag width="50" />
+		 * Value string contains "50".  
+		 * */
 		public static var XML_ATTRIBUTE_VALUE:String 			= "string.attribute-value.xml";
 		public static var XML_ATTRIBUTE_EQUALS:String 			= "keyword.operator.attribute-equals.xml";
 		
@@ -45,10 +78,10 @@ package com.flexcapacitor.utils
 		
 		/**
 		 * Get tag name from current cursor position
-		 * Profile Mark   After getXMLTagQNameFromCursorPo: +457
-		 * Profile Mark   After aceEditor.getTagName      : +3
+		 * Profile Mark   After getXMLTagQNameFromCursorPo: +457 (call as3 to js to as3 in for loop)
+		 * Profile Mark   After aceEditor.getTagName      : +3 (call javascript method and return via EI)
 		 * */
-		public static function getTagName(editor:AceEditor, row:int, column:int):QName {
+		public static function getTagName(editor:AceEditor, row:int, column:int):TokenInformation {
 			var token:Object;
 			var line:String;
 			var type:String;
@@ -56,23 +89,33 @@ package com.flexcapacitor.utils
 			var found:Boolean;
 			var qname:QName;
 			var session:Object;
+			var tokenInfo:TokenInformation;
+			var first:Boolean = true;
+			
 			
 			if (AceEditor.isBrowser && editor.useExternalInterface) {
 				var string:String = <xml><![CDATA[
 				function (id, row, column) {
 					var editor = ace.edit(id);
-					var session = editor!=null ? editor.session : null;
+					var session;
 					var token;
 					var line;
 					var type;
 					var value;
-					var found;
+					var found = false;
+					var first = true;
 					
 					const XML_TAG_NAME = "meta.tag.tag-name.xml";
 					
+					session = editor!=null ? editor.session : null;
+					
+					if (session==null) {
+						return false;
+					}
+					
 					for (; row > -1; row--) {
 						line = session.getLine(row);
-						column = line.length;
+						if (!first) column = line.length;
 						
 						for (; column>-1; column--) {
 							token = session.getTokenAt(row, column);
@@ -80,6 +123,130 @@ package com.flexcapacitor.utils
 							
 							if (type==XML_TAG_NAME) {
 								value = token.value;
+								column = token.start+1;
+								found = true;
+								break;
+							}
+						}
+						
+						first = false;
+						
+						if (found) break;
+					}
+					
+
+					if (found) {
+						token.row = row;
+						token.column = column;
+						return token;
+					}
+
+					return false;
+				}
+				]]></xml>;
+				
+				token = ExternalInterface.call(string, editor.editorIdentity, row, column);
+				
+				
+				if (token) {
+					found = true;
+					value = token.value;
+					row = token.row;
+					column = token.column;
+				}
+			}
+			else {
+				session = editor.session;
+				
+				
+				for (; row > -1; row--) {
+					line = session.getLine(row);
+					if (!first) column = line.length;
+					
+					for (; column>-1; column--) {
+						token = session.getTokenAt(row, column);
+						type = token ? token.type : "";
+						
+						if (type==XML_TAG_NAME) {
+							value = token.value;
+							column = token.start+1;
+							found = true;
+							break;
+						}
+					}
+					
+					first = false;
+					
+					if (found) break;
+				}
+			}
+			
+			tokenInfo = new TokenInformation();
+			
+			if (found) {
+				qname = new QName("", value);
+				tokenInfo.found = true;
+				tokenInfo.row = row;
+				tokenInfo.column = column;
+				tokenInfo.tagName = qname;
+				tokenInfo.token = token;
+				tokenInfo.value = token ? token.value : null;
+			}
+			
+			return tokenInfo;
+		}
+		
+		/**
+		 * Get attribute from current cursor position
+		 * */
+		public static function getAttributeName(editor:AceEditor, row:int, column:int):TokenInformation {
+			var token:Object;
+			var line:String;
+			var type:String;
+			var value:String;
+			var found:Boolean;
+			var qname:QName;
+			var firstValue:Boolean;
+			var tokenInfo:TokenInformation;
+			var session:Object;
+			
+			if (AceEditor.isBrowser && editor.useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, row, column) {
+					var editor = ace.edit(id);
+					var session;
+					var token;
+					var line;
+					var type;
+					var value;
+					var found = false;
+					var first = false;
+					
+					const XML_ATTRIBUTE_NAME = "entity.other.attribute-name.xml";
+					
+					session = editor!=null ? editor.session : null;
+					
+					if (session==null) {
+						return false;
+					}
+
+					for (; row > -1; row--) {
+						line = session.getLine(row);
+						
+						if (first) {
+							column = line.length;
+						}
+						else {
+							first = true;
+						}
+						
+						for (; column>-1; column--) {
+							token = session.getTokenAt(row, column);
+							type = token ? token.type : "";
+						
+							if (type==XML_ATTRIBUTE_NAME) {
+								value = token.value;
+								column = token.start+1;
 								found = true;
 								break;
 							}
@@ -87,31 +254,45 @@ package com.flexcapacitor.utils
 						
 						if (found) break;
 					}
-					
-					return token;
+
+					if (found) {
+						token.row = row;
+						token.column = column;
+						return token;
+					}
+
+					return false;
 				}
 				]]></xml>;
 				
-				var results:Object = ExternalInterface.call(string, editor.editorIdentity, row, column);
+				token = ExternalInterface.call(string, editor.editorIdentity, row, column);
 				
-				if (results) {
-					qname = new QName("", results.value);
+				
+				if (token) {
+					found = true;
+					value = token.value;
+					row = token.row;
+					column = token.column;
 				}
-				
-				return qname;
 			}
 			else {
 				session = editor.session;
 				
 				for (; row > -1; row--) {
 					line = session.getLine(row);
-					column = line.length;
+					
+					if (firstValue) {
+						column = line.length;
+					}
+					else {
+						firstValue = true;
+					}
 					
 					for (; column>-1; column--) {
 						token = session.getTokenAt(row, column);
 						type = token ? token.type : "";
 						
-						if (type==XML_TAG_NAME) {
+						if (type==XML_ATTRIBUTE_NAME) {
 							value = token.value;
 							found = true;
 							break;
@@ -120,57 +301,178 @@ package com.flexcapacitor.utils
 					
 					if (found) break;
 				}
-				
-				if (found) {
-					qname = new QName("", value);
-				}
-				
-				return qname;
 			}
 			
+			
+			tokenInfo = new TokenInformation();
+			
+			if (found) {
+				qname = new QName("", value);
+				tokenInfo.found = true;
+				tokenInfo.row = row;
+				tokenInfo.column = column;
+				tokenInfo.tagName = qname;
+				tokenInfo.token = token;
+				tokenInfo.value = token ? token.value : null;
+			}
+			
+			return tokenInfo;
 		}
 		
 		/**
-		 * Get attribute from current cursor position
+		 * Get id of tag from current cursor position
 		 * */
-		public static function getAttributeName(editor:AceEditor, row:int, column:int):QName {
+		public static function getAttributeValue(editor:AceEditor, attribute:String, row:int, column:int):TokenInformation {
 			var token:Object;
 			var line:String;
 			var type:String;
 			var value:String;
 			var found:Boolean;
-			var qname:QName;
-			var firstValue:Boolean;
+			var notFound:Boolean;
+			var attributeFound:Boolean;
+			var session:Object;
+			var totalLines:int;
+			var columns:int;
+			var tokenInfo:TokenInformation;
+			var attributeName:String;
 			
-			for (; row > -1; row--) {
-				line = editor.getLine(row);
-				
-				if (firstValue) {
-					column = line.length;
-				}
-				else {
-					firstValue = true;
-				}
-				
-				for (; column>-1; column--) {
-					token = editor.getTokenAt(row, column);
-					type = token ? token.type : "";
+			attribute = attribute.toLowerCase();
+			
+			// first get tag
+			tokenInfo = getTagName(editor, row, column);
+			
+			if (tokenInfo.row>-1 && tokenInfo.column>-1) {
+				row = tokenInfo.row;
+				column = tokenInfo.column;
+			}
+			
+			if (row<0 || column<0) {
+				return tokenInfo;
+			}
+			
+			if (AceEditor.isBrowser && editor.useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, attribute, row, column) {
+					var editor = ace.edit(id);
+					var session = editor!=null ? editor.session : null;
+					var token;
+					var line;
+					var type;
+					var value;
+					var notFound;
+					var totalLines;
+					var row;
+					var column;
+					var columns;
+					var attributeFound = false;
+					var found = false;
 					
-					if (type==XML_ATTRIBUTE_NAME) {
-						value = token.value;
-						found = true;
-						break;
+					const XML_END_TAG_OPEN = "meta.tag.punctuation.end-tag-open.xml";
+					const XML_ATTRIBUTE_NAME = "entity.other.attribute-name.xml";
+					const XML_ATTRIBUTE_VALUE = "string.attribute-value.xml";
+					
+					if (session==null) return false;
+					totalLines = session.getLength();
+					
+					for (var i=row; row<totalLines; row++) {
+						line = session.getLine(row);
+						columns = line.length;
+					
+						for (var j = column; column<columns; column++) {
+							token = session.getTokenAt(row, column);
+							if (token==null) break;
+							type = token.type;
+							value = token.value.toLowerCase();
+							
+							// found value - basic - expects value right after attribute name
+							if (attributeFound && type==XML_ATTRIBUTE_VALUE) {
+								value = token.value;
+								found = true;
+								break;
+							}
+							
+							// found attribute
+							if (type==XML_ATTRIBUTE_NAME && value==attribute) {
+								attributeFound = true;
+								attributeName = token.value;
+							}
+							
+							if (type==XML_END_TAG_OPEN) {
+								notFound = true;
+							}
+						}
+							
+						if (found || notFound) break;
 					}
+					
+					if (found) {
+						token.row = row;
+						token.column = column;
+						token.attributeName = attributeName;
+						return token;
+					}
+					
+					return false;
+				}
+				]]></xml>;
+				
+				token = ExternalInterface.call(string, editor.editorIdentity, attribute, row, column);
+				
+				if (token) {
+					attributeName = token.attributeName;
+					row = token.row;
+					column = token.column;
+					found = true;
 				}
 				
-				if (found) break;
+			}
+			else {
+				session = editor.session;
+				totalLines = session.getLength();
+				
+				for (;row<totalLines; row++) {
+					line = session.getLine(row);
+					columns = line.length;
+					
+					for (column = 0; column<columns; column++) {
+						token = session.getTokenAt(row, column);
+						type = token ? token.type : "";
+						value = token.value.toLowerCase();
+						
+						// found value - basic - expects value right after attribute name
+						if (attributeFound && type==XML_ATTRIBUTE_VALUE) {
+							value = token.value;
+							found = true;
+							break;
+						}
+						
+						// found attribute
+						if (type==XML_ATTRIBUTE_NAME && value==attribute) {
+							attributeFound = true;
+							attributeName = token.value;
+						}
+						
+						if (type==XML_END_TAG_OPEN) {
+							notFound = true;
+						}
+					}
+					
+					if (found || notFound) break;
+				}
 			}
 			
 			if (found) {
-				qname = new QName("", value);
+				tokenInfo.found = true;
+				tokenInfo.attributeName = new QName("", attributeName);
+				tokenInfo.row = row;
+				tokenInfo.column = column;
+				tokenInfo.token = token;
+				tokenInfo.value = token ? token.value : null;
+				tokenInfo.innerValue = token ? token.value.replace(/(^"|')(.*)("|'$)/, "$2") : null;
 			}
 			
-			return qname;
+			return tokenInfo;
+			
 		}
 		
 		/**
@@ -287,7 +589,7 @@ package com.flexcapacitor.utils
 		
 		public static var tokenInformation:TokenInformation;
 		
-		public static function getTokenInformation(aceEditor:AceEditor):TokenInformation {
+		public static function getTokenInformation(aceEditor:AceEditor, qualifyToTargetNamespace:Boolean = false):TokenInformation {
 			var cursor:Object = aceEditor.getCursor();
 			var token:Object = aceEditor.getTokenAt(cursor.row, cursor.column);
 			var tokenType:String = token ? token.type : null;
@@ -296,6 +598,9 @@ package com.flexcapacitor.utils
 			var uriQName:QName;
 			var classObject:Object;
 			var tagQName:QName;
+			var idTokenInfo:TokenInformation;
+			var tagTokenInfo:TokenInformation;
+			var attributeTokenInfo:TokenInformation;
 			var attributeQName:QName;
 			var qualifiedClassName:String;
 			var classRegistry:ClassRegistry;
@@ -303,9 +608,12 @@ package com.flexcapacitor.utils
 			
 			tokenInfo = new TokenInformation();
 			
-			classRegistry = ClassRegistry.getInstance();
+			if (classRegistry==null) classRegistry = ClassRegistry.getInstance();
 			
-			tagQName = getTagName(aceEditor, cursor.row, cursor.column);
+			tagTokenInfo = getTagName(aceEditor, cursor.row, cursor.column);
+			tagQName = tagTokenInfo.tagName;
+			idTokenInfo = getAttributeValue(aceEditor, "id", tagTokenInfo.row, tagTokenInfo.column);
+			tokenInfo.idToken = idTokenInfo;
 			
 			tokenInfo.cursor = cursor;
 			tokenInfo.token = token;
@@ -315,7 +623,7 @@ package com.flexcapacitor.utils
 			if (tagQName!=null) {
 				prefixedClassName = tagQName.localName; // returns "s:Button"
 				// from "s:Button" it returns "new QName("library://ns.adobe.com/flex/spark", "Button")"
-				uriQName = classRegistry.getQNameForPrefixedName(prefixedClassName);
+				uriQName = classRegistry.getQNameForPrefixedName(prefixedClassName, null, qualifyToTargetNamespace);
 				classObject = classRegistry.getClass(uriQName);
 				qualifiedClassName = classRegistry.getClassName(uriQName);
 				
@@ -329,9 +637,10 @@ package com.flexcapacitor.utils
 				
 				// if in or next to an attribute gets the meta data of the attribute
 				if (tokenType==XML_ATTRIBUTE_VALUE || tokenType==XML_ATTRIBUTE_EQUALS || tokenType==XML_ATTRIBUTE_NAME) {
-					attributeQName = getAttributeName(aceEditor, cursor.row, cursor.column);
+					attributeTokenInfo = getAttributeName(aceEditor, cursor.row, cursor.column);
+					attributeQName = attributeTokenInfo.tagName;
 					
-					if (classObject) {
+					if (classObject && attributeQName) {
 						tokenInfo.attributeMetaData = ClassUtils.getMetaDataOfMember(classObject, attributeQName.localName);
 					}
 					else {
@@ -447,6 +756,8 @@ package com.flexcapacitor.utils
 			var classFound:Boolean;
 			var prefixedQName:QName;
 			var classObject:Object;
+			var tagTokenInfo:TokenInformation;
+			var attributeTokenInfo:TokenInformation;
 			var tagQName:QName;
 			var attributeQName:QName;
 			var qualifiedClassName:String;
@@ -454,12 +765,14 @@ package com.flexcapacitor.utils
 			var suggestions:Array;
 			
 			if (tokenInformation==null) {
-				tokenInformation = new TokenInformation;
+				tokenInformation = new TokenInformation();
 			}
 			
 			classRegistry = ClassRegistry.getInstance();
 			
-			tagQName = getTagName(aceEditor, cursor.row, cursor.column);
+			tagTokenInfo = getTagName(aceEditor, cursor.row, cursor.column);
+			tagQName = tagTokenInfo.tagName;
+			
 			//PerformanceMeter.mark("After AceUtils.getTagName");
 			
 			//tagQName = aceEditor.getTagName(cursor.row, cursor.column) as QName;
@@ -484,7 +797,8 @@ package com.flexcapacitor.utils
 				
 				
 				if (type==XML_ATTRIBUTE_VALUE || type==XML_ATTRIBUTE_EQUALS || type==XML_ATTRIBUTE_NAME) {
-					attributeQName = getAttributeName(aceEditor, cursor.row, cursor.column);
+					attributeTokenInfo = getAttributeName(aceEditor, cursor.row, cursor.column);
+					attributeQName = attributeTokenInfo.tagName;
 					
 					if (classObject) {
 						tokenInformation.attributeMetaData = ClassUtils.getMetaDataOfMember(classObject, attributeQName.localName);

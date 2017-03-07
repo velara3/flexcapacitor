@@ -57,6 +57,7 @@ package com.flexcapacitor.controls {
 	import com.flexcapacitor.controls.supportClasses.AceCommand;
 	import com.flexcapacitor.events.AceEvent;
 	import com.flexcapacitor.utils.ClassUtils;
+	import com.flexcapacitor.utils.PopUpOverlayManager;
 	import com.flexcapacitor.utils.supportClasses.log;
 	
 	import flash.display.DisplayObject;
@@ -71,6 +72,7 @@ package com.flexcapacitor.controls {
 	import flash.utils.Dictionary;
 	import flash.utils.getTimer;
 	
+	import mx.controls.ToolTip;
 	import mx.core.UIComponent;
 	import mx.events.FlexEvent;
 	import mx.utils.NameUtil;
@@ -465,6 +467,7 @@ protected function searchInput_changeHandler(event:Event):void {
 				eventsDictionary[SESSION_CHANGE_CURSOR] 	= SELECTION;
 			}
 			
+			
 			super();
 			
 			// Desktop version
@@ -665,11 +668,14 @@ protected function searchInput_changeHandler(event:Event):void {
 					}
 					
 					var string:String = <xml><![CDATA[
-						function(id) {
+						function(id, create) {
 							var element = document.getElementById(id);
-							if (element==null) {
+							if (element==null && create==true) {
 								element = document.createElement("div");
 								element.id = id;
+							}
+							else if (element==null && create==false) {
+								throw new Error("Element '" + id + "' for editor not found");
 							}
 
 							element.style.position = "absolute";
@@ -683,15 +689,18 @@ protected function searchInput_changeHandler(event:Event):void {
 						}]]>
 						</xml>;
 					var created:String;
-					created = ExternalInterface.call(string, editorIdentity);
+					created = ExternalInterface.call(string, editorIdentity, createElementIfNeeded);
 					
+					// Error: ReferenceError: Can't find variable: ace
+					// Means you must add at least ace.js to your page
 					string = <xml><![CDATA[
 						function(id) {
 							ace.require("ace/ext/language_tools");
 							ace.require("ace/ext/beautify");
 							ace.require("ace/lib/lang");
 							ace.require("ace/ext/searchbox");
-							ace.edit(id);
+							var editor = ace.edit(id);
+							editor.$blockScrolling = Infinity;
 							return true;
 						}]]>
 						</xml>;
@@ -1002,7 +1011,13 @@ protected function searchInput_changeHandler(event:Event):void {
 				beautify = ace.require("ace/ext/beautify");
 				language = ace.require("ace/lib/lang");
 				ace.require("ace/ext/searchbox"); // search box set later
+				element = window.document.getElementById(editorIdentity);
+				if (element==null && createElementIfNeeded) {
+					element = document.createElement("div");
+					element.id = id;
+				}
 				editor = ace.edit(editorIdentity);
+				editor.$blockScrolling = Infinity;
 				element = editor.container;
 				
 				aceEditorFound = element!=null && element.env!=null && element.env.editor!=null;
@@ -1370,6 +1385,11 @@ protected function searchInput_changeHandler(event:Event):void {
  </pre>
 		 * */
 		public var editorIdentity:String = "editor";
+		
+		/**
+		 * Creates the element if it's not found on the page
+		 * */
+		public var createElementIfNeeded:Boolean = true;
 		
 		private var _theme:String = "ace/theme/crimson_editor";
 		
@@ -2477,7 +2497,7 @@ protected function searchInput_changeHandler(event:Event):void {
 					return true;
 				}
 				]]></xml>;
-				var results:String = ExternalInterface.call(string, line, center, animate, callBack);
+				var results:String = ExternalInterface.call(string, editorIdentity, line, center, animate, callBack);
 			}
 			else {
 				editor.scrollToLine(line, center, animate, callBack);
@@ -4498,6 +4518,27 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			else {
 				editor.selectToPosition(position);
+			}
+			
+		}
+		
+		/**
+		 * Selects the current line
+		 * */
+		public function selectLine(position:Object):void {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id) {
+					var editor = ace.edit(id);
+					editor.selectLine();
+					return true;
+				}
+				]]></xml>;
+				var results:Object = ExternalInterface.call(string, editorIdentity);
+			}
+			else {
+				editor.selectLine();
 			}
 			
 		}
@@ -6803,6 +6844,14 @@ editor.setCompleters(completers);
 				var display:Boolean = stage!=null;
 				var results:String = ExternalInterface.call(string, editorIdentity, false);
 			}
+			
+			if (isBrowser && hideWhenPopUp) {
+				if (popUpOverlayManager==null) {
+					popUpOverlayManager = PopUpOverlayManager.getInstance();
+				}
+				
+				popUpOverlayManager.removePopUpOverlay(this);
+			}
 		}
 		
 		/**
@@ -6825,7 +6874,18 @@ editor.setCompleters(completers);
 				var display:Boolean = stage!=null;
 				var results:String = ExternalInterface.call(string, editorIdentity, display);
 			}
+			
+			if (isBrowser && hideWhenPopUp) {
+				if (popUpOverlayManager==null) {
+					popUpOverlayManager = PopUpOverlayManager.getInstance();
+				}
+				
+				popUpOverlayManager.addPopUpOverlay(this);
+			}
 		}
+		
+		public var popUpOverlayManager:PopUpOverlayManager;
+		public var hideWhenPopUp:Boolean = true;
 		
 		public static var scriptAdded:Boolean;
 		public static var removeReferences:String = <xml><![CDATA[

@@ -9,7 +9,13 @@ package com.flexcapacitor.controls.supportClasses {
 			
 		}
 		
+		public var found:Boolean;
+		public var idToken:TokenInformation;
+		public var row:int;
+		public var column:int;
 		public var cursor:Object;
+		public var value:String;
+		public var innerValue:String;
 		public var token:Object;
 		public var tagName:QName;
 		public var uriTagName:QName;

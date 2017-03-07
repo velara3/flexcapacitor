@@ -15,7 +15,7 @@ package com.flexcapacitor.utils
 	 * */
 	public class ClassRegistry {
 		
-		public function ClassRegistry(domain:ApplicationDomain = null, defaultNamespace:QName = null) {
+		public function ClassRegistry(domain:ApplicationDomain = null, defaultNamespace:Namespace = null) {
 			
 			if (domain) {
 				this.domain = domain;
@@ -27,7 +27,10 @@ package com.flexcapacitor.utils
 					   targetNamespace="library://ns.adobe.com/flex/spark"
 					   xmlns="library://ns.adobe.com/flex/spark"
 					   elementFormDefault="qualified"/>);
-			this.defaultNamespace = defaultNamespace;
+			
+			if (defaultNamespace!=null) {
+				targetNamespace = defaultNamespace;
+			}
 		}
 		
 		private static var _instance:ClassRegistry;
@@ -242,8 +245,13 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 			
 			// First, map unqualified names to the target namespace, if the flag
 			// is explicitly set. (Used when looking up unqualified names by "ref")
-			if (prefix == null && qualifyToTargetNamespace == true && currentSchema) {
-				ns = currentSchema.targetNamespace;
+			if (prefix == null && qualifyToTargetNamespace == true) {
+				if (currentSchema) {
+					ns = currentSchema.targetNamespace;
+				}
+				else if (targetNamespace) {
+					ns = targetNamespace;
+				}
 			}
 			
 			// Otherwise, assume that unqualified names are in the default namespace.
@@ -361,8 +369,13 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 			
 			// First, map unqualified names to the target namespace, if the flag
 			// is explicitly set. (Used when looking up unqualified names by "ref")
-			if (key == null && qualifyToTargetNamespace == true && currentSchema) {
-				ns = currentSchema.targetNamespace;
+			if (key == null && qualifyToTargetNamespace == true) {
+				if (currentSchema) {
+					ns = currentSchema.targetNamespace;
+				}
+				else if (targetNamespace) {
+					ns = targetNamespace;
+				}
 			}
 			
 			if (ns) {
@@ -821,7 +834,7 @@ classRegistry.registerClass(componentQName, componentClass);
 		private var initialScope:Array;
 		private var _domain:ApplicationDomain;
 		
-		public var defaultNamespace:QName;
+		public var targetNamespace:Namespace;
 
 		public function get domain():ApplicationDomain
 		{

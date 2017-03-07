@@ -1,5 +1,7 @@
 package com.flexcapacitor.events
 {
+	import com.flexcapacitor.model.HTMLDragData;
+	
 	import flash.events.Event;
 	
 	public class HTMLDragEvent extends Event
@@ -12,7 +14,7 @@ package com.flexcapacitor.events
 		/**
 		 * Event data
 		 * */
-		public var data:Object;
+		public var data:HTMLDragData;
 	}
 }
 

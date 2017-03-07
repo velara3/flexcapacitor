@@ -542,6 +542,11 @@ package com.flexcapacitor.utils {
 		
 		
 		/**
+		 * Set this to true when events are redispatched and ctrl key value is not passed
+		 * */
+		public var runOnMouseDown:Boolean = false;
+		
+		/**
 		 * Set this to false to test on touch screen device. 
 		 * */
 		public var requireCTRLKey:Boolean = true;
@@ -864,6 +869,21 @@ package com.flexcapacitor.utils {
 					}
 					
 					addRulerHandlers(true, event);
+				}
+			}
+			else if (enabled && runOnMouseDown) {
+				
+				// ran into a case where event.ctrlkey was false clickHandler so adding option here
+				// to open on mouseDown
+				if (!requireCTRLKey || event.ctrlKey) {
+					// we are intercepting this event so we can inspect the target
+					// stop the event propagation
+					
+					// we don't stop the propagation on touch devices so you can navigate the application
+					if (requireCTRLKey) {
+						event.stopImmediatePropagation();
+					}
+					checkTarget(event.target, event);
 				}
 			}
 		}
@@ -1481,125 +1501,130 @@ package com.flexcapacitor.utils {
 			}
 			else {
 				// pulling in spark component dependencies (this is a debug time tool not a release build tool)
-				popUpDisplayGroup = new Group();
-				popUpDisplayImage = new Image();
-				popUpBorder = new Rect();
-				popUpBorder.percentWidth = 100;
-				popUpBorder.percentHeight = 100;
-				popUpBorder.stroke = new SolidColorStroke(outlineBorderColor, 1, 1, false, "normal", JointStyle.MITER);
-				
-				if (popUpBackgroundTransparentGrid) {
-					popUpBackground = new Rect();
-					popUpBackground.percentWidth = 100;
-					popUpBackground.percentHeight = 100;
-					popUpBackground.fill = new BitmapFill();
-					var fillSprite:Sprite = new Sprite();
-					fillSprite.graphics.beginFill(0xCCCCCC,1);
-					fillSprite.graphics.drawRect(0,0,10,10);
-					fillSprite.graphics.beginFill(0xFFFFFF,1);
-					fillSprite.graphics.drawRect(10,0,10,10);
-					fillSprite.graphics.beginFill(0xFFFFFF,1);
-					fillSprite.graphics.drawRect(0,10,10,10);
-					fillSprite.graphics.beginFill(0xCCCCCC,1);
-					fillSprite.graphics.drawRect(10,10,10,10);
-					BitmapFill(popUpBackground.fill).source = fillSprite;
-					BitmapFill(popUpBackground.fill).fillMode = BitmapFillMode.REPEAT;
+				if (popUpDisplayGroup ==null) {
+					popUpDisplayGroup = new Group();
+					popUpDisplayImage = new Image();
+					popUpBorder = new Rect();
+					popUpBorder.percentWidth = 100;
+					popUpBorder.percentHeight = 100;
+					popUpBorder.stroke = new SolidColorStroke(outlineBorderColor, 1, 1, false, "normal", JointStyle.MITER);
+					
+					if (popUpBackgroundTransparentGrid) {
+						popUpBackground = new Rect();
+						popUpBackground.percentWidth = 100;
+						popUpBackground.percentHeight = 100;
+						popUpBackground.fill = new BitmapFill();
+						var fillSprite:Sprite = new Sprite();
+						fillSprite.graphics.beginFill(0xCCCCCC,1);
+						fillSprite.graphics.drawRect(0,0,10,10);
+						fillSprite.graphics.beginFill(0xFFFFFF,1);
+						fillSprite.graphics.drawRect(10,0,10,10);
+						fillSprite.graphics.beginFill(0xFFFFFF,1);
+						fillSprite.graphics.drawRect(0,10,10,10);
+						fillSprite.graphics.beginFill(0xCCCCCC,1);
+						fillSprite.graphics.drawRect(10,10,10,10);
+						BitmapFill(popUpBackground.fill).source = fillSprite;
+						BitmapFill(popUpBackground.fill).fillMode = BitmapFillMode.REPEAT;
+					}
+					
+					popUpLabel = new Label();
+					popUpLabel.setStyle("backgroundColor", 0xFF0000);
+					popUpLabel.setStyle("color", 0xFFFFFF);
+					popUpLabel.setStyle("fontWeight", "bold");
+					popUpLabel.setStyle("fontSize", 12);
+					popUpLabel.setStyle("paddingTop", 3);
+					popUpLabel.setStyle("paddingBottom", 3);
+					popUpLabel.setStyle("paddingLeft", 6);
+					popUpLabel.setStyle("paddingRight", 4);
+					popUpLabel.useHandCursor = true;
+					popUpLabel.buttonMode = true;
+					
+					moveUpLabel = new Label();
+					moveUpLabel.styleName = popUpLabel;
+					moveUpLabel.useHandCursor = true;
+					moveUpLabel.buttonMode = true;
+					moveUpLabel.text = "UP";
+					moveUpLabel.setStyle("fontSize", 12);
+					moveUpLabel.setStyle("fontWeight", "bold");
+					moveUpLabel.minWidth = 1;
+					
+					moveLeftLabel = new Label();
+					moveLeftLabel.styleName = popUpLabel;
+					moveLeftLabel.useHandCursor = true;
+					moveLeftLabel.buttonMode = true;
+					moveLeftLabel.text = "L";
+					moveLeftLabel.setStyle("fontSize", 12);
+					moveLeftLabel.setStyle("fontWeight", "bold");
+					moveLeftLabel.minWidth = 1;
+					
+					moveRightLabel = new Label();
+					moveRightLabel.styleName = popUpLabel;
+					moveRightLabel.useHandCursor = true;
+					moveRightLabel.buttonMode = true;
+					moveRightLabel.text = "R";
+					moveRightLabel.setStyle("fontSize", 12);
+					moveRightLabel.setStyle("fontWeight", "bold");
+					moveRightLabel.minWidth = 1;
+					//moveUpLabel.width = 20;
+					//moveUpLabel.setStyle("backgroundColor", "#0000FF");
+					//moveUpLabel.setStyle("backgroundAlpha", 1);
+					//moveUpLabel.setStyle("paddingLeft", 2);
+					//moveUpLabel.setStyle("paddingRight", 0);
+					
+					popUpPropertyInput = new TextInput();
+					popUpValueInput = new TextInput();
+					popUpPropertyInput.setStyle("skinClass", TextInputSkin);
+					popUpValueInput.setStyle("skinClass", TextInputSkin);
+					
+					popUpPropertyInput.width = 100;
+					popUpValueInput.width = 200;
+					
+					popUpPropertyInput.alpha = .85;
+					popUpValueInput.alpha = .85;
+					popUpPropertyInput.x = 0;
+					//popUpValueInput.x = popUpPropertyInput.x + popUpPropertyInput.width + 5;
+					popUpPropertyInput.prompt = "Property";
+					popUpValueInput.prompt = "Value";
+					popUpPropertyInput.setStyle("prompt", "Property");
+					popUpValueInput.prompt = "Value";
+					popUpPropertyInput.tabIndex = 0;
+					popUpValueInput.tabIndex = 1;
+					
+					if (lastPropertyInputValue!=null && lastPropertyInputValue!="") {
+						popUpPropertyInput.text = lastPropertyInputValue;
+					}
+					
+					showInputControls(false);
+					popUpPropertyInput.addEventListener(KeyboardEvent.KEY_UP, propertyInputEnterHandler, false, 0, true);
+					popUpPropertyInput.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, propertyInputEnterHandler, false, 0, true);
+					popUpValueInput.addEventListener(KeyboardEvent.KEY_UP, valueInputEnterHandler, false, 0, true);
+					
+					var hgroup:HGroup = new HGroup();
+					var hgroup2:HGroup = new HGroup();
+					var vgroup:VGroup = new VGroup();
+					vgroup.gap = 0;
+					hgroup.gap = 1;
+					hgroup2.gap = 0;
+					vgroup.x = vgroup.y = 1;
+					
+					popUpDisplayGroup.addElement(popUpBackground);
+					popUpDisplayGroup.addElement(popUpDisplayImage);
+					popUpDisplayGroup.addElement(popUpBorder);
+					
+					hgroup.addElement(moveUpLabel);
+					hgroup.addElement(moveLeftLabel);
+					hgroup.addElement(moveRightLabel);
+					hgroup.addElement(popUpLabel);
+					hgroup2.addElement(popUpPropertyInput);
+					hgroup2.addElement(popUpValueInput);
+					vgroup.addElement(hgroup);
+					vgroup.addElement(hgroup2);
+					vgroup.id = "popUpLabelGroup";
+					popUpDisplayGroup.addElement(vgroup);
 				}
-				
-				popUpLabel = new Label();
-				popUpLabel.setStyle("backgroundColor", 0xFF0000);
-				popUpLabel.setStyle("color", 0xFFFFFF);
-				popUpLabel.setStyle("fontWeight", "bold");
-				popUpLabel.setStyle("fontSize", 12);
-				popUpLabel.setStyle("paddingTop", 3);
-				popUpLabel.setStyle("paddingBottom", 3);
-				popUpLabel.setStyle("paddingLeft", 6);
-				popUpLabel.setStyle("paddingRight", 4);
-				popUpLabel.useHandCursor = true;
-				popUpLabel.buttonMode = true;
-				
-				moveUpLabel = new Label();
-				moveUpLabel.styleName = popUpLabel;
-				moveUpLabel.useHandCursor = true;
-				moveUpLabel.buttonMode = true;
-				moveUpLabel.text = "UP";
-				moveUpLabel.setStyle("fontSize", 12);
-				moveUpLabel.setStyle("fontWeight", "bold");
-				moveUpLabel.minWidth = 1;
-				
-				moveLeftLabel = new Label();
-				moveLeftLabel.styleName = popUpLabel;
-				moveLeftLabel.useHandCursor = true;
-				moveLeftLabel.buttonMode = true;
-				moveLeftLabel.text = "L";
-				moveLeftLabel.setStyle("fontSize", 12);
-				moveLeftLabel.setStyle("fontWeight", "bold");
-				moveLeftLabel.minWidth = 1;
-				
-				moveRightLabel = new Label();
-				moveRightLabel.styleName = popUpLabel;
-				moveRightLabel.useHandCursor = true;
-				moveRightLabel.buttonMode = true;
-				moveRightLabel.text = "R";
-				moveRightLabel.setStyle("fontSize", 12);
-				moveRightLabel.setStyle("fontWeight", "bold");
-				moveRightLabel.minWidth = 1;
-				//moveUpLabel.width = 20;
-				//moveUpLabel.setStyle("backgroundColor", "#0000FF");
-				//moveUpLabel.setStyle("backgroundAlpha", 1);
-				//moveUpLabel.setStyle("paddingLeft", 2);
-				//moveUpLabel.setStyle("paddingRight", 0);
-				
-				popUpPropertyInput = new TextInput();
-				popUpValueInput = new TextInput();
-				popUpPropertyInput.setStyle("skinClass", TextInputSkin);
-				popUpValueInput.setStyle("skinClass", TextInputSkin);
-				
-				popUpPropertyInput.width = 100;
-				popUpValueInput.width = 200;
-				
-				popUpPropertyInput.alpha = .85;
-				popUpValueInput.alpha = .85;
-				popUpPropertyInput.x = 0;
-				//popUpValueInput.x = popUpPropertyInput.x + popUpPropertyInput.width + 5;
-				popUpPropertyInput.prompt = "Property";
-				popUpValueInput.prompt = "Value";
-				popUpPropertyInput.setStyle("prompt", "Property");
-				popUpValueInput.prompt = "Value";
-				popUpPropertyInput.tabIndex = 0;
-				popUpValueInput.tabIndex = 1;
-				
-				if (lastPropertyInputValue!=null && lastPropertyInputValue!="") {
-					popUpPropertyInput.text = lastPropertyInputValue;
+				else {
+					showInputControls(false);
 				}
-				
-				showInputControls(false);
-				popUpPropertyInput.addEventListener(KeyboardEvent.KEY_UP, propertyInputEnterHandler, false, 0, true);
-				popUpPropertyInput.addEventListener(FocusEvent.KEY_FOCUS_CHANGE, propertyInputEnterHandler, false, 0, true);
-				popUpValueInput.addEventListener(KeyboardEvent.KEY_UP, valueInputEnterHandler, false, 0, true);
-				
-				var hgroup:HGroup = new HGroup();
-				var hgroup2:HGroup = new HGroup();
-				var vgroup:VGroup = new VGroup();
-				vgroup.gap = 0;
-				hgroup.gap = 1;
-				hgroup2.gap = 0;
-				vgroup.x = vgroup.y = 1;
-				
-				popUpDisplayGroup.addElement(popUpBackground);
-				popUpDisplayGroup.addElement(popUpDisplayImage);
-				popUpDisplayGroup.addElement(popUpBorder);
-				
-				hgroup.addElement(moveUpLabel);
-				hgroup.addElement(moveLeftLabel);
-				hgroup.addElement(moveRightLabel);
-				hgroup.addElement(popUpLabel);
-				hgroup2.addElement(popUpPropertyInput);
-				hgroup2.addElement(popUpValueInput);
-				vgroup.addElement(hgroup);
-				vgroup.addElement(hgroup2);
-				vgroup.id = "popUpLabelGroup";
-				popUpDisplayGroup.addElement(vgroup);
 			}
 			
 			if (displayTarget==systemManagerObject && isApplication(lastTarget)) {

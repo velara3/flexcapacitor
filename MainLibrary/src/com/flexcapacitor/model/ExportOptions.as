@@ -13,6 +13,11 @@ package com.flexcapacitor.model
 		}
 		
 		/**
+		 * Exports the full document rather than the selected target
+		 * */
+		public var exportFullDocument:Boolean;
+		
+		/**
 		 * Indicates if the exporter should create files
 		 * */
 		public var createFiles:Boolean;

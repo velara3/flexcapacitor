@@ -1,11 +1,15 @@
 package com.flexcapacitor.utils
 {
 	import com.flexcapacitor.events.HTMLDragEvent;
+	import com.flexcapacitor.model.HTMLDragData;
 	
 	import flash.events.EventDispatcher;
 	import flash.external.ExternalInterface;
+	import flash.utils.ByteArray;
 	
 	import mx.core.IMXMLObject;
+	import mx.utils.Base64Decoder;
+	import mx.utils.Base64Encoder;
 
 	
 	/**
@@ -50,19 +54,19 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 	}
 }
 </pre>
-	 * 
-	 * Errors: 
+	 * <br/>
+	 * Errors: <br/><br/>
 	 * 
 	 * SecurityError: Error #2060: Security sandbox violation: ExternalInterface caller file:///Users/me/Documents/projects/myproject/MyApp/bin-debug/MyApp.swf cannot access file:///Users/me/Documents/projects/myproject/MyApp/bin-debug/MyApp.html.
 		at flash.external::ExternalInterface$/_initJS()
 		at flash.external::ExternalInterface$/call()
-		at com.flexcapacitor.utils::HTMLDragManager$/isSupported()[/Users/me/Documents/projects/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/HTMLDragManager.as:114]
+		at com.flexcapacitor.utils::HTMLDragManager$/isSupported()[/Users/me/Documents/projects/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/HTMLDragManager.as:114]<br/>
 	 * 
-	 * Possible Solutions: 
-	 * Run clean and try again. 
-	 * Restart FB or your browser and launch again
-	 * Instead of running the page on file:// use http:// 
-	 * In your wrapper page set allowscriptaccess: "always"
+	 * Possible Solutions: <br/>
+	 * Run clean and try again. <br/>
+	 * Restart FB or your browser and launch again<br/>
+	 * Instead of running the page on file:// use http:// <br/>
+	 * In your wrapper page set allowscriptaccess: "always"<br/>
 	 * http://stackoverflow.com/questions/26921469/swf-sandbox-violation-error-2060-in-chrome
 	 * */
 	public class HTMLDragManager extends EventDispatcher implements IMXMLObject {
@@ -104,6 +108,7 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		 * */
 		public var elementIdentity:String = "body";
 		public var created:Boolean;
+		public var id:String;
 		public static var debug:Boolean;
 		
 		public function createChildren():void {
@@ -254,11 +259,20 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 			}
 		}
 		
+		/**
+		 * Sometimes type is null or empty string. The data URI for this is:
+		 * 
+		 * data:;base64,
+		 * 
+		 * For example, if you drop .DS_Store this is the data URI string.  
+		 * */
 		public function dragDropHandler(file:Object):void {
+			var event:HTMLDragEvent;
+			var data:HTMLDragData;
 			
 			if (hasEventListener(DRAG_DROP)) {
-				var event:HTMLDragEvent = new HTMLDragEvent(DRAG_DROP);
-				event.data = file;
+				event = new HTMLDragEvent(DRAG_DROP);
+				event.data = new HTMLDragData(file);
 				dispatchEvent(event);
 			}
 		}
@@ -466,7 +480,90 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		 * Called when MXML document is initialized
 		 * */
 		public function initialized(document:Object, id:String):void {
+			this.id = id;
+		}
+		
+		public static var removeBase64HeaderPattern:RegExp = /.*base64,/si;
+		public static var lineEndingsGlobalPattern:RegExp = /\n/g;
+		
+		/**
+		 * Used to encode images
+		 * */
+		public static var base64Encoder:Base64Encoder;
+		
+		/**
+		 * Used to decode images
+		 * */
+		public static var base64Decoder:Base64Decoder;
+		
+		/**
+		 * Alternative base 64 encoder based on Base64. You must set this to the class for it to be used.
+		 * */
+		public static var Base64Encoder2:Object;
+		
+		/**
+		 * Alternative base 64 decoder based on Base64. You must set this to the class for it to be used.
+		 * */
+		public static var Base64Decoder2:Object;
+		
+		/**
+		 * Returns a byte array from a base 64 string. Need to remove the header text, ie "data:image/png;base64,"
+		 * and possibly line breaks.
+		 * 
+		 * @param alternativeEncoder Set the static Base64Decoder2 property to an alternative decoder before calling this.
+		 * @see #getBitmapDataFromByteArray()
+		 * @see #getBase64ImageData()
+		 * @see #getBase64ImageDataString()
+		 * */
+		public static function getByteArrayFromBase64(encoded:String, alternativeDecoder:Boolean = false, removeHeader:Boolean = true, removeLinebreaks:Boolean = true):ByteArray {
+			var results:ByteArray;
 			
+			if (!alternativeDecoder) {
+				if (!base64Decoder) {
+					base64Decoder = new Base64Decoder();
+				}
+				
+				if (removeHeader) {
+					encoded = encoded.replace(removeBase64HeaderPattern, "");
+				}
+				
+				if (removeLinebreaks) {
+					encoded = encoded.replace(lineEndingsGlobalPattern, "");
+				}
+				
+				base64Decoder.reset();
+				base64Decoder.decode(encoded);
+				results = base64Decoder.toByteArray();
+				
+				// if you get the following error then try removing the header or line breaks
+				//    Error: A partial block (3 of 4 bytes) was dropped. Decoded data is probably truncated!
+			}
+			else {
+				if (Base64Decoder2==null) {
+					throw new Error("Set the static alternative base decoder before calling this method");
+				}
+				
+				if (removeHeader) {
+					encoded = encoded.replace(removeBase64HeaderPattern, "");
+				}
+				
+				if (removeLinebreaks) {
+					encoded = encoded.replace(lineEndingsGlobalPattern, "");
+				}
+				
+				Base64Decoder2.reset();
+				Base64Decoder2.decode(encoded);
+				results = Base64Decoder2.toByteArray();
+			}
+			
+			/*
+			Error: A partial block (3 of 4 bytes) was dropped. Decoded data is probably truncated!
+			at mx.utils::Base64Decoder/flush()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/utils/Base64Decoder.as:139]
+			at mx.utils::Base64Decoder/toByteArray()[/Users/justinmclean/Documents/ApacheFlex4.15/frameworks/projects/framework/src/mx/utils/Base64Decoder.as:173]
+			at com.flexcapacitor.utils::DisplayObjectUtils$/getByteArrayFromBase64()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/DisplayObjectUtils.as:1673]
+			*/
+			
+			return results as ByteArray;
 		}
 	}
 }
