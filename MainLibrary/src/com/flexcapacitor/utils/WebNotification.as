@@ -7,8 +7,34 @@ package com.flexcapacitor.utils
 	/**
 	 * Prompts the user with a notification in the browser
 	 * 
-	 * In Safari permission is denied when running on the file sytem 
+	 * 
+	 * Example usage:  
+<pre>
+import com.flexcapacitor.utils.WebNotification;
+
+var supported:Boolean = WebNotification.isSupported();
+var options:Object = {};
+var prompt:Boolean = true;
+
+if (supported) {
+	WebNotification.showNotification("Hello world", options, prompt);
+}
+
+protected function checkPermissions_clickHandler(event:MouseEvent):void
+{
+	var supported:Boolean = WebNotification.isPermissionGranted();
+	var permission:String = WebNotification.permission;
+	var results:String = WebNotification.requestPermission();
+	if (results=="false") {
+		resultsInput.text = "Not supported";
+	}
+}
+</pre>
+	 * 
+	 * In Safari permission is denied without prompt when running on the file sytem 
 	 * When running on locahost notifications are supported
+	 * 
+	 * More info: https://developer.mozilla.org/en-US/docs/Web/API/notification
 	 * */
 	public class WebNotification extends EventDispatcher
 	{
@@ -134,7 +160,10 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
-		 * Get current permission status
+		 * Get current permission status. 
+		 * Known results can be "granted", "denied" or "false"
+		 * A value of false means that Notifications feature was not found in the 
+		 * current browser. Example, !("Notification" in window)
 		 * */
 		public static function get permission():String {
 			
@@ -151,7 +180,7 @@ package com.flexcapacitor.utils
 			var results:String = ExternalInterface.call(string);
 			
 			if (results=="false") {
-				return "Not supported";
+				return "false";
 			}
 			
 			return results;

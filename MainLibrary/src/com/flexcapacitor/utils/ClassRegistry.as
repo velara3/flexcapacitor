@@ -7,7 +7,23 @@ package com.flexcapacitor.utils
 	import mx.rpc.xml.Schema;
 
 	/**
-	 * Manages classes and namespaces in an XML document
+	 * Manages classes and namespaces in an XML document.
+	 * 
+	 * Will return the class object from a XML node or QName
+	 * Or will return the namespace and QName from a class.
+	 * 
+	 * You must add or register classes before using. Use the ClassLoader to load the Flex SDK classes.
+	 * 
+	 * Usage: 
+<pre>
+var classRegistry:ClassRegistry = ClassRegistry.getInstance();
+classRegistry.addNamespace(new Namespace("s", "library://ns.adobe.com/flex/spark"));
+classRegistry.registerClass("spark.controls.Button", "library://ns.adobe.com/flex/spark");
+var classObject:Object = classRegistry.getClass(<s:Button xmlns:s="library://ns.adobe.com/flex/spark"/>);
+var button:spark.controls.Button = new classObject();
+var qualifiedNameObject:QName = classRegistry.getQNameForType("spark.controls.Button");
+// qualifiedNameObject.uri is library://ns.adobe.com/flex/spark and qualifiedNameObject.localName is Button
+</pre>
 	 * 
 	 * Merges SchemaTypeRegistry.xml.rpc.mx
 	 * Merges SchemaManager
@@ -15,7 +31,7 @@ package com.flexcapacitor.utils
 	 * */
 	public class ClassRegistry {
 		
-		public function ClassRegistry(domain:ApplicationDomain = null, defaultNamespace:Namespace = null) {
+		public function ClassRegistry(domain:ApplicationDomain = null, defaultNamespace:Namespace = null, defaultNamespaces:Array = null) {
 			
 			if (domain) {
 				this.domain = domain;
@@ -23,6 +39,7 @@ package com.flexcapacitor.utils
 			
 			initialScope = [];
 			schemaStack = [];
+			defaultNamespaces = [];
 			initialScope.push(<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" 
 					   targetNamespace="library://ns.adobe.com/flex/spark"
 					   xmlns="library://ns.adobe.com/flex/spark"
@@ -30,6 +47,10 @@ package com.flexcapacitor.utils
 			
 			if (defaultNamespace!=null) {
 				targetNamespace = defaultNamespace;
+			}
+			
+			if (defaultNamespaces) {
+				this.defaultNamespaces = defaultNamespaces.slice();
 			}
 		}
 		
@@ -330,12 +351,53 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 			var qname:QName;
 			var key:String;
 			
-			qualifiedClassName = getQualifiedClassName(object);
+			qualifiedClassName = getSanitizedClassName(object);
 			
 			key = definitionNameMap[qualifiedClassName];
-			qname = getQNameFromKey(key);
+			
+			if (key) {
+				qname = getQNameFromKey(key);
+			}
 			
 			return qname;
+		}
+		
+		/**
+		 * Gets the qname for the type. 
+		 * If you pass a Spark Button or "spark.controls.Button" it returns 
+		 * new QName("s", "library://ns.adobe.com/flex/spark").
+		 * 
+		 * @param type Type can be an class or a string
+		 * @param qualifyToTargetNamespace A switch controlling the behavior for
+		 * unqualified names. If false, unqualified names are assumed to be prefixed
+		 * by "" and a xmlns="..." declaration is looked up. If no xmlns=".."
+		 * declaration is in scope, and the parent node is in the default namespace,
+		 * the prefixedName is resolved to the default namespace. Otherwise, it is
+		 * resolved to the targetNamespace of the current schema. If qualifyToTargetNamespace
+		 * is true, unqualified names are assumed to be in the target namespace of
+		 * the current schema, regardless of declarations for unprefixed namespaces.
+		 * qualifyToTargetNamespace should be true when resolving names coming from
+		 * the following schema attributes: name, ref.
+		 * */
+		public function getNamespaceForType(object:Object, qualifyToTargetNamespace:Boolean=false):Namespace {
+			var qualifiedClassName:String;
+			var qname:QName;
+			var key:String;
+			var objectNamespace:Namespace;
+			
+			qualifiedClassName = getSanitizedClassName(object);
+			
+			key = definitionNameMap[qualifiedClassName];
+			
+			if (key) {
+				qname = getQNameFromKey(key);
+			
+				if (qname && qname.uri && qname.localName) {
+					objectNamespace = new Namespace(qname.localName, qname.uri);
+				}
+			}
+			
+			return objectNamespace;
 		}
 		
 		/**
@@ -363,7 +425,7 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 			var ns:Namespace;
 			var localNamespaces:Array;
 			
-			qualifiedClassName = getQualifiedClassName(object);
+			qualifiedClassName = getSanitizedClassName(object);
 			
 			key = definitionNameMap[qualifiedClassName];
 			
@@ -465,7 +527,12 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 				prefix = getPrefixForURI(uri);
 			}
 			
-			qname = new QName(prefix, uri);
+			if (prefix!=null) {
+				qname = new QName(uri, prefix);
+			}
+			else {
+				qname = new QName(uri);
+			}
 			
 			return qname;
 		}
@@ -524,6 +591,30 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 			}
 			
 			return localName;
+		}
+		
+		
+		/**
+		 * Returns the qualified class name with colons removed by deafult.
+		 * 
+		 * If qualified class name is "spark.controls::Button" 
+		 * then "spark.controls.Button" is returned.
+		 * */
+		public function getSanitizedClassName(object:Object, replaceSeparator:Boolean = true):String {
+			var qualifiedName:String;
+			
+			if (object is String) {
+				qualifiedName = object as String;
+			}
+			else {
+				qualifiedName = getQualifiedClassName(object);
+			}
+			
+			if (replaceSeparator && qualifiedName.indexOf("::")!=-1) {
+				qualifiedName = qualifiedName.replace("::", ".");
+			}
+			
+			return qualifiedName;
 		}
 		
 		/**
@@ -609,6 +700,9 @@ classRegistry.addNamespaces(xml.namespaceDeclarations());
 			if (type != null) {
 				if (type is String && uri!=null) {
 					type = new QName(uri, type);
+				}
+				else if (type is XML) {
+					type = XML(type).name();
 				}
 				
 				key = getKey(type);
@@ -767,7 +861,7 @@ classRegistry.registerClass(componentQName, componentClass);
 		 * 
 		 * @param type The QName or String representation of the type name.
 		 */
-		protected function getKey(type:Object):String {
+		public function getKey(type:Object):String {
 			var key:String;
 			
 			if (type is QName) {
@@ -835,6 +929,7 @@ classRegistry.registerClass(componentQName, componentClass);
 		private var _domain:ApplicationDomain;
 		
 		public var targetNamespace:Namespace;
+		public var defaultNamespaces:Array;
 
 		public function get domain():ApplicationDomain
 		{

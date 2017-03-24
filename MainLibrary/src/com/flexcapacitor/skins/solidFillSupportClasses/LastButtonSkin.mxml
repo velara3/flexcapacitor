@@ -119,7 +119,7 @@
     
     <!-- layer 7: border - put on top of the fill so it doesn't disappear when scale is less than 1 -->
     <!--- @private -->
-    <s:Rect id="border" left="0" right="0" top="0" bottom="0" width="69" height="20" topRightRadiusX="2" bottomRightRadiusX="2">
+    <s:Rect id="border" left="0" right="0" top="0" bottom="0" topRightRadiusX="2" bottomRightRadiusX="2">
         <s:stroke>
             <s:LinearGradientStroke rotation="90" weight="1">
                 <s:GradientEntry color="0x000000" 

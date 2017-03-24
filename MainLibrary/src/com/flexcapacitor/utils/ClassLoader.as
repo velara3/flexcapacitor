@@ -153,7 +153,9 @@ package com.flexcapacitor.utils
 			
 			if (debug) trace("Loaded:" + namespaceURI);
 			
-			classRegistry = ClassRegistry.getInstance();
+			if (classRegistry==null) {
+				classRegistry = ClassRegistry.getInstance();
+			}
 			
 			
 			for each (var component:XML in componentsList) {

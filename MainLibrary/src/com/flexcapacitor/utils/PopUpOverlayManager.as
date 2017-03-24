@@ -129,7 +129,7 @@ package com.flexcapacitor.utils
 			
 			for (var overlay:Object in hiddenOverlays) {
 				
-				popup = hiddenOverlays[overlay];
+				popup = hiddenOverlays[overlay] as DisplayObject;
 				
 				if (popup==removedDisplayObject) {
 					overlay.visible = true;
@@ -164,7 +164,7 @@ package com.flexcapacitor.utils
 			
 			for (var overlay:Object in overlays) {
 				
-				if (overlay.visible==false || !onlyVisible) {
+				if (overlay.visible==true || !onlyVisible) {
 					overlay.visible = false;
 					hiddenOverlays[overlay] = 1;
 				}

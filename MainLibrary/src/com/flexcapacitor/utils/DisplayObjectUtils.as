@@ -2996,7 +2996,9 @@ trace(size); // {width = 200, height = 100}
 		}
 		
 		/**
-		 *  Creates a BitmapData representation of the target object. 
+		 * Creates a BitmapData representation of the target object but uses drawWithQuality if 
+		 * quality is set. This function is from the BitmapUtil class. 
+		 *  
 		 *  Note: This seems to add a lot of padding in some tests.<br/><br/>
 		 *
 		 *  Copied from spark.utils.BitmapUtil<br/><br/>
@@ -3089,6 +3091,7 @@ trace(size); // {width = 200, height = 100}
 			
 			return bitmapData;
 		}
+		
 		/**
 		 * Get bitmap data of the display object passed to it
 		 * padding doesn't seem to work

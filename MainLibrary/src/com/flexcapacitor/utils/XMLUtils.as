@@ -1188,6 +1188,25 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Get attribute value. Decodes attribute values
+		 * 
+		 * @param node XML item
+		 * */
+		public static function getAttributeValue(node:XML, attributeName:String, decode:Boolean = true):String {
+			var result:String;
+			var attributeValue:String;
+			
+			if (decode) {
+				result = decodeAttributeString(node.attribute(attributeName).toString());
+			}
+			else {
+				result = node.attribute(attributeName).toString();
+			}
+			
+			return result;
+		}
+		
+		/**
 		 * Get name value pair from attributes from a node. Decodes attribute values
 		 * 
 		 * @param node XML item

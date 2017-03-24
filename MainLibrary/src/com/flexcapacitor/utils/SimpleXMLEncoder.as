@@ -49,6 +49,8 @@ package com.flexcapacitor.utils
 			this.myXMLDoc = myXML ? myXML : new XML();
 		}
 		
+		public static var classRegistry:ClassRegistry;
+		
 		private static const NUMBER_TYPE:uint   = 0;
 		private static const STRING_TYPE:uint   = 1;
 		private static const OBJECT_TYPE:uint   = 2;
@@ -116,12 +118,13 @@ package com.flexcapacitor.utils
 		 *
 		 *  @return The XML object. 
 		 */
-		public function encodeValue(object:Object, qname:QName = null, parentNode:XML = null, depth:int = 100):XML {
+		public function encodeValue(object:Object, qname:QName = null, parentNode:XML = null, depth:int = 100, skipProperties:Array = null):XML {
 			var myElement:XML;
 			var nodeName:String;
 			var isColorPossibly:Boolean;
 			var childIndex:int;
 			var typeType:uint;
+			var qualifiedClassName:QName;
 			
 			if (depth < 0) {
 				return null;
@@ -172,7 +175,38 @@ package com.flexcapacitor.utils
 				nodeName = nodeName.replace("::", ".");
 			}
 			
+			if (classRegistry==null) {
+				classRegistry = ClassRegistry.getInstance();
+			}
+			
+			if (qname==null) {
+				qualifiedClassName = classRegistry.getQNameForType(object);
+				var namespaceForType:Namespace = classRegistry.getNamespaceForType(object);
+				//prefixedName = classRegistry.getQNameForType(object);
+				if (qualifiedClassName!=null) {
+					qname = qualifiedClassName;
+					//nodeName = qname.localName;
+				}
+			}
+			
+			
 			myElement.setName(nodeName);
+			
+			if (skipProperties!=null && skipProperties.length) {
+				if (skipProperties.indexOf(nodeName)!=-1) {
+					if (encodePrimitivesAsAttributes) {
+						
+						if (parentNode && myElement.childIndex()!=-1) {
+							delete parentNode[myElement.localName()][myElement.childIndex()];
+							childIndex = myElement.childIndex();
+							delete parentNode[myElement.name()][myElement.childIndex()];
+							childIndex = myElement.childIndex();
+						}
+					}
+					return null;
+				}
+			}
+			
 			
 			if (qname && qname.uri) {
 				//myElement.setNamespace(qname.uri);
@@ -204,7 +238,7 @@ package com.flexcapacitor.utils
 				{
 					var fieldName:String = properties[p];
 					var propQName:QName = new QName("", fieldName);
-					encodeValue(object[fieldName], propQName, myElement, depth-1);
+					encodeValue(object[fieldName], propQName, myElement, depth-1, skipProperties);
 				}
 			}
 			else if (typeType == SimpleXMLEncoder.ARRAY_TYPE)
@@ -215,7 +249,7 @@ package com.flexcapacitor.utils
 				
 				for (var i:uint = 0; i < numMembers; i++)
 				{
-					encodeValue(object[i], itemQName, myElement, depth-1);
+					encodeValue(object[i], itemQName, myElement, depth-1, skipProperties);
 				}
 			}
 			else

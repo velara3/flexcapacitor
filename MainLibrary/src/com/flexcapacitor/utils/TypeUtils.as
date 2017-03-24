@@ -177,7 +177,7 @@ package com.flexcapacitor.utils {
 		public static function getTypedValue(value:Object, type:String=null):* {
 			
 			// if type is not set then guess
-			if (!type) {
+			if (type==null) {
 				type = getValueType(value);
 			}
 			
