@@ -6328,6 +6328,10 @@ public function codeCompleter(editor, session, position, prefix, callback):void 
 					var classObject;
 					var autoCompleteList;
 					var propertyObject;
+					
+					if (typeof property == "undefined") {
+						property = null;
+					}
 
 					if (debug) console.log("Setting completer suggestions:"+ className, property);
 					if (application.completer==null) {
@@ -6801,6 +6805,7 @@ editor.setCompleters(completers);
 		 * Helper method for handling browser events 
 		 * */
 		public function browserCallbackHandler(callbackName:String, event:Object):void {
+			if (isValueCommit) return;
 			var type:String = callbackName.split("_")[1];
 			var aceEvent:AceEvent = new AceEvent(type);
 			aceEvent.data = event;
@@ -6850,7 +6855,7 @@ editor.setCompleters(completers);
 					popUpOverlayManager = PopUpOverlayManager.getInstance();
 				}
 				
-				popUpOverlayManager.removePopUpOverlay(this);
+				popUpOverlayManager.removeOverlay(this);
 			}
 		}
 		
@@ -6880,7 +6885,7 @@ editor.setCompleters(completers);
 					popUpOverlayManager = PopUpOverlayManager.getInstance();
 				}
 				
-				popUpOverlayManager.addPopUpOverlay(this);
+				popUpOverlayManager.addOverlay(this);
 			}
 		}
 		

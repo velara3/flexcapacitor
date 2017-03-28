@@ -1,6 +1,7 @@
 /* CSS file */
 @namespace s "library://ns.adobe.com/flex/spark";
 @namespace controls "com.flexcapacitor.controls.*";
+@namespace skins "com.flexcapacitor.skins.*";
 
 controls|BorderContainer {
 	skinClass: ClassReference("com.flexcapacitor.skins.BorderContainerSkin");
@@ -117,4 +118,30 @@ controls|AceSearchTextInput {
 
 controls|RichTextEditorBar {
 	skinClass: ClassReference("com.flexcapacitor.skins.RichTextEditorBarSkin");
+}
+
+controls|Callout {
+	skinClass: ClassReference("com.flexcapacitor.skins.CallOutSkin");
+}
+
+skins|CallOutSkin {
+	borderAlpha: 1;
+	borderThickness: 1;
+	borderColor: #000000;
+	backgroundColor: #FFFFFF;
+	contentBackgroundAppearance: flat;
+	useBackgroundGradient: false;
+	arrowWidth: 22;
+	arrowHeight: 13;
+	contentCornerRadius: 8;
+	backgroundCornerRadius: 8;
+	frameThickness: 6;
+	frameAlpha: 1;
+	highlightWeight: 0.5;
+	dropShadowBlurX: 12;
+	dropShadowBlurY: 12;
+	dropShadowDistance: 2;
+	dropShadowAngle: 90;
+	dropShadowAlpha: 0.7;
+	fadeDuration: 200;
 }

@@ -327,7 +327,7 @@ package com.flexcapacitor.utils
 			
 			memberNames 		= ClassUtils.getMemberNames(object);
 			attributes 			= node.attributes();
-			attributeNames 		= XMLUtils.convertXMLListToArray(attributes);
+			attributeNames 		= convertXMLListToArray(attributes);
 			
 			// check if default property is defined as an attribute
 			if (attributeNames.indexOf(defaultProperty)!=-1) {
@@ -335,7 +335,7 @@ package com.flexcapacitor.utils
 			}
 			
 			childNodes			= node.children();
-			childNodeNames 		= XMLUtils.getChildNodeNames(node);
+			childNodeNames 		= getChildNodeNames(node);
 			
 			// check if default property is defined as a child node
 			if (childNodeNames.indexOf(defaultProperty)!=-1) {
@@ -684,7 +684,7 @@ package com.flexcapacitor.utils
 				if (htmlLoader==null) {
 					// Error: The validateXML() call was invalid. 
 					// You must call initialize() a few frames before calling validateXML().
-					// Example: XMLUtils.initialize();
+					// Example: initialize();
 					throw new Error(notInitializedMessage);
 				}
 				
@@ -744,7 +744,7 @@ package com.flexcapacitor.utils
 					throw new Error("Could not find class for XML validation. Check the spelling and ensure to add a reference to include the class.");
 				}
 			}
-			else if (HTMLLoaderClass==null && Platform.isAir || Platform.isDesktop) {
+			else if (HTMLLoaderClass==null && (Platform.isAir || Platform.isDesktop)) {
 				htmlClassName = defaultHTMLClassName;
 				
 				if (ApplicationDomain.currentDomain.hasDefinition(htmlClassName)) {
@@ -755,7 +755,7 @@ package com.flexcapacitor.utils
 				}
 			}
 			
-			htmlText = "<html><script>"+XMLUtils.browserXMLValidationScriptDesktop+"</script><body></body></html>";
+			htmlText = "<html><script>"+browserXMLValidationScriptDesktop+"</script><body></body></html>";
 			htmlLoader = new HTMLLoaderClass();
 			htmlLoader.loadString(htmlText);
 			htmlLoader.addEventListener(Event.COMPLETE, function(e:Event):void {htmlLoaderLoaded = true;});
@@ -836,7 +836,7 @@ package com.flexcapacitor.utils
 							trace("Error:" + error.toString());
 						});
 						var out:String = ""
-						instance.loadURL("javascript:"+XMLUtils.browserXMLValidationScriptDesktop);
+						instance.loadURL("javascript:"+browserXMLValidationScriptDesktop);
 						var output:String = "javascript:validateXMLWebView(\""+JSON.stringify(xml)+"\")";
 						instance.loadURL(output);
 					}
@@ -848,7 +848,7 @@ package com.flexcapacitor.utils
 			var hasMarker:Boolean = hasByteOrderMarker(value);
 			
 			if (hasMarker) {
-				byteMarkerType = XMLUtils.getByteOrderMarkerType(value);
+				byteMarkerType = getByteOrderMarkerType(value);
 				validationInfo.hasMarker = true;
 				validationInfo.byteMarkerType = byteMarkerType;
 			}
@@ -1361,12 +1361,12 @@ var xml:XML = XMLUtils.getXMLFromStringWithNamespaces(code, namespaces);
 			// this method takes 3-4x as long as the second
 			if (!(namespaces is String)) {
 				updatedCode = addNamespacesToXMLString(code, namespaces);
-				isValid = XMLUtils.isValidXML(updatedCode);
+				isValid = isValidXML(updatedCode);
 			}
 			else {
 				root = '<'+rootNodeName + " " + namespaces +'>\n';
 				updatedCode = root + code + "\n</"+rootNodeName+">";
-				isValid = XMLUtils.isValidXML(updatedCode);
+				isValid = isValidXML(updatedCode);
 				secondMethod = true;
 			}
 			
@@ -1377,11 +1377,11 @@ var xml:XML = XMLUtils.getXMLFromStringWithNamespaces(code, namespaces);
 			XML.prettyPrinting = false;
 			XML.ignoreProcessingInstructions = false;
 			
-			isValid = XMLUtils.isValidXML(updatedCode);
-			//error = XMLUtils.validationError;
+			isValid = isValidXML(updatedCode);
+			//error = validationError;
 			
 			if (!isValid) {
-				validationInfo = XMLUtils.validateXML(code);
+				validationInfo = validateXML(code);
 				error = validationInfo.error;
 				
 				if (error is TypeError && error.errorID==1083) {

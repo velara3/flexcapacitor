@@ -174,6 +174,8 @@ package com.flexcapacitor.controls
 		public var defaultLinkTargetText:String = "_blank";
 		public var fontSizeVector:Vector.<String> = new <String>["fontSize"];
 		public var selectLinkOnFocus:Boolean = true;
+		public var focusOnTextAfterFontChange:Boolean = true;
+		public var focusOnTextAfterFontSizeChange:Boolean = true;
 		
 		private var _richEditableText:RichEditableText;
 
@@ -380,7 +382,7 @@ package com.flexcapacitor.controls
 			if (instance == fontTool)
 			{
 				fontTool.addEventListener(IndexChangeEvent.CHANGE, handleFontChange, false, 0, true);
-				fontTool.toolTip = "Font Family";
+				//fontTool.toolTip = "Font Family";
 				
 				if (fontDataProvider) {
 					fontTool.dataProvider = fontDataProvider;
@@ -390,7 +392,7 @@ package com.flexcapacitor.controls
 			if (instance == fontSizeTool)
 			{
 				fontSizeTool.addEventListener(IndexChangeEvent.CHANGE, handleSizeChange, false, 0, true);
-				fontSizeTool.toolTip = "Font Size";
+				//fontSizeTool.toolTip = "Font Size";
 			}
 			
 			if (instance == boldTool)
@@ -1659,9 +1661,15 @@ package com.flexcapacitor.controls
 				selectedItem = fontTool.selectedItem;
 				newFormat.fontFamily = selectedItem is Font ? Font(selectedItem).fontName : selectedItem;
 				richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-				richEditableText.setFocus();
+				
+				if (focusOnTextAfterFontChange) {
+					richEditableText.setFocus();
+				}
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
-				setEditorFocus();
+				
+				if (focusOnTextAfterFontChange) {
+					setEditorFocus();
+				}
 			}
 		}
 		
@@ -2028,12 +2036,7 @@ package com.flexcapacitor.controls
 			
 			newFormat = new TextLayoutFormat();
 			
-			if (fontSizeTool.selectedItem)
-			{
-				/*var format:TextLayoutFormat = richEditableText.getFormatOfRange(fontSizeVector, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-				format.fontSize = sizeTool.selectedItem;
-				richEditableText.setFormatOfRange(format, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
-				*/
+			if (fontSizeTool.selectedItem) {
 				var newFontSize:Number = fontSizeTool.selectedItem;
 				
 				// ensure font size is valid
@@ -2048,9 +2051,13 @@ package com.flexcapacitor.controls
 				newFormat.fontSize = Math.max(1, Math.min(newFontSize, 720));
 				IEditManager(richEditableText.textFlow.interactionManager).applyLeafFormat(newFormat);
 				
-				richEditableText.setFocus();
+				if (focusOnTextAfterFontSizeChange) {
+					richEditableText.setFocus();
+				}
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
-				setEditorFocus();
+				if (focusOnTextAfterFontSizeChange) {
+					setEditorFocus();
+				}
 			}
 		}
 		

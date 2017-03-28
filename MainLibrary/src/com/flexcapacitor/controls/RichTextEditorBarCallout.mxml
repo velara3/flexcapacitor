@@ -1,25 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:Callout xmlns:fx="http://ns.adobe.com/mxml/2009" 
+<controls:Callout xmlns:fx="http://ns.adobe.com/mxml/2009" 
 		 xmlns:s="library://ns.adobe.com/flex/spark" 
 		 xmlns:mx="library://ns.adobe.com/flex/mx" 
-		 xmlns:controls="com.flexcapacitor.controls.*" >
+		 xmlns:controls="com.flexcapacitor.controls.*"
+		 
+		 updatePositionOnOwnerResize="false">
 	
 	<fx:Script>
 		<![CDATA[
-			import mx.events.FlexEvent;
-			import mx.events.FlexMouseEvent;
 			import mx.events.ResizeEvent;
 			
 			import spark.components.RichEditableText;
 			
-			/**
-			 * Hides the callout when the mouse clicked outside of the editor 
-			 * and outside of the rich editable text component.
-			 * */
-			public var hideOnMouseDownOutside:Boolean = true;
-			
 			private var _richEditableText:RichEditableText;
 
+			public var updatePositionOnEditorResize:Boolean;
+			
 			/**
 			 * Reference to the RichEditableText component on the stage. Required.
 			 * */
@@ -106,19 +102,14 @@
 				
 				editorBar.attachRichEditableText(richEditableText);
 				
-				if (hideOnMouseDownOutside && !hasEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE)) {
-					addEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler, false, 0, true);
-				}
-				else if (!hideOnMouseDownOutside) {
-					removeEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler);
-				}
-				
 				if (showEditorOnFocusIn && richEditableText) {
 					richEditableText.addEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler, false, 0, true);
 					richEditableText.addEventListener(MouseEvent.CLICK, richEditableText_focusInHandler, false, 0, true);
 				}
 				
-				richEditableText.addEventListener(Event.RESIZE, editorBar_resizeHandler, false, 0, true);
+				if (updatePositionOnEditorResize) {
+					richEditableText.addEventListener(Event.RESIZE, editorBar_resizeHandler, false, 0, true);
+				}
 				
 				/*
 				TypeError: Error #1009: Cannot access a property or method of a null object reference.
@@ -131,33 +122,14 @@
 				callLater(editorBar.updateEditor);
 			}
 			
-			public function mouseDownOutsideHandler(event:MouseEvent):void {
-				var focusedComponent:Object = focusManager.getFocus();
-				var relatedObject:Object = event.relatedObject;
-				var isRelatedObjectRelated:Boolean;
-				
-				isRelatedObjectRelated = richEditableText.contains(relatedObject as DisplayObject);
-				
-				//trace(' focusedComponent: ' + focusedComponent);
-				//trace(' relatedObject: ' + relatedObject);
-				//trace(' is related: ' + isRelatedObjectRelated);
-				
-				if (focusedComponent!=richEditableText || 
-					(relatedObject!=richEditableText && !isRelatedObjectRelated)) {
-					//commitTextEditorValues();
-					close(false, richEditableText.textFlow);
-				}
-				
-			}
-			
 			
 			/**
 			 *  @private
 			 */
 			override public function close(commit:Boolean=false, data:*=null):void {
 				
-				if (hideOnMouseDownOutside) {
-					removeEventListener(FlexMouseEvent.MOUSE_DOWN_OUTSIDE, mouseDownOutsideHandler);
+				if (updatePositionOnEditorResize) {
+					richEditableText.removeEventListener(Event.RESIZE, editorBar_resizeHandler);
 				}
 				
 				editorBar.returnToDefaultState();
@@ -194,4 +166,4 @@
 	</fx:Script>
 	
 	<controls:RichTextEditorBar id="editorBar" width="100%" resize="editorBar_resizeHandler(event)" />
-</s:Callout>
+</controls:Callout>

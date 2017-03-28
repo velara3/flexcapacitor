@@ -2032,16 +2032,16 @@ rect.fill = DisplayObjectUtil.createCheckeredFill();
 		 * Given a UIComponent, DisplayObject, BitmapData or GraphicElement
 		 * returns bitmap data of that object.  
 		 * */
-		public static function getAnyTypeBitmapData(anything:Object):BitmapData {
+		public static function getAnyTypeBitmapData(anything:Object, quality:String = StageQuality.BEST, smoothing:Boolean = true):BitmapData {
 			var component:IUIComponent = anything as IUIComponent;
 			var bitmapData:BitmapData;
 			
 			
 			if (component) {
-				bitmapData = getUIComponentBitmapData(component);
+				bitmapData = getUIComponentBitmapData(component, quality);
 			}
 			else if (anything is DisplayObject) {
-				bitmapData = getBitmapDataSnapshot2(anything as DisplayObject);
+				bitmapData = getBitmapDataSnapshot2(anything as DisplayObject, true, 1, 1, 0, 0, 0x00000000, smoothing, quality);
 			}
 			else if (anything is BitmapData) {
 				bitmapData = anything as BitmapData;
@@ -2049,7 +2049,7 @@ rect.fill = DisplayObjectUtil.createCheckeredFill();
 			else if (anything is GraphicElement) {
 				//bitmapData = getGraphicElementBitmapData(target as IGraphicElement);
 				//bitmapData = rasterize2(GraphicElement(target).displayObject);
-				bitmapData = getBitmapDataSnapshot2(GraphicElement(anything).displayObject);
+				bitmapData = getBitmapDataSnapshot2(GraphicElement(anything).displayObject, true, 1, 1, 0, 0, 0x00000000, smoothing, quality);
 			}
 			else {
 				throw Error("Target is not of an acceptable type. UIComponent, DisplayObject, BitmapData and GraphicElement are accepted.");
@@ -3098,7 +3098,7 @@ trace(size); // {width = 200, height = 100}
 		 * April 2013
 		 * see the documentation at the top of this class
 		 **/
-		public static function getBitmapDataSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000, smoothing:Boolean = false):BitmapData {
+		public static function getBitmapDataSnapshot2(target:DisplayObject, transparentFill:Boolean = true, scaleX:Number = 1, scaleY:Number = 1, horizontalPadding:int = 0, verticalPadding:int = 0, fillColor:Number = 0x00000000, smoothing:Boolean = true, quality:String = null):BitmapData {
 			var targetX:Number = target.x;
 			var targetY:Number = target.y;
 			var reportedWidth:Number = target.width;
@@ -3120,6 +3120,7 @@ trace(size); // {width = 200, height = 100}
 			var bitmap:Bitmap;
 			var translateX:Number = -bounds.left+horizontalPadding/2;
 			var translateY:Number = -bounds.top+verticalPadding/2;
+			var propagatedTransform:ColorTransform;
 			
 			matrix.translate(translateX, translateY);
 			//matrix.translate(0, 0);
@@ -3127,6 +3128,15 @@ trace(size); // {width = 200, height = 100}
 			
 			try {
 				drawBitmapData(bitmapData, target, matrix);
+				
+				if (quality) {
+					//bitmapData.drawWithQuality(IBitmapDrawable(target), matrix, propagateColorTransform ? target.transform.colorTransform : null, null, null, smoothing, quality);
+					drawBitmapDataWithQuality(bitmapData, IBitmapDrawable(target), matrix, propagatedTransform, null, null, smoothing, quality);
+				}
+				else {
+					//bitmapData.draw(IBitmapDrawable(target), matrix, );
+					drawBitmapData(bitmapData, IBitmapDrawable(target), matrix, propagatedTransform, null, null, smoothing);
+				}
 			}
 			catch (e:Error) {
 				//trace( "Can't get display object preview. " + e.message);

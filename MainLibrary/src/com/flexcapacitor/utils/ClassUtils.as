@@ -463,7 +463,7 @@ trace(name); // "mySuperButton"
 			if (sort) properties.sort();
 			
 			// save results in a cache for next time
-			if (typeName && typeName!="Object") {
+			if (typeName && typeName!="Object" && !isDynamic) {
 				propertyNamesCache[typeName] = properties.slice();
 			}
 			

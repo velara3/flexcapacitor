@@ -540,6 +540,7 @@ if ( !empty($values["custom"]) ) {
 		 * Get posts
 		 * */
 		public function getPosts(query:String = "", form:URLVariables = null, count:int = 10):void {
+			if (query==null) query = "";
 			url = getPostsURL + "&count=" + count + query;
 			call = WPServiceEvent.GET_POSTS;
 			request.method = URLRequestMethod.POST;

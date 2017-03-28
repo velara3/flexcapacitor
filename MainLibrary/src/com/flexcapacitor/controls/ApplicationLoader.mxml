@@ -543,7 +543,13 @@
 			}
 			
 			private function uncaughtErrorHandler(event:UncaughtErrorEvent):void {
-				dispatchEvent(event);
+				
+				if (event.error is UncaughtErrorEvent) {
+					// infinite loop
+				}
+				else {
+					dispatchEvent(event);
+				}
 				return;
 				
 				

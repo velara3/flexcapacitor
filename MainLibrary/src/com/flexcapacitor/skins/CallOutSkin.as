@@ -20,6 +20,8 @@
 package com.flexcapacitor.skins
 {
 	
+	import com.flexcapacitor.controls.CalloutArrow;
+	
 	import flash.display.BlendMode;
 	import flash.display.GradientType;
 	import flash.display.Graphics;
@@ -41,7 +43,6 @@ package com.flexcapacitor.skins
 	import spark.primitives.RectangularDropShadow;
 	import spark.skins.ActionScriptSkinBase;
 	import spark.skins.spark.assets.CalloutContentBackground;
-	import spark.skins.spark.supportClasses.CalloutArrow;
 	
 	
 	use namespace mx_internal;
@@ -91,7 +92,6 @@ package com.flexcapacitor.skins
 		{
 			super();
 			
-			dropShadowAlpha = 0.7;
 			
 			// default DPI_120
 			backgroundCornerRadius = 6;
@@ -100,11 +100,12 @@ package com.flexcapacitor.skins
 			frameThickness = 6;
 			arrowWidth = 26;
 			arrowHeight = 13;
+			highlightWeight = 0.5;
 			contentCornerRadius = 4;
 			dropShadowBlurX = 12;
 			dropShadowBlurY = 12;
 			dropShadowDistance = 2;
-			highlightWeight = 0.5;
+			dropShadowAlpha = 0.7;
 			dropShadowAngle = 90;
 			
 		}
@@ -188,7 +189,16 @@ package com.flexcapacitor.skins
 		 *  @playerversion AIR 3
 		 *  @productversion Flex 4.6
 		 */
-		mx_internal var borderColor:uint  = 0;
+		public var borderColor:uint  = 0;
+		
+		/**
+		 *  Color of the border alpha around the <code>backgroundColor</code> "frame".
+		 *
+		 *  @langversion 3.0
+		 *  @playerversion AIR 3
+		 *  @productversion Flex 4.6
+		 */
+		public var borderAlpha:Number = 1;
 		
 		/**
 		 *  Thickness of the border stroke around the <code>backgroundColor</code>
@@ -198,7 +208,7 @@ package com.flexcapacitor.skins
 		 *  @playerversion AIR 3
 		 *  @productversion Flex 4.6
 		 */
-		mx_internal var borderThickness:Number = NaN;
+		public var borderThickness:Number = NaN;
 		
 		/**
 		 *  Width of the arrow in vertical directions. This property also controls
@@ -256,6 +266,8 @@ package com.flexcapacitor.skins
 		
 		public var dropShadowAlpha:Number;
 		
+		public var fadeDuration:int;
+		
 		public var fade:Fade;
 		
 		public var highlightWeight:Number;
@@ -290,15 +302,33 @@ package com.flexcapacitor.skins
 		{
 			super.createChildren();
 			
-			if (dropShadowVisible)
-			{
+			borderThickness 		= getStyle("borderThickness"); // callout arrow uses this style
+			borderColor 			= getStyle("borderColor");
+			borderAlpha 			= getStyle("borderAlpha");
+			useBackgroundGradient 	= getStyle("useBackgroundGradient");
+			backgroundCornerRadius 	= getStyle("backgroundCornerRadius");
+			frameThickness 			= getStyle("frameThickness");
+			arrowWidth 				= getStyle("arrowWidth");
+			arrowHeight 			= getStyle("arrowHeight");
+			contentCornerRadius 	= getStyle("contentCornerRadius");
+			dropShadowBlurX 		= getStyle("dropShadowBlurX");
+			dropShadowBlurY 		= getStyle("dropShadowBlurY");
+			dropShadowDistance 		= getStyle("dropShadowDistance");
+			dropShadowAlpha 		= getStyle("dropShadowAlpha");
+			dropShadowAngle  		= getStyle("dropShadowAngle");
+			fadeDuration	  		= getStyle("fadeDuration");
+			
+			
+			if (dropShadowVisible) {
 				dropShadow = new RectangularDropShadow();
 				dropShadow.angle = dropShadowAngle;
 				dropShadow.distance = dropShadowDistance;
 				dropShadow.blurX = dropShadowBlurX;
 				dropShadow.blurY = dropShadowBlurY;
-				dropShadow.tlRadius = dropShadow.trRadius = dropShadow.blRadius = 
-					dropShadow.brRadius = backgroundCornerRadius;
+				dropShadow.tlRadius = backgroundCornerRadius;
+				dropShadow.trRadius = backgroundCornerRadius;
+				dropShadow.blRadius = backgroundCornerRadius;
+				dropShadow.brRadius = backgroundCornerRadius;
 				dropShadow.mouseEnabled = false;
 				dropShadow.alpha = dropShadowAlpha;
 				addChild(dropShadow);
@@ -309,8 +339,7 @@ package com.flexcapacitor.skins
 			addChild(backgroundFill);
 			
 			// arrow
-			if (!arrow)
-			{
+			if (!arrow) {
 				arrow = new CalloutArrow();
 				arrow.id = "arrow";
 				arrow.styleName = this;
@@ -318,16 +347,11 @@ package com.flexcapacitor.skins
 			}
 			
 			// contentGroup
-			if (!contentGroup)
-			{
+			if (!contentGroup) {
 				contentGroup = new Group();
 				contentGroup.id = "contentGroup";
 				addChild(contentGroup);
 			}
-			
-			borderThickness = getStyle("borderThickness");
-			borderColor = getStyle("borderColor");
-			
 		}
 		
 		/**
@@ -339,6 +363,11 @@ package com.flexcapacitor.skins
 			
 			// add or remove the contentBackgroundGraphic
 			var contentBackgroundAppearance:String = getStyle("contentBackgroundAppearance");
+			var backgroundInsetClass:Class = getStyle("contentBackgroundInsetClass");
+			
+			if (backgroundInsetClass) {
+				contentBackgroundInsetClass = contentBackgroundInsetClass;
+			}
 			
 			if (contentBackgroundAppearance == ContentBackgroundAppearance.INSET)
 			{
@@ -435,7 +464,7 @@ package com.flexcapacitor.skins
 				{
 					fade = new Fade();
 					fade.target = this;
-					fade.duration = 200;
+					fade.duration = fadeDuration;
 					fade.alphaTo = 0;
 				}
 				
@@ -507,11 +536,12 @@ package com.flexcapacitor.skins
 			var backgroundColor:Number = getStyle("backgroundColor");
 			var backgroundAlpha:Number = getStyle("backgroundAlpha");
 			
+			
 			var bgFill:Graphics = backgroundFill.graphics;
 			bgFill.clear();
 			
 			if (showBorder)
-				bgFill.lineStyle(borderThickness, borderColor, 1, true);
+				bgFill.lineStyle(borderThickness, borderColor, borderAlpha, true);
 			
 			if (useBackgroundGradient)
 			{

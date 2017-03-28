@@ -8,14 +8,12 @@ package com.flexcapacitor.utils.supportClasses {
 	
 	import mx.collections.ArrayCollection;
 	import mx.core.ClassFactory;
-	import mx.core.ComponentDescriptor;
 	import mx.core.IVisualElement;
 	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.utils.NameUtil;
 	
 	import spark.core.IGraphicElement;
-	import spark.layouts.BasicLayout;
 	import spark.layouts.supportClasses.LayoutBase;
 	
 	/**
@@ -220,6 +218,16 @@ package com.flexcapacitor.utils.supportClasses {
 		 * Used for display list
 		 * */
 		public var instance:Object;
+		
+		/**
+		 * Is set to true when used as a mask
+		 * */
+		public var isMask:Boolean;
+		
+		/**
+		 * Is true when it has a mask set
+		 * */
+		public var hasMask:Boolean;
 		
 		/**
 		 * Is IVisualElementContainer
@@ -621,6 +629,97 @@ package com.flexcapacitor.utils.supportClasses {
 			}
 			
 			return componentDescription;
+		}
+		
+		public function getFirstUnlockedTarget():ComponentDescription {
+			var possibleTarget:ComponentDescription;
+			var componentDescription:ComponentDescription = this;
+			var minimumUnlockedAncestor:ComponentDescription;
+			//var unlockedList:Array;
+			
+			//unlockedList = [this];
+			
+			// first check no ancestors are locked
+			while (componentDescription!=null) {
+				
+				if (componentDescription.locked) {
+					componentDescription = componentDescription.parent;
+					minimumUnlockedAncestor = null;
+					//unlockedList.length = 0;
+					continue;
+				}
+				else {
+					//unlockedList.push(componentDescription);
+					
+					if (minimumUnlockedAncestor==null) {
+						minimumUnlockedAncestor = componentDescription;
+					}
+				}
+				
+				if (componentDescription.parent) {
+					componentDescription = componentDescription.parent;
+				}
+				else {
+					break;
+				}
+				
+			}
+			
+			return minimumUnlockedAncestor;
+		}
+		
+		public function getTargetInTree(target:Object, checkSiblingsPriorities:Boolean = false, rootComponentDescription:ComponentDescription=null):ComponentDescription {
+			var parentComponentDescription:ComponentDescription;
+			var currentComponentDescription:ComponentDescription;
+			var collection:ArrayCollection;
+			var collectionCount:int;
+			
+			
+			// check siblings first
+			if (checkSiblingsPriorities) {
+				parentComponentDescription = parent;
+				collection = parentComponentDescription ? parentComponentDescription.children : null;
+				collectionCount = collection ? collection.length : 0;
+				
+				for (var i:int = 0; i < collectionCount; i++) {
+					currentComponentDescription = collection.getItemAt(i) as ComponentDescription;
+					if (currentComponentDescription.instance==target) {
+						return currentComponentDescription;
+					}
+				}
+				
+			}
+			
+			if (rootComponentDescription==null) {
+				rootComponentDescription = parent;
+				
+				// get root parent
+				while (rootComponentDescription!=null) {
+					
+					if (rootComponentDescription.parent) {
+						rootComponentDescription = rootComponentDescription.parent;
+					}
+					else {
+						break;
+					}
+				}
+				
+				currentComponentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(target, rootComponentDescription);
+			}
+			
+			
+			
+			return currentComponentDescription;
+		}
+		
+		public function getIsMask():Boolean {
+			var parentInstance:Object = parent ? parent.instance : null;
+			
+			if (parentInstance && "mask" in parentInstance && parentInstance.mask == instance) {
+				return true;
+			}
+			
+			return false;
 		}
 	}
 }

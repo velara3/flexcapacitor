@@ -204,6 +204,7 @@ public class LayoutDebugHelper extends Sprite {
 		var index:int;
 		for (var key:Object in activeInvalidations) {
 			index++;
+			break;
 		}
 		return index!=0;
 	}
@@ -230,30 +231,31 @@ public class LayoutDebugHelper extends Sprite {
      *  @private
      */
     public function render():void {
+		var lifespan:Number;
+		var alpha:Number;
+		var position:Point;
+		
 		if (debug) {
 			log();
 		}
 		
         graphics.clear();
 		
-        for (var item:* in activeInvalidations)
-        {
-            var lifespan:Number = getTimer() - activeInvalidations[item];
+        for (var item:* in activeInvalidations) {
+			lifespan = getTimer() - activeInvalidations[item];
 			
-            if (lifespan > highlightDelay) 
-            {
+            if (lifespan > highlightDelay) {
                 removeElement(item);
             }
-            else
-            {
-                var alpha:Number = 1.0 - (lifespan / highlightDelay);
+            else {
+				alpha = 1.0 - (lifespan / highlightDelay);
 
                 if (item.parent)
                 { 
                     var w:Number = item.getLayoutBoundsWidth(true);
                     var h:Number = item.getLayoutBoundsHeight(true);
                     
-                    var position:Point = new Point();
+					position = new Point();
                     position.x = item.getLayoutBoundsX(true);
                     position.y = item.getLayoutBoundsY(true);
                     position = item.parent.localToGlobal(position);
@@ -271,6 +273,17 @@ public class LayoutDebugHelper extends Sprite {
 			}
 		}
     }
+	
+	/**
+	 * Clear the list
+	 * */
+	public function clear():void {
+		graphics.clear();
+		
+		for (var item:* in activeInvalidations) {
+			removeElement(item);
+		}
+	}
 	
 	/**
 	 * Get a rectangle of the item
