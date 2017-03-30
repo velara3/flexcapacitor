@@ -80,9 +80,13 @@ package com.flexcapacitor.utils
 			numberOfItems =  items ? items.length : 0;
 			
 			for (var i:int; i < numberOfItems; i++) {
-				//subItem = getNativeMenuItem(items[i] as MenuItem);
+				subItem = getNativeMenuItem(items[i] as MenuItem);
 				
-				//nativeMenuItem.addItem(subItem);
+				if (nativeMenuItem.submenu==null) {
+					nativeMenuItem.submenu = new NativeMenu();
+				}
+				
+				nativeMenuItem.submenu.addItem(subItem);
 			}
 			
 			if (nativeMenuItem is IEventDispatcher) {

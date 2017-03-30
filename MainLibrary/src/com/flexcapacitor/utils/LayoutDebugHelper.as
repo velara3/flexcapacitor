@@ -77,7 +77,7 @@ public class LayoutDebugHelper extends Sprite {
 	/**
 	 *  
 	 */
-	public static var highlightDelay:Number = 500;
+	public static var highlightDuration:Number = 500;
 	
 	/**
 	 *  @private
@@ -244,11 +244,11 @@ public class LayoutDebugHelper extends Sprite {
         for (var item:* in activeInvalidations) {
 			lifespan = getTimer() - activeInvalidations[item];
 			
-            if (lifespan > highlightDelay) {
+            if (lifespan > highlightDuration) {
                 removeElement(item);
             }
             else {
-				alpha = 1.0 - (lifespan / highlightDelay);
+				alpha = 1.0 - (lifespan / highlightDuration);
 
                 if (item.parent)
                 { 

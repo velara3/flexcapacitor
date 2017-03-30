@@ -31,7 +31,7 @@ limitations under the License.
 			import mx.collections.ArrayList;
 			import mx.collections.IList;
 
-			private const _defaultDataProvider:ArrayList = new ArrayList([8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 72, 96, 112, 128, 152]);
+			private const _defaultDataProvider:ArrayList = new ArrayList([8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 142, 150, 158, 166, 174, 182, 190, 198, 206, 214, 222]);
 
 			public override function set dataProvider(value:IList):void
 			{

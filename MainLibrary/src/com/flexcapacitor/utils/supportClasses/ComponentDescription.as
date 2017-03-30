@@ -721,5 +721,16 @@ package com.flexcapacitor.utils.supportClasses {
 			
 			return false;
 		}
+		
+		public function lockChildDescriptors(value:Boolean = true):void {
+			var numberOfChildren:int = children.length;
+			var componentDescription:ComponentDescription;
+			
+			for (var i:int = 0; i < numberOfChildren; i++) {
+				componentDescription = children.getItemAt(i) as ComponentDescription;
+				
+				componentDescription.locked = value;
+			}
+		}
 	}
 }
