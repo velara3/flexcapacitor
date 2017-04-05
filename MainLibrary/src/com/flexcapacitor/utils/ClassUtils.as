@@ -19,6 +19,8 @@ package com.flexcapacitor.utils {
 	import flash.utils.getQualifiedSuperclassName;
 	
 	import mx.core.IFlexModuleFactory;
+	import mx.core.IVisualElement;
+	import mx.core.IVisualElementContainer;
 	import mx.core.UIComponent;
 	import mx.styles.IStyleClient;
 	import mx.styles.IStyleManager2;
@@ -2738,6 +2740,30 @@ attributesValueObject	= ClassUtils.getTypedPropertyValueObject(elementInstance, 
 					return value;
 				}
 			}
+		}
+		
+		
+		/**
+		 * Gets visual elements by their type. 
+		 * 
+		 * For example, gets all the Button or Image instances when 
+		 * that type is passed in. You can pass in an existing array of objects to add to it
+		 * */
+		public static function getElementsByType(container:IVisualElementContainer, type:Class, elements:Array = null, recursive:Boolean = true):Array {
+			if (elements==null) elements = [];
+			
+			for (var i:int;i<container.numElements;i++) {
+				var element:IVisualElement = container.getElementAt(i);
+				
+				if (element is type) {
+					elements.push(element);
+				}
+				if (element is IVisualElementContainer && recursive) {
+					getElementsByType(element as IVisualElementContainer, type, elements);
+				}
+			}
+			
+			return elements;
 		}
 		
 	}
