@@ -4057,6 +4057,122 @@ trace(size); // {width = 200, height = 100}
 			return null;
 		}
 		
+		
+		/**
+		 * Trims the transparent pixels away from the given bitmap data
+		 **/
+		public static function trimTransparentBitmapData(bitmapData:BitmapData):BitmapData {
+			var firstNonTransparentColumn:int;
+			var lastNonTransparentColumn:int;
+			var firstNonTransparentRow:int;
+			var lastNonTransparentRow:int;
+			var clipRectangle:Rectangle;
+			var newBitmapData:BitmapData;
+			var valuesTable:Array;
+			var bitmapWidth:int;
+			var bitmapHeight:int;
+			var isEmpty:Boolean;
+			var rgbVal:uint;
+			var row:int;
+			var column:int;
+			
+			isEmpty = true;
+			valuesTable = [];
+			
+			bitmapWidth = bitmapData.width;
+			bitmapHeight = bitmapData.height;
+			
+			parseLoop:
+			
+			// Loop through the rows of pixels top to bottom
+			for (row = 0; row < bitmapHeight; row++) {
+				valuesTable.push([]);// adds a new row
+				column = 0;
+				
+				// Within each row, loop through the individual pixels left to right
+				for (column = 0; column < bitmapWidth; column++) {
+					
+					// get rgb
+					rgbVal = bitmapData.getPixel32(column, row);
+					
+					// check for alpha
+					if (rgbVal==0) {
+						rgbVal = 0;
+					}
+					else {
+						rgbVal = 1;
+					}
+					
+					valuesTable[row].push(rgbVal);
+				}
+			}
+			
+			loop1:
+			for (column = 0; column < bitmapWidth; column++) {
+				for (row = 0; row < bitmapHeight; row++) {
+					rgbVal = valuesTable[row][column];
+					
+					if (rgbVal==1) {
+						firstNonTransparentColumn = column;
+						isEmpty = false;
+						break loop1;
+					}
+				}
+			}
+			
+			loop2:
+			for (row = 0; row < bitmapHeight; row++) {
+				
+				for (column = firstNonTransparentColumn; column < bitmapWidth; column++) {
+					rgbVal = valuesTable[row][column];
+					
+					if (rgbVal==1) {
+						firstNonTransparentRow = row;
+						break loop2;
+					}
+				}
+			}
+			
+			loop3:
+			for (column = bitmapWidth - 1; column >= firstNonTransparentColumn; column--) {
+				
+				for (row = firstNonTransparentColumn; row < bitmapHeight; row++) {
+					rgbVal = valuesTable[row][column];
+					
+					if (rgbVal==1) {
+						lastNonTransparentColumn = column;
+						break loop3;
+					}
+				}
+			}
+			
+			loop4:
+			for (row = bitmapHeight - 1; row >= firstNonTransparentRow; row--) {
+				
+				for (column = firstNonTransparentColumn; column <= lastNonTransparentColumn; column++) {
+					rgbVal = valuesTable[row][column];
+					
+					if (rgbVal==1) {
+						lastNonTransparentRow = row;
+						break loop4;
+					}
+				}
+			}
+			
+			clipRectangle = new Rectangle(firstNonTransparentColumn, firstNonTransparentRow);
+			clipRectangle.width = lastNonTransparentColumn+1-firstNonTransparentColumn;
+			clipRectangle.height = lastNonTransparentRow+1-firstNonTransparentRow;
+			
+			if (clipRectangle.width<1 || clipRectangle.height<1) {
+				return null;
+			}
+			
+			newBitmapData = new BitmapData(clipRectangle.width, clipRectangle.height, true, 0x00000000);
+			newBitmapData.copyPixels(bitmapData, clipRectangle, new Point());
+			
+			return newBitmapData;
+		}
+		
 		public static var debug:Boolean;
 	}
 }
