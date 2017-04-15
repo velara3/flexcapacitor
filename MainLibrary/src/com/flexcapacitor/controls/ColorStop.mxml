@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ItemRenderer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				xmlns:s="library://ns.adobe.com/flex/spark" 
+				xmlns:mx="library://ns.adobe.com/flex/mx"
+				
+				width="10" height="10"
+				autoDrawBackground="false">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.graphics.GradientEntry;
+			override public function set data(value:Object):void {
+				super.data = value;
+				
+				gradientEntry = value as GradientEntry;
+				
+				if (gradientEntry) {
+					if (solidColorFill) {
+						solidColorFill.color = gradientEntry.color;
+					}
+				}
+			}
+			
+			private var _color:uint;
+
+			public function get color():uint {
+				return _color;
+			}
+
+			public function set color(value:uint):void {
+				_color = value;
+				
+				if (gradientEntry) {
+					gradientEntry.color = value;
+				}
+				
+				if (solidColorFill) {
+					solidColorFill.color = value;
+				}
+			}
+			
+			private var _gradientAlpha:Number;
+
+			public function get gradientAlpha():Number {
+				if (gradientEntry) {
+					return gradientEntry.alpha;
+				}
+				
+				return _gradientAlpha;
+			}
+
+			public function set gradientAlpha(value:Number):void {
+				_gradientAlpha = value;
+				
+				if (gradientEntry) {
+					gradientEntry.alpha = value;
+				}
+			}
+
+			private var _ratio:Number;
+
+			public function get ratio():Number {
+				if (gradientEntry) {
+					return gradientEntry.ratio;
+				}
+				
+				return _ratio;
+			}
+
+			public function set ratio(value:Number):void
+			{
+				_ratio = value;
+				
+				if (gradientEntry) {
+					gradientEntry.ratio = value;
+				}
+			}
+
+			protected function itemrenderer1_clickHandler(event:MouseEvent):void {
+				dispatchEvent(new Event("selected"));
+			}
+			
+			private var _gradientEntry:GradientEntry;
+
+			public function get gradientEntry():GradientEntry {
+				return _gradientEntry;
+			}
+
+			public function set gradientEntry(value:GradientEntry):void {
+				_gradientEntry = value;
+				if (value) {
+					_color = gradientEntry.color;
+					_gradientAlpha = gradientEntry.alpha;
+					_ratio = gradientEntry.ratio;
+				}
+			}
+			
+			
+			/**
+			 *  @private
+			 */    
+			override public function set selected(value:Boolean):void {
+				super.selected = value;
+				
+				if (value) {
+					line.alpha = 1;
+				}
+				else {
+					line.alpha = 0;
+				}
+			}
+		]]>
+	</fx:Script>
+	<s:Rect width="10" height="10">
+		<s:stroke>
+			<s:SolidColorStroke id="strokeOutline" weight="0" color="black"/>
+		</s:stroke>
+		<s:fill>
+			<s:SolidColor id="solidColorOutlineFill" color="0xF6f6f6" alpha="1"/>
+		</s:fill>
+	</s:Rect>
+	
+	<s:Rect width="7" height="7" top="2" left="2" >
+		<s:fill>
+			<s:SolidColor id="solidColorFill"/>
+		</s:fill>
+	</s:Rect>
+	
+	<s:Rect id="line" width="8" top="1" left="1" height="8">
+		<s:stroke>
+			<s:SolidColorStroke weight="0" color="black"/>
+		</s:stroke>
+	</s:Rect>
+</s:ItemRenderer>

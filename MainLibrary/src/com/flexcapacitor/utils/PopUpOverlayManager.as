@@ -16,9 +16,12 @@ package com.flexcapacitor.utils
 	import mx.core.FlexGlobals;
 	import mx.core.FlexSprite;
 	import mx.core.IMXMLObject;
+	import mx.core.UIComponent;
 	import mx.managers.SystemManager;
 	import mx.managers.SystemManagerGlobals;
 	import mx.utils.Platform;
+	
+	import spark.components.PopUpAnchor;
 	
 	/**
 	 * Hides external overlays when a popup such as a tool tip, dropdown or other pop up appears. 
@@ -302,9 +305,11 @@ package com.flexcapacitor.utils
 					isOver = intersects(popUp, overlay as DisplayObject);
 					
 					if (isOver) {
-						// trace("5. is over tool tip");
-						overlay.visible = false;
-						hiddenOverlays[overlay] = popUp;
+						if (overlay.stage!=null && overlay.visible==true) {
+							// trace("5. is over tool tip");
+							overlay.visible = false;
+							hiddenOverlays[overlay] = popUp;
+						}
 					}
 				}
 				else if (!isToolTip) {
@@ -313,7 +318,22 @@ package com.flexcapacitor.utils
 						var numberOfChildren:int = systemManager.rawChildren.numChildren;
 						var index:int = systemManager.rawChildren.getChildIndex(popUp);
 						
-						if (index>=0) {
+						if ("isPopUp" in popUp && UIComponent(popUp).isPopUp==true) {
+							if (UIComponent(popUp).owner is PopUpAnchor && PopUpAnchor(UIComponent(popUp).owner).isModal) {
+								overlay.visible = false;
+								hiddenOverlays[overlay] = popUp;
+							}
+							else {
+								isOver = intersects(popUp, overlay as DisplayObject);
+								
+								if (isOver) {
+									overlay.visible = false;
+									hiddenOverlays[overlay] = popUp;
+								}
+							}
+						}
+						
+						else if (index>=0) {
 							var modalWindow:FlexSprite = systemManager.rawChildren.getChildAt(index-1) as FlexSprite;
 							
 							if (modalWindow) {

@@ -1484,7 +1484,7 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		 * @see #getMetaDataOfMethod();
 		 * @see #getMetaDataOfEvent();
 		 * */
-		public static function getMetaDataOfMember(target:Object, member:String, ignoreFacades:Boolean = true):MetaData {
+		public static function getMetaDataOfMember(target:Object, member:String, ignoreFacades:Boolean = true, getUpdatedValue:Boolean = true):MetaData {
 			var isProperty:Boolean;
 			var isStyle:Boolean;
 			var isEvent:Boolean;
@@ -1508,16 +1508,16 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			}
 			
 			if (isProperty) {
-				return getMetaDataOfProperty(target, member, ignoreFacades);
+				return getMetaDataOfProperty(target, member, ignoreFacades, getUpdatedValue);
 			}
 			else if (isStyle) {
-				return getMetaDataOfStyle(target, member);
+				return getMetaDataOfStyle(target, member, null, null, getUpdatedValue);
 			}
 			else if (isEvent) {
-				return getMetaDataOfEvent(target, member);
+				return getMetaDataOfEvent(target, member, null, null, getUpdatedValue);
 			}
 			else if (isMethod) {
-				return getMetaDataOfMethod(target, member);
+				return getMetaDataOfMethod(target, member, null, null, getUpdatedValue);
 			}
 			
 			return null;
@@ -1562,64 +1562,6 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			return isProperty || isStyle || isEvent || isMethod;
 		}
 		
-		/**
-		 * Get AccessorMetaData data for the given property. 
-		 * 
-		 * @see #getMetaDataOfStyle();
-		 * @see #getMetaDataOfEvent();
-		 * */
-		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
-			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord;
-			var accessorMetaData:AccessorMetaData;
-			var matches:XMLList;
-			var matches2:XMLList;
-			var node:XML;
-			var cachedMetaData:Object;
-			
-			
-			describedTypeRecord = DescribeTypeCache.describeType(target);
-			
-			// we should not include facade properties
-			// could we move this up a few lines before the XMLList stuff and save some cpu cycles?
-			// testing now
-			//cachedMetaData = DescribeTypeCacheRecord[property];
-			cachedMetaData = describedTypeRecord[property];
-			
-			if (cachedMetaData is AccessorMetaData) {
-				AccessorMetaData(cachedMetaData).updateValues(target);
-				return AccessorMetaData(cachedMetaData);
-			}
-			
-			matches = describedTypeRecord.typeDescription..accessor.(@name==property);
-			matches2 = describedTypeRecord.typeDescription..variable.(@name==property);
-			
-			if (matches.length()>0) {
-				node = matches[0];
-			}
-			else if (matches2.length()>0) {
-				node = matches2[0];
-			}
-			
-			
-			if (node) {
-				accessorMetaData = new AccessorMetaData();
-				accessorMetaData.unmarshall(node, target);
-				
-				// we want to cache property meta data
-				if (accessorMetaData) {
-					DescribeTypeCache.registerCacheHandler(property, function (record:DescribeTypeCacheRecord):Object {
-						//if (relevantPropertyFacades.indexOf(style)!=-1) {
-						return accessorMetaData;
-						//}
-					});
-				}
-				
-				return accessorMetaData;
-			}
-			
-			return null;
-		}
-		
 		public static const relevantPropertyFacades:Array = 
 			[ "top", "left", "right", "bottom", 
 			"verticalCenter", "horizontalCenter", "baseline"];
@@ -1629,11 +1571,13 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		/**
 		 * Set cached metadata 
 		 * */
-		public static function setCachedMetaData(object:*, name:*, metadata:MetaData):void {
+		public static function setCachedMetaData(object:*, name:*, metaData:MetaData, type:Class = null):void {
 			var className:String;
 			var cacheKey:String;
 			var metadataDictionary:Dictionary;
 			var weakKeys:Boolean;
+			var results:Object;
+			var existingMetaData:MetaData;
 			
 			if (object is String) {
 				cacheKey = className = object;
@@ -1660,10 +1604,33 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 			else {
 				metadataDictionary = metadataCache[cacheKey];
 			}
-				
+			
 			// check if member is cached
 			if (metadataDictionary[name]==null) {
-				metadataDictionary[name] = metadata;
+				metadataDictionary[name] = metaData;
+			}
+			else if (type) {
+				// you can have a property and style of the same name
+				// so if we need AccessorMetaData and not StylesMetaData
+				// we can store both values as an array
+				results = metadataDictionary[name];
+				
+				if (results is Array) {
+					for (var i:int = 0; i < (results as Array).length; i++) {
+						existingMetaData = results[i];
+						
+						if (existingMetaData is type) {
+							return; // already saved
+						}
+					}
+					
+					// add our specified type
+					(results as Array).push(metaData);
+				}
+				else if (!(results is type)) {
+					results = [results, metaData];
+					metadataDictionary[name] = results;
+				}
 			}
 			
 		}
@@ -1671,11 +1638,12 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 		/**
 		 * Get cached metadata
 		 * */
-		public static function getCachedMetaData(object:*, name:*):MetaData {
+		public static function getCachedMetaData(object:*, name:*, type:Class = null):MetaData {
 			var className:String;
 			var cacheKey:String;
 			var metadataDictionary:Dictionary;
 			var metaData:MetaData;
+			var result:Object;
 			
 			if (object is String) {
 				cacheKey = className = object;
@@ -1694,7 +1662,29 @@ var allStyles:XMLList = getMetaData(myButton, "Style");
 				metadataDictionary = metadataCache[cacheKey];
 				
 				if (metadataDictionary[name]!=null) {
-					metaData = metadataDictionary[name];
+					result = metadataDictionary[name];
+					
+					// because there can be styles and properties and events that use the same name
+					// we set an array and if a type is specified we can return that type
+					// we may want to create multiple dictionaries for each type
+					if (result is Array) {
+						
+						for (var i:int = 0; i < result.length; i++) {
+							metaData = result[i];
+							
+							if (type) {
+								if (metaData is type) {
+									return metaData;
+								}
+							}
+							else {
+								return metaData;
+							}
+						}
+					}
+					else {
+						metaData = metadataDictionary[name];
+					}
 				}
 			}
 			
@@ -1716,7 +1706,7 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 		 * 
 		 * @see #getMetaDataOfProperty()
 		 * */
-		public static function getMetaDataOfMetaData(target:Object, metaDataName:String, type:String = null, stopAt:String = null):MetaDataMetaData {
+		public static function getMetaDataOfMetaData(target:Object, metaDataName:String, type:String = null, stopAt:String = null, getUpdatedValue:Boolean = true):MetaDataMetaData {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var cachedMetaData:Object;
 			var metaDataMetaData:MetaDataMetaData;
@@ -1732,7 +1722,7 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			cachedMetaData = getCachedMetaData(target, metaDataName);
 			
 			if (cachedMetaData) {
-				//MetaDataMetaData(cachedMetaData).updateValues(target, false);
+				//MetaDataMetaData(cachedMetaData).updateValues(target, getUpdatedValue); // metadata shouldn't change
 				return MetaDataMetaData(cachedMetaData);
 			}
 			
@@ -1829,8 +1819,9 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 		 * 
 		 * @see #getMetaDataOfProperty()
 		 * */
-		public static function getMetaDataOfStyle(target:Object, style:String, type:String = null, stopAt:String = null):StyleMetaData {
+		public static function getMetaDataOfStyle(target:Object, style:String, type:String = null, stopAt:String = null, getUpdatedValue:Boolean = true):StyleMetaData {
 			var describedTypeRecord:DescribeTypeCacheRecord;
+			var needToAddStyleData:Boolean;
 			var cachedMetaData:Object;
 			var styleMetaData:StyleMetaData;
 			var extendsClassList:XMLList;
@@ -1841,18 +1832,34 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			var factory:Object;
 			var node:XML;
 			
-			if (type) {
-				describedTypeRecord = DescribeTypeCache.describeType(type);
-			}
-			else {
-				describedTypeRecord = DescribeTypeCache.describeType(target);
-			}
-			
+			/*
 			cachedMetaData = describedTypeRecord[style];
 			
 			if (cachedMetaData is StyleMetaData) {
 				StyleMetaData(cachedMetaData).updateValues(target);
 				return StyleMetaData(cachedMetaData);
+			}*/
+			
+			cachedMetaData = getCachedMetaData(target, style);
+			
+			if (!(cachedMetaData is StyleMetaData)) {
+				cachedMetaData = getCachedMetaData(target, style, StyleMetaData);
+				
+				if (cachedMetaData==null) {
+					needToAddStyleData = true;
+				}
+			}
+			
+			if (cachedMetaData && cachedMetaData is StyleMetaData) {
+				StyleMetaData(cachedMetaData).updateValues(target, getUpdatedValue);
+				return StyleMetaData(cachedMetaData);
+			}
+			
+			if (type) {
+				describedTypeRecord = DescribeTypeCache.describeType(type);
+			}
+			else {
+				describedTypeRecord = DescribeTypeCache.describeType(target);
 			}
 			
 			typeDescription = describedTypeRecord.typeDescription[0];
@@ -1890,6 +1897,8 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			
 			if (matches.length()>0) {
 				node = matches[0].parent();
+				node = node.copy(); // prevent modifying xml
+				
 				if ("typeName" in typeDescription) {
 					node.@declaredBy = typeDescription.typeName;
 				}
@@ -1899,20 +1908,18 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 				else if (typeDescription.hasOwnProperty("name")) {
 					node.@declaredBy = typeDescription.@name;
 				}
+				
 				styleMetaData = new StyleMetaData();
 				styleMetaData.unmarshall(node, target);
 				
-				// we want to cache style meta data
 				if (styleMetaData) {
-					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
-					//	Error$/throwError [no source]	
-					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
-						
-					DescribeTypeCache.registerCacheHandler(style, function (record:DescribeTypeCacheRecord):Object {
-						//if (relevantPropertyFacades.indexOf(style)!=-1) {
-						return styleMetaData;
-						//}
-					});
+				
+					if (needToAddStyleData) {
+						setCachedMetaData(target, style, styleMetaData, StyleMetaData);
+					}
+					else {
+						setCachedMetaData(target, style, styleMetaData);
+					}
 				}
 				
 				return styleMetaData;
@@ -1936,7 +1943,7 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 		 * 
 		 * @see #getMetaDataOfProperty()
 		 * */
-		public static function getMetaDataOfEvent(target:Object, event:String, type:String = null, stopAt:String = null):EventMetaData {
+		public static function getMetaDataOfEvent(target:Object, event:String, type:String = null, stopAt:String = null, getUpdatedValue:Boolean = true):EventMetaData {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var eventMetaData:EventMetaData;
 			var extendsClassList:XMLList;
@@ -1948,18 +1955,18 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			var factory:Object;
 			var node:XML;
 			
+			cachedMetaData = getCachedMetaData(target, event);
+			
+			if (cachedMetaData) {
+				EventMetaData(cachedMetaData).updateValues(target, getUpdatedValue);
+				return EventMetaData(cachedMetaData);
+			}
+			
 			if (type) {
 				describedTypeRecord = DescribeTypeCache.describeType(type);
 			}
 			else {
 				describedTypeRecord = DescribeTypeCache.describeType(target);
-			}
-			
-			cachedMetaData = describedTypeRecord[event];
-			
-			if (cachedMetaData is EventMetaData) {
-				EventMetaData(cachedMetaData).updateValues(target);
-				return EventMetaData(cachedMetaData);
 			}
 			
 			typeDescription = describedTypeRecord.typeDescription[0];
@@ -1997,6 +2004,8 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			
 			if (matches.length()>0) {
 				node = matches[0].parent();
+				node = node.copy(); // prevent modifying the xml since it persists
+				
 				if ("typeName" in typeDescription) {
 					node.@declaredBy = typeDescription.typeName;
 				}
@@ -2006,20 +2015,12 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 				else if (typeDescription.hasOwnProperty("name")) {
 					node.@declaredBy = typeDescription.@name;
 				}
+				
 				eventMetaData = new EventMetaData();
 				eventMetaData.unmarshall(node, target);
 				
-				// we want to cache event meta data
 				if (eventMetaData) {
-					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
-					//	Error$/throwError [no source]	
-					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
-						
-					DescribeTypeCache.registerCacheHandler(event, function (record:DescribeTypeCacheRecord):Object {
-						//if (relevantPropertyFacades.indexOf(event)!=-1) {
-						return eventMetaData;
-						//}
-					});
+					setCachedMetaData(target, event, eventMetaData);
 				}
 				
 				return eventMetaData;
@@ -2043,7 +2044,7 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 		 * 
 		 * @see #getMetaDataOfProperty()
 		 * */
-		public static function getMetaDataOfMethod(target:Object, method:String, type:String = null, stopAt:String = null):MethodMetaData {
+		public static function getMetaDataOfMethod(target:Object, method:String, type:String = null, stopAt:String = null, getUpdatedValue:Boolean = true):MethodMetaData {
 			var describedTypeRecord:DescribeTypeCacheRecord;
 			var methodMetaData:MethodMetaData;
 			var extendsClassList:XMLList;
@@ -2055,18 +2056,18 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			var factory:Object;
 			var node:XML;
 			
+			cachedMetaData = getCachedMetaData(target, method);
+			
+			if (cachedMetaData is MethodMetaData) {
+				MethodMetaData(cachedMetaData).updateValues(target, getUpdatedValue);
+				return MethodMetaData(cachedMetaData);
+			}
+			
 			if (type) {
 				describedTypeRecord = DescribeTypeCache.describeType(type);
 			}
 			else {
 				describedTypeRecord = DescribeTypeCache.describeType(target);
-			}
-			
-			cachedMetaData = describedTypeRecord[method];
-			
-			if (cachedMetaData is MethodMetaData) {
-				MethodMetaData(cachedMetaData).updateValues(target);
-				return MethodMetaData(cachedMetaData);
 			}
 			
 			typeDescription = describedTypeRecord.typeDescription[0];
@@ -2104,6 +2105,8 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 			
 			if (matches.length()>0) {
 				node = matches[0].parent();
+				node = node.copy();
+				
 				if ("typeName" in typeDescription) {
 					node.@declaredBy = typeDescription.typeName;
 				}
@@ -2118,18 +2121,134 @@ var metadataMetaData:MetaData = getMetaDataOfMetaData(myButton, "DefaultProperty
 				
 				// we want to cache method meta data
 				if (methodMetaData) {
-					//Main Thread (Suspended: Error: Error #2090: The Proxy class does not implement callProperty. It must be overridden by a subclass.)	
-					//	Error$/throwError [no source]	
-					//	flash.utils::Proxy/http://www.adobe.com/2006/actionscript/flash/proxy::callProperty [no source]	
-					
-					DescribeTypeCache.registerCacheHandler(method, function (record:DescribeTypeCacheRecord):Object {
-						//if (relevantPropertyFacades.indexOf(method)!=-1) {
-						return methodMetaData;
+					setCachedMetaData(target, method, methodMetaData);
+				}
+				
+				return methodMetaData;
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get AccessorMetaData data for the given property. 
+		 * 
+		 * @see #getMetaDataOfStyle();
+		 * @see #getMetaDataOfEvent();
+		 * */
+		public static function getMetaDataOfProperty(target:Object, property:String, ignoreFacades:Boolean = false, getUpdatedValue:Boolean = true):AccessorMetaData {
+			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord;
+			var accessorMetaData:AccessorMetaData;
+			var accessorMatches:XMLList;
+			var variableMatches:XMLList;
+			var node:XML;
+			var cachedMetaData:MetaData;
+			var needToAddAccessorData:Boolean;
+			
+			
+			cachedMetaData = getCachedMetaData(target, property);
+			
+			if (!(cachedMetaData is AccessorMetaData)) {
+				cachedMetaData = getCachedMetaData(target, property, AccessorMetaData);
+				
+				if (cachedMetaData==null) {
+					needToAddAccessorData = true;
+				}
+			}
+			
+			if (cachedMetaData && cachedMetaData is AccessorMetaData) {
+				AccessorMetaData(cachedMetaData).updateValues(target, getUpdatedValue);
+				return AccessorMetaData(cachedMetaData);
+			}
+			
+			describedTypeRecord = DescribeTypeCache.describeType(target);
+			
+			accessorMatches = describedTypeRecord.typeDescription..accessor.(@name==property);
+			variableMatches = describedTypeRecord.typeDescription..variable.(@name==property);
+			
+			if (accessorMatches.length()>0) {
+				node = accessorMatches[0];
+			}
+			else if (variableMatches.length()>0) {
+				node = variableMatches[0];
+			}
+			
+			
+			if (node) {
+				accessorMetaData = new AccessorMetaData();
+				accessorMetaData.unmarshall(node, target);
+				
+				
+				if (accessorMetaData) {
+					if (needToAddAccessorData) {
+						setCachedMetaData(target, property, accessorMetaData, AccessorMetaData);
+					}
+					else {
+						setCachedMetaData(target, property, accessorMetaData);
+					}
+				}
+				
+				
+				return accessorMetaData;
+			}
+			
+			return null;
+		}
+		
+		/**
+		 * Get AccessorMetaData data for the given property. 
+		 * 
+		 * @see #getMetaDataOfStyle();
+		 * @see #getMetaDataOfEvent();
+		 * */
+		public static function getMetaDataOfPropertyOld(target:Object, property:String, ignoreFacades:Boolean = false):AccessorMetaData {
+			var describedTypeRecord:mx.utils.DescribeTypeCacheRecord;
+			var accessorMetaData:AccessorMetaData;
+			var matches:XMLList;
+			var matches2:XMLList;
+			var node:XML;
+			var cachedMetaData:Object;
+			
+			
+			describedTypeRecord = DescribeTypeCache.describeType(target);
+			
+			
+			// we should not include facade properties
+			// could we move this up a few lines before the XMLList stuff and save some cpu cycles?
+			// testing now
+			//cachedMetaData = DescribeTypeCacheRecord[property];
+			cachedMetaData = describedTypeRecord[property];
+			
+			if (cachedMetaData is AccessorMetaData) {
+				AccessorMetaData(cachedMetaData).updateValues(target);
+				return AccessorMetaData(cachedMetaData);
+			}
+			
+			matches = describedTypeRecord.typeDescription..accessor.(@name==property);
+			matches2 = describedTypeRecord.typeDescription..variable.(@name==property);
+			
+			if (matches.length()>0) {
+				node = matches[0];
+			}
+			else if (matches2.length()>0) {
+				node = matches2[0];
+			}
+			
+			
+			if (node) {
+				accessorMetaData = new AccessorMetaData();
+				accessorMetaData.unmarshall(node, target);
+				
+				// we want to cache property meta data
+				if (accessorMetaData) {
+					DescribeTypeCache.registerCacheHandler(property, function (record:DescribeTypeCacheRecord):Object {
+						//if (relevantPropertyFacades.indexOf(style)!=-1) {
+						return accessorMetaData;
 						//}
 					});
 				}
 				
-				return methodMetaData;
+				return accessorMetaData;
 			}
 			
 			return null;

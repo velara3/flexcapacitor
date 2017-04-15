@@ -1,0 +1,654 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" 
+		 xmlns:controls="com.flexcapacitor.controls.*"
+		 
+		 creationComplete="group1_creationCompleteHandler(event)"
+		 >
+	
+	<fx:Metadata>
+		[DefaultProperty("dataProvider")]
+		[Event(name="change", type="flash.events.Event")]
+	</fx:Metadata>
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.utils.ClassUtils;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ISort;
+			import mx.collections.ListCollectionView;
+			import mx.events.CollectionEvent;
+			import mx.events.ColorPickerEvent;
+			import mx.events.FlexEvent;
+			import mx.graphics.GradientBase;
+			import mx.graphics.GradientEntry;
+			
+			import spark.collections.Sort;
+			import spark.collections.SortField;
+			
+			public var selectedColorStop:ColorStop;
+			public var selectedGradientEntry:GradientEntry;
+			public var sort:ISort;
+			public var sortField:SortField;
+			public var sortFields:Array = [];
+			public var gradientDictionary:Dictionary = new Dictionary(true);
+			public var mouseDownPoint:Point = new Point();
+			public var stagePoint:Point = new Point();
+			public var offsetPoint:Point = new Point();
+			public var colorStopStartPoint:Point = new Point();
+			public var isDragging:Boolean;
+			public var isDraggedRemoved:Boolean;
+			private var _updateLive:Boolean = true;
+			private var originalEntries:Array;
+			private var _clientGradientBase:GradientBase;
+
+			public function get clientGradientBase():GradientBase {
+				return _clientGradientBase;
+			}
+
+			public function set clientGradientBase(value:GradientBase):void {
+				_clientGradientBase = value;
+				
+				if (value) {
+					originalEntries = _clientGradientBase.entries;
+				}
+				else {
+					originalEntries = null;
+				}
+			}
+
+
+			public function get updateLive():Boolean
+			{
+				return _updateLive;
+			}
+
+			public function set updateLive(value:Boolean):void
+			{
+				if (!value && clientGradientBase) {
+					
+					if (originalEntries && clientGradientBase.entries != originalEntries) {
+						clientGradientBase.entries = originalEntries;
+					}
+				}
+				_updateLive = value;
+			}
+
+			
+			//----------------------------------
+			//  dataProvider
+			//----------------------------------
+			
+			private var _dataProvider:ListCollectionView;
+			private var dataProviderChanged:Boolean;
+			
+			[Bindable("dataProviderChanged")]
+			[Inspectable(category="Data")]
+			
+			/**
+			 *  The data provider for this DataGroup. 
+			 *  It must be an IList.
+			 * 
+			 *  <p>There are several IList implementations included in the 
+			 *  Flex framework, including ArrayCollection, ArrayList, and
+			 *  XMLListCollection.</p>
+			 *
+			 *  @default null
+			 *
+			 *  @see #itemRenderer
+			 *  @see #itemRendererFunction
+			 *  @see mx.collections.IList
+			 *  @see mx.collections.ArrayCollection
+			 *  @see mx.collections.ArrayList
+			 *  @see mx.collections.XMLListCollection
+			 *  
+			 *  @langversion 3.0
+			 *  @playerversion Flash 10
+			 *  @playerversion AIR 1.5
+			 *  @productversion Flex 4
+			 */
+			public function get dataProvider():ListCollectionView
+			{
+				return _dataProvider;
+			}
+			
+			/**
+			 *  @private
+			 */
+			public function set dataProvider(value:ListCollectionView):void
+			{
+				if (_dataProvider == value)
+					return;
+				
+				removeDataProviderListener();
+				_dataProvider = value;  // listener will be added by commitProperties()
+				addSortToDataProvider();
+				dataProviderChanged = true;
+				invalidateProperties();
+				dispatchEvent(new Event("dataProviderChanged"));
+			}
+			
+			/** 
+			 *  @private
+			 * 
+			 *  Reuse as many of the IItemRenderer renderers in indexToRenders as possible.
+			 */
+			private function createItemRenderers():void {
+				var colorStop:ColorStop;
+				
+				if (!dataProvider) {
+					removeAllItems();
+					return;
+				}
+				
+				const numberOfEntries:int = dataProvider.length;
+				
+				for (var i:int = 0; i < numberOfEntries; i++) {
+					var gradientEntry:GradientEntry = dataProvider.getItemAt(i) as GradientEntry;
+					if (gradientDictionary[gradientEntry]==null) {
+						colorStop = createColorStop(gradientEntry);
+						gradientDictionary[gradientEntry] = colorStop;
+					}
+					
+					colorStop = gradientDictionary[gradientEntry];
+					
+					if (colorStop.stage==null) {
+						gradientContainer.addElement(colorStop);
+					}
+					
+					//addColorStopElement(gradientEntry.color, gradientEntry.ratio, gradientEntry.alpha);
+				}
+				
+			}
+			
+			/**
+			 *  @private
+			 */
+			override protected function commitProperties():void { 
+				
+				super.commitProperties();
+				
+				if (dataProviderChanged) {
+					// item renderers and the dataProvider listener have already been removed
+					createItemRenderers();
+					calculateColorStopPositions();
+					addDataProviderListener();
+					
+					dataProviderChanged = false;
+					
+					updateRectangleFill();
+					selectColorStop();
+				}
+				
+			}
+			
+			/**
+			 *  @private
+			 */
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				
+				//trace("size:" + unscaledWidth);
+				calculateColorStopPositions();
+				
+			}
+			
+			
+			/**
+			 *  @private
+			 */
+			private function addDataProviderListener():void
+			{
+				if (_dataProvider)
+					_dataProvider.addEventListener(CollectionEvent.COLLECTION_CHANGE, dataProvider_collectionChangeHandler, false, 0, true);
+			}
+			
+			/**
+			 *  @private
+			 */
+			private function removeDataProviderListener():void
+			{
+				if (_dataProvider)
+					_dataProvider.removeEventListener(CollectionEvent.COLLECTION_CHANGE, dataProvider_collectionChangeHandler);
+			}
+			
+			/**
+			 *  @private
+			 *  Called when contents within the dataProvider changes.  We will catch certain 
+			 *  events and update our children based on that.
+			 *
+			 *  @param event The collection change event
+			 *  
+			 *  @langversion 3.0
+			 *  @playerversion Flash 10
+			 *  @playerversion AIR 1.5
+			 *  @productversion Flex 4
+			 */
+			public function dataProvider_collectionChangeHandler(event:CollectionEvent):void {
+				
+				switch (event.kind) {
+					default:
+					{
+						removeDataProviderListener();
+						dataProviderChanged = true;
+						invalidateProperties();
+						break;
+					}
+				}
+			}
+			
+			/**
+			 *  @private
+			 *  Remove all of the color stops
+			 */ 
+			public function removeAllItems():void {
+				var colorStops:Array = ClassUtils.getElementsByType(gradientContainer, ColorStop, null, false);
+				
+				for (var i:int = 0; i < colorStops.length; i++) {
+					gradientContainer.removeElement(colorStops[i]);
+				}
+				
+			}
+			
+			protected function clickHandler(event:MouseEvent):void {
+				var eventTarget:Object = event.target;
+				var point:Point = new Point(event.localX, 0);
+				var colorStop:ColorStop;
+				var colorStopWidth:int;
+				var ratio:Number;
+				var gradientEntry:GradientEntry;
+				
+				colorStop = eventTarget as ColorStop;
+				
+				if (eventTarget==gradientContainer) {
+					gradientEntry = addColorStopAt(point.x);
+					ratioStepper.value = gradientEntry.ratio;
+					dataProviderChanged = true;
+					commitProperties();
+					selectedColorStop = gradientDictionary[gradientEntry];
+					updateUI(selectedColorStop);
+				}
+				else if (colorStop) {
+					updateUI(colorStop);
+				}
+			}
+			
+			public function addGradient(gradientEntry:GradientEntry):void {
+				var gradientEntry:GradientEntry;
+				
+				if (_dataProvider==null) {
+					_dataProvider = new ArrayCollection();
+				}
+				
+				dataProvider.addItem(gradientEntry);
+				
+				dataProvider.refresh();
+			}
+			
+			public function addColorStopAt(x:int):GradientEntry {
+				var colorStopWidth:int;
+				var ratio:Number;
+				var entries:Array;
+				var gradientEntry:GradientEntry;
+				var color:uint;
+				var gradientAlpha:Number;
+				
+				gradientEntry = new GradientEntry();
+				
+				color = colorPicker.selectedColor;
+				gradientAlpha = alphaStepper.value;
+				ratio = (gradientRectangle.width - x) / gradientRectangle.width;
+				ratio = Math.round(100-ratio*100)/100;
+				
+				gradientEntry.ratio = ratio;
+				gradientEntry.alpha = alpha;
+				gradientEntry.color = color;
+				
+				addGradient(gradientEntry);
+				
+				selectedGradientEntry = gradientEntry;
+				
+				return gradientEntry;
+			}
+			
+			// add a color stop element with the given information
+			public function addColorStopElement(color:uint, ratio:Number, alpha:Number):void {
+				var colorStop:ColorStop;
+				var entries:Array;
+				var gradientEntry:GradientEntry;
+				
+				gradientEntry = new GradientEntry();
+				gradientEntry.alpha = alpha;
+				gradientEntry.color = color;
+				gradientEntry.ratio = ratio;
+				
+				colorStop = new ColorStop();
+				colorStop.data = gradientEntry;
+				
+				//gradientContainer.addElement(colorStop);
+				addGradient(gradientEntry);
+			}
+			
+			public function calculateColorStopPositions():void {
+				var colorStops:Array = ClassUtils.getElementsByType(gradientContainer, ColorStop, null, false);
+				var colorStop:ColorStop;
+				var container:Object;
+				var currentWidth:int;
+				var position:int;
+				var colorStopWidth:int;
+				
+				container = gradientContainer;
+				currentWidth = container.width;
+				colorStopWidth = 10;
+				
+				for (var i:int = 0; i < colorStops.length; i++) {
+					colorStop = colorStops[i];
+					position = currentWidth*colorStop.ratio;
+					position = position-colorStopWidth/2; // center
+					colorStop.x = position;
+				}
+				
+			}
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void
+			{
+				if (dataProvider!=null && dataProvider.length) {
+					var gradientEntry:GradientEntry = dataProvider.getItemAt(0) as GradientEntry;
+					selectedGradientEntry = gradientEntry;
+					selectedColorStop = gradientDictionary[gradientEntry];
+					selectColorStop();
+					updateUI(selectedColorStop);
+				}
+			}
+			
+			protected function colorPicker_changeHandler(event:ColorPickerEvent):void {
+				var color:uint = event.color;
+				
+				if (selectedColorStop) {
+					selectedColorStop.color = color;
+				}
+			}
+			
+			protected function ratioStepper_changeHandler(event:Event):void {
+				var ratio:Number = ratioStepper.value;
+				
+				if (selectedColorStop) {
+					selectedColorStop.ratio = ratio;
+				}
+			}
+			
+			protected function alphaStepper_changeHandler(event:Event):void {
+				var gradientAlpha:Number = alphaStepper.value;
+				
+				if (selectedColorStop) {
+					selectedColorStop.gradientAlpha = gradientAlpha;
+				}
+			}
+			
+			public function createColorStop(gradientEntry:GradientEntry):ColorStop {
+				var colorStop:ColorStop;
+				
+				colorStop = new ColorStop();
+				colorStop.includeInLayout = false;
+				colorStop.data = gradientEntry;
+				return colorStop;
+			}
+			
+			private function updateRectangleFill():void {
+				var entries:Array = [];
+				
+				if (dataProvider) {
+					entries = dataProvider.toArray();
+				}
+				
+				linearGradient.entries = entries;
+				
+				if (clientGradientBase && updateLive) {
+					if (originalEntries==null) {
+						originalEntries = clientGradientBase.entries;
+					}
+					clientGradientBase.entries = entries;
+				}
+			}
+			
+			protected function listenForMove(event:MouseEvent):void {
+				var horizontalToleranceMet:Boolean;
+				var verticalToleranceMet:Boolean;
+				var horizontalTolerance:int;
+				var verticalTolerance:int;
+				var yDifference:int;
+				var position:int;
+				var colorStopWidth:int;
+				var ratio:Number;
+				
+				colorStopWidth = 10;
+				horizontalTolerance = 4;
+				verticalTolerance = 25;
+				stagePoint = new Point(event.stageX, event.stageY);
+				offsetPoint = mouseDownPoint.subtract(stagePoint);
+				
+				if (isDragging) {
+					position = colorStopStartPoint.x - offsetPoint.x;
+					position = Math.min(Math.max(-colorStopWidth/2, position), gradientContainer.width-colorStopWidth/2);
+					selectedColorStop.x = position;
+					yDifference = colorStopStartPoint.y + offsetPoint.y;
+					ratio = getRatioFromColorStopPosition(selectedColorStop);
+					selectedColorStop.ratio = ratio;
+					ratioStepper.value = ratio;
+					
+					if (yDifference>verticalTolerance) {
+						selectedColorStop.visible = false;
+						isDraggedRemoved = true;
+					}
+					else {
+						selectedColorStop.visible = true;
+						isDraggedRemoved = false;
+					}
+					return;
+				}
+				
+				horizontalToleranceMet = Math.abs(offsetPoint.x)>horizontalTolerance || Math.abs(offsetPoint.y)>horizontalTolerance;
+				
+				if (horizontalToleranceMet) {
+					isDragging = true;
+					colorStopStartPoint = new Point(selectedColorStop.x, selectedColorStop.y);
+				}
+				else {
+					isDragging = false;
+				}
+			}
+			
+			protected function mouseDownHandler(event:MouseEvent):void {
+				selectedColorStop = event.target as ColorStop;
+				mouseDownPoint = new Point(event.stageX, event.stageY);
+				
+				if (selectedColorStop) {
+					stage.addEventListener(MouseEvent.MOUSE_MOVE, listenForMove, false, 0, true);
+					stage.addEventListener(MouseEvent.MOUSE_UP, mouseUpHandler, false, 0, true);
+					selectColorStop();
+				}
+			}
+			
+			protected function mouseUpHandler(event:MouseEvent):void {
+				stage.removeEventListener(MouseEvent.MOUSE_MOVE, listenForMove);
+				stage.removeEventListener(MouseEvent.MOUSE_UP, mouseUpHandler);
+				
+				if (isDraggedRemoved) {
+					removeColorStop(selectedColorStop);
+				}
+				else if (isDragging) {
+					var ratio:Number = getRatioFromColorStopPosition(selectedColorStop);
+					
+					if (selectedColorStop) {
+						selectedColorStop.ratio = ratio;
+					}
+					
+					updateUI(selectedColorStop);
+				}
+				
+				isDraggedRemoved = false;
+				isDragging = false;
+			}
+			
+			private function getRatioFromColorStopPosition(colorStop:ColorStop):Number {
+				var ratio:Number;
+				var position:int;
+				var colorStopWidth:int;
+				
+				colorStopWidth = 10;
+				
+				ratio = (gradientRectangle.width - colorStop.x-colorStopWidth/2) / gradientRectangle.width;
+				ratio = Math.round(100-ratio*100)/100;
+				
+				ratio = Math.min(Math.max(ratio, 0), 1);
+				
+				return ratio;
+			}
+			
+			public function removeColorStop(colorStop:ColorStop):void {
+				var gradientEntry:GradientEntry;
+				var index:int;
+				
+				gradientEntry = colorStop.gradientEntry;
+				
+				if (dataProvider) {
+					index = dataProvider.getItemIndex(gradientEntry);
+					dataProvider.removeItemAt(index);
+				}
+			}
+			
+			private function updateUI(colorStop:ColorStop):void {
+				var gradientEntry:GradientEntry;
+				gradientEntry = colorStop.gradientEntry;
+				colorPicker.selectedColor = gradientEntry.color;
+				alphaStepper.value = gradientEntry.alpha;
+				ratioStepper.value = gradientEntry.ratio;
+				selectedColorStop = colorStop;
+				selectedGradientEntry = gradientEntry;
+				
+				selectColorStop();
+			}
+			
+			public function selectColorStop(deselectAll:Boolean = false):void {
+				var colorStops:Array = ClassUtils.getElementsByType(gradientContainer, ColorStop, null, false);
+				var colorStop:ColorStop;
+				
+				for (var i:int = 0; i < colorStops.length; i++) {
+					colorStop = colorStops[i];
+					colorStop.selected = false;
+				}
+				
+				if (selectedColorStop && !deselectAll) {
+					selectedColorStop.selected = true;
+				}
+				
+				if (deselectAll) {
+					selectedColorStop = null;
+					selectedGradientEntry = null;
+				}
+			}
+			
+			protected function label1_clickHandler(event:MouseEvent):void
+			{
+				selectColorStop(true);
+			}
+			
+			private function addSortToDataProvider():void {
+				var descending:Boolean;
+				var numeric:Boolean;
+				var field:String;
+				
+				if (sort==null) {
+					numeric = true;
+					field = "ratio";
+					sort = new Sort();
+					sortField = new SortField(field, descending, numeric);
+					sortFields.push(sortField);
+					sort.fields = sortFields;
+				}
+				
+				if (_dataProvider && _dataProvider.sort!=sort) {
+					_dataProvider.sort = sort;
+					_dataProvider.refresh();
+				}
+			}
+			
+			public function toArray():Array {
+				if (_dataProvider) {
+					return copyGradientEntries(_dataProvider.toArray());
+				}
+				
+				return [];
+			}
+			
+			public function copyGradientEntries(entries:Array):Array {
+				var newEntries:Array = [];
+				var entry:GradientEntry;
+				var newEntry:GradientEntry;
+				
+				for (var i:int = entries.length-1; i>-1; i--) {
+					entry = entries[i];
+					newEntries[i] = new GradientEntry();
+					newEntries[i].color = entry.color;
+					newEntries[i].ratio = entry.ratio;
+					newEntries[i].alpha = entry.alpha;
+					//newEntries.push(newEntry);
+				}
+				
+				// this loop ended up showing only the last entry when drawn
+				/*
+				for (var i:int = entries.length-1; i>-1; i--) {
+				entry = entries[i];
+				newEntry = new GradientEntry();
+				newEntry.color = entry.color;
+				newEntry.ratio = entry.ratio;
+				newEntry.alpha = entry.alpha;
+				newEntries.push(newEntry);
+				}
+				*/
+				//newEntries.reverse();
+				
+				return newEntries;
+			}
+		]]>
+	</fx:Script>
+	
+	<s:layout>
+		<s:VerticalLayout />
+	</s:layout>
+	
+	<s:Group id="gradientContainer" width="100%" height="100%" 
+			 click="clickHandler(event)"
+			 mouseDown="mouseDownHandler(event)">
+		<s:Rect id="gradientRectangle" width="100%" height="100%" top="10">
+			<s:fill>
+				<s:LinearGradient id="linearGradient">
+				</s:LinearGradient>
+			</s:fill>
+		</s:Rect>
+	</s:Group>
+	
+	<s:HGroup top="0" verticalAlign="baseline">
+		<s:Label text="Color:" click="label1_clickHandler(event)"/>
+		<controls:ColorPicker id="colorPicker" focusAlpha="0"
+							  change="colorPicker_changeHandler(event)"/>
+		<s:Label text="Alpha" click="label1_clickHandler(event)"/>
+		<s:NumericStepper id="alphaStepper" 
+						  maximum="1" minimum="0" 
+						  stepSize=".01" 
+						  snapInterval="0"
+						  width="52"
+						  focusAlpha="0"
+						  change="alphaStepper_changeHandler(event)"/>
+		<s:Label text="Ratio" click="label1_clickHandler(event)"/>
+		<s:NumericStepper id="ratioStepper" 
+						  maximum="1" minimum="0" 
+						  stepSize=".01" 
+						  snapInterval="0"
+						  width="52"
+						  focusAlpha="0"
+						  change="ratioStepper_changeHandler(event)"/>
+	</s:HGroup>
+</s:Group>
