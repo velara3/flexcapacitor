@@ -22,6 +22,7 @@ package com.flexcapacitor.utils {
 	import flash.ui.Keyboard;
 	import flash.utils.Dictionary;
 	import flash.utils.clearTimeout;
+	import flash.utils.getDefinitionByName;
 	import flash.utils.getQualifiedClassName;
 	import flash.utils.getQualifiedSuperclassName;
 	import flash.utils.setTimeout;
@@ -1821,7 +1822,7 @@ package com.flexcapacitor.utils {
 		 * */
 		protected function valueInputEnterHandler(event:KeyboardEvent):void {
 			if (event.keyCode==Keyboard.ENTER) {
-				setPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text, popUpValueInput.text);
+				setPropertyOrStyle(currentPopUpTarget, popUpPropertyInput.text, popUpValueInput.text, event.shiftKey);
 			}
 			if (event.shiftKey && event.keyLocation==Keyboard.TAB) {
 				popUpPropertyInput.setFocus();
@@ -1952,7 +1953,7 @@ package com.flexcapacitor.utils {
 		/**
 		 * Set property or style on target
 		 * */
-		public function setPropertyOrStyle(target:Object, property:String, value:String):void {
+		public function setPropertyOrStyle(target:Object, property:String, value:String, keepExistingType:Boolean = false):void {
 			var currentValue:*;
 			var style:String = property;
 			
@@ -1961,7 +1962,7 @@ package com.flexcapacitor.utils {
 				try {
 					currentValue = target[property];
 					
-					setValue(target, property, value);
+					setValue(target, property, value, false, keepExistingType);
 					
 					currentValue = target[property];
 					
@@ -1990,7 +1991,7 @@ package com.flexcapacitor.utils {
 					// need to call clear style or allow setting undefined
 					// to support
 					if (value!="undefined") {
-						setValue(target, style, value);
+						setValue(target, style, value, false, keepExistingType);
 					}
 					else if (value=="undefined") {
 						target.setStyle(style, undefined);
@@ -2093,42 +2094,50 @@ package com.flexcapacitor.utils {
 		 * There are a few areas that set values on objects
 		 * SetAction
 		 */
-		public static function setValue(target:Object, property:String, value:Object, complexData:Boolean = false):void {
-			var isStyle:Boolean = false;
-			var propName:String = property;
-			var val:Object = value;
+		public static function setValue(target:Object, property:String, value:Object, complexData:Boolean = false, keepExistingType:Boolean = false):void {
+			var propertyName:String;
+			var val:Object;
 			var currentValue:Object;
-			var propNameCased:String = getCaseSensitiveProperty(target, property, defaultPropertyNameOptions);
-			var toObject:Object = toObject(value);
+			var propertyNameCased:String;
+			var asObject:Object;
+			
+			val = value;
+			propertyName = property;
+			propertyNameCased = getCaseSensitiveProperty(target, property, defaultPropertyNameOptions);
+			asObject = toObject(value);
 			
 			// Handle special case of width/height values being set in terms
 			// of percentages. These are handled through the percentWidth/Height
 			// properties instead                
 			if (property == "width" || property == "height") {
 				if (value is String && value.indexOf("%") >= 0) {
-					propName = property == "width" ? "percentWidth" : "percentHeight";
+					propertyName = property == "width" ? "percentWidth" : "percentHeight";
 					val = val.slice(0, val.indexOf("%"));
 				}
 			}
 			else if (property == "skinClass" ) {
 				var skinClass:Object;
 				// try and resolve to a skin class
-				if (value && value is String && toObject) {
-					val = toObject;
+				if (value && value is String && asObject) {
+					val = asObject;
 				}
 			}
 			else {
-				currentValue = getValue(target, propName);
+				currentValue = getValue(target, propertyName);
+				
+				if (keepExistingType) {
+					val = getTypedValue(value, getValueType(currentValue));
+				}
 				
 				// Handle situation of turning strings into Boolean values
 				if (currentValue is Boolean) {
 					if (val is String)
-						val = (value.toLowerCase() == "true");
+						val = (value.toLowerCase() == "true" || value==="1");
 				}
 					// Handle turning standard string representations of colors
 					// into numberic values
 				else if (currentValue is Number &&
-					propName.toLowerCase().indexOf("color") != -1)
+					propertyName.toLowerCase().indexOf("color") != -1)
 				{
 					var moduleFactory:IFlexModuleFactory = null;
 					if (target is IFlexModule)
@@ -2140,16 +2149,16 @@ package com.flexcapacitor.utils {
 			
 			if (target is XML) {
 				if (complexData) 
-					setItemCDATA(XML(target), propName, val);
+					setItemCDATA(XML(target), propertyName, val);
 				else
-					XML(target)[propName] = val;
+					XML(target)[propertyName] = val;
 			}
-			else if (propName in target)
-				target[propName] = val;
+			else if (propertyName in target)
+				target[propertyName] = val;
 			else if ("setStyle" in target)
-				target.setStyle(propName, val);
+				target.setStyle(propertyName, val);
 			else
-				target[propName] = val;
+				target[propertyName] = val;
 		}
 		
 		/**
@@ -2178,6 +2187,96 @@ package com.flexcapacitor.utils {
 				return target.getStyle(propName);
 			else 
 				return null;
+		}
+		
+		
+		/**
+		 * Casts the value to the correct type
+		 * If the type is not set then attempts to discover the type
+		 * 
+		 * Function is from Flex 4.5 Framework
+		 * 
+		 * NOTE: May not work for colors
+		 * 
+		 * Note: Not sure why but has support for creating a new instance of 
+		 * a class specified in the value
+		 * 
+		 * Set type to "ClassDefinition" and value to "com.something.MyClass" to 
+		 * get an new instance. returns instance of flash.utils.getDefinitionByName(className)
+		 * */
+		public static function getTypedValue(value:Object, type:String=null):* {
+			
+			// if type is not set then guess
+			if (type==null) {
+				type = getValueType(value);
+			}
+			
+			if (type == "Boolean") {
+				
+				if (value is String) {
+					if (value.toLowerCase() == "true") {
+						return true;
+					}
+					else if (value.toLowerCase() == "false") {
+						return false;
+					}
+				}
+				
+				return Boolean(value);
+			}
+			else if (type == "Number") {
+				if (value == null || value == "") {
+					return undefined
+				};
+				return Number(value);
+			}
+			else if (type == "int") {
+				if (value == null || value == "") {
+					return undefined
+				};
+				return int(value);
+			}
+			else if (type == "uint") {
+				if (value == null || value == "") {
+					return undefined
+				};
+				return uint(value);
+			}
+			else if (type == "String") {
+				return String(value);
+			}
+				// TODO: Return color type
+			else if (type == "Color") {
+				// return convertIntToHex(value); // need to test, need use case
+				return String(value);
+			}
+			else if (type == "ClassDefinition") {
+				// Note: is this condition supposed to be in this method???
+				// returns an new instance of the type of class the value is
+				if (value) {
+					var ClassDefinition:Class = flash.utils.getDefinitionByName(String(value)) as Class;
+					return new ClassDefinition();
+				}
+				return new Object();
+			}
+			else {
+				return value;
+			}
+		}
+		
+		/**
+		 * Get the type of the value passed in
+		 * */
+		public static function getValueType(value:*):String {
+			var type:String = getQualifiedClassName(value);
+			
+			if (type=="int") {
+				if (typeof value=="number") {
+					type = "Number";
+				}
+			}
+			
+			return type;
 		}
 		
 		/**

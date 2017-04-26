@@ -203,7 +203,7 @@ package com.flexcapacitor.controls {
 	 * Dispached when a command is executed in the browser. 
 	 * When running on the desktop the callback function is called directly. 
 	 *
-	 * @eventType flash.events.Event
+	 * @eventType com.flexcapacitor.events.AceEvent
 	 */
 	[Event(name="command", type="com.flexcapacitor.events.AceEvent")]
 	
@@ -224,21 +224,21 @@ package com.flexcapacitor.controls {
 	/**
 	 *  Dispached as the mouse moves over the editor.
 	 *
-	 *  @eventType flash.events.Event
+	 *  @eventType com.flexcapacitor.events.AceEvent
 	 */
 	[Event(name="mousemove", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispached after the cursor changes positions.
 	 *
-	 *  @eventType flash.events.Event
+	 *  @eventType com.flexcapacitor.events.AceEvent
 	 */
 	[Event(name="changeCursor", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 *  Dispached after the session has changed
 	 *
-	 *  @eventType flash.events.Event
+	 *  @eventType com.flexcapacitor.events.AceEvent
 	 *  
 	 *  @langversion 3.0
 	 *  @playerversion Flash 10
@@ -252,7 +252,7 @@ package com.flexcapacitor.controls {
 	 *  selection active or lead position properties have changed
 	 *  for any reason.
 	 *
-	 *  @eventType flash.events.Event
+	 *  @eventType com.flexcapacitor.events.AceEvent
 	 *  
 	 *  @langversion 3.0
 	 *  @playerversion Flash 10
@@ -264,7 +264,7 @@ package com.flexcapacitor.controls {
 	/**
 	 *  Dispatched after a user editing operation is complete.
 	 *
-	 *  @eventType spark.events.TextOperationEvent.CHANGE
+	 *  @eventType com.flexcapacitor.events.AceEvent
 	 *  
 	 *  @langversion 3.0
 	 *  @playerversion Flash 10
@@ -272,6 +272,30 @@ package com.flexcapacitor.controls {
 	 *  @productversion Flex 4
 	 */
 	[Event(name="change", type="com.flexcapacitor.events.AceEvent")]
+	
+	/**
+	 *  Dispatched after a focus in event.
+	 *
+	 *  @eventType com.flexcapacitor.events.AceEvent
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion Flash 10
+	 *  @playerversion AIR 1.5
+	 *  @productversion Flex 4
+	 */
+	[Event(name="focus", type="com.flexcapacitor.events.AceEvent")]
+	
+	/**
+	 *  Dispatched after a blur event
+	 *
+	 *  @eventType com.flexcapacitor.events.AceEvent
+	 *  
+	 *  @langversion 3.0
+	 *  @playerversion Flash 10
+	 *  @playerversion AIR 1.5
+	 *  @productversion Flex 4
+	 */
+	[Event(name="blur", type="com.flexcapacitor.events.AceEvent")]
 	
 	/**
 	 * Font family

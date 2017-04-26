@@ -37,7 +37,7 @@ package com.flexcapacitor.utils
 		public var doNotRedirectFromUnsecuredLocalhost:Boolean = true;
 		
 		/**
-		 * Path to localhost or allowed server
+		 * Path to localhost or allowed server. Default is "localhost"
 		 * */
 		public var localhostPath:String = "localhost";
 		

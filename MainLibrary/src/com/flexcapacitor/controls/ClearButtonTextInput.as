@@ -15,7 +15,7 @@ package com.flexcapacitor.controls
 	/**
 	 * Dispatched when the clear button is pressed. 
 	 * */ 
-	[Event(name=CLEAR_TEXT,type="spark.events.TextOperationEvent")]
+	[Event(name="clearText",type="spark.events.TextOperationEvent")]
 	
 	//--------------------------------------
 	//  Styles
