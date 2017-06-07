@@ -175,6 +175,11 @@ package com.flexcapacitor.utils.supportClasses {
 		public var userStyles:String;
 		
 		/**
+		 * Embed bitmap data
+		 * */
+		public var embedBitmapData:Boolean;
+		
+		/**
 		 * User defined attributes
 		 * */
 		public var htmlAttributes:String;
@@ -731,6 +736,20 @@ package com.flexcapacitor.utils.supportClasses {
 				
 				componentDescription.locked = value;
 			}
+		}
+		
+		public function getNameOrID(getClassName:Boolean = false):String {
+			if (instance && "id" in instance && instance.id) {
+				return instance.id;
+			}
+			else if (instance && "name" in instance && instance.name) {
+				return instance.name;
+			}
+			else if (instance && className) {
+				return NameUtil.getUnqualifiedClassName(instance);
+			}
+			
+			return null;
 		}
 	}
 }

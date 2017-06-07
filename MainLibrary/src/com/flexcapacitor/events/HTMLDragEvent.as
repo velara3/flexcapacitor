@@ -15,6 +15,10 @@ package com.flexcapacitor.events
 		 * Event data
 		 * */
 		public var data:HTMLDragData;
+		public var altKey:Boolean;
+		public var commandKey:Boolean;
+		public var shiftKey:Boolean;
+		public var controlKey:Boolean;
 	}
 }
 

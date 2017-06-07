@@ -80,6 +80,8 @@ else {
 		 * */
 		public function WPAttachmentService(target:IEventDispatcher=null) {
 			super(target);
+			
+			contentType = "application/octet-stream";
 		}
 		
 		private var multipartURLLoader:MultipartURLLoader;
@@ -119,11 +121,6 @@ else {
 		 * Data field for upload. Default is "attachment".
 		 * */
 		public var dataField:String = "attachment";
-		
-		/**
-		 * Content type. Default is, "application/octet-stream". 
-		 * */
-		public var contentType:String = "application/octet-stream";
 		
 		/**
 		 * Used to send custom data

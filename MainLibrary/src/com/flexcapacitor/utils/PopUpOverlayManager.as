@@ -278,9 +278,11 @@ package com.flexcapacitor.utils
 			
 			while (parent) {
 				isVisible = parent.visible;
+				
 				if (isVisible==false) {
 					return false;
 				}
+				
 				parent = parent.parent;
 			}
 			
@@ -293,6 +295,7 @@ package com.flexcapacitor.utils
 		public function hideOverlappingObjects(popUp:DisplayObject):void {
 			var isOver:Boolean;
 			var isToolTip:Boolean;
+			var ancestorsVisible:Boolean;
 			
 			// trace("3. popup hide overlap objects");
 			
@@ -305,10 +308,15 @@ package com.flexcapacitor.utils
 					isOver = intersects(popUp, overlay as DisplayObject);
 					
 					if (isOver) {
+						
 						if (overlay.stage!=null && overlay.visible==true) {
-							// trace("5. is over tool tip");
-							overlay.visible = false;
-							hiddenOverlays[overlay] = popUp;
+							ancestorsVisible = getAllAncestorsVisible(overlay);
+							
+							if (ancestorsVisible) {
+								// trace("5. is over tool tip");
+								overlay.visible = false;
+								hiddenOverlays[overlay] = popUp;
+							}
 						}
 					}
 				}

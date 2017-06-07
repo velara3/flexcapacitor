@@ -3,11 +3,17 @@ package com.flexcapacitor.utils
 	import com.flexcapacitor.events.HTMLDragEvent;
 	import com.flexcapacitor.model.HTMLDragData;
 	
+	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.KeyboardEvent;
+	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;
 	import flash.utils.ByteArray;
 	
+	import mx.core.FlexGlobals;
 	import mx.core.IMXMLObject;
+	import mx.managers.SystemManager;
+	import mx.managers.SystemManagerGlobals;
 	import mx.utils.Base64Decoder;
 	import mx.utils.Base64Encoder;
 
@@ -46,12 +52,14 @@ package com.flexcapacitor.utils
 <pre>
  
 public function dragDropHandler(event:HTMLDragEvent):void {
-	var fileObject:Object = event.data;
-
-	if (!(fileObject is String)) {
-		trace("Dropped " + fileObject.name);
-		trace(file.dataURI);
+	var htmlDragData:HTMLDragData;
+	htmlDragData = event.data as HTMLDragData;
+	
+	if (htmlDragData.mimeType==HTMLDragManager.INVALID) {
+		return;
 	}
+	
+	var bitmapData:BitmapData = DisplayObjectUtils.getBitmapDataFromBase64(htmlDragData.dataURI, null, true, htmlDragData.mimeType);
 }
 </pre>
 	 * <br/>
@@ -103,13 +111,25 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		 * */
 		public static const INVALID:String = "invalid";
 		
+		public static var debug:Boolean;
+		
+		public var id:String;
+		public var created:Boolean;
+		
 		/**
 		 * Identity of draggable element on the page.
 		 * */
 		public var elementIdentity:String = "body";
-		public var created:Boolean;
-		public var id:String;
-		public static var debug:Boolean;
+		
+		/**
+		 * Listen for keyboard keys. Not getting any key events while dragging in FP / Safari / Mac
+		 * so listening for keys via web
+		 * */
+		public var addKeyListeners:Boolean;
+		public var isAltKeyDown:Boolean;
+		public var isShiftKeyDown:Boolean;
+		public var isCTRLKeyDown:Boolean;
+		public var isCommandKeyDown:Boolean;
 		
 		public function createChildren():void {
 			var marshallExceptions:Boolean = ExternalInterface.marshallExceptions;
@@ -123,7 +143,9 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 			//results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID);
  			created = results;
 			
-			ExternalInterface.marshallExceptions = marshallExceptions;
+			if (debug==false) {
+				ExternalInterface.marshallExceptions = marshallExceptions;
+			}
 		}
 		
 		public static function isSupported():Boolean {
@@ -219,42 +241,70 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 			return results;
 		}
 		
-		public function dragEnterHandler(type:String = null):void {
+		public function dragEnterHandler(type:String, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
+			if (addKeyListeners) {
+				SystemManager.getSWFRoot(this).addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler, true);
+				SystemManagerGlobals.topLevelSystemManagers[0].addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler, true);
+				FlexGlobals.topLevelApplication.addEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler, true);
+			
+				SystemManager.getSWFRoot(this).addEventListener(KeyboardEvent.KEY_UP, keyUpHandler, true);
+			}
+			else {
+				updateKeys(ctrl, shift, alt, meta);
+			}
 			
 			if (hasEventListener(DRAG_ENTER)) {
 				var event:HTMLDragEvent = new HTMLDragEvent(DRAG_ENTER);
+				updateEventKeys(event);
 				dispatchEvent(event);
 			}
 		}
 		
-		public function dragExitHandler(type:String = null):void {
+		public function dragExitHandler(type:String, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
+			if (addKeyListeners) {
+				SystemManager.getSWFRoot(this).removeEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler, true);
+				SystemManagerGlobals.topLevelSystemManagers[0].removeEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler, true);
+				FlexGlobals.topLevelApplication.removeEventListener(KeyboardEvent.KEY_DOWN, keyDownHandler, true);
+				
+				SystemManager.getSWFRoot(this).removeEventListener(KeyboardEvent.KEY_UP, keyUpHandler, true);
+			}
+			else {
+				updateKeys(ctrl, shift, alt, meta);
+			}
 			
 			if (hasEventListener(DRAG_EXIT)) {
 				var event:HTMLDragEvent = new HTMLDragEvent(DRAG_EXIT);
+				updateEventKeys(event);
 				dispatchEvent(event);
 			}
 		}
 		
-		public function dragStartHandler(type:String = null):void {
+		public function dragStartHandler(type:String, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
+			updateKeys(ctrl, shift, alt, meta);
 			
 			if (hasEventListener(DRAG_START)) {
 				var event:HTMLDragEvent = new HTMLDragEvent(DRAG_START);
+				updateEventKeys(event);
 				dispatchEvent(event);
 			}
 		}
 		
-		public function dragEndHandler(type:String = null):void {
+		public function dragEndHandler(type:String, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
+			updateKeys(ctrl, shift, alt, meta);
 			
 			if (hasEventListener(DRAG_END)) {
 				var event:HTMLDragEvent = new HTMLDragEvent(DRAG_END);
+				updateEventKeys(event);
 				dispatchEvent(event);
 			}
 		}
 		
-		public function dragOverHandler(type:String = null):void {
+		public function dragOverHandler(type:String, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
+			updateKeys(ctrl, shift, alt, meta);
 			
 			if (hasEventListener(DRAG_OVER)) {
 				var event:HTMLDragEvent = new HTMLDragEvent(DRAG_OVER);
+				updateEventKeys(event);
 				dispatchEvent(event);
 			}
 		}
@@ -266,15 +316,47 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		 * 
 		 * For example, if you drop .DS_Store this is the data URI string.  
 		 * */
-		public function dragDropHandler(file:Object):void {
+		public function dragDropHandler(file:Object, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
 			var event:HTMLDragEvent;
 			var data:HTMLDragData;
+			
+			updateKeys(ctrl, shift, alt, meta);
 			
 			if (hasEventListener(DRAG_DROP)) {
 				event = new HTMLDragEvent(DRAG_DROP);
 				event.data = new HTMLDragData(file);
+				updateEventKeys(event);
 				dispatchEvent(event);
 			}
+		}
+		
+		protected function updateKeys(ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
+			isAltKeyDown = alt;
+			isCommandKeyDown = meta;
+			isShiftKeyDown = shift;
+			isCTRLKeyDown = ctrl;
+		}
+		
+		protected function updateEventKeys(event:HTMLDragEvent):void {
+			event.altKey = isAltKeyDown;
+			event.commandKey = isCommandKeyDown;
+			event.shiftKey = isShiftKeyDown;
+			event.controlKey = isCTRLKeyDown;
+		}
+		
+		protected function keyUpHandler(event:KeyboardEvent):void {
+			isCTRLKeyDown = event.ctrlKey;
+			isCommandKeyDown = "commandKey" in event && event.commandKey;
+			isShiftKeyDown = event.shiftKey;
+			isAltKeyDown = event.altKey;
+		}
+		
+		protected function keyDownHandler(event:KeyboardEvent):void {
+			//trace("Event target = " + event.currentTarget);
+			isCTRLKeyDown = event.ctrlKey;
+			isCommandKeyDown = "commandKey" in event && event.commandKey;
+			isShiftKeyDown = event.shiftKey;
+			isAltKeyDown = event.altKey;
 		}
 		
 		/**
@@ -343,9 +425,11 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 							event.preventDefault();
 							event.stopPropagation();
 							
+							if (debug) console.log(event);
 							if (debug) console.log("drag prevented:"+event.type);
 							if (debug) console.log("calling callback:"+callbackName);
-							application[callbackName](event.type);
+							
+							application[callbackName](event.type, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
 						}
 						
 						var dropFunction = function(event) {
@@ -378,7 +462,7 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 									if (debug) console.log( "File loaded:" + fileObject.name);
 									if (debug) console.log(" Calling:"+callbackName);
 
-									application[callbackName](fileObject);
+									application[callbackName](fileObject, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
 
 									//application.dragAndDropReaders[currentReader] = null;
 									//delete application.dragAndDropReaders[currentReader];

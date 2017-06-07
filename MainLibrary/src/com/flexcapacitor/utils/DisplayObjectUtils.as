@@ -16,6 +16,7 @@ package com.flexcapacitor.utils {
 	import flash.display.StageQuality;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.events.IEventDispatcher;
 	import flash.events.MouseEvent;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
@@ -50,7 +51,9 @@ package com.flexcapacitor.utils {
 	import mx.utils.Base64Encoder;
 	import mx.utils.MatrixUtil;
 	
+	import spark.components.Group;
 	import spark.components.Image;
+	import spark.components.Scroller;
 	import spark.components.supportClasses.GroupBase;
 	import spark.components.supportClasses.InvalidatingSprite;
 	import spark.components.supportClasses.Skin;
@@ -3538,8 +3541,10 @@ trace(size); // {width = 200, height = 100}
 		 * If you pass in the mouse event the position returned is 10x10. It is relative to it's container.
 		 * If you pass in a container then the position returned is 10x10 relative to the container.
 		 * */
-		public static function getDisplayObjectPosition(source:DisplayObject, offset:Object = null):Point {
-			var absolutePosition:Point = source.localToGlobal(zeroPoint);
+		public static function getDisplayObjectPosition(source:DisplayObject, offset:Object = null, translate:Boolean = false, offsetScrollbars:Boolean = false):Point {
+			var absolutePosition:Point;
+			
+			absolutePosition = source.localToGlobal(zeroPoint);
 			
 			if (offset==null) {
 				return absolutePosition;
@@ -3548,11 +3553,28 @@ trace(size); // {width = 200, height = 100}
 				absolutePosition = absolutePosition.subtract(offset as Point);
 			}
 			else if (offset is MouseEvent || offset is SandboxMouseEvent) {
-				absolutePosition = new Point(offset.stageX, offset.stageY).subtract(absolutePosition);
+				if (translate) {
+					var point:Point = new Point(offset.localX, offset.localY);
+					var stagePoint:Point = DisplayObject(offset.target).localToGlobal(point);
+					point = DisplayObject(source).globalToLocal(stagePoint);
+					var mouseX:Number = point.x;
+					var mouseY:Number = point.y;
+					return point;
+				}
+				else {
+					absolutePosition = new Point(offset.stageX, offset.stageY).subtract(absolutePosition);
+				}
 				
 			}
 			else if ("localToGlobal" in offset) {
 				absolutePosition = absolutePosition.subtract(offset.localToGlobal(zeroPoint));
+			}
+			
+			if (offsetScrollbars && source is Scroller) {
+				absolutePosition.x -= Scroller(source).viewport.horizontalScrollPosition;
+				absolutePosition.y -= Scroller(source).viewport.verticalScrollPosition;
+				//sourceDifference.x -= Scroller(source).horizontalScrollBar.value;
+				//sourceDifference.y -= Scroller(source).verticalScrollBar.value;
 			}
 			
 			return absolutePosition;
@@ -3563,8 +3585,10 @@ trace(size); // {width = 200, height = 100}
 		 * If a button is nested 3 levels deep in a few groups and is visually is
 		 * 50 pixels from the edge of the container then this method
 		 * returns that value
+		 * There seems to be some issues when inside a scroller and rapid updates. 
+		 * Scroll positions may not be updated yet. 
 		 * */
-		public static function getDistanceBetweenDisplayObjects(source:Object, target:Object):Point {
+		public static function getDistanceBetweenDisplayObjects(source:Object, target:Object, offsetScrollbars:Boolean = false):Point {
 			var sourceRelativePoint:Point;
 			var sourceLocalToGlobalPoint:Point;
 			var containerLocalToGlobalPoint:Point;
@@ -3576,6 +3600,13 @@ trace(size); // {width = 200, height = 100}
 			containerLocalToGlobalPoint = target.localToGlobal(zeroPoint);
 			
 			var sourceDifference:Point = sourceLocalToGlobalPoint.subtract(containerLocalToGlobalPoint);
+			
+			if (offsetScrollbars && source is Scroller) {
+				sourceDifference.x -= Scroller(source).viewport.horizontalScrollPosition;
+				sourceDifference.y -= Scroller(source).viewport.verticalScrollPosition;
+				//sourceDifference.x -= Scroller(source).horizontalScrollBar.value;
+				//sourceDifference.y -= Scroller(source).verticalScrollBar.value;
+			}
 			
 			return sourceDifference;
 		}

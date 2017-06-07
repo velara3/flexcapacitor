@@ -43,7 +43,20 @@
 			private var _updateLive:Boolean = true;
 			private var originalEntries:Array;
 			private var _clientGradientBase:GradientBase;
-
+			public var defaultEntries:Array;
+			
+			protected function group1_creationCompleteHandler(event:FlexEvent):void {
+				defaultEntries = getDefaultLinearFillEntries()
+				
+				if (dataProvider!=null && dataProvider.length) {
+					var gradientEntry:GradientEntry = dataProvider.getItemAt(0) as GradientEntry;
+					selectedGradientEntry = gradientEntry;
+					selectedColorStop = gradientDictionary[gradientEntry];
+					selectColorStop();
+					updateUI(selectedColorStop);
+				}
+			}
+			
 			public function get clientGradientBase():GradientBase {
 				return _clientGradientBase;
 			}
@@ -88,26 +101,8 @@
 			[Inspectable(category="Data")]
 			
 			/**
-			 *  The data provider for this DataGroup. 
-			 *  It must be an IList.
-			 * 
-			 *  <p>There are several IList implementations included in the 
-			 *  Flex framework, including ArrayCollection, ArrayList, and
-			 *  XMLListCollection.</p>
-			 *
-			 *  @default null
-			 *
-			 *  @see #itemRenderer
-			 *  @see #itemRendererFunction
-			 *  @see mx.collections.IList
-			 *  @see mx.collections.ArrayCollection
-			 *  @see mx.collections.ArrayList
-			 *  @see mx.collections.XMLListCollection
-			 *  
-			 *  @langversion 3.0
-			 *  @playerversion Flash 10
-			 *  @playerversion AIR 1.5
-			 *  @productversion Flex 4
+			 * The data provider for the gradient.
+			 * Should be an array of gradient entries
 			 */
 			public function get dataProvider():ListCollectionView
 			{
@@ -142,11 +137,17 @@
 					removeAllItems();
 					return;
 				}
+				else {
+					removeAllItems();
+				
+
+				}
 				
 				const numberOfEntries:int = dataProvider.length;
 				
 				for (var i:int = 0; i < numberOfEntries; i++) {
 					var gradientEntry:GradientEntry = dataProvider.getItemAt(i) as GradientEntry;
+					
 					if (gradientDictionary[gradientEntry]==null) {
 						colorStop = createColorStop(gradientEntry);
 						gradientDictionary[gradientEntry] = colorStop;
@@ -175,7 +176,7 @@
 					createItemRenderers();
 					calculateColorStopPositions();
 					addDataProviderListener();
-					
+					//trace("updating gradient");
 					dataProviderChanged = false;
 					
 					updateRectangleFill();
@@ -352,17 +353,6 @@
 				
 			}
 			
-			protected function group1_creationCompleteHandler(event:FlexEvent):void
-			{
-				if (dataProvider!=null && dataProvider.length) {
-					var gradientEntry:GradientEntry = dataProvider.getItemAt(0) as GradientEntry;
-					selectedGradientEntry = gradientEntry;
-					selectedColorStop = gradientDictionary[gradientEntry];
-					selectColorStop();
-					updateUI(selectedColorStop);
-				}
-			}
-			
 			protected function colorPicker_changeHandler(event:ColorPickerEvent):void {
 				var color:uint = event.color;
 				
@@ -515,7 +505,9 @@
 				
 				if (dataProvider) {
 					index = dataProvider.getItemIndex(gradientEntry);
-					dataProvider.removeItemAt(index);
+					if (index!=-1) {
+						dataProvider.removeItemAt(index);
+					}
 				}
 			}
 			
@@ -550,8 +542,7 @@
 				}
 			}
 			
-			protected function label1_clickHandler(event:MouseEvent):void
-			{
+			protected function colorLabel_clickHandler(event:MouseEvent):void {
 				selectColorStop(true);
 			}
 			
@@ -612,6 +603,57 @@
 				
 				return newEntries;
 			}
+			
+			public function reverse():void {
+				var entries:Array;
+				var ratios:Array;
+				
+				entries = toArray();
+				ratios = [];
+				
+				for (var i:int = 0; i < entries.length; i++) {
+					ratios.push(1-GradientEntry(entries[i]).ratio);
+				}
+				
+				for (i = 0; i < entries.length; i++) {
+					GradientEntry(entries[i]).ratio = ratios[i];
+				}
+				
+				setEntries(entries, clientGradientBase);
+			}
+			
+			public function setEntries(value:Object, clientGradient:GradientBase = null):void {
+				if (value is Array) {
+					dataProvider = new ArrayCollection(value as Array);
+				}
+				
+				if (value is ArrayCollection) {
+					dataProvider = value as ArrayCollection;
+				}
+				
+				clientGradientBase = clientGradient;
+				
+			}
+			
+			public function reset():void {
+				dataProvider = new ArrayCollection(getDefaultLinearFillEntries());
+			}
+			
+			public function getDefaultLinearFillEntries():Array {
+				var entries:Array;
+				
+				if (defaultEntries && defaultEntries.length) {
+					return defaultEntries;
+				}
+				
+				entries = [];
+				
+				// black to white fill full alpha
+				entries[0] = new GradientEntry(0, 0, 1);
+				entries[1] = new GradientEntry(0xFFFFFF, 1, 1);
+				
+				return entries;
+			}
 		]]>
 	</fx:Script>
 	
@@ -631,10 +673,10 @@
 	</s:Group>
 	
 	<s:HGroup top="0" verticalAlign="baseline">
-		<s:Label text="Color:" click="label1_clickHandler(event)"/>
+		<s:Label text="Color:" click="colorLabel_clickHandler(event)"/>
 		<controls:ColorPicker id="colorPicker" focusAlpha="0"
 							  change="colorPicker_changeHandler(event)"/>
-		<s:Label text="Alpha" click="label1_clickHandler(event)"/>
+		<s:Label text="Alpha" click="colorLabel_clickHandler(event)"/>
 		<s:NumericStepper id="alphaStepper" 
 						  maximum="1" minimum="0" 
 						  stepSize=".01" 
@@ -642,7 +684,7 @@
 						  width="52"
 						  focusAlpha="0"
 						  change="alphaStepper_changeHandler(event)"/>
-		<s:Label text="Ratio" click="label1_clickHandler(event)"/>
+		<s:Label text="Ratio" click="colorLabel_clickHandler(event)"/>
 		<s:NumericStepper id="ratioStepper" 
 						  maximum="1" minimum="0" 
 						  stepSize=".01" 

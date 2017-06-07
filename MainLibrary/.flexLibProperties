@@ -342,6 +342,7 @@
     <classEntry path="com.flexcapacitor.effects.window.supportClasses.CenterWindowInstance"/>
     <classEntry path="com.flexcapacitor.events.AceEvent"/>
     <classEntry path="com.flexcapacitor.events.EffectEvent"/>
+    <classEntry path="com.flexcapacitor.events.HTMLClipboardEvent"/>
     <classEntry path="com.flexcapacitor.events.HTMLDragEvent"/>
     <classEntry path="com.flexcapacitor.events.HistoryEventEvent"/>
     <classEntry path="com.flexcapacitor.events.ImportEvent"/>
@@ -373,6 +374,7 @@
     <classEntry path="com.flexcapacitor.model.ErrorData"/>
     <classEntry path="com.flexcapacitor.model.ExportOptions"/>
     <classEntry path="com.flexcapacitor.model.FileInfo"/>
+    <classEntry path="com.flexcapacitor.model.HTMLClipboardData"/>
     <classEntry path="com.flexcapacitor.model.HTMLDragData"/>
     <classEntry path="com.flexcapacitor.model.HTMLExportOptions"/>
     <classEntry path="com.flexcapacitor.model.HistoryEventData"/>
@@ -486,6 +488,7 @@
     <classEntry path="com.flexcapacitor.utils.FindText"/>
     <classEntry path="com.flexcapacitor.utils.FontUtils"/>
     <classEntry path="com.flexcapacitor.utils.GetSingleton"/>
+    <classEntry path="com.flexcapacitor.utils.HTMLClipboardManager"/>
     <classEntry path="com.flexcapacitor.utils.HTMLDragManager"/>
     <classEntry path="com.flexcapacitor.utils.HTMLKeyboardHandler"/>
     <classEntry path="com.flexcapacitor.utils.HTMLUtils"/>

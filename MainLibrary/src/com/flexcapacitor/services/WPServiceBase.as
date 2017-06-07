@@ -28,9 +28,10 @@ package com.flexcapacitor.services {
 	[Event(name="fault", type="com.flexcapacitor.services.WPServiceEvent")]
 	
 	/**
-	 * An adapter class and service to save data to WordPress. <br/><br/>
+	 * The base class for WPService that is used to get and save data from WordPress.
+	 * For examples, look at the WPService class.<br/><br/>
 	 * 
-	 * This class works with the JSON API for WordPress. <br/><br/>
+	 * This class works with the JSON API plugin for WordPress. <br/><br/>
 	 * 
 	 * Notes:<br/><br/>
 	 * 
@@ -47,6 +48,8 @@ package com.flexcapacitor.services {
 	 * If you can't update or create posts be sure that the user is 
 	 * logged in with Editor or Author permissions
 	 * and check if the Posts option is enabled in the JSON-API settings page. <br/>
+	 * 
+	 * See the WPService class for example code. 
 	 * 
 	 * @see WPService
 	 * @see WPAttachmentService
@@ -123,6 +126,12 @@ package com.flexcapacitor.services {
 		public var request:URLRequest;
 		
 		/**
+		 * Content type.  
+		 * Set this to define the URLRequest content type.
+		 * */
+		public var contentType:String;
+		
+		/**
 		 * Detects multisite and updates the site after login is successful
 		 * */
 		public var updateSitePathOnLogin:Boolean = true;
@@ -132,6 +141,9 @@ package com.flexcapacitor.services {
 		/**
 		 * URL to Wordpress blog. For example, http://www.domain.com
 		 * If the site is multisite then set the site variable. 
+		 * 
+		 * Make sure the last character is a "/" if not using permalinks. 
+		 * 
 		 * @see site
 		 * @see sites
 		 * @see usePermalink
@@ -201,7 +213,7 @@ package com.flexcapacitor.services {
 		 * If you set usePermalinks to true the syntax will be "api/controller/method" 
 		 * versus "?json=controller/method" in the URL. 
 		 * 
-		 * For example, when enabled the URL would be something like,
+		 * For example, when usePermalinks is enabled the URL would be something like,
 		 * "http://www.mysite.com/blog/api/user/get_logged_in". When set to false the URL 
 		 * would be something like, "http://www.mysite.com/blog/?json=user/get_logged_in". 
 		 * @see sendURL
@@ -215,24 +227,36 @@ package com.flexcapacitor.services {
 		 */
 		public function set url(value:String):void {
 			var path:String;
+			var separator:String = "";
 			
+			// permalinks look like http://www.mysite.com/blog/api/user/get_logged_in
 			if (usePermalinks) {
 				path = permalinkPath.lastIndexOf("/")==permalinkPath.length-1 ? permalinkPath : permalinkPath + "/";
 				value = value.replace(/&/, "?"); // replace first & with ?
 				value = path + value;
 			}
 			else {
+				// default looks like http://www.mysite.com/blog/?json=user/get_logged_in
 				value = value.replace(/\?/, "&"); // replace first ? since we will be using it
 				if (value.indexOf("?json=")==-1) {
 					value = "?json=" + value;
 				}
+				
+				// add separator before query - otherwise POST variables are not sent
+				if (host.charAt(host.length-1) && site=="") {
+					separator = "/";
+				}
 			}
 			
-			_url = host + site + value;
+			_url = host + separator + site + value;
 			
 			if (request) {
 				request.url = _url;
 				request.data = null;
+			}
+			
+			if (contentType) {
+				request.contentType = contentType;
 			}
 		}
 		
@@ -278,7 +302,6 @@ package com.flexcapacitor.services {
 		/**
 		 * Data to save to the server. Flash will convert the 
 		 * parameters object to a string if the method type is set to GET.
-		 * Changed the type to URLVariables and method to POST. 
 		 * */
 		public var parameters:URLVariables;
 		
@@ -299,7 +322,7 @@ package com.flexcapacitor.services {
 		public var inProgress:Boolean;
 		
 		/**
-		 * Call method where you specify the url. Used for testing raw URL. 
+		 * Call method where you specify the url. Used for testing custom URL. 
 		 * 
 		 * url - url to call
 		 * method - "GET" or "POST"
@@ -315,19 +338,33 @@ package com.flexcapacitor.services {
 		}
 		
 		/**
-		 * Call method where you specify the controller, method and add parameters
+		 * Call method where you manually specify a controller, a method and parameters
 		 * query - list of additional get parameters. for example, "&count=10&category=news"
-		 * post - object to send to the server. 
+		 * post - an object to send to the server.
+		 * 
+<pre>
+var galleryService:WPService = new WPService();
+galleryService.host = "http://www.example.com/blog";
+galleryService.addEventListener(WPServiceBase.RESULT, galleryResultsHandler, false, 0, true);
+galleryService.addEventListener(WPServiceBase.FAULT, galleryFaultHandler, false, 0, true);
+
+var parameters:URLVariables = new URLVariables();
+parameters.search = "cats";
+
+wpSaveService.send("Gallery", "getResults", null, object);
+</pre>
 		 * @see query
 		 * */
 		public function send(controller:String = "core", method:String = "get_recent_posts", query:String="", post:Object = null):void {
 			if (query==null) query = "";
+			
 			if (usePermalinks) {
 				url = "?json=" + controller + "/" + method + query;
 			}
 			else {
 				url = controller + "/" + method + query;
 			}
+			
 			request.method = URLRequestMethod.POST;
 			request.data = post;
 			request.url = url;
@@ -338,6 +375,7 @@ package com.flexcapacitor.services {
 		 * Call method where you manually specify everything in the query including controller, method and parameters
 		 * query - list of additional get parameters. for example, "?json=posts/get_recent_posts&count=10"
 		 * post - object to send to the server. 
+		 * 
 		 * @see send
 		 * */
 		public function query(query:String="?json=1", post:Object = null):void {

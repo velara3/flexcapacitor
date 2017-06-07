@@ -57,7 +57,11 @@ package com.flexcapacitor.utils
 		public static const BOCU_1:RegExp		= /^\xFB\xEE\x28/; // FB EE 28 optionally followed by FF
 		public static const GB_18030:RegExp		= /^\x84\x31\x95\x33/;
 		
-		public static const NewLine:String 		= "&#10;";
+		public static const NewLineInAttribute:String = "&#10;";
+		public static const NewLineWindows:String = "\n\r";
+		public static const NewLineUnix:String = "\n";
+		
+		public static var header:String = '<?xml version="1.0" encoding="utf-8"?>';
 		
 		/**
 		 * Constant representing a element type returned from XML.nodeKind.
@@ -659,13 +663,17 @@ package com.flexcapacitor.utils
 		 * @return An array with the original value in the first item and any errors in the proceeding items
 		 * @see isValid
 		 */
-		public static function validateXML(value:*, useFlashParser:Boolean = false, useBrowserParser:Boolean = true):XMLValidationInfo {
+		public static function validateXML(value:*, useFlashParser:Boolean = false, useBrowserParser:Boolean = true, addHeader:Boolean = false):XMLValidationInfo {
 			var validationInfo:XMLValidationInfo;
 			var result:String;
 			
 			if (value==null) value = "";
 			
-			if (ExternalInterface.available) {
+			if (addHeader && value.indexOf("<?xml")!=0) {
+				value = header + NewLineUnix + value;
+			}
+			
+			if (useBrowserParser && ExternalInterface.available) {
 				if (addedXMLValidationToPage==false) {
 					if (autoInitialize) {
 						initializeInBrowser();
@@ -674,10 +682,11 @@ package com.flexcapacitor.utils
 						throw new Error("You must call initialize() before calling this method");
 					}
 				}
+				
 				result = ExternalInterface.call("validateXML", value);
 				validationInfo = parseValidationResult(result, value);
 			}
-			else if (Capabilities.playerType == "Desktop") {
+			else if (Capabilities.playerType == "Desktop" && useBrowserParser) {
 				var isValid:Boolean;
 				var htmlText:String;
 				
@@ -701,12 +710,22 @@ package com.flexcapacitor.utils
 			
 			if (useFlashParser) {
 				isValid = isValidXML(value);
+				
 				// browser catches a few additional errors - so ignore if already invalid
 				if (validationInfo.valid==false) {
 					validationInfo.valid = isValid;
 				}
+				
 				validationInfo.internalErrorMessage = validationErrorMessage;
 				validationInfo.error = validationError;
+			}
+			
+			if (validationInfo.errorMessage==null && validationInfo.specificErrorMessage) {
+				validationInfo.errorMessage = validationInfo.specificErrorMessage;
+			}
+			
+			if (validationInfo.errorMessage==null && validationInfo.internalErrorMessage) {
+				validationInfo.errorMessage = validationInfo.internalErrorMessage;
 			}
 			
 			return validationInfo;
@@ -880,6 +899,8 @@ package com.flexcapacitor.utils
 			var browserMessage:String;
 			var index:int;
 			
+			specificError = "";
+			
 			if (result) {
 				isMozilla = (result.indexOf("XML Parsing Error:") != -1);
 				isWebkit = (result.indexOf("This page contains the following errors:") != -1);
@@ -891,22 +912,24 @@ package com.flexcapacitor.utils
 				// get row and column
 				if (isMozilla) {
 					lines = result.match(/Line\s+Number\s+(\d+),\s+Column\s+(\d+):/i);
-					row = lines.length > 1 ? lines[1] : 0;
-					column = lines.length > 2 ? lines[2] : 0;
+					row = lines && lines.length > 1 ? lines[1] : 0;
+					column = lines && lines.length > 2 ? lines[2] : 0;
 					validationInfo.row = row;
 					validationInfo.column = column;
 					lines = result.split(/:/);
+					
 					if (lines.length>2) {
 						specificError = StringUtils.trim(lines.slice(2).join(":"));
 					}
 				}
 				else if (isWebkit) {
 					lines = result.match(/line\s+(\d+)\s+at\s+column\s+(\d+):/i);
-					row = lines.length > 1 ? lines[1] : 0;
-					column = lines.length > 2 ? lines[2] : 0;
+					row = lines && lines.length > 1 ? lines[1] : 0;
+					column = lines && lines.length > 2 ? lines[2] : 0;
 					validationInfo.row = row;
 					validationInfo.column = column;
 					lines = result.split(/:/);
+					
 					if (lines.length>2) {
 						specificError = StringUtils.trim(lines.slice(2).join(":"));
 					}
@@ -1663,6 +1686,18 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 		 * Javascript XML Validation Code - source W3C Validator
 		 * This is written to the HTML page on load
 		 * Note: wherever we have linebreaks we have to escape them - \n -> \\n
+		 * 
+		 * https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
+		 * 
+		 * enum SupportedType {
+		 *    "text/html",
+		 *    "text/xml",
+		 *    "application/xml",
+		 *    "application/xhtml+xml",
+		 *    "image/svg+xml"
+		 * }
+		 * 
+		 * https://w3c.github.io/DOM-Parsing/
 		 * */
 		public static var browserXMLValidationScriptDesktop:XML = <root><![CDATA[
 				var xt = "";
@@ -1700,39 +1735,20 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 				}
 				
 				function validateXML(txt) {
+					var message;
+					var parser;
+					var xmlDoc;
 				
-					// code for IE
-					if (window.ActiveXObject) {
-						var xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-						xmlDoc.async = "false";
-						xmlDoc.loadXML(txt);
-						
-						if (xmlDoc.parseError.errorCode != 0) {
-							txt = "Error Code: " + xmlDoc.parseError.errorCode + "\\n";
-							txt = txt + "Error Reason: " + xmlDoc.parseError.reason;
-							txt = txt + "Error Line: " + xmlDoc.parseError.line;
-							return txt;
+					// code for Edge, IE, Mozilla, Firefox, Opera, etc.
+					if (document.implementation.createDocument || window.DOMParser) {
+						parser = new DOMParser();
+
+						try {
+							xmlDoc = parser.parseFromString(text, "text/xml");
 						}
-						else {
-							return "No errors found";
+						catch (error) {
+							
 						}
-					}
-				
-					// code for Mozilla, Firefox, Opera, etc.
-					else if (document.implementation.createDocument) {
-						var parser = new DOMParser();
-						var text = txt;
-						// can also use "application/xml", image/svg+xml, text/html
-						//- https://developer.mozilla.org/en-US/docs/Web/API/DOMParser
-						// enum SupportedType {
-						//    "text/html",
-						//    "text/xml",
-						//    "application/xml",
-						//    "application/xhtml+xml",
-						//    "image/svg+xml"
-						//}
-						//- https://w3c.github.io/DOM-Parsing/
-						var xmlDoc = parser.parseFromString(text, "text/xml");
 					
 						if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
 							checkErrorXML(xmlDoc.getElementsByTagName("parsererror")[0]);
@@ -1742,6 +1758,29 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 							return "No errors found";
 						}
 					}
+					// code for older versions of IE
+					else if (window.ActiveXObject) {
+						xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+						xmlDoc.async = "false";
+
+						try {
+							xmlDoc.loadXML(text);
+						}
+						catch (error) {
+							
+						}
+						
+						if (xmlDoc.parseError.errorCode != 0) {
+							message = "Error Code: " + xmlDoc.parseError.errorCode + "\\n";
+							message = message + "Error Reason: " + xmlDoc.parseError.reason;
+							message = message + "Error Line: " + xmlDoc.parseError.line;
+							return message;
+						}
+						else {
+							return "No errors found";
+						}
+					}
+				
 					else {
 						return "Your browser cannot handle the truth. I mean XML validation";
 					}
@@ -1810,37 +1849,50 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 				
 				}
 				
-				validateXML = function (txt, type) {
+				validateXML = function (text, type) {
 				    if (type==null) type = "text/xml";
-
-					// code for IE
-					if (window.ActiveXObject) {
-						var xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
-						xmlDoc.async = "false";
-						xmlDoc.loadXML(txt);
-						
-						if (xmlDoc.parseError.errorCode != 0) {
-							txt = "Error Code: " + xmlDoc.parseError.errorCode + "\\n";
-							txt = txt + "Error Reason: " + xmlDoc.parseError.reason;
-							txt = txt + "Error Line: " + xmlDoc.parseError.line;
-							return txt;
-						}
-						else {
-							return "No errors found";
-						}
-					}
+				    var xmlDoc;
+					var parser;
+					var messsage;
 				
 					// code for Mozilla, Firefox, Opera, etc.
-					else if (document.implementation.createDocument) {
-						var parser = new DOMParser();
-						var text = txt;
-						var xmlDoc = parser.parseFromString(text, "text/xml");
+					if (document.implementation.createDocument || window.DOMParser) {
+						parser = new DOMParser();
+
+						try {
+							xmlDoc = parser.parseFromString(text, "text/xml");
+						}
+						catch (error) {
+							
+						}
 						//console.log(xmlDoc);
 					
 						if (xmlDoc.getElementsByTagName("parsererror").length > 0) {
 							//console.log(xmlDoc.getElementsByTagName("parsererror")[0]);
 							checkErrorXML(xmlDoc.getElementsByTagName("parsererror")[0]);
 							return xt;
+						}
+						else {
+							return "No errors found";
+						}
+					}
+					// code for IE
+					else if (window.ActiveXObject) {
+						xmlDoc = new ActiveXObject("Microsoft.XMLDOM");
+						xmlDoc.async = "false";
+
+						try {
+							xmlDoc.loadXML(txt);
+						}
+						catch (error) { 
+							return "" + error;
+						}
+						
+						if (xmlDoc.parseError.errorCode != 0) {
+							message = "Error Code: " + xmlDoc.parseError.errorCode + "\\n";
+							message = message + "Error Reason: " + xmlDoc.parseError.reason;
+							message = message + "Error Line: " + xmlDoc.parseError.line;
+							return message;
 						}
 						else {
 							return "No errors found";

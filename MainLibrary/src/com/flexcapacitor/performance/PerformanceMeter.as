@@ -475,7 +475,7 @@ PerformanceMeter.stop("test"); // outputs to console 10ms
 <pre>
 PerformanceMeter.mark("before my test", true);
 // do something
-PerformanceMeter.stop("after my test");
+PerformanceMeter.mark("after my test");
 
 // outputs
 Performance Mark   BEFORE JPG size           :

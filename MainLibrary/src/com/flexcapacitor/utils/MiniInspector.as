@@ -14,6 +14,7 @@ package com.flexcapacitor.utils {
 	import flash.events.IEventDispatcher;
 	import flash.events.KeyboardEvent;
 	import flash.events.MouseEvent;
+	import flash.external.ExternalInterface;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
 	import flash.system.ApplicationDomain;
@@ -276,6 +277,29 @@ package com.flexcapacitor.utils {
 		 * Minimum and maximumn amount of space to show style name in console in style name lookup
 		 * */
 		public var minimumStyleNamePadding:int = 35;
+		
+		private var _showHTMLErrors:Boolean;
+
+		/**
+		 * Shows errors from JavaScript
+		 * @see ExternalInterface.marshallExceptions
+		 * */
+		public function get showHTMLErrors():Boolean
+		{
+			return _showHTMLErrors;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set showHTMLErrors(value:Boolean):void
+		{
+			if (ExternalInterface.available) {
+				ExternalInterface.marshallExceptions = value;
+			}
+			_showHTMLErrors = value;
+		}
+
 		
 		/**
 		 * Shows style inheritance information

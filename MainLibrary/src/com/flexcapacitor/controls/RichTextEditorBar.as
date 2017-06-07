@@ -1194,8 +1194,8 @@ package com.flexcapacitor.controls
 			currentTarget = event.currentTarget;
 			eventType = event.type;
 			
-			trace("\n" + currentTarget);
-			trace("Event: " +  event.type);
+			//trace("\n" + currentTarget);
+			//trace("Event: " +  event.type);
 			
 			
 			if (currentTarget is LoaderInfo) {
@@ -1238,10 +1238,10 @@ package com.flexcapacitor.controls
 			
 			graphicStatus = inlineGraphicElement ? inlineGraphicElement.status : "inline graphic element not found";
 			
-			trace("Graphic status: " + graphicStatus);
+			//trace("Graphic status: " + graphicStatus);
 			
 			if (eventType==IOErrorEvent.IO_ERROR) {
-				trace("Error: " + event);
+				//trace("Error: " + event);
 				var errorText:String = IOErrorEvent(event).text;
 				//sprite.removeChildren();loader.removeChildren();
 			}
@@ -1362,7 +1362,7 @@ package com.flexcapacitor.controls
 				richEditableText.selectRange(startPosition+1, startPosition);
 			}
 			else {
-				trace("could not find element");
+				//trace("could not find element");
 			}
 			
 		}
