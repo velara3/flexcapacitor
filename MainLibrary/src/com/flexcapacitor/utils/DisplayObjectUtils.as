@@ -314,12 +314,17 @@ trace(ObjectUtil.toString(rootComponent));
 </pre>
 		 * 		 
 		 * */
-		public static function getComponentDisplayList2(element:Object, parentItem:ComponentDescription = null, depth:int = 0, dictionary:Dictionary = null):ComponentDescription {
+		public static function getComponentDisplayList2(element:Object, parentItem:ComponentDescription = null, depth:int = 0, dictionary:Dictionary = null, exclusions:Dictionary = null):ComponentDescription {
 			var item:ComponentDescription;
 			var childElement:IVisualElement;
 			
 			
 			if (!parentItem) {
+				
+				if (exclusions && exclusions[element]) {
+					//trace("now we're here");
+				}
+				
 				if (dictionary && dictionary[element]) {
 					parentItem = dictionary[element];
 				}
@@ -330,7 +335,7 @@ trace(ObjectUtil.toString(rootComponent));
 				// reset the children bc could be different
 				parentItem.children = new ArrayCollection();
 				
-				return getComponentDisplayList2(element, parentItem, depth++, dictionary);
+				return getComponentDisplayList2(element, parentItem, depth++, dictionary, exclusions);
 			}
 			
 			
@@ -344,6 +349,11 @@ trace(ObjectUtil.toString(rootComponent));
 				
 				for (var i:int;i<numberOfElements;i++) {
 					childElement = visualContainer.getElementAt(i);
+					
+					
+					if (exclusions && exclusions[childElement]) {
+						continue;
+					}
 						
 					if (dictionary && dictionary[childElement]) {
 						item = dictionary[childElement];
@@ -364,7 +374,7 @@ trace(ObjectUtil.toString(rootComponent));
 					// check for IVisualElement
 					if (childElement is IVisualElementContainer && IVisualElementContainer(childElement).numElements>0) {
 						!item.children ? item.children = new ArrayCollection() : void;
-						getComponentDisplayList2(childElement, item, depth++, dictionary);
+						getComponentDisplayList2(childElement, item, depth++, dictionary, exclusions);
 					}
 					
 					
@@ -3543,6 +3553,10 @@ trace(size); // {width = 200, height = 100}
 		 * */
 		public static function getDisplayObjectPosition(source:DisplayObject, offset:Object = null, translate:Boolean = false, offsetScrollbars:Boolean = false):Point {
 			var absolutePosition:Point;
+			var point:Point;
+			var stagePoint:Point;
+			var mouseX:Number;
+			var mouseY:Number;
 			
 			absolutePosition = source.localToGlobal(zeroPoint);
 			
@@ -3554,11 +3568,11 @@ trace(size); // {width = 200, height = 100}
 			}
 			else if (offset is MouseEvent || offset is SandboxMouseEvent) {
 				if (translate) {
-					var point:Point = new Point(offset.localX, offset.localY);
-					var stagePoint:Point = DisplayObject(offset.target).localToGlobal(point);
+					point = new Point(offset.localX, offset.localY);
+					stagePoint = DisplayObject(offset.target).localToGlobal(point);
 					point = DisplayObject(source).globalToLocal(stagePoint);
-					var mouseX:Number = point.x;
-					var mouseY:Number = point.y;
+					mouseX = point.x;
+					mouseY = point.y;
 					return point;
 				}
 				else {
@@ -3570,6 +3584,7 @@ trace(size); // {width = 200, height = 100}
 				absolutePosition = absolutePosition.subtract(offset.localToGlobal(zeroPoint));
 			}
 			
+			//testing may not need anymore with translate code
 			if (offsetScrollbars && source is Scroller) {
 				absolutePosition.x -= Scroller(source).viewport.horizontalScrollPosition;
 				absolutePosition.y -= Scroller(source).viewport.verticalScrollPosition;

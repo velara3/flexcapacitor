@@ -114,6 +114,7 @@
 			public var loadedContent:Object;
 			
 			public var loadedLoaderInfo:LoaderInfo;
+			public var addUncaughtErrorHandler:Boolean = true;
 
 			/**
 			 * 
@@ -362,7 +363,9 @@
 				}
 				
 				if (loadedLoaderInfo) {
-					loadedLoaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+					if (addUncaughtErrorHandler) {
+						loadedLoaderInfo.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+					}
 				}
 				
 				if (isFromEmbedded) {
