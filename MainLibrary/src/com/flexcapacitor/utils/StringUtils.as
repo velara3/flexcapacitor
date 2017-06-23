@@ -284,5 +284,20 @@ trace(indented3Times); // "	Hello World" - one indent left
 			
 			return outdentedText;
 		}
+		
+		/**
+		 * Pass in a string to make sure that if it contains a value there
+		 * is a space at the end of that string. 
+		 * 
+		 * Used for ensuring multiple values in a string are separated by a space. 
+		 */
+		public static function ensureSpaceExists(value:String):String {
+			
+			if (value && value.length!=0 && value.charAt(value.length-1)!=" ") {
+				value += " ";
+			}
+			
+			return value;
+		}
 	}
 }

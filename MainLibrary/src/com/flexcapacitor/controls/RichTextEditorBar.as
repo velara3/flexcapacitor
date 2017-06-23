@@ -130,6 +130,22 @@ package com.flexcapacitor.controls
 		public static var IMAGE_VIEW:String = "imageView";
 		public static var NORMAL_VIEW:String = "normal";
 		
+		/**
+		 * List of fonts 
+		 * */
+		public function get fontDataProvider():IList
+		{
+			return _fontDataProvider;
+		}
+
+		/**
+		 * @private
+		 */
+		public function set fontDataProvider(value:IList):void
+		{
+			_fontDataProvider = value;
+		}
+
 		private var _defaultErrorHandler:Function;
 
 		public function get defaultErrorHandler():Function
@@ -150,10 +166,7 @@ package com.flexcapacitor.controls
 			}
 		}
 		
-		/**
-		 * List of fonts 
-		 * */
-		public var fontDataProvider:IList;
+		private var _fontDataProvider:IList;
 		
 		public const LINK_SELECTED_CHANGE:String = "linkSelectedChange";
 		public const IMAGE_ICON_CLICKED:String = "imageIconClicked";
