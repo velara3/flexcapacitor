@@ -299,5 +299,24 @@ trace(indented3Times); // "	Hello World" - one indent left
 			
 			return value;
 		}
+		
+		/**
+		 * Pass in a string to make sure that if it contains a value
+		 * in between it and the next value 
+		 * 
+		 * Used for ensuring multiple values in a string are separated by a space. 
+		 */
+		public static function ensureCharacterBetween(value:String, additionalValue:String, character:String = "+"):String {
+			if (value==null) value = "";
+			
+			if (value && value.length!=0 && value.charAt(value.length-character.length)!=character) {
+				value += character + additionalValue;
+			}
+			else {
+				value += additionalValue;
+			}
+			
+			return value;
+		}
 	}
 }

@@ -4,6 +4,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 	import com.flexcapacitor.effects.file.BrowseForFile;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
+	import flash.display.DisplayObject;
 	import flash.display.DisplayObjectContainer;
 	import flash.events.Event;
 	import flash.events.FileListEvent;
@@ -93,7 +94,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 				if (!action.targetAncestor && !fileClassFound) {
 					dispatchErrorEvent("The target ancestor property must be set to a parent display object of the target(s). You could probably set it to '{this}' and it would work.");
 				}
-				else if (!(action.targetAncestor is DisplayObjectContainer) && !fileClassFound) {
+				else if (!(action.targetAncestor is DisplayObject) && !fileClassFound) {
 					dispatchErrorEvent("The target ancestor property must be a Display Object Container");
 				}
 				
@@ -165,7 +166,6 @@ package com.flexcapacitor.effects.file.supportClasses {
 			var filtersString:String;
 			var fileLocation:String;
 			var fileExists:Boolean;
-			var length:int;
 			
 			///////////////////////////////////////////////////////////
 			// Continue with action

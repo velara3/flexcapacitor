@@ -5,7 +5,7 @@ package com.flexcapacitor.effects.file {
 	import com.flexcapacitor.effects.file.supportClasses.BrowseForFileInstance;
 	import com.flexcapacitor.effects.supportClasses.ActionEffect;
 	
-	import flash.display.DisplayObjectContainer;
+	import flash.display.DisplayObject;
 	import flash.events.Event;
 	import flash.net.FileReference;
 	import flash.net.FileReferenceList;
@@ -59,6 +59,7 @@ package com.flexcapacitor.effects.file {
 	 * 
 	 * If it is part of an event handler it must be called within the call stack of a click event.
 	 * Set the targetAncestor property to a parent of the button that triggers this event.
+	 * You can usually bind it to the "this" property or "systemManager".
 	 * Must not have any effects before it that have any duration. <br/><br/>
 	 * 
 	 * <b>Errors:</b> <br/>
@@ -178,19 +179,19 @@ package com.flexcapacitor.effects.file {
 		
 		/**
 		 * An ancestor of the display object generating the click event. You can most likely 
-		 * set this property to the this keyword. 
+		 * set this property to the "this" or "systemManager" keyword. 
 		 * Note: Browsing for a file while in the browser requires a button event to 
 		 * pass the security sandbox. 
 		 * */
 		[Bindable]
-		public function set targetAncestor(value:DisplayObjectContainer):void {
+		public function set targetAncestor(value:DisplayObject):void {
 			_targetAncestor = value;
 		}
 		
-		public function get targetAncestor():DisplayObjectContainer {
+		public function get targetAncestor():DisplayObject {
 			return _targetAncestor;
 		}
-		private var _targetAncestor:DisplayObjectContainer;
+		private var _targetAncestor:DisplayObject;
 		
 		/**
 		 * Flag indicating to open a file dialog. You do not set this. 

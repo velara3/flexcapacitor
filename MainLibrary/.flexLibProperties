@@ -358,7 +358,6 @@
     <classEntry path="com.flexcapacitor.form.vo.FormElement"/>
     <classEntry path="com.flexcapacitor.form.vo.ItemElement"/>
     <classEntry path="com.flexcapacitor.formatters.HTMLFormatterTLF"/>
-    <classEntry path="com.flexcapacitor.graphics.LayoutLines"/>
     <classEntry path="com.flexcapacitor.handlers.Condition"/>
     <classEntry path="com.flexcapacitor.handlers.EventHandler"/>
     <classEntry path="com.flexcapacitor.handlers.EventHandlerBase"/>

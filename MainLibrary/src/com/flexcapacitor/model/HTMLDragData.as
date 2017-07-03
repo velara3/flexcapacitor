@@ -10,6 +10,7 @@ package com.flexcapacitor.model
 	 * Not all file types have a mime type registered
 	 * That does not mean they are invalid. 
 	 * Use a base64 to byte array class to convert the string value
+	 * Check the mimeType for value "invalid" for unsupported types. 
 	 * */
 	public class HTMLDragData {
 		
@@ -34,6 +35,8 @@ package com.flexcapacitor.model
 		/**
 		 * Mime type of the file as returned from the browser. 
 		 * Sometimes this is null when the mime type is not registered
+		 * or is "invalid". Check this property value for "invalid" when 
+		 * you get drop event.  
 		 * */
 		public var mimeType:String;
 		

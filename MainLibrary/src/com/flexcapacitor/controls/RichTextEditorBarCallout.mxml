@@ -12,7 +12,10 @@
 			
 			import spark.components.RichEditableText;
 			
+			import flashx.textLayout.elements.TextFlow;
+			
 			private var _richEditableText:RichEditableText;
+			public var originalTextFlow:TextFlow;
 
 			public var updatePositionOnEditorResize:Boolean;
 			
@@ -35,8 +38,10 @@
 					editorBar.detachRichEditableText(_richEditableText);
 					richEditableText.removeEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
 					richEditableText.removeEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
+					richEditableText.removeEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
 				}
 				
+				originalTextFlow = null;
 				_richEditableText = value;
 				
 				if (value) {
@@ -48,10 +53,20 @@
 						_richEditableText.removeEventListener(FocusEvent.FOCUS_IN, richEditableText_focusInHandler);
 						_richEditableText.removeEventListener(MouseEvent.CLICK, richEditableText_focusInHandler);
 					}
+					
+					if (closeOnEscKey) {
+						_richEditableText.addEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler, false, 0, true);
+					}
+					
+					originalTextFlow = value.textFlow;
 				}
+				
+				otherOwner = value;
+				
 			}
 
 			
+			public var closeOnEscKey:Boolean = true;
 			private var _showEditorOnFocusIn:Boolean;
 
 			/**
@@ -97,7 +112,7 @@
 				}
 				
 				if (richEditableText==null) {
-					throw Error("You must assign an instance of RichEditableText before calling open");
+					throw Error("You must set or pass in an instance of RichEditableText on or before calling open");
 				}
 				
 				editorBar.attachRichEditableText(richEditableText);
@@ -132,6 +147,10 @@
 					richEditableText.removeEventListener(Event.RESIZE, editorBar_resizeHandler);
 				}
 				
+				if (closeOnEscKey) {
+					richEditableText.removeEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
+				}
+				
 				editorBar.returnToDefaultState();
 				
 				super.close(commit, data);
@@ -144,8 +163,22 @@
 			 * */
 			public function richEditableText_focusInHandler(event:Event):void {
 				
-				if (showEditorOnFocusIn && isOpen==false) {
-					open(richEditableText);
+				if (showEditorOnFocusIn && isOpen==false && owner) {
+					open(owner);
+				}
+			}
+			
+			
+			/**
+			 * If close on esc key is true and user presses escape key
+			 * then close the callout and revert any changes
+			 * */
+			public function richEditableText_escKeyHandler(event:KeyboardEvent):void {
+				
+				if (event.keyCode==Keyboard.ESCAPE) {
+					richEditableText.textFlow = originalTextFlow;
+					close(false);
+					richEditableText.removeEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
 				}
 			}
 			

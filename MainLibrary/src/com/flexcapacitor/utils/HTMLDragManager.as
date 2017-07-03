@@ -310,11 +310,32 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		}
 		
 		/**
-		 * Sometimes type is null or empty string. The data URI for this is:
+		 * The event when a drop occurs. If there is an event listener for this event
+		 * a HTMLDragEvent is created and the event has a property called data
+		 * that is of type HTMLDragData. 
+		 * 
+		 * The HTMLDragData class has a name, dataURI and type that describes the dropped file. 
+		 * 
+		 * Sometimes the dropped object is invalid. In this case the type will be "invalid"
+		 * or HTMLDragManager.INVALID.  
+		 * 
+		 * In the past when the file was invalid the type was null or empty string. But for some
+		 * files the data URI for this is:
 		 * 
 		 * data:;base64,
 		 * 
-		 * For example, if you drop .DS_Store this is the data URI string.  
+		 * For example, if you drop .DS_Store the dataURI is only, "data:;base64,".   
+		 * 
+		 * Or for others it is null. 
+		 * 
+		 * If you drag and drop an image from another browser window from another domain a 
+		 * drop event is dispatched but there is no data. What has data or does not 
+		 * have data is a decision of the browser manufacturers).
+		 *  
+		 * When this happens a drop event occurs as usual but HTMLDragData object has a type 
+		 * of HTMLDragManager.INVALID and the name or dataURI are both null.
+		 * 
+		 * Check for the type value to handle cases like this. 
 		 * */
 		public function dragDropHandler(file:Object, ctrl:Boolean, shift:Boolean, alt:Boolean, meta:Boolean):void {
 			var event:HTMLDragEvent;
@@ -442,8 +463,8 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 							var fileObject = {};
 							var reader;
 
-							if (debug) console.log( "Drop. File count:" + droppedFiles.length);
-							if (debug) console.log( event);
+							if (debug) console.log("Drop. File count:" + droppedFiles.length);
+							if (debug) console.log(event);
 							
 							for (var i = 0; i < numberOfFiles; i++) {
 								files[i] = droppedFiles[i];
@@ -475,7 +496,7 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 								fileObject.name = null;
 								fileObject.type = "invalid";
 								fileObject.dataURI = null;
-								application[callbackName](fileObject);
+								application[callbackName](fileObject, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
 							}
 						}
 

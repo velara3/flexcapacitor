@@ -56,6 +56,12 @@ package com.flexcapacitor.controls
 		public var updatePositionOnOwnerResize:Boolean = true;
 		
 		/**
+		 * Additional owner that you can set to prevent call out from closing
+		 * TODO: Add support to add an array of objects
+		 **/
+		public var otherOwner:Object;
+		
+		/**
 		 * 
 		 * */
 		override public function open(owner:DisplayObjectContainer, modal:Boolean = false):void {
@@ -95,14 +101,32 @@ package com.flexcapacitor.controls
 			var focusedComponent:Object = focusManager.getFocus();
 			var relatedObject:Object = event.relatedObject;
 			var isRelatedObjectRelated:Boolean;
+			var notOtherOwner:Boolean;
+			var notOwner:Boolean;
+			
+			
+			if (otherOwner) {
+				if ("contains" in otherOwner) {
+					isRelatedObjectRelated = otherOwner.contains(relatedObject as DisplayObject);
+				}
+				
+				if (focusedComponent!=otherOwner || 
+					(relatedObject!=otherOwner && !isRelatedObjectRelated)) {
+					notOtherOwner = true;
+				}
+				
+			}
 			
 			isRelatedObjectRelated = owner.contains(relatedObject as DisplayObject);
 			
 			if (focusedComponent!=owner || 
 				(relatedObject!=owner && !isRelatedObjectRelated)) {
-				close(false);
+				notOwner = true;
 			}
 			
+			if (notOwner && notOtherOwner) {
+				close(false);
+			}
 		}
 		
 		protected function owner_resizeHandler(event:ResizeEvent):void {
