@@ -43,6 +43,7 @@ package com.flexcapacitor.utils {
 	import mx.events.SandboxMouseEvent;
 	import mx.graphics.BitmapFill;
 	import mx.graphics.BitmapFillMode;
+	import mx.graphics.BitmapScaleMode;
 	import mx.graphics.codec.JPEGEncoder;
 	import mx.graphics.codec.PNGEncoder;
 	import mx.managers.ISystemManager;
@@ -2714,18 +2715,27 @@ trace(size); // {width = 200, height = 100}
 		public static function duplicateIntoImage(graphicElement:IGraphicElement, transparent:Boolean = true, fillColor:uint = 0xFFFFFF, useLocalSpace:Boolean = true, clipRectangle:Rectangle = null):Image {
 			var bitmapData:BitmapData = getGraphicElementBitmapData(graphicElement as IGraphicElement, transparent, fillColor, useLocalSpace, clipRectangle);
 			var container:Object = graphicElement.owner ? graphicElement.owner : graphicElement.parent;
-			var image:Image = new Image();
+			var image:Image;
 			var x:Number;
 			var y:Number;
+			
+			image = new Image();
 			image.source = bitmapData;
-			image.includeInLayout = false;
+			image.includeInLayout = true;
+			x = 0;
+			y = 0;
+			
 			x = graphicElement.getLayoutBoundsX();
 			y = graphicElement.getLayoutBoundsY();
 			
 			image.x = x;
 			image.y = y;
+			image.fillMode = BitmapFillMode.SCALE;
+			image.scaleMode = BitmapScaleMode.STRETCH;
 			image.width = bitmapData.width;
 			image.height = bitmapData.height;
+			
+			IInvalidating(image).validateNow();
 			
 			if (container is IVisualElementContainer) {
 				container.addElement(image);

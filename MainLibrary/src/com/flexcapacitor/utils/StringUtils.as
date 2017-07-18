@@ -287,13 +287,21 @@ trace(indented3Times); // "	Hello World" - one indent left
 		
 		/**
 		 * Pass in a string to make sure that if it contains a value there
-		 * is a space at the end of that string. 
+		 * is a space at the end of that string. If the string is null or empty 
+		 * it does not add a space.
 		 * 
 		 * Used for ensuring multiple values in a string are separated by a space. 
+		 * 
+		 * Usage: 
+<pre>
+output = StringUtils.ensureSpaceExists("Item1"); // "Item1 "
+output = StringUtils.ensureSpaceExists(""); // ""
+</pre> 
 		 */
 		public static function ensureSpaceExists(value:String):String {
+			if (value==null) value = "";
 			
-			if (value && value.length!=0 && value.charAt(value.length-1)!=" ") {
+			if (value.length!=0 && value.charAt(value.length-1)!=" ") {
 				value += " ";
 			}
 			
@@ -302,17 +310,31 @@ trace(indented3Times); // "	Hello World" - one indent left
 		
 		/**
 		 * Pass in a string to make sure that if it contains a value
-		 * in between it and the next value 
+		 * in between it and the next value. If either values passed in 
+		 * are null or empty no separator is added. 
 		 * 
-		 * Used for ensuring multiple values in a string are separated by a space. 
+		 * Used for ensuring multiple values in a string are separated by a space.
+		 * 
+		 * Usage: 
+<pre>
+output = StringUtils.ensureCharacterBetween("Item1", "Item2"); // "Item1 Item2"
+output = StringUtils.ensureCharacterBetween("Item1", ""); // "Item1"
+output = StringUtils.ensureCharacterBetween("", "Item2"); // "Item2"
+</pre> 
+		 * @param value First string value
+		 * @param additionalValue Second string value
+		 * @param character Character used as separator between values
 		 */
 		public static function ensureCharacterBetween(value:String, additionalValue:String, character:String = "+"):String {
 			if (value==null) value = "";
+			if (additionalValue==null) additionalValue = "";
 			
-			if (value && value.length!=0 && value.charAt(value.length-character.length)!=character) {
+			// add character if needed
+			if (value.length!=0 && value.charAt(value.length-character.length)!=character) {
 				value += character + additionalValue;
 			}
 			else {
+				// matching character already exists or one of the values is empty. combine strings 
 				value += additionalValue;
 			}
 			

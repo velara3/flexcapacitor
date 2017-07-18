@@ -1037,8 +1037,9 @@ protected function searchInput_changeHandler(event:Event):void {
 				ace.require("ace/ext/searchbox"); // search box set later
 				element = window.document.getElementById(editorIdentity);
 				if (element==null && createElementIfNeeded) {
-					element = document.createElement("div");
-					element.id = id;
+					element = window.document.createElement("div");
+					element.id = editorIdentity;
+					window.document.body.appendChild(element);
 				}
 				editor = ace.edit(editorIdentity);
 				editor.$blockScrolling = Infinity;

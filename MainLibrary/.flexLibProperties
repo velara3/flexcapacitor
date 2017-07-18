@@ -351,6 +351,7 @@
     <classEntry path="com.flexcapacitor.events.RedirectEvent"/>
     <classEntry path="com.flexcapacitor.filters.BlackAndWhiteFilter"/>
     <classEntry path="com.flexcapacitor.filters.BorderStrokeFilter"/>
+    <classEntry path="com.flexcapacitor.filters.SharpenFilter"/>
     <classEntry path="com.flexcapacitor.filters.TextShadowFilter"/>
     <classEntry path="com.flexcapacitor.form.FormAdapter"/>
     <classEntry path="com.flexcapacitor.form.FormManager"/>

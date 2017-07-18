@@ -1734,7 +1734,7 @@ var newCode:String = XMLUtils.addNamespacesToXMLString(code, namespaces);
 				
 				}
 				
-				function validateXML(txt) {
+				function validateXML(text) {
 					var message;
 					var parser;
 					var xmlDoc;
