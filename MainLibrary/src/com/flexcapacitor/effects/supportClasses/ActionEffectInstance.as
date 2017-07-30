@@ -171,8 +171,10 @@ package com.flexcapacitor.effects.supportClasses {
 		private static var seperator:String = " > ";
 		
 		/**
-		 * When set to true enters the debugger right before
+		 * When set to true enters the debugger right before 
 		 * the play method is called. 
+		 * A message is written to the console with the name of the effect and 
+		 * the instructions to press the step into button on your debugger 
 		 * */
 		public var stepInto:Boolean;
 		

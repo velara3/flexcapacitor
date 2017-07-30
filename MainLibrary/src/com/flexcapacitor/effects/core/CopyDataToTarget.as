@@ -123,5 +123,10 @@ package com.flexcapacitor.effects.core {
 		 * Convert object to string
 		 * */
 		public var convertObjectToString:Boolean;
+		
+		/**
+		 * If data is null throw error
+		 **/
+		public var throwErrorIfDataIsNull:Boolean = true;
 	}
 }

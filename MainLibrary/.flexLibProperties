@@ -503,6 +503,7 @@
     <classEntry path="com.flexcapacitor.utils.ObjectUtils"/>
     <classEntry path="com.flexcapacitor.utils.PersistentStorage"/>
     <classEntry path="com.flexcapacitor.utils.PopUpOverlayManager"/>
+    <classEntry path="com.flexcapacitor.utils.PreventRedirect"/>
     <classEntry path="com.flexcapacitor.utils.RandomData"/>
     <classEntry path="com.flexcapacitor.utils.RegisterSingleton"/>
     <classEntry path="com.flexcapacitor.utils.SVGUtils"/>

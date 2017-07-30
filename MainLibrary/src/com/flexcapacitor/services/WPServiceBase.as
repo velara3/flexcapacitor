@@ -421,6 +421,7 @@ wpSaveService.send("Gallery", "getResults", null, object);
 			var serviceEvent:WPServiceEvent = new WPServiceEvent(WPServiceEvent.FAULT);
 			serviceEvent.call = call;
 			serviceEvent.faultEvent = event;
+			serviceEvent.hasError = true;
 			errorOccured = true;
 			errorMessage = event.toString();
 			errorEvent = event;

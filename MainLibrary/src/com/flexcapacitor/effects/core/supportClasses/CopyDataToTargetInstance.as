@@ -144,6 +144,11 @@ package com.flexcapacitor.effects.core.supportClasses {
 				value = valueType(value);
 			}
 			
+			// throw error if value is null
+			if (action.throwErrorIfDataIsNull && value==null) {
+				dispatchErrorEvent("The data is null and is not allowed by this effect");
+			}
+			
 			if (action.convertObjectToString) {
 				value = ObjectUtil.toString(value);
 			}

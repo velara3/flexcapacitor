@@ -116,6 +116,9 @@ package com.flexcapacitor.controls
 				}
 				
 			}
+			else {
+				notOtherOwner = true;
+			}
 			
 			isRelatedObjectRelated = owner.contains(relatedObject as DisplayObject);
 			

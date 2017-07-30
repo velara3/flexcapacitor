@@ -429,7 +429,7 @@ package com.flexcapacitor.effects.file.supportClasses {
 			action.loaderContentType = loaderInfo.contentType;
 			
 			if (loaderInfo.content is Bitmap) {
-				action.bitmapData = Bitmap(loaderInfo.content).bitmapData;
+				action.bitmapData = Bitmap(loaderInfo.content).bitmapData.clone();// should .clone() and then destroy reference
 			}
 			
 			// NOTE: there is a complete event and loader complete event
