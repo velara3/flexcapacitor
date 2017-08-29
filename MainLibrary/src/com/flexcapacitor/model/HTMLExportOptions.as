@@ -17,6 +17,11 @@ package com.flexcapacitor.model
 		 * */
 		public var showScreenshotBackground:Boolean;
 		
+		/**
+		 * Uses single 1x1 pixel data so editors are not full of image data  
+		 **/
+		public var embedPlaceholderImageData:Boolean;
+		
 		////////////////////////////////////
 		// The following may be removed
 		////////////////////////////////////

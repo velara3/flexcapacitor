@@ -66,6 +66,9 @@ package com.flexcapacitor.services {
 		
 		private var _faultEvent:Event;
 
+		/**
+		 * Fault event. 
+		 **/
 		public function get faultEvent():Event {
 			return _faultEvent;
 		}

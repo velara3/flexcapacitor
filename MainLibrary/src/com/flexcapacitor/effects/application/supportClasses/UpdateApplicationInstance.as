@@ -4,6 +4,9 @@ package com.flexcapacitor.effects.application.supportClasses {
 	import com.flexcapacitor.effects.application.UpdateApplication;
 	import com.flexcapacitor.effects.supportClasses.ActionEffectInstance;
 	
+	import flash.desktop.NativeApplication;
+	import flash.desktop.NotificationType;
+	import flash.display.NativeWindow;
 	import flash.events.ErrorEvent;
 	import flash.events.Event;
 	import flash.events.IEventDispatcher;
@@ -11,6 +14,10 @@ package com.flexcapacitor.effects.application.supportClasses {
 	import flash.filesystem.File;
 	
 	import mx.binding.utils.BindingUtils;
+	import mx.core.FlexGlobals;
+	
+	import spark.components.Application;
+	import spark.components.WindowedApplication;
 	
 	import air.update.ApplicationUpdater;
 	import air.update.ApplicationUpdaterUI;
@@ -285,6 +292,10 @@ package com.flexcapacitor.effects.application.supportClasses {
 					
 					// if an update is available this property is true
 					if (statusEvent.available) {
+						
+						if (action.orderUpdateAvailableWindowToFront) {
+							orderUpdateWindowToFront();
+						}
 			
 						if (action.hasEventListener(UpdateApplication.UPDATE_AVAILABLE)) {
 							dispatchActionEvent(new Event(UpdateApplication.UPDATE_AVAILABLE));
@@ -435,6 +446,42 @@ package com.flexcapacitor.effects.application.supportClasses {
 			// setting current state again
 			if (updater) {
 				action.currentState = updater.currentState;
+			}
+		}
+		
+		protected function orderUpdateWindowToFront():void {
+			var windows:Array;
+			var window:NativeWindow;
+			var nativeApplication:NativeApplication;
+			var nativeWindow:NativeWindow;
+			
+			nativeWindow = FlexGlobals.topLevelApplication.nativeWindow;
+			nativeApplication = FlexGlobals.topLevelApplication.nativeApplication;
+			
+			windows = nativeApplication.openedWindows;
+			
+			for (var i:int;i<windows.length;i++) {
+				window = windows[i];
+				
+				// if application then skip
+				if (window==nativeWindow) {
+					window.notifyUser(NotificationType.INFORMATIONAL);
+					window.notifyUser(NotificationType.CRITICAL);
+					continue;
+				}
+				
+				if (window.title.indexOf("Updating:")!=-1) {
+					// determine if update window - what about non-english
+				}
+				
+				if (window.width==530 && window.height==232) {
+					// determine if update window - what about scale factor or content
+				}
+				
+				// order all non-application windows to front until we find a method to
+				// find our update window
+				window.orderToFront();
+				//break;
 			}
 		}
 		

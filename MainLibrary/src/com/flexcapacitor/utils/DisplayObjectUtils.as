@@ -1,5 +1,6 @@
 
 package com.flexcapacitor.utils {
+	import com.flexcapacitor.events.BitmapDataEvent;
 	import com.flexcapacitor.utils.supportClasses.ComponentDescription;
 	import com.flexcapacitor.utils.supportClasses.GroupOptions;
 	
@@ -16,7 +17,6 @@ package com.flexcapacitor.utils {
 	import flash.display.StageQuality;
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
-	import flash.events.IEventDispatcher;
 	import flash.events.MouseEvent;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
@@ -52,7 +52,6 @@ package com.flexcapacitor.utils {
 	import mx.utils.Base64Encoder;
 	import mx.utils.MatrixUtil;
 	
-	import spark.components.Group;
 	import spark.components.Image;
 	import spark.components.Scroller;
 	import spark.components.supportClasses.GroupBase;
@@ -66,6 +65,8 @@ package com.flexcapacitor.utils {
 	import spark.skins.IHighlightBitmapCaptureClient;
 	
 	use namespace mx_internal;
+	
+	[Event(name="bitmapDataChanged", type="com.flexcapacitor.events.BitmapDataEvent")]
 	
 	/**
 	 * Utils used to manipulate the component tree and display list tree.<br/><br/>
@@ -92,7 +93,7 @@ else {
 	 * */
 	public class DisplayObjectUtils extends EventDispatcher {
 		
-		public function DisplayObjectUtils() {
+		public function DisplayObjectUtils(s:SINGLEDOUBLE) {
 			
 		}
 		
@@ -978,8 +979,7 @@ var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(
 		public static function getSizeByScaleMode(maxWidth:int, maxHeight:int, 
 												  width:int, height:int, 
 												  scaleMode:String="letterbox",
-												  dpi:Number=NaN):Matrix 
-		{
+												  dpi:Number=NaN):Matrix {
 			
 			var aspectRatio:String = (maxWidth < maxHeight) ? "portrait" : "landscape";
 			var orientation:String = aspectRatio;
@@ -991,7 +991,7 @@ var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(
 			//var dpiScale:Number = this.root.scaleX;
 			
 			// Start building a matrix
-			var m:Matrix = new Matrix();
+			var matrix:Matrix = new Matrix();
 			
 			// Stretch
 			var scaleX:Number = 1;
@@ -1015,24 +1015,23 @@ var isVisible:Boolean = DisplayObjectUtils.getGreatestVisibility(IVisualElement(
 			}
 			
 			// what does this do
-			if (scaleX != 1 || scaleY != 0)
-			{
+			if (scaleX != 1 || scaleY != 0) {
 				width *= scaleX;
 				height *= scaleY;
-				m.scale(scaleX, scaleY);
+				matrix.scale(scaleX, scaleY);
 			}
 			
 			
 			// Move center to (0,0):
-			m.translate(-width / 2, -height / 2);
+			matrix.translate(-width / 2, -height / 2);
 			
 			// Align center of image (0,0) to center of stage: 
-			m.translate(maxWidth / 2, maxHeight / 2);
+			matrix.translate(maxWidth / 2, maxHeight / 2);
 			
 			// Apply matrix
 			// splashImage.transform.matrix = m;
 			
-			return m;
+			return matrix;
 		}
 		
 		/**
@@ -1551,7 +1550,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * @see #getBase64ImageDataString()
 		 * */
 		public static function getBase64ImageData(target:Object, type:String = PNG, encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1, linebreaks:Boolean = false):String {
-			var component:IUIComponent = target as IUIComponent;
+			var component:IUIComponent;
 			var bitmapData:BitmapData;
 			var byteArray:ByteArray;
 			var useEncoder:Boolean;
@@ -1564,6 +1563,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var tintType2:Boolean = true;
 			var time:int;
 			
+			component = target as IUIComponent;
 			
 			if (checkCache && base64BitmapCache[target]) {
 				return base64BitmapCache[target];
@@ -1856,9 +1856,11 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		public static var loader:Loader;
 		
 		/**
-		 * Get bitmap data from a byte array
+		 * Get bitmap data from a byte array. The image can be blank if used before it's fully loaded.
+		 * 
+		 * Add a listener for bitmapDataChanged or pass in an object or function to get updated bitmap data   
 		 * */
-		public static function getBitmapDataFromByteArray(byteArray:ByteArray, loaderContext:LoaderContext = null, size:Point = null):BitmapData {
+		public static function getBitmapDataFromByteArray(byteArray:ByteArray, loaderContext:LoaderContext = null, size:Point = null, owner:Object = null):BitmapData {
 			var PNGEncoderOptionsClass:Object;
 			var bitmapData:BitmapData;
 			var value:Object;
@@ -1870,11 +1872,12 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var loaderContext:LoaderContext;
 			var isPNG:Boolean;
 			var isJPG:Boolean;
+			var bitmapContent:Bitmap;
 			
 			try {
 				byteArray.position = 0;
-				bitmapData = new BitmapData(initialWidth,initialHeight,true,0xFFFFFFFF);
-				rectangle = new Rectangle(0,0,initialWidth,initialHeight);
+				bitmapData = new BitmapData(initialWidth, initialHeight, true, 0xFFFFFFFF);
+				rectangle = new Rectangle(0, 0, initialWidth, initialHeight);
 				//quality = StageQuality.HIGH_16X16_LINEAR;
 				
 				// asyncronous
@@ -1891,9 +1894,8 @@ trace(result); // rgba(255, 0, 0, 0.3);
 					//	stage.addChild(loader);
 					
 					if (loader.content) {
-						var bitmap:Bitmap;
-						bitmap = loader.content as Bitmap;
-						return bitmap.bitmapData;
+						bitmapContent = loader.content as Bitmap;
+						return bitmapContent.bitmapData;
 					}
 					
 					// we don't need an event listener if we have the size before hand
@@ -1902,6 +1904,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 						var newBitmapData:BitmapData;
 						var bitmap:Bitmap;
 						var rectangle:Rectangle;
+						var bitmapChangedEvent:BitmapDataEvent;
 						
 						if (loader.content) {
 							bitmap = LoaderInfo(event.currentTarget).loader.content as Bitmap;
@@ -1912,7 +1915,32 @@ trace(result); // rgba(255, 0, 0, 0.3);
 								//rectangle = new Rectangle(0, 0, newBitmapData.width, newBitmapData.height);
 								//bitmapData.merge(newBitmapData, rectangle, new Point(), 0, 0, 0, 0);
 								//bitmapData.drawWithQuality(newBitmapData, null, null, null, rectangle, false, quality);
+								//bitmapData.lock();
 								bitmapData.drawWithQuality(newBitmapData, null, null, null, null, false, quality);
+								//bitmapData.unlock();
+								
+								if (instance.hasEventListener(BitmapDataEvent.BITMAP_DATA_CHANGED)) {
+									bitmapChangedEvent = new BitmapDataEvent(BitmapDataEvent.BITMAP_DATA_CHANGED);
+									bitmapChangedEvent.bitmapData = bitmapData;
+									instance.dispatchEvent(bitmapChangedEvent);
+								}
+								
+								if (owner) {
+									if (owner is Image) {
+										Image(owner).source = null;
+										Image(owner).source = newBitmapData;
+									}
+									else if (owner is BitmapImage) {
+										BitmapImage(owner).source = null;
+										BitmapImage(owner).source = newBitmapData;
+									}
+									
+									else if (owner is Function) {
+										// EvalError: Error #1066: The form function('function body') is not supported.
+										//Function(owner)(newBitmapData);
+										owner(newBitmapData, bitmapData);
+									}
+								}
 								//bitmapData.drawWithQuality(LoaderInfo(event.currentTarget).loader, null, null, null, null, false, quality);
 								//bitmapData.copyPixels(newBitmapData, newBitmapData.rect, new Point());
 								//bitmapData = newBitmapData.clone();
@@ -1967,7 +1995,7 @@ public function handleLoadingImages(event:Event):void {
 </pre>
 		 * 
 		 * */
-		public static function getBitmapDataFromBase64(encodedValue:String, loaderContext:LoaderContext = null, parseBitmapSize:Boolean = true, imageType:String = null):BitmapData {
+		public static function getBitmapDataFromBase64(encodedValue:String, loaderContext:LoaderContext = null, parseBitmapSize:Boolean = true, imageType:String = null, owner:Object = null):BitmapData {
 			var PNGEncoderOptionsClass:Object;
 			var bitmapData:BitmapData;
 			var loader:Loader;
@@ -1988,7 +2016,7 @@ public function handleLoadingImages(event:Event):void {
 			}
 			
 			if (byteArray) {
-				bitmapData = getBitmapDataFromByteArray(byteArray, loaderContext, size);
+				bitmapData = getBitmapDataFromByteArray(byteArray, loaderContext, size, owner);
 			}
 			
 			return bitmapData;
@@ -4229,6 +4257,48 @@ trace(size); // {width = 200, height = 100}
 			return newBitmapData;
 		}
 		
+		[Inspectable(enumeration="none,letterbox,stretch,zoom", defaultValue="none")]
+		
+		/**
+		 * Resize display object or bitmap data to a new size
+		 **/
+		public static function resizeBitmapData(bitmapDrawable:IBitmapDrawable, width:Number, height:Number, scaleMode:String="none", 
+											  smooth:Boolean = true, transparent:Boolean = true, fillColor:Number = 0x00000000):BitmapData {
+			var sizedBitmapData:BitmapData;
+			var matrix:Matrix;
+			matrix = getSizeByScaleMode(width, height, Object(bitmapDrawable).width, Object(bitmapDrawable).height, scaleMode);
+			//matrix = new Matrix();
+			//matrix.scale(width/bitmapData.width, height/bitmapData.height);
+			sizedBitmapData = new BitmapData(width, height, transparent, fillColor);
+			sizedBitmapData.draw(bitmapDrawable, matrix, null, null, null, smooth);
+			
+			return sizedBitmapData;
+		}
+		
+		
+		//----------------------------------
+		//  instance
+		//----------------------------------
+		
+		public static function get instance():DisplayObjectUtils
+		{
+			if (!_instance) {
+				_instance = new DisplayObjectUtils(new SINGLEDOUBLE());
+			}
+			return _instance;
+		}
+		
+		/**
+		 * An instance used to listen for events
+		 **/
+		public static function getInstance():DisplayObjectUtils {
+			return instance;
+		}
+		
+		private static var _instance:DisplayObjectUtils;
+		
 		public static var debug:Boolean;
 	}
 }
+
+class SINGLEDOUBLE{}

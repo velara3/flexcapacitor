@@ -245,12 +245,13 @@ var indented:String = indent("Hello World", "		");
 trace(indented); // "		Hello World"
 </pre>
 		 * */
-		public static function indent(input:String, indentAmount:String = "\t"):String {
-			if (input==null || input=="") return indentAmount;
+		public static function indent(value:String, indentAmount:String = "\t"):String {
+			if (value==null || value=="") return indentAmount;
 			
-			if (indentAmount==null || indentAmount=="") indentAmount = "\t";
+			//if (indentAmount==null || indentAmount=="") indentAmount = "\t";
+			if (indentAmount==null || indentAmount=="")  return value;
 			
-			var indentedText:String = input.replace(indentPattern, indentAmount + "$1$2");
+			var indentedText:String = value.replace(indentPattern, indentAmount + "$1$2");
 			return indentedText;
 		}
 
@@ -313,17 +314,19 @@ output = StringUtils.ensureSpaceExists(""); // ""
 		 * in between it and the next value. If either values passed in 
 		 * are null or empty no separator is added. 
 		 * 
-		 * Used for ensuring multiple values in a string are separated by a space.
+		 * Used for ensuring multiple values in a string are separated by a space or other character.
 		 * 
 		 * Usage: 
 <pre>
-output = StringUtils.ensureCharacterBetween("Item1", "Item2"); // "Item1 Item2"
+output = StringUtils.ensureCharacterBetween("Item1", "Item2"); // "Item1+Item2"
 output = StringUtils.ensureCharacterBetween("Item1", ""); // "Item1"
 output = StringUtils.ensureCharacterBetween("", "Item2"); // "Item2"
 </pre> 
 		 * @param value First string value
 		 * @param additionalValue Second string value
 		 * @param character Character used as separator between values
+		 * 
+		 * @see #ensureSpaceBetween
 		 */
 		public static function ensureCharacterBetween(value:String, additionalValue:String, character:String = "+"):String {
 			if (value==null) value = "";
@@ -339,6 +342,29 @@ output = StringUtils.ensureCharacterBetween("", "Item2"); // "Item2"
 			}
 			
 			return value;
+		}
+		
+		/**
+		 * Pass in a string to make sure that if it contains a space
+		 * in between it and the next value. If either values passed in 
+		 * are null or empty no space is added. 
+		 * 
+		 * Used for ensuring multiple values in a string are separated by a space.
+		 * 
+		 * Usage: 
+		 <pre>
+		 output = StringUtils.ensureCharacterBetween("Item1", "Item2"); // "Item1 Item2"
+		 output = StringUtils.ensureCharacterBetween("Item1", ""); // "Item1"
+		 output = StringUtils.ensureCharacterBetween("", "Item2"); // "Item2"
+		 </pre> 
+		 * @param value First string value
+		 * @param additionalValue Second string value
+		 * @param character Character used as separator between values
+		 * 
+		 * @see #ensureCharacterBetween
+		 */
+		public static function ensureSpaceBetween(value:String, additionalValue:String):String {
+			return ensureCharacterBetween(value, additionalValue, " ");
 		}
 	}
 }

@@ -8,6 +8,7 @@ package com.flexcapacitor.utils
 	
 	import flash.external.ExternalInterface;
 	import flash.utils.Dictionary;
+	import flash.utils.getTimer;
 	
 	import mx.core.FlexGlobals;
 	
@@ -335,6 +336,8 @@ package com.flexcapacitor.utils
 			var columns:int;
 			var tokenInfo:TokenInformation;
 			var attributeName:String;
+			var dataURIMatch:Array;
+			var tokens:Array;
 			
 			attribute = attribute.toLowerCase();
 			
@@ -366,10 +369,15 @@ package com.flexcapacitor.utils
 					var columns;
 					var attributeFound = false;
 					var found = false;
+					var dataURIMatch;
+					var tokens;
 					
 					const XML_END_TAG_OPEN = "meta.tag.punctuation.end-tag-open.xml";
 					const XML_ATTRIBUTE_NAME = "entity.other.attribute-name.xml";
 					const XML_ATTRIBUTE_VALUE = "string.attribute-value.xml";
+
+					var dataURIExpPrefix = /\s*?data:image\/(png|jpeg);base64,/i;
+					var dataURIExpFull = /\s*?data:image\/(png|jpeg);base64,([^]*)==/gi;
 					
 					if (session==null) return false;
 					totalLines = session.getLength();
@@ -400,6 +408,25 @@ package com.flexcapacitor.utils
 							if (type==XML_END_TAG_OPEN) {
 								notFound = true;
 							}
+						
+							// if we encounter data uri we should skip
+							if (value && value.length>128) {
+								dataURIMatch = value.match(dataURIExpPrefix);
+								
+								if (dataURIMatch!=null && dataURIMatch.length>0) {
+									column = column+value.length-1;
+									
+									dataURIMatch = value.match(dataURIExpFull);
+									//tokens = session.getTokens(row);
+									
+									// spans multiple lines or is data uri is malformed
+									// if full match not found exit out of loop for now
+									if (dataURIMatch==null) {
+										row = totalLines;
+										break;
+									}
+								}
+							}
 						}
 							
 						if (found || notFound) break;
@@ -427,17 +454,34 @@ package com.flexcapacitor.utils
 				
 			}
 			else {
-				session = editor.session;
-				totalLines = session.getLength();
 				
-				for (;row<totalLines; row++) {
-					line = session.getLine(row);
-					columns = line.length;
+				var useTokenIterator:Boolean;
+				
+				if (useTokenIterator) {
+					// this is not tested
+					var TokenIterator:Object;
+					var stream:Object;
+					var searching:Boolean;
+					var searchLimit:int;
 					
-					for (column = 0; column<columns; column++) {
-						token = session.getTokenAt(row, column);
+					TokenIterator = editor.ace.require("ace/token_iterator").TokenIterator;
+					stream = new TokenIterator(editor.session, row, column);
+					searching = true;
+					searchLimit = getTimer();
+					
+					token = stream.getCurrentToken();
+					
+					while (token || searching) {
+						token = stream.stepForward();
+						
+						if (!token || !(token.type == "storage.type" || token.type == "constant.character.escape")) {
+							token = stream.stepForward();
+							continue;
+						}
+						
 						type = token ? token.type : "";
 						value = token.value.toLowerCase();
+						
 						
 						// found value - basic - expects value right after attribute name
 						if (attributeFound && type==XML_ATTRIBUTE_VALUE) {
@@ -455,9 +499,63 @@ package com.flexcapacitor.utils
 						if (type==XML_END_TAG_OPEN) {
 							notFound = true;
 						}
+						
+						if (found || notFound) break;
 					}
+				}
+				else {
+				
+					session = editor.session;
+					totalLines = session.getLength();
 					
-					if (found || notFound) break;
+					for (;row<totalLines; row++) {
+						line = session.getLine(row);
+						columns = line.length;
+						
+						for (column = 0; column<columns; column++) {
+							token = session.getTokenAt(row, column);
+							type = token ? token.type : "";
+							value = token.value.toLowerCase();
+							
+							// found value - basic - expects value right after attribute name
+							if (attributeFound && type==XML_ATTRIBUTE_VALUE) {
+								value = token.value;
+								found = true;
+								break;
+							}
+							
+							// found attribute
+							if (type==XML_ATTRIBUTE_NAME && value==attribute) {
+								attributeFound = true;
+								attributeName = token.value;
+							}
+							
+							if (type==XML_END_TAG_OPEN) {
+								notFound = true;
+							}
+							
+							// if we encounter data uri we should skip
+							if (value && value.length>128) {
+								dataURIMatch = value.match(dataURIExpPrefix);
+								
+								if (dataURIMatch!=null && dataURIMatch.length>0) {
+									column = column+value.length-1;
+									
+									dataURIMatch = value.match(dataURIExpFull);
+									//tokens = session.getTokens(row);
+									
+									// spans multiple lines or is data uri is malformed
+									// if full match not found exit out of loop for now
+									if (dataURIMatch==null) {
+										row = totalLines;
+										break;
+									}
+								}
+							}
+						}
+						
+						if (found || notFound) break;
+					}
 				}
 			}
 			
@@ -474,6 +572,9 @@ package com.flexcapacitor.utils
 			return tokenInfo;
 			
 		}
+		
+		public static var dataURIExpPrefix:RegExp = /\s*?data:image\/(png|jpeg);base64,/i;
+		public static var dataURIExpFull:RegExp = /\s*?data:image\/(png|jpeg);base64,(.*)==/gsi;
 		
 		/**
 		 * Get auto complete object from an object 

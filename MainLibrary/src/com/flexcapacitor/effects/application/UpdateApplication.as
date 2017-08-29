@@ -571,5 +571,11 @@ public function customFunction (currentVersion:String, updateVersion:String):Boo
 		 * */
 		public var cancelBeforeUpdate:Boolean;
 		
+		/**
+		 * Orders the update available window in front of the application (sometimes it is hidden). 
+		 * Listen for application complete event to avoid sometimes hidden.
+		 **/
+		public var orderUpdateAvailableWindowToFront:Boolean = true;
+		
 	}
 }

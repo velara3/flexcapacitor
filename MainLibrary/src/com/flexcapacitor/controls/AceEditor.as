@@ -723,6 +723,7 @@ protected function searchInput_changeHandler(event:Event):void {
 							ace.require("ace/ext/beautify");
 							ace.require("ace/lib/lang");
 							ace.require("ace/ext/searchbox");
+							//ace.require("ace/token_iterator").TokenIterator;
 							var editor = ace.edit(id);
 							editor.$blockScrolling = Infinity;
 							return true;
@@ -1035,6 +1036,8 @@ protected function searchInput_changeHandler(event:Event):void {
 				beautify = ace.require("ace/ext/beautify");
 				language = ace.require("ace/lib/lang");
 				ace.require("ace/ext/searchbox"); // search box set later
+				tokenIterator = ace.require("ace/token_iterator").TokenIterator;
+				
 				element = window.document.getElementById(editorIdentity);
 				if (element==null && createElementIfNeeded) {
 					element = window.document.createElement("div");
@@ -1349,6 +1352,11 @@ protected function searchInput_changeHandler(event:Event):void {
 		 * Reference to the ace language tools
 		 * */
 		public var languageTools:Object;
+		
+		/**
+		 * Reference to token iterator
+		 **/
+		public var tokenIterator:Object;
 		
 		private var _window:Object;
 		public var instanceClassName:String;
@@ -4987,6 +4995,26 @@ protected function searchInput_changeHandler(event:Event):void {
 			}
 			else {
 				return editor.session.getTokenAt(row, column);
+			}
+		}
+		
+		/**
+		 * Gets the tokens at the row specified
+		 * */
+		public function getTokens(row:uint):Array {
+			
+			if (isBrowser && useExternalInterface) {
+				var string:String = <xml><![CDATA[
+				function (id, row) {
+					var editor = ace.edit(id);
+					return editor.session.getTokens(row);
+				}
+				]]></xml>;
+				var results:Array = ExternalInterface.call(string, editorIdentity, row);
+				return results;
+			}
+			else {
+				return editor.session.getTokens(row);
 			}
 		}
 		

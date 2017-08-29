@@ -51,5 +51,20 @@ package com.flexcapacitor.model
 		 * Embed local images inline
 		 * */
 		public var embedImages:Boolean;
+		
+		/**
+		 * Embed thumbnail
+		 * */
+		public var embedThumbnail:Boolean;
+		
+		/**
+		 * Width of embedded thumbnail of document
+		 * */
+		public var thumbnailWidth:Number;
+		
+		/**
+		 * Height of embedded thumbnail of document
+		 * */
+		public var thumbnailHeight:Number;
 	}
 }

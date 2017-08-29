@@ -341,7 +341,7 @@ package com.flexcapacitor.utils
 							}
 						}
 						
-						else if (index>=0) {
+						else if (index>0) {
 							var modalWindow:FlexSprite = systemManager.rawChildren.getChildAt(index-1) as FlexSprite;
 							
 							if (modalWindow) {
