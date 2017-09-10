@@ -108,7 +108,6 @@ package com.flexcapacitor.services {
 			_message = value;
 		}
 
-
 		public var parseError:Error;
 		
 		public var faultCode:String;

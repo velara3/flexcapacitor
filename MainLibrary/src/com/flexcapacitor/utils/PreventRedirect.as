@@ -98,7 +98,7 @@ package com.flexcapacitor.utils
 					if (application!=null && application.onbeforeunload_handler!=null) {
 						//window.removeEventListener("onbeforeunload", application.onbeforeunload_handler);
 						window.onbeforeunload = null;
-						console.log("removing listener!");
+						//console.log("removing listener!");
 					}
 
 					if (application!=null && application.onbeforeunload_handler==null) {
@@ -130,14 +130,14 @@ package com.flexcapacitor.utils
 					if (enabled && application!=null) {
 						//window.addEventListener("onbeforeunload", application.onbeforeunload_handler);
 						window.onbeforeunload = application.onbeforeunload_handler;
-						console.log("adding listener!");
+						//console.log("adding listener!");
 					}
 
 					if (application!=null) {
-						console.log("app found");
+						//console.log("app found");
 					}
 					else {
-						console.log("app not found");
+						//console.log("app not found");
 					}
 
 					return true;

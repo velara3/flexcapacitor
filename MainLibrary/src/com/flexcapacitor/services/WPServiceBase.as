@@ -226,7 +226,7 @@ package com.flexcapacitor.services {
 		 * @private
 		 */
 		public function set url(value:String):void {
-			var path:String;
+			var path:String = "";
 			var separator:String = "";
 			
 			// permalinks look like http://www.mysite.com/blog/api/user/get_logged_in
@@ -243,7 +243,7 @@ package com.flexcapacitor.services {
 				}
 				
 				// add separator before query - otherwise POST variables are not sent
-				if (host.charAt(host.length-1) && site=="") {
+				if (host.charAt(host.length-1)!="/" && site=="") {
 					separator = "/";
 				}
 			}
@@ -351,19 +351,14 @@ galleryService.addEventListener(WPServiceBase.FAULT, galleryFaultHandler, false,
 var parameters:URLVariables = new URLVariables();
 parameters.search = "cats";
 
-wpSaveService.send("Gallery", "getResults", null, object);
+wpSaveService.send("Gallery", "getResults", null, parameters);
 </pre>
 		 * @see query
 		 * */
 		public function send(controller:String = "core", method:String = "get_recent_posts", query:String="", post:Object = null):void {
 			if (query==null) query = "";
 			
-			if (usePermalinks) {
-				url = "?json=" + controller + "/" + method + query;
-			}
-			else {
-				url = controller + "/" + method + query;
-			}
+			url = controller + "/" + method + query;
 			
 			request.method = URLRequestMethod.POST;
 			request.data = post;
@@ -419,11 +414,23 @@ wpSaveService.send("Gallery", "getResults", null, object);
 		 * */
 		public function onFault(event:Event):void {
 			var serviceEvent:WPServiceEvent = new WPServiceEvent(WPServiceEvent.FAULT);
+			var errorText:String = "";
+			
+			if (event is WPServiceEvent && WPServiceEvent(event).faultEvent) {
+				errorText = "text" in WPServiceEvent(event).faultEvent ? Object(WPServiceEvent(event).faultEvent).text : "";
+				errorText = "message" in WPServiceEvent(event).faultEvent ? Object(WPServiceEvent(event).faultEvent).message : errorText;
+			}
+			
+			if (event is IOErrorEvent) {
+				errorText = IOErrorEvent(event).text;
+			}
+			
 			serviceEvent.call = call;
 			serviceEvent.faultEvent = event;
 			serviceEvent.hasError = true;
+			serviceEvent.errorMessage = errorText;
 			errorOccured = true;
-			errorMessage = event.toString();
+			errorMessage = errorText;
 			errorEvent = event;
 			inProgress = false;
 			createPending = false;

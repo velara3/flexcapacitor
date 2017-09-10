@@ -103,6 +103,7 @@ package com.flexcapacitor.services {
 			_successful = value;
 		}
 
+		public var errorMessage:String;
 		
 		override public function clone():Event {
 			return new ServiceEvent(type, bubbles, cancelable);
