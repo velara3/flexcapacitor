@@ -1,0 +1,63 @@
+<s:Application xmlns:svg="http://www.w3.org/2000/svg" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:fc="library://ns.flexcapacitor.com/flex" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:mx="library://ns.adobe.com/flex"  pageTitle="Example" fc:version="2.2.0" width="750">
+	<s:TileGroup x="35" columnWidth="148" horizontalGap="10" width="240" horizontalAlign="left" columnAlign="left" verticalAlign="middle" height="166" requestedColumnCount="2" y="107">
+		<s:Label text="Button" verticalAlign="middle"/>
+		<s:Button x="124" y="41" label="Button"/>
+		<s:Label text="Checkbox" verticalAlign="middle"/>
+		<s:CheckBox height="20" width="78" label="Checkbox"/>
+		<s:Label text="Combobox" verticalAlign="middle"/>
+		<s:ComboBox height="23" dataProvider="Item 1,Item 2,Item 3" width="166"/>
+		<s:Label text="DropdownList" verticalAlign="middle"/>
+		<s:DropDownList height="23" dataProvider="Item 1,Item 2,Item 3" width="166"/>
+		<s:Label text="HSlider" verticalAlign="middle"/>
+		<s:HSlider maximum="12" width="166"/>
+		<s:Label text="Hyperlink" verticalAlign="middle"/>
+		<s:Hyperlink text="Link" verticalAlign="middle"/>
+		<s:Label text="Image" verticalAlign="middle"/>
+		<s:Image fillMode="clip" scaleMode="stretch" source="assets/icons/components/Image.png"/>
+		<s:Label text="Label" verticalAlign="middle"/>
+		<s:Label text="Label" verticalAlign="middle"/>
+		<s:Label text="LinkButton" verticalAlign="middle"/>
+		<s:LinkButton label="Link Button"/>
+		<s:Label text="List" verticalAlign="middle"/>
+		<s:List height="20" dataProvider="Item 1,Item 2,Item 3"/>
+		<s:Label text="Numeric Stepper" verticalAlign="middle"/>
+		<s:NumericStepper visible="true"/>
+		<s:Label text="Radio Button" verticalAlign="middle"/>
+		<s:RadioButton height="20" width="96" label="Radio Button"/>
+		<s:Label text="Text Area" verticalAlign="middle"/>
+		<s:TextArea width="166" height="23"/>
+		<s:Label text="Text Input" verticalAlign="middle"/>
+		<s:TextInput width="120" height="22"/>
+		<s:Label text="Toggle Button" verticalAlign="middle"/>
+		<s:ToggleButton height="20" width="76" label="Toggle"/>
+		<s:Label text="Vertical Slider" verticalAlign="middle"/>
+		<s:VSlider width="10" height="23"/>
+		<s:Spacer x="-426" height="16" width="16" y="101"/>
+	</s:TileGroup>
+	<s:Label x="34" y="45" text="Components" fontWeight="bold" fontSize="33"/>
+	<s:Label x="453" y="45" text="Layout" fontWeight="bold" fontSize="33"/>
+	<s:BorderContainer x="447" height="400" width="261" y="91" backgroundColor="#F6F6F6" fc:convertToImage="true">
+		<s:Group x="10" height="160" width="240" y="10">
+			<s:Label x="2" y="2" text="Top=0&#10;Left=0" top="0" left="0"/>
+			<s:Label x="2" y="2" text="Right=0&#10;Bottom=0" bottom="0" right="0"/>
+			<s:Label x="2" y="2" text="Vertical Center=0&#10;Horizontal Center=0" horizontalCenter="0" verticalCenter="0"/>
+			<s:Label y="2" text="Left=0&#10;Bottom=0" bottom="0" left="0"/>
+			<s:Label x="2" y="2" text="Top=0&#10;Right=0" top="0" right="0"/>
+			<s:Label x="92" y="2" text="Group" horizontalCenter="0" fontWeight="bold"/>
+		</s:Group>
+		<s:VGroup minHeight="20" x="100" minWidth="20" y="245">
+			<s:Label x="425" y="178" text="VGroup" lineHeight="183%" fontWeight="bold"/>
+			<s:Label y="90" text="Label"/>
+			<s:Label y="90" text="Label"/>
+			<s:Label y="90" text="Label"/>
+			<s:Label y="90" text="Label"/>
+		</s:VGroup>
+		<s:HGroup minHeight="20" verticalAlign="middle" x="26" minWidth="20" y="203">
+			<s:Label name="HGroup Label" id="hgroup_label" text="HGroup" fontWeight="bold"/>
+			<s:Label text="Label"/>
+			<s:Label text="Label"/>
+			<s:Label x="389" y="60" text="Label"/>
+			<s:Label text="Label"/>
+		</s:HGroup>
+	</s:BorderContainer>
+</s:Application>

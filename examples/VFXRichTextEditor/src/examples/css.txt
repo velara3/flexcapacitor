@@ -1,0 +1,136 @@
+@namespace s "library://ns.adobe.com/flex/spark";
+@namespace view "com.flexcapacitor.prompt.view.*";
+@namespace components "components.*";
+@namespace mobile "spark.skins.mobile.*";
+
+
+/** COLORS **/
+
+.lightGray {
+	color:#a5a5a5;
+}
+.mediumGray {
+	color:#6e6e6e;
+}
+.darkGray {
+	color:#373334;
+}
+
+.headerColor {
+	fontSize:16;
+	color:#eeeeee;
+}
+
+@media (application-dpi: 320)
+{
+	global
+	{
+		fontFamily: LucidaGrande;
+		fontSize: 24;
+	}
+}
+
+global
+{
+	fontFamily: "LucidaGrande";
+	fontSize: 	24;
+	color: 		#383838;
+}
+
+s|BorderContainer.backgroundHeader {
+	backgroundAlpha:	.65;
+	backgroundColor:	#000000;
+	borderWeight:		0;
+	borderVisible:		false;
+}
+
+
+s|Label.screenHeaderLabel {
+	color:				#FFFFFF;
+	fontWeight:			bold;
+	backgroundColor:	0;
+	backgroundAlpha:	0;
+	verticalAlign:		middle;
+	fontSize:			28;
+	paddingLeft:		20;
+	paddingRight:		20;
+}
+
+s|Label.libraryLabel {
+	fontWeight: 	bold;
+	typographicCase: uppercase;
+}
+
+s|Label.valueLabel {
+	fontSize:		16;
+	textAlpha:		1;
+	color:			#424242;
+	fontWeight:		normal;
+	fontFamily:		LucidaGrande;
+}
+
+s|TextArea.textArea {
+	fontSize:		18;
+	color:			#424242;
+	fontWeight:		normal;
+	paddingLeft:	12;
+	paddingRight:	33;
+	fontFamily:		LucidaGrande2;
+	skinClass: 		ClassReference("spark.skins.mobile.TextAreaSkin");
+}
+
+
+s|Label.sliderLabel {
+	fontSize: 		19;
+	color: 			#424242;
+	fontWeight: 	bold;
+	paddingLeft:	4;
+	fontFamily:		LucidaGrande;
+}
+
+.paginationText {
+	fontSize: 		19;
+	color: 			#424242;
+	fontWeight: 	bold;
+	fontFamily:		LucidaGrande;
+}
+
+
+s|Label.asciiLabel {
+	color: 			#000000;
+	fontWeight:		normal;
+	fontFamily:		"Courier New";
+	fontSize: 		8;
+	lineBreak:		explicit;
+}
+
+
+view|PromptDialog {
+	fontSize: 		22;
+	color: 			#424242;
+	fontWeight: 	normal;
+	fontFamily:		LucidaGrande;
+}
+
+
+.uppercase {
+	typographicCase:	uppercase;
+}
+
+
+components|IntroductionCallout {
+	skinClass: 		ClassReference("skins.StyledCalloutSkin")
+}
+
+
+s|ToggleSwitch {
+	fontFamily: 	"LucidaGrande2";
+}
+
+mobile|ButtonSkin {
+	fontFamily:		"LucidaGrande2";
+}
+
+mobile|TextAreaSkin {
+	fontFamily:		"LucidaGrande2";
+}

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fxpProperties abbreviated="false" authoringTool="Flex Builder" compiles="true" parentProject="40165225-c125-45cc-84c3-4f6339dffa62" projectUUID="40165225-c125-45cc-84c3-4f6339dffa62" pureCatalystProject="false" sdkVersion="4.16.0" uuid="00839d1d-ba5a-467a-b136-11a7902abd3c" version="15">
+  <projects>
+    <project filename="FCLibrary.fxpl" position="2" projectUUID="7a7b5b7d-5d27-41b3-9aff-c99f02efbbc1" uuid="00839d1d-ba5a-467a-b136-11a7902abd3c"/>
+    <project filename="Radii8Library.fxpl" position="3" projectUUID="bffb08cf-9863-49e0-ab71-1e13d08f4ec0" uuid="00839d1d-ba5a-467a-b136-11a7902abd3c"/>
+  </projects>
+  <src/>
+  <swc>
+    <linked location="sdkPlaceHolder" path="sdkPlaceHolder" position="0" uuid="00839d1d-ba5a-467a-b136-11a7902abd3c"/>
+    <linked location="/libs" path="/libs" position="1" uuid="00839d1d-ba5a-467a-b136-11a7902abd3c"/>
+  </swc>
+  <misc/>
+  <theme/>
+  <mxmlFormattingPrefs groupAttributesByState="true" maxLineWidth="100" mxmlAlignAttributes="true" mxmlAttributeOrder="id,userLabel,includeIn,excludeFrom,visible,x,y,z,left,right,top,bottom,width,height,minWidth,minHeight,maxWidth,maxHeight,label" mxmlKeepAttributeValuesOrganized="true"/>
+</fxpProperties>

@@ -1,0 +1,867 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx"
+					   xmlns:utils="com.flexcapacitor.utils.*" 
+					   xmlns:local="*"
+					   
+					   frameRate="10"
+					   width="1000" height="550" 
+					   initialize="startSampling()"
+					   applicationComplete="init()" 
+					   >
+	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.utils.CursorUtils;
+			import com.flexcapacitor.utils.DisplayObjectUtils;
+			
+			import flash.sampler.Sample;
+			import flash.sampler.getLexicalScopes;
+			import flash.sampler.getMemberNames;
+			import flash.sampler.getSampleCount;
+			import flash.sampler.getSamples;
+			import flash.sampler.getSize;
+			import flash.sampler.startSampling;
+			import flash.sampler.stopSampling;
+			
+			import mx.collections.ArrayList;
+			import mx.core.UIComponent;
+			import mx.utils.ObjectUtil;
+			
+			import spark.components.Button;
+			import spark.components.ComboBox;
+			import spark.components.Group;
+			import spark.components.TileGroup;
+			import spark.utils.TextFlowUtil;
+			
+			import flashx.textLayout.tlf_internal;
+			import flashx.textLayout.container.ContainerController;
+			import flashx.textLayout.edit.IEditManager;
+			import flashx.textLayout.edit.SelectionState;
+			import flashx.textLayout.elements.InlineGraphicElement;
+			import flashx.textLayout.elements.TextFlow;
+			import flashx.textLayout.events.FlowElementMouseEvent;
+			import flashx.textLayout.formats.TextLayoutFormat;
+			
+			use namespace flash_proxy;
+			use namespace AS3;
+			
+			static private const simpleText:String = "<TextFlow xmlns='http://ns.adobe.com/textLayout/2008'>"
+				+ "<p styleName='center'><span typeName='a'>There are many </span><span styleName='italic'>such</span><span> lime-kilns </span><a href='http://www.google.com' typeName='a'><span>links</span></a><span> in that tract of country, for the purpose of burning the white marble which composes a large part of the substance of the hills. Some of them, built years ago, and long deserted, with weeds growing in the vacant round of the interior, which is open to the sky, and grass and wild-flowers rooting themselves into the chinks of the stones, look already like relics of antiquity, and may yet be overspread with the lichens of centuries to come. Others, where the lime-burner still feeds his daily and nightlong fire, afford points of interest to the wanderer among the hills, who seats himself on a log of wood or a fragment of marble, to hold a chat with the solitary man. It is a lonesome, and, when the character is inclined to thought, may be an intensely thoughtful occupation; as it proved in the case of Ethan Brand, who had mused to such strange purpose, in days gone by, while the fire in this very kiln was burning.</span></p>"
+				+ "<br/><p><span>The man who now watched the </span><span id='bold'>fire</span><span> was of a </span><span typeName='foo'>different</span><span> order, and troubled himself with no thoughts save the very few that were requisite to his business. At frequent intervals, he flung back the clashing weight of the iron door, and, turning his face from the insufferable glare, thrust in huge logs of oak, or stirred the immense brands with a long pole. Within the furnace were seen the curling and riotous flames, and the burning marble, almost molten with the intensity of heat; while without, the reflection of the fire quivered on the dark intricacy of the surrounding forest, and showed in the foreground a bright and ruddy little picture of the hut, the spring beside its door, the athletic and coal-begrimed figure of the lime-burner, and the half-frightened child, shrinking into the protection of his father's shadow. And when again the iron door was closed, then reappeared the tender light of the half-full moon, which vainly strove to trace out the indistinct shapes of the neighboring mountains; and, in the upper sky, there was a flitting congregation of clouds, still faintly tinged with the rosy sunset, though thus far down into the valley the sunshine had vanished long and long ago.</span></p>"
+				+ "</TextFlow>";
+			
+			private function init():void {
+				
+				// set it into the editor
+				resetContent();
+				
+				//startSampling();
+				/*
+				var sample:Sample = new Sample();
+				var size:Object = getSize(this);
+				
+				
+				var x:String = "Hello world";
+				var sizeAfter:Object = getSize(this);
+				
+				stopSampling();
+				
+				var samples:Object = getSamples();
+				var sampleCount:int = getSampleCount();
+				
+				var members:Object = getMemberNames(resetContent, true);
+				
+				for each (var m:QName in members){
+				trace(m);
+				}
+				var members2:Object = getMemberNames(float, true);
+				for each (var m:QName in members2){
+				//trace(m);
+				}
+				var lex:Object = getLexicalScopes(init);
+				ObjectUtil.toString(members2);
+				var sampletime:Object = sample.time;
+				//ReferenceError: Error #1069: Property time not found on (null) and there is no default value.
+				var samples1:Object = samples? samples.time : null;
+				var samples1:Object = samples && "time" in samples ? samples.time : null;*/
+				
+				var floatOptions:Array = ["none","left","right","start","end"];
+				floatTypeList.dataProvider = new ArrayList(floatOptions);
+				floatTypeList.selectedIndex = 0;
+				
+				if (mouseCursorData==null) {
+					cursorID = "handCursor";
+					mouseCursorData = CursorUtils.createMouseCursorData(HandPointer, nativeMouseCursorX, nativeMouseCursorY);
+					Mouse.registerCursor(cursorID, mouseCursorData);
+					//					cursorID = MouseCursor.HAND;
+				}
+			}
+			
+			public var inlineGraphicElementsDictionary:Dictionary = new Dictionary(true);
+			public var displayObjectsDictionary:Dictionary = new Dictionary(true);
+			public var componentsDictionary:Dictionary = new Dictionary(true);
+			public var index:int;
+			public var editorSubGroup:Group;
+			public var grandparentComponent:UIComponent;
+			public var positioningGroups:Array = [];
+			
+			private var editManager:IEditManager;
+			
+			/**
+			 * Insert an image
+			 * 
+			 * source is either 
+			 *    a String interpreted as a URI, 
+			 *    a Class interpreted as the class of an Embed DisplayObject, 
+			 *    a DisplayObject instance or 
+			 *    a URLRequest.
+			 * width, height is a number or percent
+			 * options - the float to assign (String value, none for inline with text, left/right/start/end for float)
+			 */
+			public function insertImage(source:Object, width:Object = null, height:Object = null, options:String= null, operationState:SelectionState = null):InlineGraphicElement {
+				var inlineGraphicElement:InlineGraphicElement;
+				var currentFormat:TextLayoutFormat;
+				var selectionStart:int;
+				var selectionEnd:int;
+				var loader:Loader;
+				var displayObject:DisplayObject;
+				var textFlow:TextFlow;
+				var uicomponent:UIComponent;
+				var componentContainer:Sprite;
+				var sprite:Sprite;
+				var addEventMirror:Boolean;
+				
+				if (editor.selectionActivePosition==-1) {
+					editor.selectRange(0, 0);
+				}
+				
+				if (editor && editor.textFlow) {
+					textFlow = editor.textFlow;
+				}
+				
+				if (textFlow.interactionManager) {
+					editManager = textFlow.interactionManager as IEditManager;
+				}
+				
+				if (editor && textFlow && editManager) {
+					
+					if (editor.selectionActivePosition==-1) {
+						editManager.selectFirstPosition();
+					}
+					
+					//textFlow.flowComposer.addController(new ContainerController(new Sprite(), 500, 100));
+					
+					var containerController:ContainerController = textFlow.flowComposer.getControllerAt(0);
+					var container:DisplayObjectContainer = containerController.container; // rich text editor component
+					//textFlow.flowComposer.numControllers;
+					
+					if (source is UIComponent) {
+						var containerSprite:Sprite;
+						var nestComponent:Boolean;
+						var addToSubGroup:Boolean = false;
+						var addToSubSubGroup:Boolean = true;
+						var crazyGroup1:Group;
+						var crazyGroup2:Group;
+						var optimizedTest:Boolean;
+						var parentToComponent:UIComponent;
+						
+						uicomponent = source as UIComponent;
+						
+						if (!nestComponent) {
+							
+							
+							if (addToSubSubGroup) {
+								
+								if (optimizedTest) {
+									// this is flakey (delete does not remove elements after a whiel
+									if (addToSubSubGroup && grandparentComponent==null) {
+										grandparentComponent = new UIComponent();
+										editor.addChild(grandparentComponent);
+									}
+									
+									parentToComponent = new UIComponent();
+									
+									parentToComponent.addChild(uicomponent);
+									grandparentComponent.addChild(parentToComponent);
+									
+									inlineGraphicElement = editManager.insertInlineGraphic(parentToComponent, uicomponent.width, uicomponent.height, options, operationState);
+								}
+								else {
+									// this works mostly but seems flakey when reseting the 
+									// textflow or using anything but float none or left
+									var localParentToComponent:UIComponent = new UIComponent();
+									var localGrandparent:UIComponent = new UIComponent();
+									
+									localParentToComponent.addChild(uicomponent);
+									localGrandparent.addChild(localParentToComponent);
+									positioningGroups.push(localGrandparent);
+									editor.addChild(localGrandparent);
+									
+									inlineGraphicElement = editManager.insertInlineGraphic(localParentToComponent, uicomponent.width, uicomponent.height, options, operationState);
+									
+								}
+								
+								/* THIS WORKS BEST
+								var parentToComponent:UIComponent = new UIComponent();
+								var grandparent:UIComponent = new UIComponent();
+								
+								parentToComponent.addChild(uicomponent);
+								grandparent.addChild(parentToComponent);
+								editor.addChild(grandparent);
+								
+								inlineGraphicElement = editManager.insertInlineGraphic(parentToComponent, uicomponent.width, uicomponent.height, options, operationState);
+								
+								
+								crazyGroup1 = new Group();
+								crazyGroup2 = new Group();
+								crazyGroup1.addElement(uicomponent);
+								crazyGroup2.addElement(crazyGroup1);
+								editor.addChild(crazyGroup2);
+								
+								inlineGraphicElement = editManager.insertInlineGraphic(crazyGroup1, uicomponent.width, uicomponent.height, options, operationState);
+								*/
+								
+								/*
+								var parentContainer:Sprite = new Sprite();
+								var grandparentContainer:Sprite = new Sprite();
+								parentContainer.addChild(uicomponent);
+								grandparentContainer.addChild(parentContainer);
+								editor.addChild(grandparentContainer);
+								
+								inlineGraphicElement = editManager.insertInlineGraphic(parentContainer, uicomponent.width, uicomponent.height, options, operationState);
+								
+								var parentContainer:SpriteVisualElement = new SpriteVisualElement();
+								var grandparentContainer:SpriteVisualElement = new SpriteVisualElement();
+								parentContainer.addChild(uicomponent);
+								grandparentContainer.addChild(parentContainer);
+								editor.addChild(grandparentContainer);
+								
+								inlineGraphicElement = editManager.insertInlineGraphic(parentContainer, uicomponent.width, uicomponent.height, options, operationState);
+								
+								*/
+							}
+								
+							else if (addToSubGroup) {
+								
+								if (editorSubGroup==null) {
+									editorSubGroup = new Group();
+									editor.addChild(editorSubGroup);
+								}
+								
+								editorSubGroup.addElement(uicomponent);
+								inlineGraphicElement = editManager.insertInlineGraphic(editorSubGroup, uicomponent.width, uicomponent.height, options, operationState);
+							}
+							else {
+								addElement(uicomponent);
+								inlineGraphicElement = editManager.insertInlineGraphic(uicomponent, uicomponent.width, uicomponent.height, options, operationState);
+							}
+							
+						}
+						else {
+							containerSprite = new Sprite();
+							inlineGraphicElement = editManager.insertInlineGraphic(containerSprite, uicomponent.width, uicomponent.height, options, operationState);
+							sprite = inlineGraphicElement.graphic as Sprite;
+							
+							if (sprite) {
+								//addElement(uicomponent);
+								//editor.addChild(uicomponent);
+								//sprite.parent.addChild(uicomponent);
+							}
+						}
+						
+						
+						if (uicomponent) {
+							uicomponent.validateNow();
+						}
+						
+						componentsDictionary[inlineGraphicElement] = uicomponent;
+					}
+					else {
+						inlineGraphicElement = editManager.insertInlineGraphic(source, null, null, options, operationState);
+						
+						if (addEventMirror) {
+							var eventMirror:IEventDispatcher = inlineGraphicElement.tlf_internal::getEventMirror();
+							
+							eventMirror.addEventListener(FlowElementMouseEvent.MOUSE_MOVE, flowElementMouseMove);
+							eventMirror.addEventListener(FlowElementMouseEvent.ROLL_OVER, flowElementRollOver);
+							eventMirror.addEventListener(FlowElementMouseEvent.ROLL_OUT, flowElementRollOut);
+							
+							return inlineGraphicElement;
+						}
+					}
+					
+					if (inlineGraphicElement==null) {
+						
+						if (editor.selectionActivePosition==-1) {
+							trace("You need to have a set an active position");
+							return null;
+						}
+						
+						trace("Inline graphic was not created and null");
+						return null;
+					}
+					
+					//inlineGraphicElement.status = InlineGraphicElementStatus.LOADING;
+					
+					displayObject = inlineGraphicElement.graphic as DisplayObject;
+					loader = inlineGraphicElement.graphic as Loader;
+					sprite = inlineGraphicElement.graphic as Sprite;
+					uicomponent = inlineGraphicElement.graphic as UIComponent;
+					
+					if (loader) {
+						loader.contentLoaderInfo.addEventListener(Event.INIT, inlineGraphicElementLoader_complete);
+						loader.contentLoaderInfo.addEventListener(Event.COMPLETE, inlineGraphicElementLoader_complete);
+						loader.contentLoaderInfo.addEventListener(IOErrorEvent.IO_ERROR, inlineGraphicElementLoader_complete);
+						loader.contentLoaderInfo.addEventListener(HTTPStatusEvent.HTTP_STATUS, inlineGraphicElementLoader_complete);
+						loader.contentLoaderInfo.addEventListener(Event.OPEN, inlineGraphicElementLoader_complete);
+						loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, inlineGraphicElementLoader_complete);
+						loader.contentLoaderInfo.addEventListener(Event.UNLOAD, inlineGraphicElementLoader_complete);
+						
+						loader.addEventListener(Event.ADDED, inlineGraphicElementLoader_complete);
+						loader.addEventListener(Event.ADDED_TO_STAGE, inlineGraphicElementLoader_complete);
+						loader.addEventListener(MouseEvent.CLICK, inlineGraphicElementClickHandler);
+						//loader.addEventListener(MouseEvent.MOUSE_OUT, inlineGraphicElementMouseOut);
+						loader.addEventListener(MouseEvent.MOUSE_MOVE, cursorObject_mouseMove);
+						loader.addEventListener(MouseEvent.ROLL_OVER, cursorObject_rollOver);
+						loader.addEventListener(MouseEvent.ROLL_OUT, cursorObject_rollOut);
+						//loader.addEventListener(MouseEvent.ROLL_OUT, inlineGraphicElementMouseOut);
+						
+						//loader.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
+						displayObject = loader.parent; // may be null
+						
+						inlineGraphicElementsDictionary[loader] = inlineGraphicElement;
+						if (displayObject) {
+							displayObjectsDictionary[displayObject] = inlineGraphicElement;
+						}
+					}
+					else if (displayObject) {
+						if (uicomponent) {
+							uicomponent.validateNow();
+						}
+						if (displayObject is Shape) {
+							//addElement(button);
+							//editor.addChild(button);
+							//sprite = displayObject.parent as Sprite;
+							//sprite.addChild(button);
+							//removeElement(button);
+						}
+						
+						inlineGraphicElementsDictionary[displayObject] = inlineGraphicElement;
+					}
+					
+					editManager.updateAllControllers();
+				}
+				
+				return inlineGraphicElement;
+			}
+			
+			/**
+			 * Handle inline graphics loaded
+			 * */
+			public function inlineGraphicElementLoader_complete(event:Event):void {
+				var inlineGraphicElement:InlineGraphicElement;
+				var displayObject:DisplayObject;
+				var loaderInfo:LoaderInfo;
+				var loader:Loader;
+				var sprite:Sprite;
+				var bitmap:Bitmap;
+				var actualWidth:int;
+				var actualHeight:int;
+				var graphicStatus:String;
+				var currentTarget:Object;
+				var eventType:String;
+				var drawGraphics:Boolean;
+				
+				currentTarget = event.currentTarget;
+				eventType = event.type;
+				
+				trace("\n" + currentTarget);
+				trace("Event: " +  event.type);
+				
+				
+				if (currentTarget is LoaderInfo) {
+					loader = currentTarget.loader as Loader;
+				}
+				else if (currentTarget is Loader) {
+					loader = currentTarget as Loader;
+				}
+				
+				displayObject = loader ? loader.parent : null;
+				sprite = displayObject ? displayObject as Sprite : null;
+				
+				
+				// show loading icon???
+				if (eventType==Event.OPEN && sprite) {
+					/*
+					var busyIndicator:BusyCursor = new BusyCursor();
+					var button:Button = new Button();
+					button.label="Test";
+					button.width = 100;
+					button.height = 22;
+					sprite.width = button.width;
+					sprite.height = button.height;
+					loader.width = button.width;
+					loader.height = button.height;
+					button.validateNow();
+					//sprite.addChild(button);
+					
+					//loader.addChild(button);
+					sprite.addChild(busyIndicator);
+					*/
+				}
+				
+				inlineGraphicElement = inlineGraphicElementsDictionary[loader];
+				
+				// add to dictionary since the display object may not have been created yet
+				if (displayObject && inlineGraphicElement && displayObjectsDictionary[displayObject]==null) {
+					displayObjectsDictionary[displayObject] = inlineGraphicElement;
+				}
+				
+				graphicStatus = inlineGraphicElement ? inlineGraphicElement.status : "inline graphic element not found";
+				
+				trace("Graphic status: " + graphicStatus);
+				
+				if (eventType==IOErrorEvent.IO_ERROR) {
+					//sprite.removeChildren();loader.removeChildren();
+				}
+				
+				if (eventType!=Event.ADDED_TO_STAGE) {
+					return;
+				}
+				
+				if (loader.content) {
+					bitmap = loader.content as Bitmap;
+					
+					if (bitmap) {
+						actualWidth = bitmap.width;
+						actualHeight = bitmap.height;
+					}
+				}
+				
+				if (sprite) {
+					sprite.buttonMode = true;
+					
+					if (drawGraphics) {
+						if (sprite.width==0 && actualWidth) {
+							sprite.width = actualWidth;
+							sprite.height = actualHeight;
+						}
+						
+						sprite.graphics.beginFill(0xff0000, .8);
+						sprite.graphics.drawCircle(0,0, 10);
+						sprite.graphics.endFill();
+					}
+				}
+				
+				if (displayObject) {
+					displayObject.addEventListener(MouseEvent.CLICK, inlineGraphicElementClickHandler, false, 0, true);
+					//displayObject.addEventListener(MouseEvent.CLICK, highPriorityInlineGraphicElementClickHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
+				}
+				
+			}
+			
+			protected function inlineGraphicElementClickHandler(event:Event):void {
+				trace ("Clicked: " + event.currentTarget);
+				var inlineGraphicElement:InlineGraphicElement;
+				var currentTarget:Object = event.currentTarget;
+				var sprite:Sprite = currentTarget as Sprite;
+				var target:Object = event.target;
+				var loader:Loader = target as Loader;
+				var object:Object;
+				var startPosition:int;
+				
+				inlineGraphicElement = inlineGraphicElementsDictionary[currentTarget];
+				
+				if (inlineGraphicElement==null) {
+					inlineGraphicElement = displayObjectsDictionary[currentTarget];
+				}
+				
+				if (inlineGraphicElement==null) {
+					object = currentTarget;
+				}
+				
+				
+				while (inlineGraphicElement==null) {
+					
+					inlineGraphicElement = inlineGraphicElementsDictionary[object];
+					
+					if (inlineGraphicElement==null && object && "parent" in object) {
+						object = object.parent;
+					}
+					else {
+						break;
+					}
+				}
+				
+				if (inlineGraphicElement!=null) {
+					startPosition = inlineGraphicElement.getAbsoluteStart();
+					
+					editor.selectRange(startPosition, startPosition+1);
+				}
+				else {
+					trace("could not find element");
+				}
+				
+			}
+			
+			
+			protected function highPriorityInlineGraphicElementClickHandler(event:Event):void {
+				trace ("high Priority Clicked");
+			}
+			
+			private function uncaughtErrorHandler(event:UncaughtErrorEvent):void {
+				trace ("Error");
+				
+				if (event.error is Error) {
+					var error:Error = event.error as Error;
+					// do something with the error
+				}
+				else if (event.error is ErrorEvent) {
+					var errorEvent:ErrorEvent = event.error as ErrorEvent;
+					// do something with the error
+				}
+				else {
+					// a non-Error, non-ErrorEvent type was thrown and uncaught
+				}
+				
+				
+			}
+			
+			
+			public var PointerHand:Class = Radii8LibraryToolAssets.PointerHand;
+			public var HandPointer:Class = Radii8LibraryToolAssets.Button32;
+			public var mouseCursorData:MouseCursorData;
+			public var nativeMouseCursorX:int = 12;
+			public var nativeMouseCursorY:int = 7;
+			public var cursorManagerX:int = -6;
+			public var cursorManagerY:int = 0;
+			public var useCursorManager:Boolean = false;
+			public var useCustomCursor:Boolean = true;
+			private var cursorID:String;
+			private var currentCursorIndex:int;
+			public var hideCursorWithDefaultMouse:Boolean = true;
+			
+			protected function flowElementRollOver(event:Event):void {
+				trace("flow element roll over");
+				Mouse.cursor = MouseCursor.BUTTON;
+			}
+			protected function flowElementMouseMove(event:Event):void {
+				trace("flow element mouse move");
+				Mouse.cursor = MouseCursor.BUTTON;
+			}
+			
+			protected function flowElementRollOut(event:Event):void {
+				trace("flow element roll out");
+			}
+			
+			protected function cursorObject_mouseMove(event:MouseEvent):void {
+				
+				trace("\n"+event.type);
+				
+				if (useCursorManager) {
+					// when using flex cursor manager the cursor is updated
+					// at the framerate of the application. this makes it look 
+					// sluggish. calling updateAfterEvent forces a redraw
+					event.updateAfterEvent();
+				}
+				
+			}
+			
+			protected function cursorObject_rollOver(event:Event):void
+			{
+				
+				trace("\n"+event.type);
+				
+				if (useCursorManager) {
+					trace("using flex cursor manager");
+					currentCursorIndex = cursorManager.setCursor(PointerHand, 2, cursorManagerX, cursorManagerY);
+				}
+				else {
+					
+					if (useCustomCursor) {
+						trace("Assigning cursor named " + cursorID + "");
+						Mouse.cursor = cursorID;
+					}
+					else {
+						trace("Assigning MouseCursor.BUTTON");
+						
+						if (hideCursorWithDefaultMouse) {
+							cursorManager.hideCursor();
+						}
+						
+						Mouse.cursor = MouseCursor.BUTTON;
+					}
+				}
+				
+				//Mouse.cursor = MouseCursor.AUTO;
+				//cursorManager.setBusyCursor();
+			}
+			
+			protected function cursorObject_rollOut(event:MouseEvent):void
+			{
+				trace(event.type);
+				removeCustomCursor();
+			}
+			
+			public function removeCustomCursor():void {
+				
+				if (useCursorManager) {
+					trace("removing flex cursor " + currentCursorIndex);
+					cursorManager.removeCursor(currentCursorIndex);
+					cursorManager.removeAllCursors();
+				}
+				else {
+					if (hideCursorWithDefaultMouse) {
+						cursorManager.showCursor();
+					}
+					
+					trace("reseting to MouseCursor.AUTO");
+					Mouse.cursor = MouseCursor.AUTO;
+				}
+			}
+			
+			protected function switchCursorModes_clickHandler(event:MouseEvent):void {
+				var selected:Boolean = switchCursorModesButton.selected;
+				
+				removeCustomCursor();
+				
+				if (useCursorManager) {
+					useCursorManager = false;
+					switchCursorModesButton.label = "Mouse Cursor";
+				}
+				else {
+					switchCursorModesButton.label = "Cursor Manager";
+					useCursorManager = true;
+				}
+				
+			}
+			
+			protected function insertImage_clickHandler(event:MouseEvent):void
+			{
+				var url:String = "http://www.radii8.com/r8m/wp-content/uploads/2015/10/radiate-logo-2.png";
+				insertImage(url, null, null, floatTypeList.selectedItem);
+			}
+			
+			protected function insertButton_clickHandler(event:MouseEvent):void
+			{
+				var button:Button;
+				button = new Button();
+				button.width = 100;
+				button.height = 24;
+				button.label = "Flex" + ++index;
+				button.addEventListener(MouseEvent.CLICK, function(event:*):void {trace("button click");});
+				
+				insertImage(button, null, null, floatTypeList.selectedItem);
+			}
+			
+			protected function insertComboBox_clickHandler(event:MouseEvent):void
+			{
+				var combo:ComboBox;
+				combo = new ComboBox();
+				combo.width = 100;
+				combo.height = 24;
+				combo.addEventListener(Event.CHANGE, function(event:*):void {trace("combo box change");});
+				
+				insertImage(combo, null, null, floatTypeList.selectedItem);
+			}
+			
+			protected function insertGroup_clickHandler(event:MouseEvent):void
+			{
+				var combo:ComboBox;
+				combo = new ComboBox();
+				combo.width = 100;
+				combo.height = 24;
+				combo.addEventListener(Event.CHANGE, function(event:*):void {trace("combo box change");});
+				
+				var button:Button;
+				button = new Button();
+				button.width = 100;
+				button.height = 24;
+				button.label = "Flex" + ++index;
+				button.addEventListener(MouseEvent.CLICK, function(event:*):void {trace("button click");});
+				
+				var group:TileGroup;
+				group = new TileGroup();
+				group.width = 100;
+				group.height = 100;
+				group.addEventListener(MouseEvent.CLICK, function(event:*):void {trace("group click");});
+				
+				group.addElement(button);
+				group.addElement(combo);
+				group.addElement(button);
+				
+				insertImage(group, null, null, floatTypeList.selectedItem);
+			}
+			
+			
+			protected function listImages_clickHandler(event:MouseEvent):void
+			{
+				var images:Array = [];
+				var textFlow:TextFlow = editor.textFlow;
+				images = textFlow.getElementsByTypeName("img");
+				var inlineGraphic:InlineGraphicElement;
+				
+				trace("\ninline graphics:\n" + images);
+				
+				for (var i:int;i<images.length;i++) {
+					inlineGraphic = images[i] as InlineGraphicElement;
+					
+					var zeroPoint:Point = new Point();
+					var graphicPoint:Point = inlineGraphic.graphic.localToGlobal(zeroPoint);
+					var uicomponent:DisplayObject = componentsDictionary[inlineGraphic] ;
+					var containerPoint:Point = editor.localToGlobal(zeroPoint);
+					var difference:Point = containerPoint.subtract(graphicPoint);
+					
+					if (uicomponent) {
+						var uicomponentPoint:Point = uicomponent.localToGlobal(zeroPoint);
+						var componentDifference:Point = containerPoint.subtract(uicomponentPoint);
+						if ("label" in uicomponent) {
+							trace(uicomponent["label"]);
+						}
+					}
+					
+					trace("graphic y " + graphicPoint.y);
+					trace("container y " + containerPoint.y);
+					trace("img.graphic y " + inlineGraphic.graphic.y);
+					trace("difference y " + difference.y);
+					
+					if (uicomponent) {
+						trace("uicomponent y " + uicomponent.y);
+						trace("component difference y " + componentDifference.y);
+					}
+					
+					trace("graphic x " + graphicPoint.x);
+					trace("container x " + containerPoint.x);
+					trace("img.graphic x " + inlineGraphic.graphic.x);
+					trace("difference x " + difference.x);
+					
+					if (uicomponent) {
+						trace("uicomponent x " + uicomponent.x);
+						trace("component difference x " + componentDifference.x);
+					}
+				}
+			}
+			
+			protected function editableToggle_clickHandler(event:MouseEvent):void
+			{
+				var editable:Boolean = editableToggle.selected;
+				editor.editable = editable;
+				
+			}
+			
+			protected function selectableToggle_clickHandler(event:MouseEvent):void
+			{
+				var selectable:Boolean = selectableToggle.selected;
+				editor.selectable = selectable;
+				
+			}
+			
+			protected function resetContent():void
+			{
+				var textFlow:TextFlow;
+				
+				TextFlow.defaultConfiguration.unfocusedSelectionFormat = TextFlow.defaultConfiguration.focusedSelectionFormat;
+				TextFlow.defaultConfiguration.inactiveSelectionFormat = TextFlow.defaultConfiguration.focusedSelectionFormat;
+				
+				textFlow = TextFlowUtil.importFromString(simpleText);
+				
+				// set it into the editor
+				editor.textFlow = textFlow;
+				
+				if (positioningGroups && positioningGroups.length) {
+					
+					for (var i:int;i<positioningGroups.length;i++) {
+						var component:UIComponent = positioningGroups.pop();
+						component.parent ? component.parent.removeChild(component):0;
+						trace("Removing components");
+					}
+				}
+				
+				if (editor.selectionActivePosition==-1) {
+					editor.selectRange(0, 0);
+				}
+				editor.selectRange(0, 0);
+			}
+			
+			protected function showDisplayList_clickHandler(event:MouseEvent):void
+			{
+				treeScaleZ = 0;
+				DisplayObjectUtils.walkDownDisplayList(this, showDisplayFunction);
+			}
+			
+			public var treeScaleZ:int;
+			public function showDisplayFunction(object:DisplayObject):void {
+				treeScaleZ = treeScaleZ +5;
+				object.scaleZ = treeScaleZ;
+			}
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<utils:MiniInspector />
+	</fx:Declarations>
+	
+	<s:HGroup top="20" horizontalCenter="0">
+		<s:Button label="Insert Image" 
+				  click="insertImage_clickHandler(event)"/>
+		
+		<s:Button label="Insert Button" 
+				  click="insertButton_clickHandler(event)"/>
+		
+		<s:Button label="Insert Combobox" 
+				  click="insertComboBox_clickHandler(event)"/>
+		
+		<s:Button label="Insert Group" 
+				  click="insertGroup_clickHandler(event)"/>
+		
+	</s:HGroup>
+	
+	<s:HGroup  top="20" left="10">
+		<s:Button label="List Images"
+				  click="listImages_clickHandler(event)"/>
+		<s:Button label="3D View"
+				  click="showDisplayList_clickHandler(event)"/>
+	</s:HGroup>
+	
+	<s:DropDownList id="floatTypeList" right="20" top="20" selectedIndex="0" >
+	</s:DropDownList>
+	
+	<s:RichEditableText id="editor" text="Some rich text" 
+						top="100" left="100" right="100"
+						selectionHighlighting="whenActive"
+						/>
+	<!--<s:RichEditableText id="editor" text="Some rich text" 
+	top="100" left="100" right="100"
+	/>-->
+	
+	
+	<s:HGroup bottom="20" left="20" >
+		<s:ToggleButton id="editableToggle" 
+						label="Editable" 
+						selected="true" 
+						click="editableToggle_clickHandler(event)"/>
+		<s:ToggleButton id="selectableToggle" 
+						label="Selectable" 
+						selected="true" 
+						click="selectableToggle_clickHandler(event)"/>
+	</s:HGroup>
+	
+	<s:HGroup bottom="20" right="20" gap="10">
+		<s:ToggleButton id="switchCursorModesButton" label="Mouse Cursor" 
+						click="switchCursorModes_clickHandler(event)"/>
+		
+		<s:Button id="modesButton" label="Cursor test area" 
+				  rollOver="cursorObject_rollOver(event)"
+				  rollOut="cursorObject_rollOut(event)"/>
+		
+		<s:Button id="nativeHandButton" label="MouseCursor.Button" 
+				  rollOver="Mouse.cursor = MouseCursor.BUTTON"
+				  rollOut="Mouse.cursor = MouseCursor.AUTO"/>
+	</s:HGroup>
+	
+	
+	<s:Button label="Reset TextFlow" bottom="20" horizontalCenter="0"
+			  click="resetContent()"/>
+</s:WindowedApplication>

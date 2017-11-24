@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<!-- sparktextcontrols/TLFLists.mxml -->
+<s:Application 
+    xmlns:fx="http://ns.adobe.com/mxml/2009"    
+    xmlns:mx="library://ns.adobe.com/flex/mx"     
+    xmlns:s="library://ns.adobe.com/flex/spark">
+  
+    <s:layout> 
+        <s:VerticalLayout/> 
+    </s:layout>
+
+    <!-- Simple bulleted list. -->
+    <s:RichEditableText id="myRET1" width="200">
+    	<s:textFlow>
+        <s:p>Simple bulleted list:</s:p>
+        <s:list id="list1" listStylePosition="outside">
+            <s:li>Item 1</s:li>
+            <s:li>Item 2</s:li>
+            <s:li>Item 3</s:li>
+        </s:list>
+        </s:textFlow>
+    </s:RichEditableText>
+
+    <!-- Nested bulleted list. -->
+    <s:RichEditableText id="myRET2" width="200">
+    <s:textFlow>
+        <s:p>Nested bulleted list:</s:p>
+        <s:list id="list2">
+            <s:li>Dry cleaning</s:li>
+            <s:li>Groceries
+                <s:list id="list1a">
+                    <s:li>Quart of milk</s:li>
+                    <s:li>Loaf of bread</s:li>
+                    <s:li>Stick of butter</s:li>
+                </s:list>               
+            </s:li>
+            <s:li>Oil change
+                <s:list id="list1b">
+                    <s:li>Item 1b</s:li>
+                </s:list>                           
+            </s:li>
+        </s:list>
+        </s:textFlow>
+    </s:RichEditableText>   
+
+    <!-- Custom spacing list. -->
+    <s:RichEditableText id="myRET3" width="200">
+    <s:textFlow>
+        <s:p>List with custom indents:</s:p>
+        <s:list id="list3" paddingLeft="20">
+            <s:li>Dry cleaning</s:li>
+            <s:li>Groceries
+                <s:list id="list31" paddingLeft="20">
+                    <s:li>Quart of milk</s:li>
+                    <s:li>Loaf of bread</s:li>
+                    <s:li>Stick of butter</s:li>
+                </s:list>            
+            </s:li>
+            <s:li>Item 3</s:li>
+        </s:list>
+        </s:textFlow>
+    </s:RichEditableText>   
+
+    <!-- Custom styled list. -->
+    <s:RichEditableText id="myRET4" width="200">
+    <s:textFlow>
+        <s:p>Styled bulleted list:</s:p>
+        <s:list id="list4" listStylePosition="inside">
+            <s:listMarkerFormat>
+                <s:ListMarkerFormat fontSize="14" fontWeight="bold" color="0xFF0066" afterContent=" "/>
+            </s:listMarkerFormat>
+            <s:li>Quart of milk</s:li>
+            <s:li>Loaf of bread</s:li>
+            <s:li>Stick of butter</s:li>
+        </s:list>
+        </s:textFlow>
+    </s:RichEditableText>   
+</s:Application>

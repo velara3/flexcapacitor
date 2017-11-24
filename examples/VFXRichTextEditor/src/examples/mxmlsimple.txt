@@ -1,0 +1,6 @@
+<s:Application xmlns:svg="http://www.w3.org/2000/svg" xmlns:s="library://ns.adobe.com/flex/spark" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:fc="library://ns.flexcapacitor.com/flex" xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:html="http://www.w3.org/1999/xhtml" xmlns:mx="library://ns.adobe.com/flex"  pageTitle="Example" fc:version="2.2.0" width="750">
+
+		<s:Label t="value" text="Label" verticalAlign="middle" horizontalCenter="0" verticalCenter="0"/>
+		<s:Button x="124" y="41" label="Button" horizontalCenter="0" verticalCenter="100"/>
+
+</s:Application>

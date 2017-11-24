@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
+					   xmlns:s="library://ns.adobe.com/flex/spark" 
+					   xmlns:mx="library://ns.adobe.com/flex/mx" 
+					   
+					   frameRate="30"
+					   showStatusBar="false"
+					   minWidth="720"
+					   minHeight="480"
+					   initialize="initializeHandler(event)"
+					   backgroundColor="#242424"
+					   >
+	
+	<fx:Style source="fonts.css"/>
+	
+	<fx:Style source="styles.css"/>
+	
+	<fx:Style>
+		@namespace s "library://ns.adobe.com/flex/spark";
+		@namespace utils "com.flexcapacitor.utils.*";
+		@namespace mx "library://ns.adobe.com/flex/mx";
+		@namespace components "components.*";
+		
+		s|ToggleSwitch
+		{
+		    accentColor: #3F7FBA;
+		    color: #FFFFFF;
+		    fontSize: 27;
+		    skinClass: ClassReference("spark.skins.mobile.ToggleSwitchSkin");
+		    slideDuration: 125;
+		     /*textShadowAlpha: .65;
+		   textShadowColor: #000000;*/
+		}
+		
+		s|TextArea
+		{
+		    skinClass: ClassReference("spark.skins.spark.TextAreaSkin");
+		}
+		
+		s|Label {
+			paddingLeft: 20;
+		}
+		
+	</fx:Style>
+	
+	<fx:Script>
+		<![CDATA[
+			
+			/**
+			 * Error: Could not find compiled resource bundle 'logging' for locale 'en_US'
+			 * 
+			 * Caused by when I switched to using external library on FCLibrary
+			 */
+			
+			import mx.events.FlexEvent;
+			
+			protected function initializeHandler(event:FlexEvent):void {
+				width = Capabilities.screenResolutionX*.85;
+				height = Capabilities.screenResolutionY*.88;
+				center();
+			}
+			
+			// Align native AIR application window horizontally and vertically
+			protected function center():void {
+				nativeWindow.x = (Capabilities.screenResolutionX - width) / 2;
+				nativeWindow.y = (Capabilities.screenResolutionY - height) / 2 - 32;
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<fx:Boolean id="desktop">true</fx:Boolean>
+		<fx:Boolean id="element">true</fx:Boolean>
+
+		
+		<utils:RegisterSingleton id="registerSingleton" 
+								 target="{manager}" />
+		<controller:ApplicationController id="manager" isDesktop="true"/>
+	</fx:Declarations>
+	
+	<components:MainGroup id="mainGroup" width="100%" height="100%" scaleX=".80" scaleY=".80"/>
+	
+</s:WindowedApplication>
