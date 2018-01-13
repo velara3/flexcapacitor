@@ -51,6 +51,7 @@ controls|FrameContainer {
 	insetColor: #ffffff;
 	insetAlpha: .75;
 	cornerRadius: 10;
+	angle: 90;
 }
 
 controls|InsetLabel {

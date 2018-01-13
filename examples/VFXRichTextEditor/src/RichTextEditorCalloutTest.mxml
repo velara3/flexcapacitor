@@ -53,10 +53,6 @@
 		<![CDATA[
 			import com.flexcapacitor.controls.RichTextEditorBar;
 			import com.flexcapacitor.controls.RichTextEditorBarCallout;
-			import com.flexcapacitor.managers.HistoryManager;
-			import com.flexcapacitor.model.IDocument;
-			import com.flexcapacitor.tools.Selection;
-			import com.flexcapacitor.tools.Text;
 			import com.flexcapacitor.utils.ClassUtils;
 			import com.flexcapacitor.utils.DisplayObjectUtils;
 			import com.flexcapacitor.utils.TextFlowUtils;
@@ -997,7 +993,7 @@
 			protected function editor_focusInHandler(event:FocusEvent):void
 			{
 				//if (isEditableRichTextEditorBarVisible==false) {
-				showRichEditorCallout(null);
+					showRichEditorCallout(null);
 				//}
 			}
 			
@@ -1207,273 +1203,273 @@
 			 * */
 			/*
 			public static function showTextEditor(textField:Object, selectText:Boolean = false, setFocus:Boolean = true):void {
-			var textTarget:TextBase = textField as TextBase;
-			var isRichEditor:Boolean;
-			var rectangle:Rectangle;
-			var propertyNames:Array;
-			var valuesObject:Object;
-			var isBasicLayout:Boolean;
-			var topSystemManager:ISystemManager;
-			var currentEditor:Object;
-			var textFlowString:String;
-			var textFlow:TextFlow;
-			var iDocument:IDocument;
-			var targetComponentDescription:ComponentDescription;
-			var parentComponentDescription:ComponentDescription;
-			var basicFonts:Boolean = false;
-			var focusAlpha:Number = 0;
-			var position:Point;
-			var distancePoint:Point;
-			var scale:Number;
-			
-			const MIN_WIDTH:int = 22;
-			
-			if (!(instance.selectedTool is Selection) && !(instance.selectedTool is com.flexcapacitor.tools.Text)) {
-			return;
-			}
-			
-			// get reference to current source label or richtext 
-			currentEditableComponent = textTarget;
-			
-			if (editableRichTextField==null) {
-			editableRichTextField = new RichEditableText();
-			}
-			
-			editableRichTextField.selectionHighlighting = TextSelectionHighlighting.WHEN_ACTIVE;
-			
-			// get positions of label or richtext
-			// and setup properties that need to be set for temporary rich text field
-			if (currentEditableComponent) {
-			iDocument = instance.selectedDocument;
-			targetComponentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(textTarget, iDocument.componentDescription);
-			parentComponentDescription = targetComponentDescription.parent;
-			//rectangle = DisplayObjectUtils.getRectangleBounds(target, iDocument.instance);
-			//propertyNames = ["x", "y", "text", "minWidth"];
-			//valuesObject = {};
-			
-			//if ((parentComponentDescription.instance is GroupBase || parentComponentDescription.instance is BorderContainer)
-			//	&& parentComponentDescription.instance.layout is BasicLayout) {
-			//	isBasicLayout = true;
-			//	rectangle = DisplayObjectUtils.getRectangleBounds(target, parentComponentDescription.instance);
-			//}
-			
-			isRichEditor = "textFlow" in currentEditableComponent;
-			//currentEditor = isRichEditor ? editableRichTextEditorBarCallout : editableRichTextField;
-			currentEditor = editableRichTextField;
-			
-			//rectangle = DisplayObjectUtils.getRectangleBounds(target);
-			propertyNames = ["x", "y", "minWidth"];
-			valuesObject = {};
-			
-			if (currentEditableComponent.owner.layout is BasicLayout) {
-			isBasicLayout = true;
-			rectangle = DisplayObjectUtils.getRectangleBounds(currentEditableComponent, currentEditableComponent.owner);
-			}
-			else {
-			rectangle = DisplayObjectUtils.getRectangleBounds(textTarget, iDocument.instance);
-			}
-			
-			position = DisplayObjectUtils.getDisplayObjectPosition(currentEditableComponent as DisplayObject, null, true);
-			distancePoint = DisplayObjectUtils.getDistanceBetweenDisplayObjects(currentEditableComponent, instance.toolLayer);
-			
-			focusAlpha = 0;
-			valuesObject.x = rectangle.x;
-			valuesObject.y = rectangle.y;
-			valuesObject.minWidth = MIN_WIDTH;
-			
-			if (!isNaN(textTarget.explicitWidth)) {
-			propertyNames.push("width");
-			valuesObject.width = rectangle.width;
-			}
-			else if (!isNaN(textTarget.percentWidth)) {
-			// if basic layout we can get percent width
-			if (isBasicLayout) {
-			propertyNames.push("percentWidth");
-			valuesObject.percentWidth = textTarget.percentWidth;
-			}
-			else {
-			propertyNames.push("width");
-			valuesObject.width = rectangle.width;
-			}
-			}
-			
-			currentEditableComponent.visible = false;
-			
-			if (editableRichTextEditorBarCallout==null) {
-			editableRichTextEditorBarCallout = new RichTextEditorBarCallout();
-			editableRichTextEditorBarCallout.initialize();
-			editableRichTextEditorBarCallout.createDeferredContent();
-			}
-			
-			if (basicFonts && editableRichTextEditorBarCallout.editorBar.fontDataProvider) {
-			editableRichTextEditorBarCallout.editorBar.fontDataProvider = null;
-			}
-			else if (!basicFonts && editableRichTextEditorBarCallout.editorBar.fontDataProvider ==null) {
-			editableRichTextEditorBarCallout.editorBar.fontDataProvider = new ArrayList(fontsArray);
-			}
-			
-			editableRichTextEditorBarCallout.editorBar.focusOnTextAfterFontChange = false;
-			editableRichTextEditorBarCallout.editorBar.focusOnTextAfterFontSizeChange = false;
-			
-			if (isRichEditor && editableRichTextEditorBarCallout.richEditableText != editableRichTextField) {
-			//testTextArea.heightInLines = NaN;
-			//editableRichTextEditorBarCallout.richEditableText = editableRichTextField;
-			}
-			
-			
-			if (isRichEditor) {
-			editableRichTextEditorBarCallout.hideOnMouseDownOutside = true;
-			editableRichTextEditorBarCallout.showEditorOnFocusIn = true;
-			
-			// TODO: use TextFlowUtil
-			//TextFlowUtil.importFromString();
-			//TextFlowUtil.export();
-			
-			textFlowString = TextConverter.export(currentEditableComponent.textFlow, TextConverter.TEXT_LAYOUT_FORMAT, ConversionType.STRING_TYPE) as String;
-			textFlow = TextConverter.importToFlow(textFlowString, TextConverter.TEXT_LAYOUT_FORMAT);
-			
-			editableRichTextEditorBarCallout.horizontalPosition = "middle";
-			editableRichTextEditorBarCallout.verticalPosition = "before";
-			editableRichTextEditorBarCallout.setStyle("contentBackgroundAppearance", ContentBackgroundAppearance.NONE);
-			editableRichTextEditorBarCallout.richEditableText = editableRichTextField;
-			
-			
-			//editableRichTextEditorBar.textFlow = textFlow;
-			
-			//isEditableRichTextEditorBarVisible = true;
-			//editableRichTextEditorBarCallout.textFlow = textFlow;
-			// not sure why the next line is commented out
-			//editableRichTextEditor.styleName = currentEditableComponent;
-			editableRichTextField.styleName = currentEditableComponent;
-			editableRichTextField.focusRect = null;
-			editableRichTextField.setStyle("focusAlpha", focusAlpha);
-			editableRichTextField.validateNow();
-			}
-			else {
-			//editableRichTextField.text = currentEditableComponent.text;
-			valuesObject.text = currentEditableComponent.text;
-			
-			editableRichTextField.styleName = currentEditableComponent;
-			editableRichTextField.focusRect = null;
-			editableRichTextField.setStyle("focusAlpha", focusAlpha);
-			editableRichTextField.validateNow();
-			}
-			
-			
-			if (isRichEditor) {
-			//editableRichTextEditorBarCallout.includeInLayout = false;
-			valuesObject.textFlow = textFlow;
-			propertyNames.push("textFlow");
-			}
-			else {
-			valuesObject.text = currentEditableComponent.text;
-			propertyNames.push("text");
-			}
-			
-			// add editor but prevent from adding to document history
-			HistoryManager.doNotAddEventsToHistory = true;
-			if (isBasicLayout) {
-			
-			if (isRichEditor) {
-			
-			//if (editableRichTextField.stage==null) {
-			//	currentEditableComponent.owner.addElement(editableRichTextField);
-			//}
-			
-			//addElement(editableRichTextEditorBarCallout, parentComponentDescription.instance, propertyNames, null, null, valuesObject);
-			addElement(editableRichTextField, parentComponentDescription.instance, propertyNames, null, null, valuesObject);
-			}
-			else {
-			addElement(editableRichTextField, parentComponentDescription.instance, propertyNames, null, null, valuesObject);
-			}
-			}
-			else {
-			if (isRichEditor) {
-			
-			//if (editableRichTextField.stage==null) {
-			//	currentEditableComponent.owner.addElement(editableRichTextField);
-			//}
-			
-			//addElement(editableRichTextEditorBarCallout, iDocument.instance, propertyNames, null, null, valuesObject);
-			addElement(editableRichTextField, iDocument.instance, propertyNames, null, null, valuesObject);
-			}
-			else {
-			addElement(editableRichTextField, iDocument.instance, propertyNames, null, null, valuesObject);
-			}
-			}
-			HistoryManager.doNotAddEventsToHistory = false;
-			
-			topSystemManager = SystemManagerGlobals.topLevelSystemManagers[0];
-			topSystemManager.stage.stageFocusRect = false;
-			
-			if (isRichEditor) {
-			scale = instance.getScale();
-			
-			editableRichTextFieldSprite.width = rectangle.width;
-			editableRichTextFieldSprite.height = rectangle.height;
-			
-			var showSpriteFillArea:Boolean = false;
-			
-			if (editableRichTextFieldSprite.owner!=instance.toolLayer) {
-			instance.toolLayer.addElement(editableRichTextFieldSprite);
-			}
-			
-			if (showSpriteFillArea) {
-			editableRichTextFieldSprite.graphics.clear();
-			editableRichTextFieldSprite.graphics.beginFill(Math.random()*255555,.4);
-			editableRichTextFieldSprite.graphics.drawRect(0, 0, rectangle.width, rectangle.height);
-			editableRichTextFieldSprite.graphics.endFill();
-			}
-			
-			distancePoint = DisplayObjectUtils.getDisplayObjectPosition(currentEditableComponent as DisplayObject, instance.toolLayer, true);
-			
-			editableRichTextFieldSprite.x = distancePoint.x;
-			editableRichTextFieldSprite.y = distancePoint.y;
-			editableRichTextFieldSprite.validateNow();
-			
-			editableRichTextField.setFocus();
-			editableRichTextEditorBarCallout.open(editableRichTextFieldSprite);
-			
-			//editableRichTextEditorBarCallout.alpha = .5;
-			//editableRichTextEditorBarCallout.scaleX = 1;
-			//editableRichTextEditorBarCallout.scaleY = 1;
-			editableRichTextEditorBarCallout.addEventListener(PopUpEvent.CLOSE, richTextCallOut_closeHandler, false, 0, true);
-			
-			
-			if (setFocus) {
-			callAfter(1, editableRichTextField.setFocus);
-			}
-			
-			if (selectText) {
-			callAfter(1, editableRichTextField.selectAll);
-			}
-			
-			}
-			else {
-			editableRichTextField.selectAll();
-			editableRichTextField.setFocus();
-			
-			if (setFocus) {
-			callAfter(1, editableRichTextField.setFocus);
-			}
-			
-			if (selectText) {
-			callAfter(1, editableRichTextField.selectAll);
-			}
-			
-			editableRichTextField.addEventListener(FocusEvent.FOCUS_OUT, handleEditorEvents, false, 0, true);
-			editableRichTextField.addEventListener(FlexEvent.ENTER, handleEditorEvents, false, 0, true);
-			editableRichTextField.addEventListener(FlexEvent.VALUE_COMMIT, handleEditorEvents, false, 0, true);
-			editableRichTextField.addEventListener(MouseEvent.CLICK, handleEditorEvents, false, 0, true);
-			}
-			
-			if (!(instance.selectedTool is com.flexcapacitor.tools.Text)) {
-			instance.disableTool();
-			}
-			
-			instance.disableTool();
-			}
-			
+				var textTarget:TextBase = textField as TextBase;
+				var isRichEditor:Boolean;
+				var rectangle:Rectangle;
+				var propertyNames:Array;
+				var valuesObject:Object;
+				var isBasicLayout:Boolean;
+				var topSystemManager:ISystemManager;
+				var currentEditor:Object;
+				var textFlowString:String;
+				var textFlow:TextFlow;
+				var iDocument:IDocument;
+				var targetComponentDescription:ComponentDescription;
+				var parentComponentDescription:ComponentDescription;
+				var basicFonts:Boolean = false;
+				var focusAlpha:Number = 0;
+				var position:Point;
+				var distancePoint:Point;
+				var scale:Number;
+				
+				const MIN_WIDTH:int = 22;
+				
+				if (!(instance.selectedTool is Selection) && !(instance.selectedTool is com.flexcapacitor.tools.Text)) {
+					return;
+				}
+				
+				// get reference to current source label or richtext 
+				currentEditableComponent = textTarget;
+				
+				if (editableRichTextField==null) {
+					editableRichTextField = new RichEditableText();
+				}
+				
+				editableRichTextField.selectionHighlighting = TextSelectionHighlighting.WHEN_ACTIVE;
+				
+				// get positions of label or richtext
+				// and setup properties that need to be set for temporary rich text field
+				if (currentEditableComponent) {
+					iDocument = instance.selectedDocument;
+					targetComponentDescription = DisplayObjectUtils.getTargetInComponentDisplayList(textTarget, iDocument.componentDescription);
+					parentComponentDescription = targetComponentDescription.parent;
+					//rectangle = DisplayObjectUtils.getRectangleBounds(target, iDocument.instance);
+					//propertyNames = ["x", "y", "text", "minWidth"];
+					//valuesObject = {};
+					
+					//if ((parentComponentDescription.instance is GroupBase || parentComponentDescription.instance is BorderContainer)
+					//	&& parentComponentDescription.instance.layout is BasicLayout) {
+					//	isBasicLayout = true;
+					//	rectangle = DisplayObjectUtils.getRectangleBounds(target, parentComponentDescription.instance);
+					//}
+					
+					isRichEditor = "textFlow" in currentEditableComponent;
+					//currentEditor = isRichEditor ? editableRichTextEditorBarCallout : editableRichTextField;
+					currentEditor = editableRichTextField;
+					
+					//rectangle = DisplayObjectUtils.getRectangleBounds(target);
+					propertyNames = ["x", "y", "minWidth"];
+					valuesObject = {};
+					
+					if (currentEditableComponent.owner.layout is BasicLayout) {
+						isBasicLayout = true;
+						rectangle = DisplayObjectUtils.getRectangleBounds(currentEditableComponent, currentEditableComponent.owner);
+					}
+					else {
+						rectangle = DisplayObjectUtils.getRectangleBounds(textTarget, iDocument.instance);
+					}
+					
+					position = DisplayObjectUtils.getDisplayObjectPosition(currentEditableComponent as DisplayObject, null, true);
+					distancePoint = DisplayObjectUtils.getDistanceBetweenDisplayObjects(currentEditableComponent, instance.toolLayer);
+					
+					focusAlpha = 0;
+					valuesObject.x = rectangle.x;
+					valuesObject.y = rectangle.y;
+					valuesObject.minWidth = MIN_WIDTH;
+					
+					if (!isNaN(textTarget.explicitWidth)) {
+						propertyNames.push("width");
+						valuesObject.width = rectangle.width;
+					}
+					else if (!isNaN(textTarget.percentWidth)) {
+						// if basic layout we can get percent width
+						if (isBasicLayout) {
+							propertyNames.push("percentWidth");
+							valuesObject.percentWidth = textTarget.percentWidth;
+						}
+						else {
+							propertyNames.push("width");
+							valuesObject.width = rectangle.width;
+						}
+					}
+					
+					currentEditableComponent.visible = false;
+					
+					if (editableRichTextEditorBarCallout==null) {
+						editableRichTextEditorBarCallout = new RichTextEditorBarCallout();
+						editableRichTextEditorBarCallout.initialize();
+						editableRichTextEditorBarCallout.createDeferredContent();
+					}
+					
+					if (basicFonts && editableRichTextEditorBarCallout.editorBar.fontDataProvider) {
+						editableRichTextEditorBarCallout.editorBar.fontDataProvider = null;
+					}
+					else if (!basicFonts && editableRichTextEditorBarCallout.editorBar.fontDataProvider ==null) {
+						editableRichTextEditorBarCallout.editorBar.fontDataProvider = new ArrayList(fontsArray);
+					}
+					
+					editableRichTextEditorBarCallout.editorBar.focusOnTextAfterFontChange = false;
+					editableRichTextEditorBarCallout.editorBar.focusOnTextAfterFontSizeChange = false;
+					
+					if (isRichEditor && editableRichTextEditorBarCallout.richEditableText != editableRichTextField) {
+						//testTextArea.heightInLines = NaN;
+						//editableRichTextEditorBarCallout.richEditableText = editableRichTextField;
+					}
+					
+					
+					if (isRichEditor) {
+						editableRichTextEditorBarCallout.hideOnMouseDownOutside = true;
+						editableRichTextEditorBarCallout.showEditorOnFocusIn = true;
+						
+						// TODO: use TextFlowUtil
+						//TextFlowUtil.importFromString();
+						//TextFlowUtil.export();
+						
+						textFlowString = TextConverter.export(currentEditableComponent.textFlow, TextConverter.TEXT_LAYOUT_FORMAT, ConversionType.STRING_TYPE) as String;
+						textFlow = TextConverter.importToFlow(textFlowString, TextConverter.TEXT_LAYOUT_FORMAT);
+						
+						editableRichTextEditorBarCallout.horizontalPosition = "middle";
+						editableRichTextEditorBarCallout.verticalPosition = "before";
+						editableRichTextEditorBarCallout.setStyle("contentBackgroundAppearance", ContentBackgroundAppearance.NONE);
+						editableRichTextEditorBarCallout.richEditableText = editableRichTextField;
+						
+						
+						//editableRichTextEditorBar.textFlow = textFlow;
+						
+						//isEditableRichTextEditorBarVisible = true;
+						//editableRichTextEditorBarCallout.textFlow = textFlow;
+						// not sure why the next line is commented out
+						//editableRichTextEditor.styleName = currentEditableComponent;
+						editableRichTextField.styleName = currentEditableComponent;
+						editableRichTextField.focusRect = null;
+						editableRichTextField.setStyle("focusAlpha", focusAlpha);
+						editableRichTextField.validateNow();
+					}
+					else {
+						//editableRichTextField.text = currentEditableComponent.text;
+						valuesObject.text = currentEditableComponent.text;
+						
+						editableRichTextField.styleName = currentEditableComponent;
+						editableRichTextField.focusRect = null;
+						editableRichTextField.setStyle("focusAlpha", focusAlpha);
+						editableRichTextField.validateNow();
+					}
+					
+					
+					if (isRichEditor) {
+						//editableRichTextEditorBarCallout.includeInLayout = false;
+						valuesObject.textFlow = textFlow;
+						propertyNames.push("textFlow");
+					}
+					else {
+						valuesObject.text = currentEditableComponent.text;
+						propertyNames.push("text");
+					}
+					
+					// add editor but prevent from adding to document history
+					HistoryManager.doNotAddEventsToHistory = true;
+					if (isBasicLayout) {
+						
+						if (isRichEditor) {
+							
+							//if (editableRichTextField.stage==null) {
+							//	currentEditableComponent.owner.addElement(editableRichTextField);
+							//}
+							
+							//addElement(editableRichTextEditorBarCallout, parentComponentDescription.instance, propertyNames, null, null, valuesObject);
+							addElement(editableRichTextField, parentComponentDescription.instance, propertyNames, null, null, valuesObject);
+						}
+						else {
+							addElement(editableRichTextField, parentComponentDescription.instance, propertyNames, null, null, valuesObject);
+						}
+					}
+					else {
+						if (isRichEditor) {
+							
+							//if (editableRichTextField.stage==null) {
+							//	currentEditableComponent.owner.addElement(editableRichTextField);
+							//}
+							
+							//addElement(editableRichTextEditorBarCallout, iDocument.instance, propertyNames, null, null, valuesObject);
+							addElement(editableRichTextField, iDocument.instance, propertyNames, null, null, valuesObject);
+						}
+						else {
+							addElement(editableRichTextField, iDocument.instance, propertyNames, null, null, valuesObject);
+						}
+					}
+					HistoryManager.doNotAddEventsToHistory = false;
+					
+					topSystemManager = SystemManagerGlobals.topLevelSystemManagers[0];
+					topSystemManager.stage.stageFocusRect = false;
+					
+					if (isRichEditor) {
+						scale = instance.getScale();
+						
+						editableRichTextFieldSprite.width = rectangle.width;
+						editableRichTextFieldSprite.height = rectangle.height;
+						
+						var showSpriteFillArea:Boolean = false;
+						
+						if (editableRichTextFieldSprite.owner!=instance.toolLayer) {
+							instance.toolLayer.addElement(editableRichTextFieldSprite);
+						}
+						
+						if (showSpriteFillArea) {
+							editableRichTextFieldSprite.graphics.clear();
+							editableRichTextFieldSprite.graphics.beginFill(Math.random()*255555,.4);
+							editableRichTextFieldSprite.graphics.drawRect(0, 0, rectangle.width, rectangle.height);
+							editableRichTextFieldSprite.graphics.endFill();
+						}
+						
+						distancePoint = DisplayObjectUtils.getDisplayObjectPosition(currentEditableComponent as DisplayObject, instance.toolLayer, true);
+						
+						editableRichTextFieldSprite.x = distancePoint.x;
+						editableRichTextFieldSprite.y = distancePoint.y;
+						editableRichTextFieldSprite.validateNow();
+						
+						editableRichTextField.setFocus();
+						editableRichTextEditorBarCallout.open(editableRichTextFieldSprite);
+						
+						//editableRichTextEditorBarCallout.alpha = .5;
+						//editableRichTextEditorBarCallout.scaleX = 1;
+						//editableRichTextEditorBarCallout.scaleY = 1;
+						editableRichTextEditorBarCallout.addEventListener(PopUpEvent.CLOSE, richTextCallOut_closeHandler, false, 0, true);
+						
+						
+						if (setFocus) {
+							callAfter(1, editableRichTextField.setFocus);
+						}
+						
+						if (selectText) {
+							callAfter(1, editableRichTextField.selectAll);
+						}
+						
+					}
+					else {
+						editableRichTextField.selectAll();
+						editableRichTextField.setFocus();
+						
+						if (setFocus) {
+							callAfter(1, editableRichTextField.setFocus);
+						}
+						
+						if (selectText) {
+							callAfter(1, editableRichTextField.selectAll);
+						}
+						
+						editableRichTextField.addEventListener(FocusEvent.FOCUS_OUT, handleEditorEvents, false, 0, true);
+						editableRichTextField.addEventListener(FlexEvent.ENTER, handleEditorEvents, false, 0, true);
+						editableRichTextField.addEventListener(FlexEvent.VALUE_COMMIT, handleEditorEvents, false, 0, true);
+						editableRichTextField.addEventListener(MouseEvent.CLICK, handleEditorEvents, false, 0, true);
+					}
+					
+					if (!(instance.selectedTool is com.flexcapacitor.tools.Text)) {
+						instance.disableTool();
+					}
+					
+					instance.disableTool();
+				}
+				
 			}*/
 		]]>
 	</fx:Script>

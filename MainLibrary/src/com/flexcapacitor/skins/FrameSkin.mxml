@@ -28,6 +28,7 @@
 				dropShadowFilter.distance = uint(getStyle("borderWeight"));
 				dropShadowFilter.color = uint(getStyle("insetColor"));
 				dropShadowFilter.alpha = Number(getStyle("insetAlpha"));
+				dropShadowFilter.angle = int(getStyle("angle"));
 			}
 			
 		]]>

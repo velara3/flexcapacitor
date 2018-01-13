@@ -702,7 +702,7 @@ dispatchActionEvent(new Event(Action.EVENT_NAME));
 				previousEffectName = previousEffect ? "[" + index + "] " + previousEffect.className + seperator +  "[" + int(index+1) + "] " : "[" + index + "] ";
 				info = previousEffectName + effect.className + seperator + message;
 				cancel(info);
-				throw new Error(info);
+				throw new Error(info); // for more info debug at the previous line in the call stack
 			}
 			
 		}

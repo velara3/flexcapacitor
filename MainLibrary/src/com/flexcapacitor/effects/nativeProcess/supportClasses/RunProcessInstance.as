@@ -107,7 +107,12 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 				
 				// check if the NativeProcess class is found
 				if (!action.ignoreUnsupportedDevices && !NativeProcess.isSupported) {
-					dispatchErrorEvent("The Native Process is not supported on this platform. You may need to add extendedDesktop option to your application profile.");
+					// Be sure to add "extendedDesktop" to the supported profiles tag 
+					// is in the application descriptor file like so:
+					//
+					//            <supportedProfiles>extendedDesktop desktop</supportedProfiles>
+					// 
+					dispatchErrorEvent("The Native Process is not supported on this platform. You may need to add extendedDesktop option to your application profile. Order it first in the tag.");
 				}
 				
 				// ArgumentError: Error #2007: Parameter  must be non-null.
@@ -238,6 +243,7 @@ package com.flexcapacitor.effects.nativeProcess.supportClasses {
 			catch (error:Error) {
 				isError = true;
 				action.errorEvent = error;
+				action.errorMessage = "message" in error ? error.message : null;
 			}
 			
 			

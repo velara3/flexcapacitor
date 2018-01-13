@@ -59,9 +59,10 @@ package com.flexcapacitor.effects.nativeProcess {
 	[Event(name="error", type="flash.events.Event")]
 	
 	/**
-	 * Runs a process on the system. Runs on desktop with extendedDesktop profile.<br/><br/>
+	 * Runs a process on the system. You must set the profile to "extendedDesktop" profile or "extendedMobile". 
+	 * Order of tag value matters and "extendedDesktop" or "extendedMobile" must be defined first.<br/><br/>
 	 * 
-	 * Be sure to add "extendedDesktop" to the supported profiles tag in the application descriptor file like so:
+	 * Ensure "extendedDesktop" is defined in the supported profiles tag in the application descriptor file like so:
 	 * 
 <pre>
 &lt;supportedProfiles&gt;extendedDesktop desktop&lt;/supportedProfiles&gt;
@@ -76,6 +77,7 @@ package com.flexcapacitor.effects.nativeProcess {
 	  standardErrorData="trace('Error Data:' + runProcess.errorData)"
 	  standardErrorIOError="trace('Error IO Error:' + event.toString())"
 	  standardOutputIOError="trace('Output IO Error:' + event.toString())"
+	  error="runAProcess_errorHandler(event)"
 	  exit="trace('Process exited with: ' + event.exitCode)">
 	&lt;nativeProcess:notSupportedEffect>
 		&lt;status:ShowStatusMessage message="Native process not supported"/>

@@ -9,6 +9,8 @@
 					   width="1000" height="550" 
 					   initialize="startSampling()"
 					   applicationComplete="init()" 
+					   keyDown="windowedapplication1_keyDownHandler(event)"
+					   keyUp="windowedapplication1_keyUpHandler(event)"
 					   >
 	
 	<fx:Script>
@@ -24,6 +26,7 @@
 			import flash.sampler.getSize;
 			import flash.sampler.startSampling;
 			import flash.sampler.stopSampling;
+			import flash.text.engine.FontPosture;
 			
 			import mx.collections.ArrayList;
 			import mx.core.UIComponent;
@@ -33,12 +36,15 @@
 			import spark.components.ComboBox;
 			import spark.components.Group;
 			import spark.components.TileGroup;
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
 			import spark.utils.TextFlowUtil;
 			
 			import flashx.textLayout.tlf_internal;
 			import flashx.textLayout.container.ContainerController;
 			import flashx.textLayout.edit.IEditManager;
 			import flashx.textLayout.edit.SelectionState;
+			import flashx.textLayout.elements.FlowElement;
 			import flashx.textLayout.elements.InlineGraphicElement;
 			import flashx.textLayout.elements.TextFlow;
 			import flashx.textLayout.events.FlowElementMouseEvent;
@@ -51,6 +57,40 @@
 				+ "<p styleName='center'><span typeName='a'>There are many </span><span styleName='italic'>such</span><span> lime-kilns </span><a href='http://www.google.com' typeName='a'><span>links</span></a><span> in that tract of country, for the purpose of burning the white marble which composes a large part of the substance of the hills. Some of them, built years ago, and long deserted, with weeds growing in the vacant round of the interior, which is open to the sky, and grass and wild-flowers rooting themselves into the chinks of the stones, look already like relics of antiquity, and may yet be overspread with the lichens of centuries to come. Others, where the lime-burner still feeds his daily and nightlong fire, afford points of interest to the wanderer among the hills, who seats himself on a log of wood or a fragment of marble, to hold a chat with the solitary man. It is a lonesome, and, when the character is inclined to thought, may be an intensely thoughtful occupation; as it proved in the case of Ethan Brand, who had mused to such strange purpose, in days gone by, while the fire in this very kiln was burning.</span></p>"
 				+ "<br/><p><span>The man who now watched the </span><span id='bold'>fire</span><span> was of a </span><span typeName='foo'>different</span><span> order, and troubled himself with no thoughts save the very few that were requisite to his business. At frequent intervals, he flung back the clashing weight of the iron door, and, turning his face from the insufferable glare, thrust in huge logs of oak, or stirred the immense brands with a long pole. Within the furnace were seen the curling and riotous flames, and the burning marble, almost molten with the intensity of heat; while without, the reflection of the fire quivered on the dark intricacy of the surrounding forest, and showed in the foreground a bright and ruddy little picture of the hut, the spring beside its door, the athletic and coal-begrimed figure of the lime-burner, and the half-frightened child, shrinking into the protection of his father's shadow. And when again the iron door was closed, then reappeared the tender light of the half-full moon, which vainly strove to trace out the indistinct shapes of the neighboring mountains; and, in the upper sky, there was a flitting congregation of clouds, still faintly tinged with the rosy sunset, though thus far down into the valley the sunshine had vanished long and long ago.</span></p>"
 				+ "</TextFlow>";
+			
+			[Embed(source="assets/icons/tools/PointingHand.png")]
+			public var PointerHand:Class;
+			
+			[Embed(source="assets/icons/tools/Button32.png")]
+			public var HandPointer:Class;
+			
+			[Embed(source="assets/icons/tools/HandPointer.png")]
+			public static const HandPointer2:Class;
+			
+			public var mouseCursorData:MouseCursorData;
+			public var nativeMouseCursorX:int = 12;
+			public var nativeMouseCursorY:int = 7;
+			public var cursorManagerX:int = -6;
+			public var cursorManagerY:int = 0;
+			private var cursorID:String;
+			private var currentCursorIndex:int;
+			public var hideCursorWithDefaultMouse:Boolean = true;
+			
+			public var useCursorManager:Boolean = false;
+			public var useCustomCursor:Boolean = true;
+			public var addEventMirror:Boolean = false;
+			
+			
+			public var inlineGraphicElementsDictionary:Dictionary = new Dictionary(true);
+			public var displayObjectsDictionary:Dictionary = new Dictionary(true);
+			public var componentsDictionary:Dictionary = new Dictionary(true);
+			public var currentInlineGraphicElement:InlineGraphicElement;
+			public var index:int;
+			public var editorSubGroup:Group;
+			public var grandparentComponent:UIComponent;
+			public var positioningGroups:Array = [];
+			
+			private var editManager:IEditManager;
 			
 			private function init():void {
 				
@@ -92,22 +132,17 @@
 				floatTypeList.selectedIndex = 0;
 				
 				if (mouseCursorData==null) {
-					cursorID = "handCursor";
+					cursorID = "myHandCursor";
 					mouseCursorData = CursorUtils.createMouseCursorData(HandPointer, nativeMouseCursorX, nativeMouseCursorY);
 					Mouse.registerCursor(cursorID, mouseCursorData);
 					//					cursorID = MouseCursor.HAND;
 				}
+				
+				if (addEventMirror) {
+					switchCursorModesButton.label = "Using Event Mirror (hold CMD or CTRL)";
+					switchCursorModesButton.enabled = false;
+				}
 			}
-			
-			public var inlineGraphicElementsDictionary:Dictionary = new Dictionary(true);
-			public var displayObjectsDictionary:Dictionary = new Dictionary(true);
-			public var componentsDictionary:Dictionary = new Dictionary(true);
-			public var index:int;
-			public var editorSubGroup:Group;
-			public var grandparentComponent:UIComponent;
-			public var positioningGroups:Array = [];
-			
-			private var editManager:IEditManager;
 			
 			/**
 			 * Insert an image
@@ -131,7 +166,6 @@
 				var uicomponent:UIComponent;
 				var componentContainer:Sprite;
 				var sprite:Sprite;
-				var addEventMirror:Boolean;
 				
 				if (editor.selectionActivePosition==-1) {
 					editor.selectRange(0, 0);
@@ -157,6 +191,8 @@
 					var container:DisplayObjectContainer = containerController.container; // rich text editor component
 					//textFlow.flowComposer.numControllers;
 					
+					
+					// adding a UIComponent
 					if (source is UIComponent) {
 						var containerSprite:Sprite;
 						var nestComponent:Boolean;
@@ -279,8 +315,13 @@
 						componentsDictionary[inlineGraphicElement] = uicomponent;
 					}
 					else {
+						
+						// adding an image
 						inlineGraphicElement = editManager.insertInlineGraphic(source, null, null, options, operationState);
 						
+						// trying adding listeners to event mirror
+						// cmd or ctrl key must be held down to receive all events
+						// see FlowElementMouseEventManager
 						if (addEventMirror) {
 							var eventMirror:IEventDispatcher = inlineGraphicElement.tlf_internal::getEventMirror();
 							
@@ -310,6 +351,7 @@
 					sprite = inlineGraphicElement.graphic as Sprite;
 					uicomponent = inlineGraphicElement.graphic as UIComponent;
 					
+					// we don't hit this code if addEventMirror is true
 					if (loader) {
 						loader.contentLoaderInfo.addEventListener(Event.INIT, inlineGraphicElementLoader_complete);
 						loader.contentLoaderInfo.addEventListener(Event.COMPLETE, inlineGraphicElementLoader_complete);
@@ -319,6 +361,8 @@
 						loader.contentLoaderInfo.addEventListener(ProgressEvent.PROGRESS, inlineGraphicElementLoader_complete);
 						loader.contentLoaderInfo.addEventListener(Event.UNLOAD, inlineGraphicElementLoader_complete);
 						
+						// hacky way to add change the mouse cursor
+						// better way is make changes in FlowElementMouseEventManager
 						loader.addEventListener(Event.ADDED, inlineGraphicElementLoader_complete);
 						loader.addEventListener(Event.ADDED_TO_STAGE, inlineGraphicElementLoader_complete);
 						loader.addEventListener(MouseEvent.CLICK, inlineGraphicElementClickHandler);
@@ -427,6 +471,7 @@
 					//sprite.removeChildren();loader.removeChildren();
 				}
 				
+				// if added to stage exit and wait until loaded
 				if (eventType!=Event.ADDED_TO_STAGE) {
 					return;
 				}
@@ -440,6 +485,7 @@
 					}
 				}
 				
+				// attempt to show some sort of loading indicator
 				if (sprite) {
 					sprite.buttonMode = true;
 					
@@ -455,6 +501,7 @@
 					}
 				}
 				
+				// add click handler to make it easier to select image
 				if (displayObject) {
 					displayObject.addEventListener(MouseEvent.CLICK, inlineGraphicElementClickHandler, false, 0, true);
 					//displayObject.addEventListener(MouseEvent.CLICK, highPriorityInlineGraphicElementClickHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
@@ -499,6 +546,8 @@
 					startPosition = inlineGraphicElement.getAbsoluteStart();
 					
 					editor.selectRange(startPosition, startPosition+1);
+					
+					currentInlineGraphicElement = inlineGraphicElement;
 				}
 				else {
 					trace("could not find element");
@@ -530,19 +579,9 @@
 			}
 			
 			
-			public var PointerHand:Class = Radii8LibraryToolAssets.PointerHand;
-			public var HandPointer:Class = Radii8LibraryToolAssets.Button32;
-			public var mouseCursorData:MouseCursorData;
-			public var nativeMouseCursorX:int = 12;
-			public var nativeMouseCursorY:int = 7;
-			public var cursorManagerX:int = -6;
-			public var cursorManagerY:int = 0;
-			public var useCursorManager:Boolean = false;
-			public var useCustomCursor:Boolean = true;
-			private var cursorID:String;
-			private var currentCursorIndex:int;
-			public var hideCursorWithDefaultMouse:Boolean = true;
 			
+			// EVENT MIRROR HANDLERS
+			// SOME EVENTS CURRENTLY DO NOT DISPATCH UNLESS CTRL KEY IS DOWN
 			protected function flowElementRollOver(event:Event):void {
 				trace("flow element roll over");
 				Mouse.cursor = MouseCursor.BUTTON;
@@ -556,9 +595,10 @@
 				trace("flow element roll out");
 			}
 			
+			// USING CURSOR MANAGER or 
 			protected function cursorObject_mouseMove(event:MouseEvent):void {
 				
-				trace("\n"+event.type);
+				trace("cursorObject_mouseMove:"+event.type);
 				
 				if (useCursorManager) {
 					// when using flex cursor manager the cursor is updated
@@ -572,7 +612,7 @@
 			protected function cursorObject_rollOver(event:Event):void
 			{
 				
-				trace("\n"+event.type);
+				trace("cursorObject_rollOver:"+event.type);
 				
 				if (useCursorManager) {
 					trace("using flex cursor manager");
@@ -601,7 +641,7 @@
 			
 			protected function cursorObject_rollOut(event:MouseEvent):void
 			{
-				trace(event.type);
+				trace("cursorObject_rollOut:" + event.type);
 				removeCustomCursor();
 			}
 			
@@ -629,10 +669,10 @@
 				
 				if (useCursorManager) {
 					useCursorManager = false;
-					switchCursorModesButton.label = "Mouse Cursor";
+					switchCursorModesButton.label = "Using Mouse Cursor";
 				}
 				else {
-					switchCursorModesButton.label = "Cursor Manager";
+					switchCursorModesButton.label = "Using Cursor Manager";
 					useCursorManager = true;
 				}
 				
@@ -641,6 +681,7 @@
 			protected function insertImage_clickHandler(event:MouseEvent):void
 			{
 				var url:String = "http://www.radii8.com/r8m/wp-content/uploads/2015/10/radiate-logo-2.png";
+				url = "https://www.google.com/images/branding/googlelogo/1x/googlelogo_color_272x92dp.png";
 				insertImage(url, null, null, floatTypeList.selectedItem);
 			}
 			
@@ -708,6 +749,8 @@
 				for (var i:int;i<images.length;i++) {
 					inlineGraphic = images[i] as InlineGraphicElement;
 					
+					
+					// positioning can be found in FlowElementMouseEventManager.mouseToContainer()
 					var zeroPoint:Point = new Point();
 					var graphicPoint:Point = inlineGraphic.graphic.localToGlobal(zeroPoint);
 					var uicomponent:DisplayObject = componentsDictionary[inlineGraphic] ;
@@ -796,6 +839,37 @@
 				treeScaleZ = treeScaleZ +5;
 				object.scaleZ = treeScaleZ;
 			}
+			
+			protected function floatTypeList_changeHandler(event:IndexChangeEvent):void
+			{
+				var textFlow:TextFlow = editor.textFlow;
+				var inlineGraphic:InlineGraphicElement;
+				var element:FlowElement;
+				var floatType:String = floatTypeList.selectedItem;
+				var position:int;
+				var interactionManager:IEditManager;
+				
+				if (currentInlineGraphicElement && currentInlineGraphicElement.getTextFlow()==textFlow) {
+					interactionManager = IEditManager(textFlow.interactionManager);
+					interactionManager.modifyInlineGraphic(currentInlineGraphicElement.source, null, null, floatType);
+				}
+				
+			}
+			
+			protected function windowedapplication1_keyDownHandler(event:KeyboardEvent):void
+			{
+				if (event.keyCode==Keyboard.COMMAND) {
+					trace("ctrl key down");
+				}
+			}
+			
+			protected function windowedapplication1_keyUpHandler(event:KeyboardEvent):void
+			{
+				if (event.keyCode==Keyboard.COMMAND) {
+					trace("ctrl key up");
+				}
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -825,11 +899,11 @@
 				  click="showDisplayList_clickHandler(event)"/>
 	</s:HGroup>
 	
-	<s:DropDownList id="floatTypeList" right="20" top="20" selectedIndex="0" >
+	<s:DropDownList id="floatTypeList" right="20" top="20" selectedIndex="0" change="floatTypeList_changeHandler(event)">
 	</s:DropDownList>
 	
 	<s:RichEditableText id="editor" text="Some rich text" 
-						top="100" left="100" right="100"
+						top="100" left="100" right="150"
 						selectionHighlighting="whenActive"
 						/>
 	<!--<s:RichEditableText id="editor" text="Some rich text" 
@@ -849,18 +923,22 @@
 	</s:HGroup>
 	
 	<s:HGroup bottom="20" right="20" gap="10">
-		<s:ToggleButton id="switchCursorModesButton" label="Mouse Cursor" 
+		<s:ToggleButton id="switchCursorModesButton" label="Using Mouse Cursor" 
 						click="switchCursorModes_clickHandler(event)"/>
-		
-		<s:Button id="modesButton" label="Cursor test area" 
-				  rollOver="cursorObject_rollOver(event)"
-				  rollOut="cursorObject_rollOut(event)"/>
-		
-		<s:Button id="nativeHandButton" label="MouseCursor.Button" 
-				  rollOver="Mouse.cursor = MouseCursor.BUTTON"
-				  rollOut="Mouse.cursor = MouseCursor.AUTO"/>
 	</s:HGroup>
 	
+	
+	<s:VGroup right="10" top="100">
+		
+		<!--- testing mouse cursor types-->
+		<s:Button id="modesButton" label="Cursor type 1" 
+				  rollOver="cursorObject_rollOver(event)"
+				  rollOut="cursorObject_rollOut(event)" right="10"/>
+		
+		<s:Button id="nativeHandButton" label="Cursor type 2" 
+				  rollOver="Mouse.cursor = MouseCursor.BUTTON"
+				  rollOut="Mouse.cursor = MouseCursor.AUTO" right="10"/>
+	</s:VGroup>
 	
 	<s:Button label="Reset TextFlow" bottom="20" horizontalCenter="0"
 			  click="resetContent()"/>
