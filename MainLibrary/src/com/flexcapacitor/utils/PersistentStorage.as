@@ -9,6 +9,17 @@ package com.flexcapacitor.utils {
 	 * Utility class to read and write values from encrypted local storage. 
 	 * 
 	 * Works in AIR only.
+	 * 
+	 * 
+	 * Note: The user is prompted to enter password to save to encrypted local storage
+	 * if user clicks Deny then error is thrown
+	 * 
+	 * Error: EncryptedLocalStore internal error
+	 *  at flash.data::EncryptedLocalStore$/processErrorCode()
+	 *  at flash.data::EncryptedLocalStore$/getItem()
+	 *  at com.flexcapacitor.utils::PersistentStorage$/read()
+	 * 
+	 * filterWords = PersistentStorage.read(FILTER_WORDS);
 	 * */
 	public class PersistentStorage {
 		

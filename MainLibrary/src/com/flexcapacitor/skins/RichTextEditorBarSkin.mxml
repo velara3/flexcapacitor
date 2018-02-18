@@ -21,6 +21,7 @@ limitations under the License.
 		xmlns:s="library://ns.adobe.com/flex/spark" 
 		xmlns:mx="library://ns.adobe.com/flex/mx" 
 		xmlns:r="com.flexcapacitor.controls.richTextEditorClasses.*"
+		xmlns:local="*" 
 		>
 	
 	<!-- host component -->
@@ -64,16 +65,44 @@ limitations under the License.
 				
 			}
 			
+			[Bindable]
+			public var duration:int = 0;
+			
+			override protected function updateDisplayList(unscaledWidth:Number, unscaledHeight:Number):void {
+				super.updateDisplayList(unscaledWidth, unscaledHeight);
+				/*
+				var backgroundColor:Number = getStyle("backgroundColor");
+				var backgroundAlpha:Number = getStyle("backgroundAlpha");
+				
+				if (isNaN(backgroundAlpha)) {
+					backgroundAlpha = 1;
+				}
+				
+				if (!isNaN(backgroundColor)) {
+					backgroundRect.fill = new SolidColor(backgroundColor, backgroundAlpha);
+				}
+				else {
+					backgroundRect.fill = new SolidColor(0, 0);
+				}*/
+			}
+			
 		]]>
 	</fx:Script>
 	
 	<fx:Declarations>
+		<fx:Component id="verticalLine1" className="VerticalLine1">
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
+		</fx:Component>
 	</fx:Declarations>
 	
 	<s:transitions>
 		
 		<s:Transition fromState="normal" toState="linkView" interruptionBehavior="stop" autoReverse="true">
-			<s:Sequence duration="250" 
+			<s:Sequence duration="{duration}" 
 						>
 				<s:Resize target="{this}"/>
 				<s:AddAction target="{linkDetailsView}"/>
@@ -82,7 +111,7 @@ limitations under the License.
 		</s:Transition>
 		
 		<s:Transition fromState="normal" toState="imageView" interruptionBehavior="stop" autoReverse="true">
-			<s:Sequence duration="250" 
+			<s:Sequence duration="{duration}" 
 						>
 				<s:Resize target="{this}"/>
 				<s:AddAction target="{imageDetailsView}"/>
@@ -132,6 +161,24 @@ limitations under the License.
 	name=linkTool, type=spark.components.richTextEditorClasses.LinkTool, required=false
 	-->
 	
+	<!-- 
+	kludge to make relatedObject of a focusOut event contain a part of the editor 
+	when focus out of the rich text field.  
+	tried numerous workarounds inc border container, group, rect etc
+	-->
+	<s:Button id="backgroundHitArea" 
+			  alpha="0"
+			  width="100%" 
+			  height="100%"/>
+	
+	<s:Rect id="backgroundRect" 
+			width="100%" height="100%" 
+			top="0" left="0" right="0" bottom="0">
+		<s:fill>
+			<s:SolidColor color="0xFFFFFF" alpha="1"/>
+		</s:fill>
+	</s:Rect>
+	
 	<s:VGroup width="100%">
 		<s:HGroup width="100%" >	
 			<r:FontTool id="fontTool" width="100%" maxWidth="180" minWidth="140" 
@@ -151,6 +198,11 @@ limitations under the License.
 				</s:stroke>
 			</s:Line>
 			<r:AlignTool id="alignTool" width="80" />
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
 			<r:BulletTool id="bulletTool" width="20" icon="@Embed('richTextEditorClasses/icons/bullet.png')"/>
 			<r:BulletTool id="orderedBulletTool" width="20" icon="@Embed('richTextEditorClasses/icons/OrderedList.png')"/>
 			<s:Line height="100%">
@@ -171,7 +223,15 @@ limitations under the License.
 					<s:SolidColorStroke color="#B3C2B8"/>
 				</s:stroke>
 			</s:Line>
-			<r:ClearFormattingTool id="clearFormattingTool" width="23" />
+			<r:ClearFormattingTool id="clearFormattingTool" width="23" 
+								   icon="@Embed('richTextEditorClasses/icons/clearFormatting.png')"/>
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
+			<s:Button id="cancelButton" label="Cancel" />
+			<s:Button id="applyButton" label="Apply" />
 		</s:HGroup>
 		
 		<r:LinkDetailsView id="linkDetailsView" 

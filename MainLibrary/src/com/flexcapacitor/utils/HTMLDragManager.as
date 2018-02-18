@@ -3,10 +3,8 @@ package com.flexcapacitor.utils
 	import com.flexcapacitor.events.HTMLDragEvent;
 	import com.flexcapacitor.model.HTMLDragData;
 	
-	import flash.events.Event;
 	import flash.events.EventDispatcher;
 	import flash.events.KeyboardEvent;
-	import flash.events.MouseEvent;
 	import flash.external.ExternalInterface;
 	import flash.utils.ByteArray;
 	
@@ -47,7 +45,7 @@ package com.flexcapacitor.utils
 	[Event(name="dragDrop", type="com.flexcapacitor.events.HTMLDragEvent")]
 	
 	/**
-	 * Adds basic support for dragging files into the browser
+	 * Adds basic support for dragging files into your application via the browser
 	 * 
 <pre>
  
@@ -83,7 +81,7 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		 * Constructor
 		 * */
 		public function HTMLDragManager() {
-			createChildren();
+			initialize();
 			
 			super(); // event listeners in mxml get added here
 		}
@@ -111,10 +109,18 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		 * */
 		public static const INVALID:String = "invalid";
 		
-		public static var debug:Boolean;
+		/**
+		 * You cannot set this at runtime.  
+		 **/
+		public static var debug:Boolean = false;
 		
 		public var id:String;
 		public var created:Boolean;
+		
+		/**
+		 * Create byte array from base 64 when available
+		 **/
+		public var createByteArray:Boolean = true;
 		
 		/**
 		 * Identity of draggable element on the page.
@@ -131,9 +137,11 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 		public var isCTRLKeyDown:Boolean;
 		public var isCommandKeyDown:Boolean;
 		
-		public function createChildren():void {
-			var marshallExceptions:Boolean = ExternalInterface.marshallExceptions;
-			ExternalInterface.marshallExceptions = debug;
+		public function initialize():void {
+			
+			if (debug) {
+				ExternalInterface.marshallExceptions = debug;
+			}
 			
 			if (isSupported()==false) {
 				return;
@@ -142,10 +150,6 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 			var results:Boolean = enable();
 			//results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID);
  			created = results;
-			
-			if (debug==false) {
-				ExternalInterface.marshallExceptions = marshallExceptions;
-			}
 		}
 		
 		public static function isSupported():Boolean {
@@ -235,6 +239,10 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 				}
 				else {
 					results = ExternalInterface.call(disableScript, elementIdentity, ExternalInterface.objectID, debug);
+				}
+				
+				if (debug && !results) {
+					throw new Error("Initialize failed");
 				}
 			}
 			
@@ -429,7 +437,7 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 						var useCapture = true;
 
 						if (debug) {
-							console.log("Adding listener for: " + eventName + " to " + element);
+							console.log("Adding listener for: " + eventName + " to " + element.localName);
 						}
 
 						if (element==null) {
@@ -443,17 +451,21 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 						}
 						
 						var dragFunction = function(event) {
+							event.dataTransfer.effectAllowed = "all";
 							event.preventDefault();
 							event.stopPropagation();
-							
-							if (debug) console.log(event);
-							if (debug) console.log("drag prevented:"+event.type);
+
+							if (debug) console.log("Drag event. Type:" + event.type);
+							if (debug) console.log("Modifiers ctrl:" + event.ctrlKey + ", shift:" + event.shiftKey + ", alt:" + event.altKey + ", meta:" + event.metaKey);
 							if (debug) console.log("calling callback:"+callbackName);
+							if (debug) console.log(event);
+
 							
 							application[callbackName](event.type, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
 						}
 						
 						var dropFunction = function(event) {
+							event.dataTransfer.effectAllowed = "all";
 							event.preventDefault();
 							event.stopPropagation();
 							
@@ -463,7 +475,8 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 							var fileObject = {};
 							var reader;
 
-							if (debug) console.log("Drop. File count:" + droppedFiles.length);
+							if (debug) console.log("Drop Event. File count:" + droppedFiles.length);
+							if (debug) console.log("Modifiers ctrl:" + event.ctrlKey + ", shift:" + event.shiftKey + ", alt:" + event.altKey + ", meta:" + event.metaKey);
 							if (debug) console.log(event);
 							
 							for (var i = 0; i < numberOfFiles; i++) {
@@ -480,6 +493,7 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 									fileObject.name = loadedFile.name;
 									fileObject.type = loadedFile.type;
 									
+									if (debug) console.log( "Modifiers ctrl:" + event.ctrlKey + ", shift:" + event.shiftKey + ", alt:" + event.altKey + ", meta:" + event.metaKey);
 									if (debug) console.log( "File loaded:" + fileObject.name);
 									if (debug) console.log(" Calling:"+callbackName);
 
@@ -516,6 +530,11 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 				]]></xml>;
 				var results:Boolean;
 				results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID, eventName, callbackName, debug);
+				
+				
+				if (debug && !results) {
+					throw new Error("Event listeners failed");
+				}
 			}
 		}
 		

@@ -29,6 +29,11 @@ package com.flexcapacitor.utils.supportClasses {
 		public var name:String;
 		
 		/**
+		 * Display name
+		 * */
+		public var displayName:String;
+		
+		/**
 		 * Qualified class name
 		 * */
 		public var className:String;

@@ -81,8 +81,6 @@ limitations under the License.
 				minWidth="100" 
 				width="100%"
 				prompt="Image URL"
-				mouseFocusEnabled="false"
-				tabFocusEnabled="false"
 				toolTip="Image URL" 
 				height="21"
 				text="" />
@@ -90,6 +88,7 @@ limitations under the License.
 			  height="21" width="20" resizeEffect="Resize"
 			  icon="@Embed('../../skins/richTextEditorClasses/icons/error.png')"
 			  />
+	<s:Button id="moreButton" label="..."/>
 	<s:DropDownList id="floatTypeList" selectedIndex="0" height="100%">
 	</s:DropDownList>
 </s:HGroup>

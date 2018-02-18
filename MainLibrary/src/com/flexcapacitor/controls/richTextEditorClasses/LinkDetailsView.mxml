@@ -21,7 +21,6 @@ limitations under the License.
 			 xmlns:mx="library://ns.adobe.com/flex/mx" 
 			 xmlns:s="library://ns.adobe.com/flex/spark"
 			 
-			 mouseFocusEnabled="false"
 			 tabFocusEnabled="false" 
 			 xmlns:controls="com.flexcapacitor.controls.*"
 			 >
@@ -94,7 +93,7 @@ limitations under the License.
 				minWidth="100" 
 				width="100%"
 				prompt="Hyperlink"
-				mouseFocusEnabled="false"
+				mouseFocusEnabled="true"
 				tabFocusEnabled="false"
 				toolTip="Hyperlink text" 
 				text="" />

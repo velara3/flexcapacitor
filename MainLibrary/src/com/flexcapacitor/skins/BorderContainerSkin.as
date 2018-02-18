@@ -62,8 +62,8 @@ package com.flexcapacitor.skins
 		{
 			super();
 			
-			minWidth = 30;
-			minHeight = 30;
+			minWidth = 20;
+			minHeight = 20;
 			
 			states = [
 				new State({name:"normal"}), 

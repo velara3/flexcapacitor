@@ -61,6 +61,7 @@ public class LayoutDebugHelper extends Sprite {
     public function LayoutDebugHelper() {
         super();
         activeInvalidations = new Dictionary();
+        activeSizes = new Dictionary();
 		
 		if (!automaticEnableDisable) {
         	addEventListener("enterFrame", onEnterFrame);
@@ -88,6 +89,11 @@ public class LayoutDebugHelper extends Sprite {
 	 *  @private
 	 */
 	public var activeInvalidations:Dictionary;
+	
+	/**
+	 * @private
+	 **/
+	public var activeSizes:Dictionary;
 	
 	/**
 	 *  @private
@@ -188,12 +194,13 @@ public class LayoutDebugHelper extends Sprite {
     /**
      *  @private
      */
-    public function addElement(item:ILayoutElement):void {
+    public function addElement(item:ILayoutElement, size:Rectangle = null):void {
 		if (debug) {
 			log();
 		}
 		
         activeInvalidations[item] = getTimer();
+		activeSizes[item] = size;
 		
 		if (hasItems() && automaticEnableDisable) {
 			enable();
@@ -220,6 +227,9 @@ public class LayoutDebugHelper extends Sprite {
         activeInvalidations[item] = null;
         delete activeInvalidations[item];
 		
+        activeSizes[item] = null;
+        delete activeSizes[item];
+		
 		if (automaticEnableDisable) {
 			if (!hasItems()) {
 				disable();
@@ -234,6 +244,7 @@ public class LayoutDebugHelper extends Sprite {
 		var lifespan:Number;
 		var alpha:Number;
 		var position:Point;
+		var rectangle:Rectangle;
 		
 		if (debug) {
 			log();
@@ -241,28 +252,41 @@ public class LayoutDebugHelper extends Sprite {
 		
         graphics.clear();
 		
-        for (var item:* in activeInvalidations) {
-			lifespan = getTimer() - activeInvalidations[item];
+        for (var element:* in activeInvalidations) {
+			lifespan = getTimer() - activeInvalidations[element];
 			
             if (lifespan > highlightDuration) {
-                removeElement(item);
+                removeElement(element);
             }
             else {
 				alpha = 1.0 - (lifespan / highlightDuration);
 
-                if (item.parent)
-                { 
-                    var w:Number = item.getLayoutBoundsWidth(true);
-                    var h:Number = item.getLayoutBoundsHeight(true);
+				// passed in a size rectangle
+				if (activeSizes[element]) {
+					rectangle = activeSizes[element];
+					position = new Point();
+					position.x = element.getLayoutBoundsX(true);
+					position.y = element.getLayoutBoundsY(true);
+					position = element.parent.localToGlobal(position);
+					
+					graphics.lineStyle(2, highlightColor, alpha);     
+					graphics.drawRect(position.x, position.y, rectangle.width, rectangle.height);
+					graphics.endFill();
+				}
+				else if (element.parent)
+                {
+					// doesn't seem to work well when element is scaled
+                    var w:Number = element.getLayoutBoundsWidth(true);
+                    var h:Number = element.getLayoutBoundsHeight(true);
                     
 					position = new Point();
-                    position.x = item.getLayoutBoundsX(true);
-                    position.y = item.getLayoutBoundsY(true);
-                    position = item.parent.localToGlobal(position);
+                    position.x = element.getLayoutBoundsX(true);
+                    position.y = element.getLayoutBoundsY(true);
+                    position = element.parent.localToGlobal(position);
                     
-                    graphics.lineStyle(2, highlightColor, alpha);        
+                    graphics.lineStyle(2, highlightColor, alpha);     
                     graphics.drawRect(position.x, position.y, w, h);
-                    graphics.endFill();         
+                    graphics.endFill();
                }
             }
         }

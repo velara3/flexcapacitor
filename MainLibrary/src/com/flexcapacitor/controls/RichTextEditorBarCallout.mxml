@@ -20,6 +20,14 @@
 			public var updatePositionOnEditorResize:Boolean;
 			
 			/**
+			 * Set this to false when showing editor in a pop up.
+			 * Setting it to true makes the comboboxes gain focus
+			 * when you click on them with the mouse 
+			 * taking focus away from the editable text field (usually undesired behavior in a call out). 
+			 **/
+			public var preserveFocusOnComboBoxes:Boolean = false;
+			
+			/**
 			 * Reference to the RichEditableText component on the stage. Required.
 			 * */
 			public function get richEditableText():RichEditableText {
@@ -111,6 +119,8 @@
 					richEditableText = owner as RichEditableText;
 				}
 				
+				editorBar.preserveFocusOnComboBoxes(preserveFocusOnComboBoxes);
+				
 				if (richEditableText==null) {
 					throw Error("You must set or pass in an instance of RichEditableText on or before calling open");
 				}
@@ -126,15 +136,22 @@
 					richEditableText.addEventListener(Event.RESIZE, editorBar_resizeHandler, false, 0, true);
 				}
 				
+				if (closeOnEscKey && richEditableText) {
+					richEditableText.addEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
+				}
 				/*
 				TypeError: Error #1009: Cannot access a property or method of a null object reference.
-				at flashx.textLayout.edit::ElementRange$/createElementRange()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/edit/ElementRange.as:359]
-				at com.flexcapacitor.controls::RichTextEditorBar/handleSelectionChange()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1885]
-				at com.flexcapacitor.controls::RichTextEditorBar/updateEditor()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1713]
+					at flashx.textLayout.edit::ElementRange$/createElementRange()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/edit/ElementRange.as:359]
+					at com.flexcapacitor.controls::RichTextEditorBar/handleSelectionChange()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1885]
+					at com.flexcapacitor.controls::RichTextEditorBar/updateEditor()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1713]
 				*/
-				// error when calling the following
+				
+				// prev error when calling the following: 
+				
 				// editorBar.updateEditor();
-				callLater(editorBar.updateEditor);
+				// callLater(editorBar.updateEditor);
+				
+				editorBar.updateEditor();
 			}
 			
 			
@@ -147,13 +164,22 @@
 					richEditableText.removeEventListener(Event.RESIZE, editorBar_resizeHandler);
 				}
 				
-				if (closeOnEscKey) {
+				if (closeOnEscKey && richEditableText) {
 					richEditableText.removeEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
 				}
 				
 				editorBar.returnToDefaultState();
 				
 				super.close(commit, data);
+			}
+			
+			/**
+			 * Cancel editing
+			 **/
+			public function cancel():void {
+				richEditableText.textFlow = originalTextFlow;
+				close(false);
+				richEditableText.removeEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
 			}
 			
 			
@@ -176,9 +202,7 @@
 			public function richEditableText_escKeyHandler(event:KeyboardEvent):void {
 				
 				if (event.keyCode==Keyboard.ESCAPE) {
-					richEditableText.textFlow = originalTextFlow;
-					close(false);
-					richEditableText.removeEventListener(KeyboardEvent.KEY_DOWN, richEditableText_escKeyHandler);
+					cancel();
 				}
 			}
 			

@@ -17,6 +17,7 @@ package com.flexcapacitor.utils {
 	import flash.external.ExternalInterface;
 	import flash.geom.Matrix;
 	import flash.geom.Point;
+	import flash.geom.Rectangle;
 	import flash.system.ApplicationDomain;
 	import flash.text.Font;
 	import flash.text.TextFormat;
@@ -1487,6 +1488,7 @@ package com.flexcapacitor.utils {
 		public var moveUpLabel:Label;
 		public var moveLeftLabel:Label;
 		public var moveRightLabel:Label;
+		public var moveDownLabel:Label;
 		public var popUpPropertyInput:TextInput;
 		public var popUpValueInput:TextInput;
 		public var popUpIsDisplaying:Boolean;
@@ -1590,6 +1592,15 @@ package com.flexcapacitor.utils {
 					moveRightLabel.setStyle("fontSize", 12);
 					moveRightLabel.setStyle("fontWeight", "bold");
 					moveRightLabel.minWidth = 1;
+					
+					moveDownLabel = new Label();
+					moveDownLabel.styleName = popUpLabel;
+					moveDownLabel.useHandCursor = true;
+					moveDownLabel.buttonMode = true;
+					moveDownLabel.text = "DN";
+					moveDownLabel.setStyle("fontSize", 12);
+					moveDownLabel.setStyle("fontWeight", "bold");
+					moveDownLabel.minWidth = 1;
 					//moveUpLabel.width = 20;
 					//moveUpLabel.setStyle("backgroundColor", "#0000FF");
 					//moveUpLabel.setStyle("backgroundAlpha", 1);
@@ -1639,6 +1650,7 @@ package com.flexcapacitor.utils {
 					hgroup.addElement(moveUpLabel);
 					hgroup.addElement(moveLeftLabel);
 					hgroup.addElement(moveRightLabel);
+					hgroup.addElement(moveDownLabel);
 					hgroup.addElement(popUpLabel);
 					hgroup2.addElement(popUpPropertyInput);
 					hgroup2.addElement(popUpValueInput);
@@ -1692,7 +1704,7 @@ package com.flexcapacitor.utils {
 				*/
 			}
 			if (isApp) {
-				spriteVisualElement.height = 28;
+				spriteVisualElement.height = 32;
 			}
 			
 			var name:String;
@@ -1711,8 +1723,9 @@ package com.flexcapacitor.utils {
 			}
 			popUpDisplayGroup.minHeight = moveUpLabel.height;
 			//container.graphics.endFill();
-			popUpLabel.text = name + " - " + "Position: " + spriteVisualElement.x + "x" + spriteVisualElement.y + " - Size: ";
-			popUpLabel.text += spriteVisualElement.width + "x" + spriteVisualElement.height + " ";
+			popUpLabel.text = name;
+			//popUpLabel.text = name + " - " + "Position: " + spriteVisualElement.x + "x" + spriteVisualElement.y + " - Size: ";
+			//popUpLabel.text += spriteVisualElement.width + "x" + spriteVisualElement.height + " ";
 			popUpDisplayImage.width = spriteVisualElement.width;
 			popUpDisplayImage.height = spriteVisualElement.height;
 			popUpDisplayGroup.width = spriteVisualElement.width;
@@ -1730,6 +1743,26 @@ package com.flexcapacitor.utils {
 				targetY = displayTarget.localToGlobal(new Point()).y * scale;
 				popUpDisplayGroup.x = targetX;
 				popUpDisplayGroup.y = targetY;
+				var detectEdge:Boolean = true;
+				
+				// kludge to check for edge 
+				if (detectEdge) {
+					//FlexGlobals.topLevelApplication.addElement(popUpDisplayGroup);
+					popUpDisplayGroup.validateNow();
+					var screenWidth:int = systemManagerObject.stage.stageWidth;
+					var formWidth:Rectangle = popUpLabel.owner.getBounds(systemManagerObject.stage);
+					formWidth = formWidth.width==0 ? popUpPropertyInput.owner.getBounds(systemManagerObject.stage) : formWidth;
+					var offscreenOffset:int = screenWidth - (targetX+Math.max(formWidth.width, 200));
+					if (offscreenOffset<0) {
+						popUpDisplayGroup.x = targetX + offscreenOffset;
+						//popUpDisplayImage.x -= offscreenOffset; sometimes works sometimes off
+					}
+					else {
+						
+					}
+					//trace("showing something at x:" + popUpDisplayGroup.x);
+					//FlexGlobals.topLevelApplication.removeElement(popUpDisplayGroup);
+				}
 				
 				var minLabelPosition:int = 18;
 				
@@ -1743,26 +1776,8 @@ package com.flexcapacitor.utils {
 					popUpLabel.parent.parent.x = 0;
 					popUpLabel.parent.parent.y = 0;
 				}
+				//trace("showing something at y:" + popUpDisplayGroup.y);
 			}
-			/*
-			if (popUpLabel.height==0) { 
-				popUpLabel.y = popUpDisplayGroup.y>=15 ? -15 : 0;
-				moveUpLabel.y = popUpLabel.y;
-			}
-			else { 
-				popUpLabel.y = popUpDisplayGroup.y>=15 ? -popUpLabel.height : 0;
-				moveUpLabel.y = popUpLabel.y;
-			}*/
-			
-			//popUpLabel.x = 10;
-			//moveUpLabel.height = 16;
-			
-			
-			//container.x = inspector.target.localToGlobal(new Point()).x;
-			//container.y = inspector.target.localToGlobal(new Point()).y;
-			
-			//trace(inspector.target.localToGlobal(new Point()).x);
-			//trace(inspector.target.localToGlobal(new Point()).y);
 			
 			// add mouse up and mouse up outside handlers for 
 			DisplayObject(popUpDisplayGroup).addEventListener(MOUSE_DOWN_OUTSIDE, mouseDownOutsidePopUpHandler, false, 0, true);
@@ -1980,13 +1995,28 @@ package com.flexcapacitor.utils {
 		public function setPropertyOrStyle(target:Object, property:String, value:String, keepExistingType:Boolean = false):void {
 			var currentValue:*;
 			var style:String = property;
+			var typeBaseline:Boolean;
+			var match:Array;
 			
 			if (target && property in target) {
 				
 				try {
 					currentValue = target[property];
 					
-					setValue(target, property, value, false, keepExistingType);
+					// baseline property needs to be cast to type int if value is number for it to apply 
+					if (property=="baseline") {
+						if (value!=null) {
+							match = value.match(/^[-0-9]+$/g);
+							typeBaseline = match && match.length>0;
+						}
+					}
+					
+					if (typeBaseline) {
+						setValue(target, property, parseInt(value), false, keepExistingType);
+					}
+					else {
+						setValue(target, property, value, false, keepExistingType);
+					}
 					
 					currentValue = target[property];
 					
@@ -2356,6 +2386,29 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
+		 * Get first child of the target
+		 **/
+		public function getFirstChildElement(target:Object, displayed:Boolean = false, getNextParent:Boolean = true, automaticallyMoveToNextParent:Boolean = true):Object {
+			var container:DisplayObjectContainer = target as DisplayObjectContainer;
+			var elementContainer:IVisualElementContainer = target as IVisualElementContainer;
+			var elementIndex:int;
+			var childIndex:int;
+				
+			if (elementContainer && elementContainer.numElements) {
+				target = elementContainer.getElementAt(0);
+			}
+			else if (container && container.numChildren) {
+				target = container.getChildAt(0);
+			}
+			
+			if (target) {
+				return postDisplayObject(target, displayed, getNextParent, automaticallyMoveToNextParent);
+			}
+			
+			return null;
+		}
+		
+		/**
 		 * Get previous sibling element in a container
 		 **/
 		public function getPreviousElement(target:Object, displayed:Boolean = false, getNextParent:Boolean = false, automaticallyMoveToNextParent:Boolean = false):Object {
@@ -2493,6 +2546,14 @@ package com.flexcapacitor.utils {
 				else if (event.target == moveRightLabel) {
 					clearTimeout(popUpTimeout);
 					getNextElement(currentPopUpTarget, true, false, false);
+					if (popUpIsDisplaying && lastComponentItem) {
+						trace("Selected " + getComponentLabel(lastComponentItem));
+					}
+					showInputControls(false);
+				}
+				else if (event.target == moveDownLabel) {
+					clearTimeout(popUpTimeout);
+					getFirstChildElement(currentPopUpTarget, true, false, false);
 					if (popUpIsDisplaying && lastComponentItem) {
 						trace("Selected " + getComponentLabel(lastComponentItem));
 					}

@@ -119,6 +119,8 @@ controls|AceSearchTextInput {
 
 controls|RichTextEditorBar {
 	skinClass: ClassReference("com.flexcapacitor.skins.RichTextEditorBarSkin");
+	backgroundColor: #FFFFFF;
+	backgroundAlpha: 1;
 }
 
 controls|Callout {

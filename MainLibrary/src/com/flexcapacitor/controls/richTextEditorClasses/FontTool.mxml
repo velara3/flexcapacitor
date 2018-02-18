@@ -21,7 +21,7 @@ limitations under the License.
 			xmlns:mx="library://ns.adobe.com/flex/mx" 
 			xmlns:s="library://ns.adobe.com/flex/spark"
 			
-			mouseFocusEnabled="false" 
+			mouseFocusEnabled="true" 
 			dataProvider="{null}" 
 			labelFunction="fontLabelFunction"
 			>

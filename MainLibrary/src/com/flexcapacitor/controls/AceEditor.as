@@ -684,8 +684,11 @@ protected function searchInput_changeHandler(event:Event):void {
 			else if (isBrowser) {
 				
 				if (useExternalInterface) {
-					var marshallExceptions:Boolean = ExternalInterface.marshallExceptions;
-					ExternalInterface.marshallExceptions = true;
+					//var marshallExceptions:Boolean = ExternalInterface.marshallExceptions;
+					//ExternalInterface.marshallExceptions = true;
+					if (debug && ExternalInterface.marshallExceptions==false) {
+						trace("When debugging enable marshalling exceptions in your main application. ExternalInterface.marshallExceptions=true");
+					}
 					
 					if (editorIdentity==null || editorIdentity=="editor") {
 						editorIdentity = NameUtil.createUniqueName(this);
@@ -748,7 +751,7 @@ protected function searchInput_changeHandler(event:Event):void {
 					// listen for events once editor is created
 					addDeferredEventListeners()
 					
-					ExternalInterface.marshallExceptions = marshallExceptions;
+					//ExternalInterface.marshallExceptions = marshallExceptions;
 				}
 				else {
 					if (browserClass==null) {

@@ -1,6 +1,91 @@
 <?xml version="1.0" encoding="utf-8"?>
 <s:WindowedApplication xmlns:fx="http://ns.adobe.com/mxml/2009" 
 					   xmlns:s="library://ns.adobe.com/flex/spark" 
-					   xmlns:mx="library://ns.adobe.com/flex/mx">
+					   xmlns:mx="library://ns.adobe.com/flex/mx" 
+					   xmlns:utils="com.flexcapacitor.utils.*" 
+					   xmlns:controls="com.flexcapacitor.controls.*"
+					   width="800" height="600"
+					   click="windowedapplication1_clickHandler(event)">
 	
+	<fx:Script>
+		<![CDATA[
+			import com.flexcapacitor.utils.TextFlowUtils;
+			
+			import flashx.textLayout.elements.TextFlow;
+			protected function testRichEditableText_focusInHandler(event:FocusEvent):void
+			{
+				if (richTextEditorBar.richEditableText!=event.currentTarget) {
+					richTextEditorBar.attachRichEditableText(event.currentTarget as RichEditableText);
+				}
+			}
+			
+			protected function testRichEditableText_focusOutHandler(event:FocusEvent):void
+			{
+				richTextEditorBar.detachRichEditableText(event.currentTarget as RichEditableText);
+			}
+			
+			protected function windowedapplication1_clickHandler(event:MouseEvent):void
+			{
+				//trace("click");
+			}
+			
+			protected function copyTextFlow_clickHandler(event:MouseEvent):void
+			{
+				var textFlow:TextFlow = TextFlowUtils.cloneTextFlow(richTextEditorBar.textFlow);
+				richEditableTextComponent2.textFlow = textFlow;
+				//https://www.eia.gov/energyexplained/images/diagram_generator.png
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<utils:MiniInspector />
+	</fx:Declarations>
+	
+	<s:Label id="headerLabel" 
+			 text="VFX Rich Text Editor" 
+			 left="20" top="20" 
+			 fontSize="18" fontWeight="bold"/>
+	
+	<s:BorderContainer top="40" 
+					   left="20" right="20" 
+					   bottom="20"
+					   visible="true">
+		
+		<s:layout>
+			<s:VerticalLayout gap="0"/>
+		</s:layout>
+		
+		
+		<controls:RichTextEditorBar id="richTextEditorBar" width="100%" 
+									visible="true"
+									focusOnTextAfterFontChange="false"
+									focusOnTextAfterFontSizeChange="false"
+									invertFontSizeKeyboardKeys="true"/>
+		
+		<s:RichEditableText id="richEditableTextComponent" 
+							height="100%" 
+							width="100%"
+							styleName="myTextArea" 
+							focusIn="testRichEditableText_focusInHandler(event)"
+							focusOut="testRichEditableText_focusOutHandler(event)"
+							/>
+		<s:Button id="copyTextFlow" 
+				  label="copy textflow" 
+				  width="100%"
+				  height="18"
+				  click="copyTextFlow_clickHandler(event)"/>
+		<s:RichEditableText id="richEditableTextComponent2" 
+							height="100%" 
+							width="100%"
+							styleName="myTextArea" 
+							focusIn="testRichEditableText_focusInHandler(event)"
+							focusOut="testRichEditableText_focusOutHandler(event)"
+							/>
+		
+	</s:BorderContainer>
+	
+	<!--<controls:ColorPicker top="10" horizontalCenter="0" textInputClass="{ClearButtonTextInput}"
+	swatchPanelStyleName="textStyles"/>-->
 </s:WindowedApplication>

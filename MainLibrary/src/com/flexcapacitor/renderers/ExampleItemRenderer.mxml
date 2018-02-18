@@ -12,8 +12,6 @@
 	<fx:Script>
 		<![CDATA[
 			
-			import mx.events.FlexEvent;
-			import spark.utils.DataItem;
 			
 			override public function set data(value:Object):void {
 				super.data = value;
@@ -23,7 +21,7 @@
 			}
 			
 			override public function setCurrentState(stateName:String, playTransition:Boolean=true):void {
-				labelDisplay.text = stateName;
+				//labelDisplay.text = stateName;
 				super.setCurrentState(stateName, playTransition);
 			}
 			

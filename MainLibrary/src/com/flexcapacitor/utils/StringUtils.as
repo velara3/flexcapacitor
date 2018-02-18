@@ -166,7 +166,7 @@ package com.flexcapacitor.utils {
 		}
 		
 		/**
-		 * Changes camel case to a human readable format. So helloWorld, hello-world and hello_world becomes "Hello World". 
+		 * Changes camel case to a human readable format. So helloWorld, hello-world or hello_world becomes "Hello World". 
 		 * */
 		public static function prettifyCamelCase(value:String=""):String {
 		    var output:String = "";

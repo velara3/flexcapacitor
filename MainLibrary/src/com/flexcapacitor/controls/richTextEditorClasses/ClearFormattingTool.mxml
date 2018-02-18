@@ -17,11 +17,10 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 -->
-<controls:ClearButton mouseFocusEnabled="false" 
-				xmlns:fx="http://ns.adobe.com/mxml/2009"
-				xmlns:mx="library://ns.adobe.com/flex/mx" 
-				xmlns:s="library://ns.adobe.com/flex/spark" 
-				xmlns:controls="com.flexcapacitor.controls.*">
+<s:Button xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:mx="library://ns.adobe.com/flex/mx" 
+		  xmlns:s="library://ns.adobe.com/flex/spark" 
+		  xmlns:controls="com.flexcapacitor.controls.*">
 	<fx:Script>
 		<![CDATA[
 
@@ -30,4 +29,4 @@ limitations under the License.
 	<fx:Declarations>
 		<!-- Place non-visual elements (e.g., services, value objects) here -->
 	</fx:Declarations>
-</controls:ClearButton>
+</s:Button>

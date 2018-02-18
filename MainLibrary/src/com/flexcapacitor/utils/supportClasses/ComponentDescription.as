@@ -742,6 +742,9 @@ package com.flexcapacitor.utils.supportClasses {
 			if (instance && "id" in instance && instance.id) {
 				return instance.id;
 			}
+			else if (instance && "displayName" in instance && instance.displayName) {
+				return instance.name;
+			}
 			else if (instance && "name" in instance && instance.name) {
 				return instance.name;
 			}

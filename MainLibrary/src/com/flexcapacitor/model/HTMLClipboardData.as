@@ -5,7 +5,9 @@ package com.flexcapacitor.model
 	import mx.utils.Base64Decoder;
 	
 	/**
-	 * Contains information from the browser clipboard
+	 * Contains information from the browser clipboard or paste event.
+	 * Utility methods include getAsByteArray() and getAsString() to 
+	 * convert data URI value into a byte array or a string.
 	 * 
 	 * Not all file types have a mime type registered
 	 * That does not mean they are invalid. 
@@ -13,7 +15,7 @@ package com.flexcapacitor.model
 	 * */
 	public class HTMLClipboardData {
 		
-		public function HTMLClipboardData(data:Object = null) {
+		public function HTMLClipboardData(data:Object = null, createByteArray:Boolean = false) {
 			
 			if (data) {
 				unmarshall(data);
@@ -27,7 +29,7 @@ package com.flexcapacitor.model
 		
 		/**
 		 * The data URI string of base64 encoded data. 
-		 * It looks like "data:svg/xml;base64,abcdefghij"
+		 * For example, "data:svg/xml;base64,abcdefghij"
 		 * */
 		public var dataURI:String;
 		
@@ -39,6 +41,7 @@ package com.flexcapacitor.model
 		
 		/**
 		 * Kind of the content as returned from the browser. 
+		 * Not available in all browsers. 
 		 * */
 		public var kind:String;
 		
@@ -56,8 +59,96 @@ package com.flexcapacitor.model
 		 * */
 		public var name:String;
 		
+		/**
+		 * Original object
+		 **/
+		public var originalData:Object;
+		
+		/**
+		 * Name of event if available.
+		 **/
+		public var eventName:String;
+		
+		/**
+		 * Reference to error if error occurred.
+		 **/
+		public var error:Object;
+		
+		/**
+		 * Size if available
+		 **/
+		public var size:String;
+		
+		/**
+		 * List of types or formats of data in the clipboard during the paste event 
+		 **/
+		public var types:Array;
+		
+		/**
+		 * List of items in the clipboard by name only. 
+		 * Note: Some browsers do not allow access to clipboard items 
+		 * Can only pass string between Flash and the container
+		 * so only returning single file in data uri property 
+		 * one event at a time at this time. 
+		 **/
+		public var clipboardItems:Array;
+		
+		/**
+		 * List of files in the clipboard by name only. 
+		 * Note: Some browsers do not allow access to clipboard files 
+		 * Can only pass string between Flash and the container
+		 * so only returning single file in data uri property 
+		 * one event at a time at this time. 
+		 **/
+		public var clipboardFiles:Array;
+		
+		/**
+		 * Number of nodes pasted or contained in an content editable element
+		 **/
+		public var numberOfNodes:int;
+		
+		/**
+		 * Width of content if available
+		 **/
+		public var width:String;
+		
+		/**
+		 * Height of content if available
+		 **/
+		public var height:String;
+		
+		/**
+		 * Origin of data. 
+		 **/
+		public var origin:String;
+		
+		/**
+		 * Index of item whether clipboard item, clipboard file or pasted element nodes
+		 **/
+		public var index:int;
+		
+		/**
+		 * Number of files in the clipboard
+		 **/
+		public var numberOfFiles:int;
+		
+		/**
+		 * Number of items in the clipboard
+		 **/
+		public var numberOfItems:int;
+		
+		/**
+		 * Text value when pasted item is text/plain or text/html.
+		 **/
+		public var value:String;
+		
+		
 		private var byteArray:ByteArray;
 		
+		/**
+		 * Set the values from the event data. 
+		 * Not all properties are available for each event. 
+		 **/
 		public function unmarshall(object:Object):void {
 			dataURI = object.dataURI;
 			name = object.name;
@@ -72,6 +163,28 @@ package com.flexcapacitor.model
 			if (object.kind!="" && object.kind!=null) {
 				kind = object.kind;
 			}
+			
+			error = object.error;
+			eventName = object.eventType || object.eventName;
+			
+			types = object.types ? object.types : [];
+			
+			clipboardItems = object.clipboardItems ? object.clipboardItems : [];
+			clipboardFiles = object.clipboardFiles ? object.clipboardFiles : [];
+			
+			originalData = object;
+			
+			width = object.width;
+			height = object.height;
+			
+			numberOfFiles = object.numberOfFiles;
+			numberOfItems = object.numberOfItems;
+			index = object.index;
+			
+			numberOfNodes = object.numberOfNodes;
+			origin = object.origin;
+			
+			value = object.value;
 		}
 		
 		/**
@@ -126,6 +239,9 @@ package com.flexcapacitor.model
 			return byteArray;
 		}
 		
+		/**
+		 * Get a string value from the data URI
+		 **/
 		public function getString():String {
 			if (byteArray==null) {
 				getByteArray();
@@ -138,6 +254,10 @@ package com.flexcapacitor.model
 			return stringValue;
 		}
 		
+		/**
+		 * Get extension of the file if it has one. Searches the name
+		 * property for "." and returns the value after it. 
+		 **/
 		public function getExtension():String {
 			var lastIndex:int;
 			var extension:String;

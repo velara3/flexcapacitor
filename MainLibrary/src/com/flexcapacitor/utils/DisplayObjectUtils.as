@@ -1520,9 +1520,10 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				type = JPEG;
 			}
 			
-			// you have to be careful, if line breaks occur, the image data will not show
+			// you have to be careful, if line breaks occur, the image data may not show
 			if (hasJPEGEncoderOptions || hasPNGEncoderOptions) {
-				output = "data:image/" + type + ";base64," + getBase64ImageData(target, type, encoderOptions, false, 80, color, alpha, linebreaks);
+				output = getBase64ImageData(target, type, encoderOptions, false, 80, color, alpha, linebreaks);
+				output = BASE64_HEADER_PNG + output;
 			}
 			else {
 				output = "data:image/" + type + ";base64," + "";
@@ -1532,6 +1533,15 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			return output;
 		}
 		
+		/**
+		 * Get base 64 string from bitmap data. You may need to add the header, "data:image/png;base64," 
+		 * or call getBase64ImageDataString();
+		 * @see #getBase64ImageData()
+		 * @see #getBase64ImageDataString()
+		 **/
+		public static function getBase64FromBitmapData(bitmapData:BitmapData, type:String = PNG, encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1, linebreaks:Boolean = false, addHeader:Boolean = false):String {
+			return getBase64ImageData(bitmapData, type, encoderOptions, checkCache, quality, color, alpha, linebreaks, addHeader);
+		}
 		
 		/**
 		 * Returns base64 image string. This function may be doing too much. 
@@ -1549,7 +1559,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * 
 		 * @see #getBase64ImageDataString()
 		 * */
-		public static function getBase64ImageData(target:Object, type:String = PNG, encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1, linebreaks:Boolean = false):String {
+		public static function getBase64ImageData(target:Object, type:String = PNG, encoderOptions:Object = null, checkCache:Boolean = false, quality:int = 80, color:Number = NaN, alpha:Number = 1, linebreaks:Boolean = false, addHeader:Boolean = false):String {
 			var component:IUIComponent;
 			var bitmapData:BitmapData;
 			var byteArray:ByteArray;
@@ -1562,6 +1572,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 			var colorTransform:ColorTransform;
 			var tintType2:Boolean = true;
 			var time:int;
+			var header:String = "";
 			
 			component = target as IUIComponent;
 			
@@ -1618,7 +1629,16 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				time = getTimer();
 			}
 			
-			base64Data = getBase64FromByteArray(byteArray, altBase64, linebreaks);
+			if (addHeader) {
+				if (type==PNG) {
+					header = BASE64_HEADER_PNG;
+				}
+				else if (type==JPEG || type==JPG) {
+					header = BASE64_HEADER_JPEG;
+				}
+			}
+			
+			base64Data = getBase64FromByteArray(byteArray, altBase64, linebreaks, header);
 			//trace(base64.toString());
 			
 			if (timeEvents) {
@@ -1638,7 +1658,7 @@ trace(result); // rgba(255, 0, 0, 0.3);
 		 * @see #getBase64ImageData()
 		 * @see #getBase64ImageDataString()
 		 * */
-		public static function getBase64FromByteArray(byteArray:ByteArray, alternativeEncoder:Boolean, insertLinebreaks:Boolean = false):String {
+		public static function getBase64FromByteArray(byteArray:ByteArray, alternativeEncoder:Boolean, insertLinebreaks:Boolean = false, header:String = null):String {
 			var results:String;
 			
 			if (!alternativeEncoder) {
@@ -1666,9 +1686,15 @@ trace(result); // rgba(255, 0, 0, 0.3);
 				}
 			}
 			
+			if (header!=null && header!="") {
+				results = header + results;
+			}
+			
 			return results;
 		}
 		
+		public static var BASE64_HEADER_PNG:String = "data:image/png;base64,";
+		public static var BASE64_HEADER_JPEG:String = "data:image/jpeg;base64,";
 		public static var removeBase64HeaderPattern:RegExp = /.*base64,/si;
 		public static var lineEndingsGlobalPattern:RegExp = /\n/g;
 		public static var JPEG_ENCODER_OPTIONS_CLASS_PATH:String = "flash.display.JPEGEncoderOptions";
@@ -2262,7 +2288,7 @@ trace(size); // {width = 200, height = 100}
 		 * 
 		 * @see #getRectangleBounds()
 		 */
-		public static function getRealBounds(target:DisplayObject, matrix:Matrix = null, padding:int = 0):Rectangle {
+		public static function getRealBounds(target:DisplayObject, matrix:Matrix = null, padding:int = 0, container:Object = null):Rectangle {
 			var bitmap:BitmapData;
 			bitmap = new BitmapData(target.width + 2 * padding, target.height + 2 * padding, true, 0x00000000);
 			
@@ -2305,8 +2331,38 @@ trace(size); // {width = 200, height = 100}
 				var newPadding:int = (padding == 0) ? 10 : 2 * padding;
 				
 				bitmap.dispose();
-				return getRealBounds(target, matrix, newPadding);
+				return getRealBounds(target, matrix, newPadding, container);
 			}
+		}
+		
+		/**
+		 * Get the bounds of target. Must have "getBounds" method. 
+		 **/
+		public static function getBounds(element:Object, container:Object):Rectangle {
+			var rectangle:Rectangle;
+			var position:Point;
+			var target:Object;
+			
+			if (element is GraphicElement) {
+				target = GraphicElement(element).displayObject;
+			}
+			else {
+				target = element;
+			}
+			
+			if ("getBounds" in target) {
+				rectangle = Object(target).getBounds(container);
+			}
+			if (rectangle && "getLayoutBoundsX" in target) {
+				position = new Point();
+				position.x = target.getLayoutBoundsX(true);
+				position.y = target.getLayoutBoundsY(true);
+				position = target.parent.localToGlobal(position);
+				rectangle.x = position.x;
+				rectangle.y = position.y;
+			}
+			
+			return rectangle;
 		}
 		
 		/*********************************************************************
@@ -4113,6 +4169,10 @@ trace(size); // {width = 200, height = 100}
 			var jpg:Array = [0xFFFFFFFF,0xFFFFFFD8,0xFFFFFFFF];
 			var jpg1:Array = [0xFF,0xD8,0xFF]; 
 			var jpg2:Array = [0x4A,0x46,0x49,0x46]; // JFIF
+			var gif:Array = [0x47,0x49,0x46];
+			var bmp:Array = [0x42,0x4D];
+			var tiff1:Array = [0x49,0x49];
+			var tiff2:Array = [0x4D,0x4D];
 			var found:Boolean;
 			var headerIndex:int;
 			

@@ -42,10 +42,10 @@
 			icon: "assets/upImage.png";
 		}
 		controls|ImageButton#myImage:over {
-			icon: "assets/downImage.png";
+			icon: "assets/overImage.png";
 		}
 		controls|ImageButton#myImage:down {
-			icon: "assets/overImage.png";
+			icon: "assets/downImage.png";
 		}
 		controls|ImageButton#myImage:disabled {
 			icon: "assets/disabledImage.png";

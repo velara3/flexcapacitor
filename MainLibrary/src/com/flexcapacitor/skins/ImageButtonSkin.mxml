@@ -91,7 +91,7 @@
 				// cache images to prevent flicker
 				if (iconDisplay) {
 					iconDisplay.contentLoader = contentLoader;
-					iconDisplay.clearOnLoad = true;
+					iconDisplay.clearOnLoad = false;
 				}
 				
 				/// padding

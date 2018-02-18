@@ -62,10 +62,16 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.formats.TextLayoutFormat;
 
 	// for asdoc
+	[Deprecated(message="Use RichTextEditorBar instead",replacement="RichTextEditorBar")]
 	[Experimental]
 	[Event(name = "change", type = "mx.events.FlexEvent")]
 	[Style(name = "borderColor", inherit = "no", type = "unit")]
 	[Style(name = "focusColor", inherit = "yes", type = "unit")]
+	
+	/**
+	 * From Apache Flex experimental components library.  
+	 * Use RichEditorBar instead.
+	 **/
 	public class RichTextAreaEditorBar extends SkinnableComponent
 	{
 		private var _htmlText:String;

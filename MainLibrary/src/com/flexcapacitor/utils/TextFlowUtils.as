@@ -4,15 +4,21 @@ package com.flexcapacitor.utils
 	import avmplus.getQualifiedClassName;
 	
 	import flashx.textLayout.tlf_internal;
+	import flashx.textLayout.conversion.ConversionType;
+	import flashx.textLayout.conversion.TextConverter;
 	import flashx.textLayout.edit.ElementRange;
 	import flashx.textLayout.edit.IEditManager;
 	import flashx.textLayout.edit.ISelectionManager;
 	import flashx.textLayout.edit.SelectionState;
 	import flashx.textLayout.elements.FlowElement;
+	import flashx.textLayout.elements.FlowLeafElement;
 	import flashx.textLayout.elements.InlineGraphicElement;
 	import flashx.textLayout.elements.LinkElement;
 	import flashx.textLayout.elements.SpanElement;
 	import flashx.textLayout.elements.TextFlow;
+	import flashx.textLayout.formats.Category;
+	import flashx.textLayout.formats.TextLayoutFormat;
+	import flashx.textLayout.property.Property;
 
 	use namespace tlf_internal;
 	
@@ -20,9 +26,13 @@ package com.flexcapacitor.utils
 	{
 		public function TextFlowUtils()
 		{
+			
 		}
 		
-		
+		/**
+		 * Contains last error from some calls
+		 **/
+		public static var error:Error;
 		
 		/**
 		 * Gets an inline graphic element at the position provided or null if not found
@@ -135,6 +145,64 @@ package com.flexcapacitor.utils
 		}
 		
 		/**
+		 * Gets an array of elements by type
+		 * */
+		public static function getElementsByType(textFlow:TextFlow, type:Object):Array {
+			var elementRange:ElementRange;
+			var leaf:FlowLeafElement;
+			var isString:Boolean = type is String;
+			var typeName:String = type as String;
+			var elements:Array = [];
+			var pathName:String;
+			var absoluteEnd:int;
+			
+			if (isString) {
+				elements = textFlow.getElementsByTypeName(typeName);
+				return elements;
+			}
+			
+			try {
+				absoluteEnd = Math.max(textFlow.textLength, textFlow.interactionManager.absoluteEnd); 
+				elementRange = ElementRange.createElementRange(textFlow, 0, absoluteEnd);
+				leaf = elementRange ? elementRange.firstLeaf : null;
+			}
+			catch(error:Error) {
+				return [];
+			}
+			
+			
+			for (;;) {
+				
+				if (isString) {
+					if ("defaultTypeName" in leaf && leaf.defaultTypeName==typeName) {
+						elements.push(leaf);
+					}
+					else if ("typeName" in leaf && leaf.typeName==typeName) {
+						elements.push(leaf);
+					}
+					else {
+						pathName = getQualifiedClassName(leaf);
+						pathName = pathName.indexOf("::")!=-1 ? pathName.split("::")[1]:pathName;
+						if (pathName==typeName) {
+							elements.push(leaf);
+						}
+					}
+				}
+				else if (leaf is (type as Class)) {
+					elements.push(leaf);
+				}
+			
+				if (leaf == elementRange.lastLeaf) {
+					break;
+				}
+				
+				leaf = leaf.getNextLeaf();
+			}
+			
+			return elements;
+		}
+		
+		/**
 		 * Gets the name of the element. For a paragraph will return "p" or "ParagraphElement"
 		 * depending if the short name is set to true or false
 		 * */
@@ -178,6 +246,85 @@ package com.flexcapacitor.utils
 			selection.updateRange(startIndex, startIndex + element.textLength);
 			IEditManager(textFlow.interactionManager).setSelectionState(selection);
 			textFlow.flowComposer.updateAllControllers();
+		}
+		
+		/**
+		 * Get format of element range
+		 **/
+		public static function getElementRangeFormat(elementRange:ElementRange):TextLayoutFormat {		
+			var leaf:FlowLeafElement = elementRange.firstLeaf;
+			var attr:TextLayoutFormat = new TextLayoutFormat(leaf.computedFormat);
+			
+			// found method: 
+			// RichEditableText.getFormatOfRange();
+			
+			for (;;)
+			{
+				if (leaf == elementRange.lastLeaf)
+					break;
+				leaf = leaf.getNextLeaf();
+				attr.concatInheritOnly(leaf.computedFormat);
+			}
+			
+			return Property.extractInCategory(TextLayoutFormat, TextLayoutFormat.description, attr, Category.CHARACTER, false) as TextLayoutFormat;
+		}
+		
+		/**
+		 * Get format of current selection from TextFlow
+		 **/
+		public static function getFormatOfSelection(textFlow:TextFlow):TextLayoutFormat {
+			var selectionManager:ISelectionManager = textFlow.interactionManager;
+			var selectionStart:int = Math.min(selectionManager.absoluteStart, selectionManager.absoluteEnd);
+			var selectionEnd:int = Math.max(selectionManager.absoluteEnd, selectionManager.absoluteEnd);
+			var elementRange:ElementRange = ElementRange.createElementRange(textFlow, selectionStart, selectionEnd);
+			var format:TextLayoutFormat = getElementRangeFormat(elementRange);
+			
+			return format;
+		}
+		
+		/**
+		 * Get string value of a TextFlow
+		 **/
+		public static function getTextFlowString(value:TextFlow):String {
+			return TextConverter.export(value, TextConverter.TEXT_LAYOUT_FORMAT, ConversionType.STRING_TYPE) as String;
+		}
+		
+		
+		/**
+		 * Get a TextFlow from a string value
+		 **/
+		public static function getTextFlowFromString(value:String):TextFlow {
+			var flow:TextFlow;
+			error = null;
+			
+			// TODO: test performance of below if deep copy is faster and works reliably
+			try {
+				flow = TextConverter.importToFlow(value, TextConverter.TEXT_LAYOUT_FORMAT);
+			}
+			catch (e:Error) {
+				error = e;
+			}
+			
+			return flow;
+		}
+		
+		/**
+		 * Clone a textflow 
+		 **/
+		public static function cloneTextFlow(textFlow:TextFlow, useDeepCopy:Boolean = false):TextFlow {
+			var string:String;
+			var flow:TextFlow;
+			error = null;
+			
+			try {
+				string = getTextFlowString(textFlow);
+				flow = getTextFlowFromString(string);
+			}
+			catch (e:Error) {
+				error = e;
+			}
+			
+			return flow;
 		}
 	}
 }

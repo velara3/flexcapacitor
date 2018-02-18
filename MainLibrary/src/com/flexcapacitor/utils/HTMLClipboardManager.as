@@ -19,6 +19,13 @@ package com.flexcapacitor.utils
 	 */
 	[Event(name="paste", type="com.flexcapacitor.events.HTMLClipboardEvent")]
 	
+	/**
+	 *  Dispached before a paste event is processed
+	 *
+	 *  @eventType com.flexcapacitor.events.HTMLClipboardEvent
+	 */
+	[Event(name="beforePaste", type="com.flexcapacitor.events.HTMLClipboardEvent")]
+	
 	
 	/**
 	 * Adds basic support for retrieving content pasted into the browser
@@ -56,12 +63,20 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 		/**
 		 * Constructor
 		 * */
-		public function HTMLClipboardManager() {
-			createChildren();
+		public function HTMLClipboardManager(id:String = null) {
+			initialize();
 			
 			super(); // event listeners in mxml get added here
+			
+			// if created in code pass in ID of HTML element to listen for paste events
+			// if declared in MXML set attributes of HTML element on the page
+			// and then call reinitialize when html element is created
+			if (id) {
+				enableElement(id);
+			}
 		}
 		
+		public static const BEFORE_PASTE:String = "beforePaste";
 		public static const PASTE:String = "paste";
 		public static const COPY:String = "copy";
 		public static const CUT:String = "cut";
@@ -85,17 +100,28 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 		/**
 		 * Identity of pastable element on the page.
 		 * */
-		public var elementIdentity:String = "window";
+		public var elementIdentity:String;
 		public var created:Boolean;
+		public var runAtStartup:Boolean = true;
 		public var id:String;
 		public static var debug:Boolean = true;
 		
-		public function createChildren():void {
+		[Embed(source="./supportClasses/clipboardFunction.js", mimeType="application/octet-stream")]
+		public var imageFunction:Class;
+		public var imageFunctionValue:String;
+		
+		/**
+		 * Create byte array from base 64 when available
+		 **/
+		public var createByteArray:Boolean;
+		
+		public function initialize():void {
 			var marshallExceptions:Boolean;
 			var results:Boolean;
 			
-			marshallExceptions = ExternalInterface.marshallExceptions;
-			ExternalInterface.marshallExceptions = debug;
+			if (debug) {
+				ExternalInterface.marshallExceptions = true;
+			}
 			
 			if (isSupported()==false) {
 				return;
@@ -104,13 +130,48 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 	 			created = true;
 			}
 			
-			//results = enable();
-			//results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID);
- 			//created = results;
+			imageFunctionValue = new imageFunction();
+		}
+		
+		/**
+		 * Called when MXML document is initialized
+		 * */
+		public function initialized(document:Object, id:String):void {
+			this.id = id;
 			
-			if (debug==false) {
-				ExternalInterface.marshallExceptions = marshallExceptions;
+			if (runAtStartup) {
+				addHandlers();
 			}
+		}
+		
+		/**
+		 * If you create an HTML element after this class is created you will
+		 * need to set up the element. Pass in the id of the element on the page 
+		 **/
+		public function enableElement(id:String):void {
+			removeHandlers();
+			elementIdentity = id;
+			addHandlers();
+		}
+		
+		/**
+		 * If you create an HTML element after this class is created you will
+		 * need to set up the element. Pass in the id of the element on the page 
+		 **/
+		public function disableElement(id:String):void {
+			removeHandlers();
+			elementIdentity = id;
+			removeHandlers();
+		}
+		
+		/**
+		 * If HTML element needs to be enabled and element name is already defined
+		 * then call this method to add paste handlers to the element
+		 **/
+		public function refresh():void {
+			removeHandlers();
+			elementIdentity = id;
+			addHandlers();
 		}
 		
 		/**
@@ -140,31 +201,53 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 				var results:Boolean;
 				
 				if (value) {
-					removeEventListener(PASTE, pasteHandler, false);
+					addHandlers();
 				}
 				else {
-					addEventListener(PASTE, pasteHandler, false, 0, true);
+					removeHandlers();
 				}
 			}
 			
 			return results;
 		}
 		
+		public function disable():void {
+			enable(false);
+		}
+		
 		/**
-		 * Sometimes type is null or empty string. The data URI for this is:
+		 * Handles paste event. Dispatches an event that contains a HTMLClipboardData object.
+		 * The type is sometimes null or empty string. The data URI for this is:
 		 * 
 		 * data:;base64,
 		 * 
-		 * For example, if you drop .DS_Store this is the data URI string.  
+		 * For example, if you drop .DS_Store this is the data URI string.
+		 * 
+		 * If the type is invalid then the paste operation was not successful. 
+		 * This results when the object pasted is not compatible or accepted type.   
 		 * */
-		public function pasteHandler(file:Object):void {
+		public function pasteHandler(file:Object):Boolean {
 			var event:HTMLClipboardEvent;
+			var eventType:String = file.eventType;
+			
+			if (eventType==BEFORE_PASTE) {
+				
+				if (hasEventListener(BEFORE_PASTE)) {
+					event = new HTMLClipboardEvent(BEFORE_PASTE);
+					event.data = new HTMLClipboardData(file);
+					dispatchEvent(event);
+				}
+				return event.isDefaultPrevented();
+			}
 			
 			if (hasEventListener(PASTE)) {
 				event = new HTMLClipboardEvent(PASTE);
-				event.data = new HTMLClipboardData(file);
+				event.data = new HTMLClipboardData(file, createByteArray);
 				dispatchEvent(event);
+				return event.isDefaultPrevented();
 			}
+			
+			return false;
 		}
 		
 		/**
@@ -174,168 +257,35 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 			
 			super.addEventListener(type, listener, useCapture, priority, useWeakReference);
 			
+		}
+		
+		/**
+		 * Add event handlers to element. Exits if element can't be found. 
+		 **/
+		public function addHandlers():void {
 			var eventName:String;
 			var callbackName:String;
+			var elementExists:Boolean;
 			
-			if (type==PASTE) {
-				eventName = "paste";
-				callbackName = elementIdentity+"_paste";
-				ExternalInterface.addCallback(callbackName, pasteHandler);
+			elementExists = getElementExists(elementIdentity);
+			
+			if (!elementExists) {
+				return;
 			}
 			
+			eventName = "paste";
+			callbackName = elementIdentity+"_paste";
+			ExternalInterface.addCallback(callbackName, pasteHandler);
+			
+			
 			if (ExternalInterface.available) {
-				var string:String = <xml><![CDATA[
-					function(id, objectId, eventName, callbackName, debug) {
-						var element;
-						var application = document.getElementById(objectId);
-						var useCapture = true;
-
-						if (id=="body") {
-							element = document.body;
-						}
-						else if (id=="window") {
-							element = window;
-						}
-						else {
-							element = document.getElementById(id);
-						}
-
-						if (debug) {
-							console.log("Adding listener for: " + eventName + " to " + element);
-						}
-console.log("2");
-						if (element==null) {
-							if (debug) console.log("Element was not found: " + id);
-							return false;
-						}
-console.log("3");
-						if (application==null) {
-							if (debug) console.log("application was not found: " + objectId);
-							return false;
-						}
-console.log("4");
-						var pasteFunction = function(event) {
-							var preventDefault;
-							var items;
-							var numberOfItems;
-							var files;
-							var fileObject;
-							var reader;
-							var clipboardData;
-							var blob;
-
-							if (debug) console.log( "Paste event handler");
-							
-							clipboardData = event.clipboardData || event.originalEvent.clipboardData;
-							
-							if (clipboardData.items && clipboardData.items.length) {
-								items = clipboardData.items;
-							}
-							else if (clipboardData.files && clipboardData.files.length) {
-								items = clipboardData.files;
-							}
-							else {
-								items = [];
-							}
-							
-							numberOfItems = items.length;
-							files = {};
-							fileObject = {};
-
-							if (debug) console.log("Item count:" + items.length);
-							//if (debug) console.log(JSON.stringify(items));
-							if (debug) console.log(event);
-							
-							for (var i = 0; i < numberOfItems; i++) {
-								if (debug) console.log("Item: " + items[i].type + ", " + items[i].kind);
-
-								// local references seem to be overwritten when in a loop and using local variables and readers
-								files[i] = items[i];
-
-								// type DataTransferItem
-								if (debug) console.log(items[i]);
-
-								if (items[i].type.indexOf("image") === 0) {
-									if (debug) console.log("Getting blob");
-									blob = items[i].getAsFile();
-									if (debug) console.log(blob);
-								}
-								else {
-									blob = null;
-									fileObject.type = items[i].type;
-									fileObject.kind = items[i].kind;
-									application[callbackName](fileObject);
-									continue;
-								}
-
-								reader = new FileReader();
-								reader.file = files[i]; 
-								
-								reader.addEventListener("loadend", function (e) {
-									var currentReader = e.target;
-									
-									loadedFile = currentReader.file; // our reference
-
-									fileObject.dataURI = currentReader.result;
-									fileObject.name = loadedFile.name;
-									fileObject.type = loadedFile.type;
-									fileObject.kind = loadedFile.kind;
-									//fileObject.size = loadedFile.size;
-									if (debug) console.log(loadedFile);
-									if (debug) console.log(currentReader);
-									
-									if (debug) console.log("File loaded:" + fileObject.type);
-									if (debug) console.log("Calling application:" + callbackName);
-
-									application[callbackName](fileObject);
-									reader.addEventListener("loadend", this);
-									//application.pasteReaders[currentReader] = null;
-									//delete application.pasteReaders[currentReader];
-								});
-
-								// could also be text/rtf, text/plain, text/html
-								if (blob) {
-									if (debug) console.log("Reading blob as data URL");
-									reader.readAsDataURL(blob);
-								}
-							}
-
-							if (numberOfItems==0) {
-								fileObject.name = null;
-								fileObject.type = "invalid";
-								fileObject.dataURI = null;
-								if (debug) console.log("CallbackName:" + callbackName);
-							
-								application[callbackName](fileObject);
-							}
-							else {
-								//event.preventDefault();
-								//event.stopPropagation();
-							}
-
-							if (debug) console.log("End of paste event handler");
-						}
-
-						if (application.clipboardHandlers==null) {
-							application.clipboardHandlers = {};
-						}
-console.log("5");
-						if (eventName=="paste") {
-							if (debug) console.log("Adding paste listener");
-							application.clipboardHandlers[eventName] = pasteFunction;
-						}
-						
-						element.addEventListener(eventName, application.clipboardHandlers[eventName], useCapture);
-						element.addEventListener(eventName, application.clipboardHandlers[eventName], !useCapture);
-
-						//document.onpaste = pasteFunction;
-console.log("6");
-						if (debug) console.log("End of add listener");
-						return true;
-					}
-				]]></xml>;
 				var results:Boolean;
-				results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID, eventName, callbackName, debug);
+				results = ExternalInterface.call(imageFunctionValue, elementIdentity, ExternalInterface.objectID, eventName, callbackName, debug);
+				//results = ExternalInterface.call("addPasteListeners", elementIdentity, ExternalInterface.objectID, eventName, callbackName, debug);
+				
+				if (!results) {
+					throw new Error("Error in JavaScript");
+				}
 			}
 		}
 		
@@ -344,24 +294,31 @@ console.log("6");
 		 * */
 		override public function removeEventListener(type:String, listener:Function, useCapture:Boolean=false):void {
 			
-			//super.removeEventListener(type, listener, useCapture);
+			super.removeEventListener(type, listener, useCapture);
 			
+		}
+		
+		public function removeHandlers():void {
 			var eventName:String;
 			var callbackName:String;
 			
-			if (type==PASTE) {
-				eventName = "paste";
-				callbackName = elementIdentity+"_paste";
-				ExternalInterface.addCallback(elementIdentity+"_paste", null);
+			if (elementIdentity==null) {
+				return;
 			}
+			
+			eventName = PASTE;
+			callbackName = elementIdentity+"_paste";
+			ExternalInterface.addCallback(elementIdentity+"_paste", null);
 			
 			if (ExternalInterface.available) {
 				var string:String = <xml><![CDATA[
-					function(id, objectId, eventName, callbackName) {
-						//var element = document.getElementById(id);
-						var element;
+					function(id, objectId, eventName, callbackName, debug) {
 						var application = document.getElementById(objectId);
-						//console.log(element);
+						var element;
+
+						if (debug) {
+							console.log("Removing listeners");
+						}
 
 						if (id=="body") {
 							element = document.body;
@@ -374,7 +331,7 @@ console.log("6");
 						}
 
 						if (element==null) {
-							return false;
+							return true;
 						}
 						
 						if (application.clipboardHandlers && application.clipboardHandlers[eventName]) {
@@ -385,15 +342,37 @@ console.log("6");
 					}
 				]]></xml>;
 				var results:Boolean;
-				results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID, eventName, callbackName);
+				results = ExternalInterface.call(string, elementIdentity, ExternalInterface.objectID, eventName, callbackName, debug);
 			}
 		}
 		
 		/**
-		 * Called when MXML document is initialized
-		 * */
-		public function initialized(document:Object, id:String):void {
-			this.id = id;
+		 * Checks if the element exists on the page
+		 **/
+		public function getElementExists(id:String):Boolean {
+			if (ExternalInterface.available) {
+				var elementString:String = <xml><![CDATA[
+					function(id, objectId, debug) {
+						var element;
+
+						if (id=="body") {
+							element = document.body;
+						}
+						else if (id=="window") {
+							element = window;
+						}
+						else {
+							element = document.getElementById(id);
+						}
+
+						return element!=null;
+					}
+				]]></xml>;
+				var elementExists:Boolean;
+				elementExists = ExternalInterface.call(elementString, id, ExternalInterface.objectID, debug);
+			}
+			
+			return elementExists;
 		}
 		
 		public static var removeBase64HeaderPattern:RegExp = /.*base64,/si;

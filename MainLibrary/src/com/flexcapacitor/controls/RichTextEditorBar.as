@@ -61,6 +61,7 @@ package com.flexcapacitor.controls
 	import mx.events.ColorPickerEvent;
 	import mx.events.FlexEvent;
 	
+	import spark.components.Button;
 	import spark.components.RichEditableText;
 	import spark.components.TextSelectionHighlighting;
 	import spark.components.ToggleButton;
@@ -70,6 +71,7 @@ package com.flexcapacitor.controls
 	import spark.events.IndexChangeEvent;
 	import spark.events.TextOperationEvent;
 	
+	import flashx.textLayout.tlf_internal;
 	import flashx.textLayout.conversion.ConversionType;
 	import flashx.textLayout.conversion.TextConverter;
 	import flashx.textLayout.edit.ElementRange;
@@ -95,12 +97,17 @@ package com.flexcapacitor.controls
 	import flashx.textLayout.property.Property;
 
 	use namespace mx_internal;
-	 
+	use namespace tlf_internal;
+	
 	[Event(name = FlexEvent.Change, type = "mx.events.FlexEvent")]
 	[Event(name = LINK_SELECTED_CHANGE, type = "flash.events.Event")]
 	[Event(name = IMAGE_ICON_CLICKED, type = "flash.events.Event")]
 	[Event(name = LINK_ICON_CLICKED, type = "flash.events.Event")]
+	[Event(name = CANCEL, type = "flash.events.Event")]
+	[Event(name = APPLY, type = "flash.events.Event")]
 	
+	[Style(name = "backgroundAlpha", type="Number", inherit="no", max="1", min="0")]
+	[Style(name = "backgroundColor", type="uint", format="Color", inherit="no")]
 	[Style(name = "borderColor", inherit = "no", type = "unit")]
 	[Style(name = "focusColor", inherit = "yes", type = "unit")]
 	
@@ -111,25 +118,41 @@ package com.flexcapacitor.controls
 	*/
 	
 	/**
-	 * Component used to apply rich text formatting to a rich editable text field or text area
-	 * 
+	 * Component used to apply rich text formatting to a rich editable text component or Spark text area.
+	 * Based on RichTextAreaBar in Apache Flex experimental components
+	 * To change the look or styles modify the RichTextEditorBarSkin. 
 	 * */
 	public class RichTextEditorBar extends SkinnableComponent {
 		
 		public function RichTextEditorBar() {
 			super();
 			
-			//addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeCompleteHandler);
-			//addEventListener(FlexEvent.STATE_CHANGE_COMPLETE, stateChangeCompleteHandler);
-			
-			textFlow = new TextFlow(); //Prevents a stack trace that happends when you try to access the textflow on click.
-			
+			//Prevents a stack trace that happends when you try to access the textflow on click.
+			textFlow = new TextFlow(); 
 		}
 		
+		public var debug:Boolean = true;
+		
+		public static var APPLY:String = "apply";
+		public static var CANCEL:String = "cancel";
 		public static var LINK_VIEW:String = "linkView";
 		public static var IMAGE_VIEW:String = "imageView";
 		public static var NORMAL_VIEW:String = "normal";
 		
+		public function get originalTextFlow():TextFlow
+		{
+			if (_originalTextFlow==null && originalTextFlowString) {
+				return TextFlowUtils.getTextFlowFromString(originalTextFlowString);
+			}
+			
+			return _originalTextFlow;
+		}
+
+		public function set originalTextFlow(value:TextFlow):void
+		{
+			_originalTextFlow = value;
+		}
+
 		/**
 		 * List of fonts 
 		 * */
@@ -144,6 +167,10 @@ package com.flexcapacitor.controls
 		public function set fontDataProvider(value:IList):void
 		{
 			_fontDataProvider = value;
+			
+			if (_fontDataProvider && fontTool) {
+				fontTool.dataProvider = fontDataProvider;
+			}
 		}
 
 		private var _defaultErrorHandler:Function;
@@ -187,8 +214,21 @@ package com.flexcapacitor.controls
 		public var defaultLinkTargetText:String = "_blank";
 		public var fontSizeVector:Vector.<String> = new <String>["fontSize"];
 		public var selectLinkOnFocus:Boolean = true;
+		
+		/**
+		 * After selecting a font set the focus to the text component
+		 **/
 		public var focusOnTextAfterFontChange:Boolean = true;
+		
+		/**
+		 * After selecting a font size set the focus to the text component
+		 **/
 		public var focusOnTextAfterFontSizeChange:Boolean = true;
+		
+		/**
+		 * Invert the font size to increase when up key is pressed in font size combo box
+		 **/
+		public var invertFontSizeKeyboardKeys:Boolean = true;
 		
 		private var _richEditableText:RichEditableText;
 
@@ -203,6 +243,9 @@ package com.flexcapacitor.controls
 			attachRichEditableText(value);
 			_richEditableText = value;
 		}
+
+		[SkinPart(required="false")]
+		public var background:Object;
 
 		[SkinPart(required="false")]
 		public var fontTool:FontTool;
@@ -231,19 +274,25 @@ package com.flexcapacitor.controls
 		[SkinPart(required="false")]
 		public var orderedBulletTool:BulletTool;
 		
-		[SkinPart(required="true")]
+		[SkinPart(required="false")]
 		public var linkButton:LinkButtonTool;
 		
-		[SkinPart(required="true")]
+		[SkinPart(required="false")]
+		public var cancelButton:Button;
+		
+		[SkinPart(required="false")]
+		public var applyButton:Button;
+		
+		[SkinPart(required="false")]
 		public var linkDetailsView:LinkDetailsView;
 		
 		[SkinPart(required="false")]
 		public var clearFormattingTool:ClearFormattingTool;
 		
-		[SkinPart(required="true")]
+		[SkinPart(required="false")]
 		public var imageButton:ImageTool;
 		
-		[SkinPart(required="true")]
+		[SkinPart(required="false")]
 		public var imageDetailsView:ImageDetailsView;
 		
 		/**
@@ -265,20 +314,20 @@ package com.flexcapacitor.controls
 		/**
 		 *  The htmlText property is here for convenience. It converts the textFlow to TextConverter.TEXT_FIELD_HTML_FORMAT.
 		 */
-		public function get htmlText():String
-		{
-			if (_htmlTextChanged)
-			{
-				if (text == "")
-				{
+		public function get htmlText():String {
+			
+			if (_htmlTextChanged) {
+				
+				if (text == "") {
 					_htmlText = "";
 				}
-				else
-				{
+				else {
 					_htmlText = TextConverter.export(textFlow, TextConverter.TEXT_FIELD_HTML_FORMAT, ConversionType.STRING_TYPE) as String;
 				}
+				
 				_htmlTextChanged = false;
 			}
+			
 			return _htmlText;
 		}
 
@@ -375,10 +424,16 @@ package com.flexcapacitor.controls
 		{
 			_textFlow = value;
 			
-			if (richEditableText) {
+			if (richEditableText && richEditableText.textFlow!=value) {
 				richEditableText.textFlow = value;
 			}
 		}
+		
+		/**
+		 * String value of original text flow
+		 **/
+		public var originalTextFlowString:String;
+		private var _originalTextFlow:TextFlow;
 
 		/**
 		 *  @private
@@ -390,6 +445,11 @@ package com.flexcapacitor.controls
 			if (instance == richEditableText)
 			{
 				addTextArea(instance);
+			}
+			
+			if (instance==background) {
+				
+				//background.addEventListener(MouseEvent.CLICK, clickEventHandler, false, 0, true);
 			}
 			
 			if (instance == fontTool)
@@ -404,7 +464,8 @@ package com.flexcapacitor.controls
 			
 			if (instance == fontSizeTool)
 			{
-				fontSizeTool.addEventListener(IndexChangeEvent.CHANGE, handleSizeChange, false, 0, true);
+				fontSizeTool.invertKeyUpEvents = invertFontSizeKeyboardKeys;
+				fontSizeTool.addEventListener(IndexChangeEvent.CHANGE, handleFontSizeChange, false, 0, true);
 				//fontSizeTool.toolTip = "Font Size";
 			}
 			
@@ -432,6 +493,10 @@ package com.flexcapacitor.controls
 				colorTool.addEventListener(ColorPickerEvent.CHANGE, handleColorChoose, false, 0, true);
 				//colorTool.addEventListener(Event.CLOSE, handleColorChoose, false, 0, true);
 				colorTool.toolTip = "Color";
+				
+				// color tool has a pop up 
+				relatedObjects.push(colorTool);
+				relatedObjects.push(colorTool.getDropdown());
 			}
 			
 			if (instance == alignTool) {
@@ -472,6 +537,14 @@ package com.flexcapacitor.controls
 				}
 			}
 			
+			if (instance == cancelButton) {
+				cancelButton.addEventListener(MouseEvent.CLICK, cancelButtonClick, false, 0, true);
+			}
+			
+			if (instance == applyButton) {
+				applyButton.addEventListener(MouseEvent.CLICK, applyButtonClick, false, 0, true);
+			}
+			
 			if (instance == linkDetailsView) {
 				linkDetailsView.textDisplay.addEventListener(KeyboardEvent.KEY_DOWN, handleLinkKeydown, false, 0, true);
 				linkDetailsView.textDisplay.addEventListener(FocusEvent.MOUSE_FOCUS_CHANGE, handleLinkUpdate, false, 0, true);
@@ -485,12 +558,18 @@ package com.flexcapacitor.controls
 			if (instance == imageDetailsView) {
 				imageDetailsView.imageSourceInput.addEventListener(KeyboardEvent.KEY_DOWN, handleImageKeydown, false, 0, true);
 				imageDetailsView.imageSourceInput.addEventListener(ClearButtonTextInput.CLEAR_TEXT, handleImageURLClearButton, false, 0, true);
+				imageDetailsView.moreButton.addEventListener(MouseEvent.CLICK, handleImageMoreButton, false, 0, true);
 				
 				imageDetailsView.floatTypeList.addEventListener(Event.CHANGE, handleInlineGraphicFloatListChange, false, 0, true);
 				showImageErrorIcon(false);
 			}
 			
 			handleSelectionChange();
+		}
+		
+		protected function handleImageMoreButton(event:MouseEvent):void
+		{
+			
 		}
 		
 		protected function handleImageURLClearButton(event:Event):void
@@ -514,7 +593,7 @@ package com.flexcapacitor.controls
 			}
 			
 			if (instance == fontSizeTool) {
-				fontSizeTool.removeEventListener(IndexChangeEvent.CHANGE, handleSizeChange);
+				fontSizeTool.removeEventListener(IndexChangeEvent.CHANGE, handleFontSizeChange);
 			}
 			
 			if (instance == boldTool) {
@@ -579,13 +658,43 @@ package com.flexcapacitor.controls
 					}
 				}
 			}
+			
+			if (instance == cancelButton) {
+				cancelButton.removeEventListener(MouseEvent.CLICK, cancelButtonClick);
+			}
+			
+			if (instance == applyButton) {
+				applyButton.removeEventListener(MouseEvent.CLICK, applyButtonClick);
+			}
+		}
+		
+		protected function applyButtonClick(event:MouseEvent):void
+		{
+			if (richEditableText && richEditableText.textFlow!=textFlow) {
+				richEditableText.textFlow = textFlow;
+			}
+			
+			if (hasEventListener(APPLY)) {
+				dispatchEvent(new Event(APPLY));
+			}
+		}
+		
+		protected function cancelButtonClick(event:MouseEvent):void {
+			var cancelEvent:Event = new Event(CANCEL);
+			
+			if (hasEventListener(CANCEL)) {
+				dispatchEvent(cancelEvent);
+			}
+			
+			if (!cancelEvent.isDefaultPrevented()) {
+				richEditableText.textFlow = originalTextFlow;
+			}
 		}
 		
 		override protected function attachSkin():void {
 			super.attachSkin();
 			
 			if (skin) {
-				//skin.addEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeCompleteHandler);
 				skin.addEventListener(FlexEvent.STATE_CHANGE_COMPLETE, stateChangeCompleteHandler);
 			}
 		}
@@ -594,7 +703,6 @@ package com.flexcapacitor.controls
 			super.detachSkin();
 			
 			if (skin) {
-				//skin.removeEventListener(StateChangeEvent.CURRENT_STATE_CHANGE, stateChangeCompleteHandler);
 				skin.removeEventListener(FlexEvent.STATE_CHANGE_COMPLETE, stateChangeCompleteHandler);
 			}
 		}
@@ -774,14 +882,16 @@ package com.flexcapacitor.controls
 			}
 		}
 		
-		protected function handleClearFormattingClick(event:MouseEvent):void
-		{
+		protected function handleClearFormattingClick(event:MouseEvent):void {
 			var currentFormat:TextLayoutFormat;
 			var currentParagraphFormat:TextLayoutFormat;
+			var containerFormat:TextLayoutFormat;
+			var currentSelectionFormat:TextLayoutFormat;
 			var selectionStart:int;
 			var selectionEnd:int;
 			var operationState:SelectionState;
 			var editManager:IEditManager;
+			var elementRange:ElementRange;
 			
 			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
 				editManager = IEditManager(richEditableText.textFlow.interactionManager);
@@ -793,13 +903,18 @@ package com.flexcapacitor.controls
 					operationState = new SelectionState(richEditableText.textFlow, selectionStart, selectionEnd);
 				}
 				
-				currentFormat = editManager.getCommonCharacterFormat();
-				currentParagraphFormat = editManager.getCommonParagraphFormat();
+				elementRange = ElementRange.createElementRange(richEditableText.textFlow, selectionStart, selectionEnd);
+				currentFormat = TextFlowUtils.getElementRangeFormat(elementRange);
 				
-				//richEditableText.selectRange(selectionStart, selectionEnd);
-				editManager.clearFormat(currentFormat, currentParagraphFormat, currentFormat);
-				//editManager.clearFormatOnElement(linkElement.getChildAt(0), currentFormat);
+				currentParagraphFormat = editManager.getCommonParagraphFormat(operationState);
+				containerFormat = editManager.getCommonContainerFormat(operationState);
+				
+				//editManager.clearFormat(currentFormat, currentParagraphFormat, containerFormat);
+				editManager.clearFormat(currentFormat, null, null);
+				
 				setEditorFocus();
+				
+				updateEditor();
 			}
 			
 		}
@@ -861,7 +976,9 @@ package com.flexcapacitor.controls
 				Object(instance).prompt = prompt;
 			}
 			
-			textFlow = instance.textFlow;
+			originalTextFlowString = TextFlowUtils.getTextFlowString(instance.textFlow);
+			//originalTextFlow = TextFlowUtils.cloneTextFlow(instance.textFlow);
+			
 			
 			if (_htmlText) {
 				instance.textFlow = TextConverter.importToFlow(_htmlText, TextConverter.TEXT_FIELD_HTML_FORMAT);
@@ -870,15 +987,17 @@ package com.flexcapacitor.controls
 				instance.text = _text;
 			}
 			
-			if (addToStage) {
-				
-			}
+			textFlow = instance.textFlow;
+			
+			textFlow.addEventListener(StatusChangeEvent.INLINE_GRAPHIC_STATUS_CHANGE, inlineGraphicElementLoader_complete, false, 0, true);
+			
+			updateImageClickHandlers(instance.textFlow);
 			
 			if (selectionHighlighting) {
 				instance.selectionHighlighting = selectionHighlighting;
 			}
 			else {
-				instance.selectionHighlighting = TextSelectionHighlighting.WHEN_ACTIVE;
+				instance.selectionHighlighting = TextSelectionHighlighting.ALWAYS;
 			}
 			
 			var configuration:Configuration= textFlow.configuration as Configuration;
@@ -888,7 +1007,101 @@ package com.flexcapacitor.controls
 				configuration.manageTabKey = true;
 			}
 			
+		}
+		
+		public function updateImageClickHandlers(textFlow:TextFlow):void {
+			var images:Array = [];
+			var inlineGraphicElement:InlineGraphicElement;
 			
+			images = TextFlowUtils.getElementsByType(textFlow, InlineGraphicElement);
+			
+			if (debug) {
+				trace("updateImageClickHandlers");
+				trace("images found: " + images.length);
+			}
+			
+			for (var i:int = 0; i < images.length; i++) {
+				inlineGraphicElement = images[i] as InlineGraphicElement;
+				
+				if (inlineGraphicElement) {
+					addInlineGraphicElementListeners(inlineGraphicElement);
+				}
+				
+			}
+			
+		}
+		
+		public function addInlineGraphicElementListeners(inlineGraphicElement:InlineGraphicElement):void {
+			var inlineGraphicElement:InlineGraphicElement;
+			var sprite:Sprite;
+			var loader:Loader;
+			var loaderParent:DisplayObject;
+			
+			sprite = inlineGraphicElement.placeholderGraphic;
+			loader = inlineGraphicElement.graphic as Loader;
+			loaderParent = loader ? loader.parent : null;
+			
+			if (loader) {
+				loader.addEventListener(MouseEvent.MOUSE_MOVE, cursorObject_mouseMove, false, 0, true);
+				loader.addEventListener(MouseEvent.ROLL_OVER, cursorObject_rollOver, false, 0, true);
+				loader.addEventListener(MouseEvent.ROLL_OUT, cursorObject_rollOut, false, 0, true);
+				loader.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick, false, 0, true);
+				inlineGraphicElementsDictionary[loader] = inlineGraphicElement;
+			}
+			
+			if (loaderParent) {
+				loaderParent.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick, false, 0, true);
+				inlineGraphicElementsDictionary[loaderParent] = inlineGraphicElement;
+			}
+			
+			if (sprite) {
+				sprite.buttonMode = true;
+				displayObjectsDictionary[sprite] = inlineGraphicElement;
+				sprite.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick, false, 0, true);
+				inlineGraphicElementsDictionary[sprite] = inlineGraphicElement;
+			}
+			
+		}
+		
+		/**
+		 * If we do not prevent click events other objects take focus from 
+		 * the editable text component and generate focus out events
+		 **/
+		protected function clickEventHandler(event:MouseEvent):void
+		{
+			event.stopPropagation();
+			event.stopImmediatePropagation();
+		}
+		
+		/**
+		 * Array that contains objects that may have related objects
+		 **/
+		public var relatedObjects:Array = [];
+		
+		/**
+		 * Check if the object contains the object
+		 **/
+		public function containsObject(object:Object):Boolean {
+			var containsRelated:Boolean;
+			var relatedObject:Object;
+			
+			// check if rich editor contains the object
+			containsRelated = contains(object as DisplayObject);
+			
+			if (!containsRelated) {
+				for (var i:int = 0; i < relatedObjects.length; i++) 
+				{
+					relatedObject = relatedObjects[i];
+						
+					if ("contains" in relatedObject) {
+						containsRelated = relatedObject.contains(object);
+					}
+					
+					if (containsRelated) return containsRelated;
+				}
+			}
+			
+			return containsRelated;
 		}
 		
 		public function detachRichEditableText(instance:Object, removeFromStage:Boolean = false):void {
@@ -998,7 +1211,8 @@ package com.flexcapacitor.controls
 			
 			if (richEditableText && richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
 				//Get the current format
-				currentFormat = richEditableText.textFlow.interactionManager.getCommonCharacterFormat();
+				//currentFormat = richEditableText.textFlow.interactionManager.getCommonCharacterFormat();
+				currentFormat = TextFlowUtils.getFormatOfSelection(richEditableText.textFlow);
 				
 				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
 				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
@@ -1010,21 +1224,17 @@ package com.flexcapacitor.controls
 				
 				linkElement = IEditManager(richEditableText.textFlow.interactionManager).applyLink(href, target, extendToLinkBoundary, operationState);
 				
-				//return;
+				// return;
 				IEditManager(richEditableText.textFlow.interactionManager).updateAllControllers();
-				//Fix the formatting
+				
+				// Fix the formatting - might not need fixing
 				if (linkElement) {
-					//IEditManager(richEditableText.textFlow.interactionManager).clearFormatOnElement(linkElement.getChildAt(0), currentFormat);
-					//IEditManager(richEditableText.textFlow.interactionManager).applyFormatToElement(linkElement, currentFormat);
-					//IEditManager(richEditableText.textFlow.interactionManager).applyFormatToElement(linkElement, currentFormat);
 					richEditableText.selectRange(selectionStart, selectionEnd);
-					//IEditManager(richEditableText.textFlow.interactionManager).applyLeafFormat(currentFormat);
 				}
 				else {
 					richEditableText.selectRange(selectionStart, selectionEnd);
 					IEditManager(richEditableText.textFlow.interactionManager).applyLeafFormat(currentFormat);
 				}
-				//IEditManager(richEditableText.textFlow.interactionManager).applyFormat(currentFormat, currentFormat, currentFormat);
 			}
 		}
 		
@@ -1079,6 +1289,7 @@ package com.flexcapacitor.controls
 			var selectionEnd:int;
 			var loader:Loader;
 			var displayObject:DisplayObject;
+			var loaderParent:DisplayObject;
 			var sprite:Sprite;
 			var uicomponent:UIComponent;
 			var editManager:IEditManager;
@@ -1096,6 +1307,7 @@ package com.flexcapacitor.controls
 				inlineGraphicElement = editManager.insertInlineGraphic(source, width, height, options, operationState);
 				
 				displayObject = inlineGraphicElement.graphic as DisplayObject;
+				loaderParent = inlineGraphicElement.graphic as Loader;
 				loader = inlineGraphicElement.graphic as Loader;
 				sprite = inlineGraphicElement.graphic as Sprite;
 				uicomponent = inlineGraphicElement.graphic as UIComponent;
@@ -1121,12 +1333,12 @@ package com.flexcapacitor.controls
 					//loader.addEventListener(MouseEvent.ROLL_OUT, inlineGraphicElementMouseOut);
 					
 					//loader.uncaughtErrorEvents.addEventListener(UncaughtErrorEvent.UNCAUGHT_ERROR, uncaughtErrorHandler);
-					displayObject = loader.parent; // may be null
+					loaderParent = loader.parent; // may be null
 					
 					inlineGraphicElementsDictionary[loader] = inlineGraphicElement;
 					
-					if (displayObject) {
-						displayObjectsDictionary[displayObject] = inlineGraphicElement;
+					if (loaderParent) {
+						displayObjectsDictionary[loaderParent] = inlineGraphicElement;
 					}
 				}
 				else if (displayObject) {
@@ -1192,7 +1404,7 @@ package com.flexcapacitor.controls
 		 * */
 		public function inlineGraphicElementLoader_complete(event:Event):void {
 			var inlineGraphicElement:InlineGraphicElement;
-			var displayObject:DisplayObject;
+			var loaderParent:DisplayObject;
 			var loaderInfo:LoaderInfo;
 			var loader:Loader;
 			var sprite:Sprite;
@@ -1209,7 +1421,9 @@ package com.flexcapacitor.controls
 			
 			//trace("\n" + currentTarget);
 			//trace("Event: " +  event.type);
-			
+			if (debug) {
+				trace("inlineGraphicElementLoader_complete:" + eventType);
+			}
 			
 			if (currentTarget is LoaderInfo) {
 				loader = currentTarget.loader as Loader;
@@ -1218,8 +1432,8 @@ package com.flexcapacitor.controls
 				loader = currentTarget as Loader;
 			}
 			
-			displayObject = loader ? loader.parent : null;
-			sprite = displayObject ? displayObject as Sprite : null;
+			loaderParent = loader ? loader.parent : null;
+			sprite = loaderParent ? loaderParent as Sprite : null;
 			
 			
 			// show loading icon???
@@ -1245,8 +1459,8 @@ package com.flexcapacitor.controls
 			inlineGraphicElement = inlineGraphicElementsDictionary[loader];
 			
 			// add to dictionary since the display object may not have been created yet
-			if (displayObject && inlineGraphicElement && displayObjectsDictionary[displayObject]==null) {
-				displayObjectsDictionary[displayObject] = inlineGraphicElement;
+			if (loaderParent && inlineGraphicElement && displayObjectsDictionary[loaderParent]==null) {
+				displayObjectsDictionary[loaderParent] = inlineGraphicElement;
 			}
 			
 			graphicStatus = inlineGraphicElement ? inlineGraphicElement.status : "inline graphic element not found";
@@ -1302,8 +1516,8 @@ package com.flexcapacitor.controls
 				}
 			}
 			
-			if (displayObject) {
-				displayObject.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick, false, 0, true);
+			if (loaderParent) {
+				loaderParent.addEventListener(MouseEvent.CLICK, handleInlineGraphicElementClick, false, 0, true);
 				//displayObject.addEventListener(MouseEvent.CLICK, highPriorityInlineGraphicElementClickHandler, true, EventPriority.CURSOR_MANAGEMENT, true);
 			}
 			
@@ -1312,6 +1526,24 @@ package com.flexcapacitor.controls
 			
 			//target_mc.y = (stage.stageHeight - target_mc.height) / 2;
 			//target_mc.x = (stage.stageWidth - target_mc.width) / 2;
+		}
+		
+		/**
+		 * When editor is displayed in a call out we usually do NOT want 
+		 * comboboxes to take focus from the editable text field 
+		 * so we set mouse focused enabled to false. 
+		 * Set this value to false when in pop up or call outs.
+		 * Set this value to true when not in a pop up or call out. 
+		 **/
+		public function preserveFocusOnComboBoxes(value:Boolean = false):void {
+			
+			if (fontTool) {
+				fontTool.mouseFocusEnabled = value;
+			}
+			
+			if (fontSizeTool) {
+				fontSizeTool.mouseFocusEnabled = value;
+			}
 		}
 		
 		public var inlineGraphicElementsDictionary:Dictionary = new Dictionary(true);
@@ -1345,10 +1577,18 @@ package com.flexcapacitor.controls
 			var object:Object;
 			var startPosition:int;
 			
+			if (debug) {
+				trace("handleInlineGraphicElementClick");
+			}
+			
 			inlineGraphicElement = inlineGraphicElementsDictionary[currentTarget];
 			
 			if (inlineGraphicElement==null) {
 				inlineGraphicElement = displayObjectsDictionary[currentTarget];
+			}
+			
+			if (inlineGraphicElement==null) {
+				inlineGraphicElement = inlineGraphicElementsDictionary[target];
 			}
 			
 			if (inlineGraphicElement==null) {
@@ -1366,6 +1606,10 @@ package com.flexcapacitor.controls
 				else {
 					break;
 				}
+			}
+			
+			if (debug) {
+				trace("InlineGraphicElement found:" + inlineGraphicElement);
 			}
 			
 			if (inlineGraphicElement!=null) {
@@ -1631,6 +1875,17 @@ package com.flexcapacitor.controls
 				}
 				
 				if (doCreate) {
+					// listelements =0
+					// selectionState.absoluteEnd = -1
+					// selectionState.absoluteStart = -1
+					// selectionState.activePosition = -1
+					// selectionState.anchorPosition = -1
+					// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+					//	at flashx.textLayout.operations::CreateListOperation/set parent()[CreateListOperation.as:103]
+					//  at flashx.textLayout.operations::CreateListOperation()
+					// 	at flashx.textLayout.edit::EditManager/createList()
+					// elem is null
+					//  begPos -= elem.parentRelativeStart;
 					editManager.createList(null, newFormat, selectionState);
 				}
 				
@@ -1830,6 +2085,13 @@ package com.flexcapacitor.controls
 		 * You usually call this if you make modifications to the text flow programmatically 
 		 * */
 		public function updateEditor():void {
+			
+			// getting errors when calling ElementRange$/createElementRange()
+			// TypeError: Error #1009: Cannot access a property or method of a null object reference.
+			//	at flashx.textLayout.edit::ElementRange$/createElementRange()[/Users/justinmclean/Documents/ApacheFlexTLFGit/textLayout/src/flashx/textLayout/edit/ElementRange.as:359]
+			//	at com.flexcapacitor.controls::RichTextEditorBar/handleSelectionChange()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1885]
+			//	at com.flexcapacitor.controls::RichTextEditorBar/updateEditor()[/Users/monkeypunch/Documents/ProjectsGithub/flexcapacitor/MainLibrary/src/com/flexcapacitor/controls/RichTextEditorBar.as:1713]
+			
 			handleSelectionChange();
 		}
 		
@@ -1843,7 +2105,18 @@ package com.flexcapacitor.controls
 			
 			if (richEditableText != null) {
 				
-				format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				// bug in ElementRange$/createElementRange()
+				// this line:  
+				// if (((rslt.lastLeaf == null) && (rslt.absoluteEnd == textFlow.textLength)) || (rslt.absoluteEnd == rslt.lastLeaf.getAbsoluteStart()))
+				// should be: 
+				// ...(rslt.lastLeaf && rslt.absoluteEnd == rslt.lastLeaf.getAbsoluteStart()))
+				// exit out for now
+				try {
+					format = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+				}
+				catch (error:Error) {
+					return;
+				}
 				
 				if (fontTool != null)
 				{ 
@@ -2043,7 +2316,7 @@ package com.flexcapacitor.controls
 		/**
 		 *  @private
 		 */
-		private function handleSizeChange(e:Event):void {
+		private function handleFontSizeChange(e:Event):void {
 			var newFormat:TextLayoutFormat;
 			var currentFormat:TextLayoutFormat;
 			
@@ -2067,7 +2340,9 @@ package com.flexcapacitor.controls
 				if (focusOnTextAfterFontSizeChange) {
 					richEditableText.setFocus();
 				}
+				
 				richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
+				
 				if (focusOnTextAfterFontSizeChange) {
 					setEditorFocus();
 				}

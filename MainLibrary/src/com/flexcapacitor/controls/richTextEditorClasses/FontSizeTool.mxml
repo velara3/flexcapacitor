@@ -23,15 +23,21 @@ limitations under the License.
 				
 				restrict="0-9."
 				dataProvider="{null}" 
-				mouseFocusEnabled="false"
+				mouseFocusEnabled="true"
 				tabFocusEnabled="false">
 	
 	<fx:Script>
 		<![CDATA[
 			import mx.collections.ArrayList;
 			import mx.collections.IList;
+			import mx.core.LayoutDirection;
+			//import mx.core.mx_internal;
+			
+			//use namespace mx_internal;
 
-			private const _defaultDataProvider:ArrayList = new ArrayList([8, 9, 10, 11, 12, 14, 16, 18, 20, 22, 24, 26, 28, 36, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 142, 150, 158, 166, 174, 182, 190, 198, 206, 214, 222]);
+			private const _defaultDataProvider:ArrayList = new ArrayList([5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 18, 20, 22, 24, 26, 28, 36, 48, 56, 64, 72, 80, 88, 96, 104, 112, 120, 128, 136, 142, 150, 158, 166, 174, 182, 190, 198, 206, 214, 222]);
+			
+			public var invertKeyUpEvents:Boolean;
 
 			public override function set dataProvider(value:IList):void
 			{
@@ -70,6 +76,58 @@ limitations under the License.
 			 */
 			public function get selectedFontSize():String {
 				return this.selectedItem;
+			}
+			
+			// we create this to get rid of compiler bug when extending mx_internal in MXML 
+			// https://forums.adobe.com/thread/678342
+			public namespace mx_internal="http://www.adobe.com/2006/flex/mx/internal";
+			
+			override mx_internal function mapKeycodeForLayoutDirection(event:KeyboardEvent, mapUpDown:Boolean=false):uint {
+				var keyCode:uint = event.keyCode;
+				
+				if (invertKeyUpEvents) {
+					if (keyCode==Keyboard.DOWN) {
+						keyCode = Keyboard.UP;
+					}
+					else if (keyCode==Keyboard.UP) {
+						keyCode = Keyboard.DOWN;
+					}
+				}
+				
+				// If rtl layout, left still means left and right still means right so
+				// swap the keys to get the correct action.
+				switch (keyCode)
+				{
+					case Keyboard.DOWN:
+					{
+						// typically, if ltr, the same as RIGHT
+						if (mapUpDown && layoutDirection == LayoutDirection.RTL)
+							keyCode = Keyboard.LEFT;
+						break;
+					}
+					case Keyboard.RIGHT:
+					{
+						if (layoutDirection == LayoutDirection.RTL)
+							keyCode = Keyboard.LEFT;
+						break;
+					}
+					case Keyboard.UP:
+					{
+						// typically, if ltr, the same as LEFT
+						if (mapUpDown && layoutDirection == LayoutDirection.RTL)
+							keyCode = Keyboard.RIGHT;                
+						break;
+					}
+					case Keyboard.LEFT:
+					{
+						if (layoutDirection == LayoutDirection.RTL)
+							keyCode = Keyboard.RIGHT;                
+						break;
+					}
+				}
+				
+				return keyCode;
+				
 			}
 		]]>
 	</fx:Script>
