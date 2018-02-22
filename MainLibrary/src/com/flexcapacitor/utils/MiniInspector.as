@@ -1746,10 +1746,12 @@ package com.flexcapacitor.utils {
 				var detectEdge:Boolean = true;
 				
 				// kludge to check for edge 
+				// todo check out MenuBar.showMenu() method for checking for when offscreen 
 				if (detectEdge) {
 					//FlexGlobals.topLevelApplication.addElement(popUpDisplayGroup);
 					popUpDisplayGroup.validateNow();
 					var screenWidth:int = systemManagerObject.stage.stageWidth;
+					// look into LayoutElementUIComponentUtils
 					var formWidth:Rectangle = popUpLabel.owner.getBounds(systemManagerObject.stage);
 					formWidth = formWidth.width==0 ? popUpPropertyInput.owner.getBounds(systemManagerObject.stage) : formWidth;
 					var offscreenOffset:int = screenWidth - (targetX+Math.max(formWidth.width, 200));

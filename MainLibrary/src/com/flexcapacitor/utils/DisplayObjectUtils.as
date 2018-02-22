@@ -60,6 +60,7 @@ package com.flexcapacitor.utils {
 	import spark.components.supportClasses.SkinnableComponent;
 	import spark.core.IGraphicElement;
 	import spark.core.SpriteVisualElement;
+	import spark.layouts.BasicLayout;
 	import spark.primitives.BitmapImage;
 	import spark.primitives.supportClasses.GraphicElement;
 	import spark.skins.IHighlightBitmapCaptureClient;
@@ -4335,6 +4336,17 @@ trace(size); // {width = 200, height = 100}
 			return sizedBitmapData;
 		}
 		
+		/**
+		 * Returns true if object is in a BasicLayout
+		 **/
+		public static function isInBasicLayout(target:Object):Boolean {
+			
+			if (target && "owner" in target && "layout" in target.owner && target.owner.layout is BasicLayout) {
+				return true;
+			}
+			
+			return false;
+		}
 		
 		//----------------------------------
 		//  instance

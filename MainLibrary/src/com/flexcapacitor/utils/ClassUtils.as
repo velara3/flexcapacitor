@@ -473,6 +473,21 @@ trace(name); // "mySuperButton"
 		}
 		
 		/**
+		 * Get an array of properties on an object
+		 **/
+		public static function getDynamicProperties(object:Object, sort:Boolean = false):Array {
+			var properties:Array = [];
+			
+			for (var propertyName:String in object) {
+				properties.push(propertyName);
+			}
+			
+			if (sort) properties.sort();
+			
+			return properties;
+		}
+		
+		/**
 		 * Returns an array the events for the given object including super class events. 
 		 * Setting includeInherited to false is not yet implemented.<br/><br/>
 		 * 
@@ -2317,7 +2332,7 @@ var styles:Array = getStylesFromObject(myButton, {"color":10,"fontFamily":30,"ma
 		}
 		
 		/**
-		 * Gets an array of the properties from an object with name value pair<br/><br/>
+		 * Gets an array of the properties from a second object that exist on a second object<br/><br/>
 		 * 
 		 * Usage:<br/>
 <pre>
@@ -2328,6 +2343,7 @@ var properties:Array = getPropertiesFromObject(myButton, {"x":10,"apple":30,"wid
 		 * @param object The object to check.
 		 * @param object A generic object with properties on it.
 		 * 
+		 * @see #getPropertyNames()
 		 * @see #getStylesFromObject()
 		 * @see #getEventsFromObject()
 		 * */

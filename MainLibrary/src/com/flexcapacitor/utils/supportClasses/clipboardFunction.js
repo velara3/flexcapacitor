@@ -2,6 +2,7 @@ function (id, objectId, eventName, callbackName, debug) {
 	var application = document.getElementById(objectId);
 	var useCapture = true;
 	var element;
+	"use strict"
 
 	if (id=="body") {
 		element = document.body;
@@ -50,15 +51,25 @@ function (id, objectId, eventName, callbackName, debug) {
 		var blob;
 		var types;
 		var type;
+		var size;
 		var quality = 1;
 		var clipboardItems = [];
 		var clipboardFiles = [];
 		var useFileArray = false;
 		var childNodes;
 		var loadedFile;
+		
 		const PLAIN_TEXT = "text/plain";
 		const IMAGE_PNG = "image/png";
 		const INVALID = "invalid";
+		
+		const FILE_FROM_CLIPBOARD = "fileFromClipboard";
+		const ITEM_FROM_CLIPBOARD = "itemFromClipboard";
+		const FILE_FROM_CONTENT_EDITABLE = "fileFromContentEditable";
+		const DATA_URI_FROM_BLOG_URI = "DataURIFromBlobURI";
+		const STRING_FROM_CLIPBOARD = "stringFromClipboard";
+		const NODE_VALUE = "nodeValue";
+		const CANVAS = "canvas";
 		
 
 		if (debug) console.log("Paste event handler");
@@ -89,7 +100,7 @@ function (id, objectId, eventName, callbackName, debug) {
 		
 		files = {};
 		fileObject = {};
-		fileObject.type = INVALID;
+		fileObject.invalid = false;
 		
 		if (debug) console.log("Item count:" + items.length);
 		if (debug) console.log(event);
@@ -112,6 +123,7 @@ function (id, objectId, eventName, callbackName, debug) {
 		}
 		
 		fileObject.eventType = "paste";
+		fileObject.type = INVALID;
 		//debugger;
 
 		// if no items in the clipboard loop through the container elements
@@ -136,7 +148,7 @@ function (id, objectId, eventName, callbackName, debug) {
 					fileObject.index = j;
 					
 					// type 3 is text node, 1 is html element
-					if (debug) console.log("Text node:" + nodeName);
+					if (debug) console.log("Node name:" + nodeName);
 
 					// pasted file
 					if (nodeName=="attachment" && child.file) {
@@ -149,7 +161,7 @@ function (id, objectId, eventName, callbackName, debug) {
 	
 							loadedFile = currentReader.file; // our reference
 	
-							fileObject.origin = "fileFromContentEditable";
+							fileObject.origin = FILE_FROM_CONTENT_EDITABLE;
 							fileObject.dataURI = currentReader.result;
 							fileObject.name = loadedFile.name;
 							fileObject.type = loadedFile.type;
@@ -170,6 +182,7 @@ function (id, objectId, eventName, callbackName, debug) {
 	
 							loadedFile = currentReader.file; // our reference
 	
+							fileObject.invalid = true;
 							fileObject.name = loadedFile.name;
 							fileObject.error = e;
 							if (debug) console.log("File loaded error:" + loadedFile.type);
@@ -183,111 +196,161 @@ function (id, objectId, eventName, callbackName, debug) {
 						reader.readAsDataURL(reader.file);
 					}
 					else if (nodeName=="#text" || nodeType==3) {
-						if (debug) console.log("Text data");
+						if (debug) console.log("Text data. Skipping...");
 						type = PLAIN_TEXT;
 						fileObject.value = child.nodeValue;
 						fileObject.name = "";
 						fileObject.type = type;
-						fileObject.origin = "nodeValue";
+						fileObject.origin = NODE_VALUE;
 						
 						//fileObject.size = canvas.toBlob(callback); // convert to blob to get size
-
-						processPaste(fileObject);
+						continue;
+						//processPaste(fileObject);
 					}
 					else if (tag === "img") {
 						// fetching the blob via the URL - is returning TIFF on Safari
-						var fetchFromURL = false;
 						var image = child;
+						var url = child.src;
+						var fetchFromURLOnFail = true;
+						var fetchFromURL = false;
+						var hasBlobData = url && url.indexOf("blob")===0;
+						
 						type = IMAGE_PNG;
 						
-						// default is to draw to canvas. alternative is fetch from url
-						if (!fetchFromURL) {
+						getDataURIFromBlobURISuccess = function(dataURI) {
+							if (debug) console.log("Read as URL from blob success");
+							fileObject.error = null;
+							fileObject.invalid = false;
+							fileObject.dataURI = dataURI;
+							fileObject.type = type;
+							fileObject.size = size;
+							processPaste(fileObject);
+						};
 
-							var drawImage = function() {
-								if (debug) console.log("Drawing image");
-								var canvas = document.createElement("canvas");
-								canvas.width = image.naturalWidth;
-								canvas.height = image.naturalHeight;
-								canvas.getContext("2d").drawImage(image, 0, 0);
+						getDataURIFromBlobURIFault = function(e) {
+							// errors when running locally from file:// and other errors 
+							// Origin null is not allowed by Access-Control-Allow-Origin.
+							// Failed to load resource: Origin null is not allowed by Access-Control-Allow-Origin.
+							// Fetch API cannot load https://example.com/image.jpg. Origin null is not allowed by Access-Control-Allow-Origin.
+							if (debug) console.log("Read as URL from blob error");
+							if (debug) console.log(e);
+							fileObject.name = null;
+							fileObject.dataURI = null;
+							fileObject.error = e;
+							fileObject.errorMessage = e && "message" in e ? e.message : null;
+							processPaste(fileObject);
+						};
 
+						getDataURIFromBlobURIReject = function(e) {
+							// errors when running locally from file:// and other errors 
+							// Origin null is not allowed by Access-Control-Allow-Origin.
+							// Failed to load resource: Origin null is not allowed by Access-Control-Allow-Origin.
+							// Fetch API cannot load https://example.com/image.jpg. Origin null is not allowed by Access-Control-Allow-Origin.
+							if (debug) console.log("Read as URL from blob error");
+							if (debug) console.log(e);
+							fileObject.name = null;
+							fileObject.dataURI = null;
+							fileObject.error = e;
+							processPaste(fileObject);
+						};
+
+						// function to load in a blob url
+						getDataURIFromBlobURI = function(url) {
+							return fetch(url).then(function(response) {
+								return response.blob();
+							}).then(function (blob) {
+								type = blob.type;
+								size = blob.size;
+								return new Promise(function(resolve, reject) {
+									const reader = new FileReader();
+									reader.onerror = reject;
+									reader.onloadend = function(progressEvent) {
+										return resolve(reader.result);
+									}
+									reader.readAsDataURL(blob);
+								}
+							)}
+						)};
+						
+						// function to draw to a canvas element
+						drawImage = function() {
+							if (debug) console.log("Drawing image");
+							var canvas = document.createElement("canvas");
+							canvas.width = image.naturalWidth;
+							canvas.height = image.naturalHeight;
+							canvas.getContext("2d").drawImage(image, 0, 0);
+							fileObject.origin = CANVAS;
+
+							try {
+								// SecurityError (DOM Exception 18): The operation is insecure.
+								// - when not running on the server in Safari and with some images
+								// Upload to server or set "Disable local file restrictions" in the browser Develop menu.
 								fileObject.dataURI = canvas.toDataURL(IMAGE_PNG, quality);
+								if (debug) console.log("Image captured:" + type);
 								fileObject.name = "";
 								fileObject.type = type;
-								fileObject.origin = "canvas";
 								fileObject.width = image.naturalWidth;
 								fileObject.height = image.naturalHeight;
-								
-								//fileObject.size = canvas.toBlob(callback); // convert to blob to get size
-								if (debug) console.log("Image captured:" + type);
-
 								processPaste(fileObject);
 							}
+							catch(e) {
+								if (debug) console.log("Error drawing image");
+								if (debug) console.log(e);
+								fileObject.invalid = true;
+								fileObject.error = e;
+								processPaste(fileObject);
+								
+								if (fetchFromURLOnFail && hasBlobData) {
+									fileObject.origin = DATA_URI_FROM_BLOG_URI;
+									getDataURIFromBlobURI(url).then(getDataURIFromBlobURISuccess, getDataURIFromBlobURIFault);
+								}
+							}
+							
+							//fileObject.size = canvas.toBlob(callback); // convert to blob to get size
+
+						}
+						
+						// default is to draw to canvas
+						if (!fetchFromURL) {
 
 							if (image.naturalWidth) {
+								if (debug) console.log("Drawing image immediately");
 								drawImage();
-							} 
+							}
 							else {
+								if (debug) console.log("Drawing image onload");
 								image.onload = drawImage;
 							}
 						}
-						else {
-							var url = child.src;
+						
+						// fetch from url
+						if (fetchFromURL) {
+							if (debug) console.log("Fetching from URL");
 							
 							// read blob url into data uri
-							if (url && url.indexOf("blob")===0) {
+							if (hasBlobData) {
 								if (debug) console.log("Parsing blob URL into DataURI");
-								fileObject.origin = "DataURIFromBlobURI";
-								
-								var getDataURIFromBlobURI = function(url) {
-									return fetch(url).then(function(response) {
-										return response.blob();
-									}).then(function (blob) {
-										type = blob.type;
-										size = blob.size;
-										return new Promise(function(resolve, reject) {
-											const reader = new FileReader();
-											reader.onerror = reject;
-											reader.onloadend = function(progressEvent) {
-												return resolve(reader.result);
-											}
-											reader.readAsDataURL(blob);
-										}
-									)}
-								)}
-								
-								getDataURIFromBlobURI(url).then(function(dataURI) {
-									if (debug) console.log("DataURI:" + dataURI);
-									fileObject.dataURI = dataURI;
-									fileObject.type = type;
-									fileObject.size = size;
-									processPaste(fileObject);
-								}, function(err) {
-									if (debug) console.log("Read as URL error");
-									fileObject.name = null;
-									fileObject.dataURI = null;
-									if (debug) console.log("CallbackName:" + callbackName);
-									
-									processPaste(fileObject);
-								})
+								fileObject.origin = DATA_URI_FROM_BLOG_URI;
+								getDataURIFromBlobURI(url).then(getDataURIFromBlobURISuccess, getDataURIFromBlobURIFault);
 							}
 						}
 					}
 				}
 			}
 			
-			window.key = setTimeout(getImageDataURI, 1);
+			window.getImageDataURI_timeout = setTimeout(getImageDataURI, 1);
 			return;
 		}
 		
 		//debugger;
 		
-		// loop through items in the clipboard - not supported in safari osx atm
+		// loop through items in the clipboard - not supported by safari osx atm
 		// item in items can be DataTransferItem or File
 		for (var i = 0; i < numberOfItems; i++) {
 			if (items[i]==null) continue; // clipboard items may be emptied
 			// when item is DataTransferItem the value is "string" or "file". when item is File value is null
 			itemKind = items[i].kind;
-			itemType = Object.prototype.toString.call(items[i]).slice(8, -1);
+			itemType = Object.prototype.toString.call(items[i]).slice(8, -1); // removes braces
 			type = items[i].type; // mime type
 			if (debug) console.log("Item["+i+"]: " + type);
 
@@ -299,7 +362,7 @@ function (id, objectId, eventName, callbackName, debug) {
 			// if DataTransferItem and is string
 			if (itemKind=="string" && "getAsString" in items[i]) {
 				items[i].getAsString(function(value) {
-					fileObject.origin = "stringFromClipboard";
+					fileObject.origin = STRING_FROM_CLIPBOARD;
 					
 					fileObject.value = value;
 					//fileObject.name = name;
@@ -352,10 +415,10 @@ function (id, objectId, eventName, callbackName, debug) {
 				loadedFile = currentReader.file; // our reference
 
 				if (clipboardFiles.length) {
-					fileObject.origin = "fileFromClipboard";
+					fileObject.origin = FILE_FROM_CLIPBOARD;
 				}
 				else {
-					fileObject.origin = "itemFromClipboard";
+					fileObject.origin = ITEM_FROM_CLIPBOARD;
 				}
 				fileObject.dataURI = currentReader.result;
 				fileObject.name = loadedFile.name;

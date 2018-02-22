@@ -5,6 +5,7 @@ package com.flexcapacitor.utils
 	
 	import flash.events.EventDispatcher;
 	import flash.external.ExternalInterface;
+	import flash.geom.Rectangle;
 	import flash.utils.ByteArray;
 	
 	import mx.core.IMXMLObject;
@@ -28,7 +29,12 @@ package com.flexcapacitor.utils
 	
 	
 	/**
-	 * Adds basic support for retrieving content pasted into the browser
+	 * Adds basic support for retrieving content pasted into the browser. You must display an HTML element
+	 * above the swf or hide the swf temporarily. 
+	 * 
+	 * You must run on a local or remote server in some browsers or you get an error on paste. 
+	 * Set debug to true and open your web console to debug any issues. 
+	 * You may need to set your content to wmode to display an element above the swf content. 
 	 * 
 <pre>
  
@@ -49,7 +55,7 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 	 * SecurityError: Error #2060: Security sandbox violation: ExternalInterface caller file:///Users/me/Documents/projects/myproject/MyApp/bin-debug/MyApp.swf cannot access file:///Users/me/Documents/projects/myproject/MyApp/bin-debug/MyApp.html.
 		at flash.external::ExternalInterface$/_initJS()
 		at flash.external::ExternalInterface$/call()
-		at com.flexcapacitor.utils::HTMLDragManager$/isSupported()[/Users/me/Documents/projects/flexcapacitor/MainLibrary/src/com/flexcapacitor/utils/HTMLDragManager.as:114]<br/>
+		at com.flexcapacitor.utils::HTMLDragManager$/isSupported()[HTMLDragManager.as:114]<br/>
 	 * 
 	 * Possible Solutions: <br/>
 	 * Run clean and try again. <br/>
@@ -57,6 +63,12 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 	 * Instead of running the page on file:// use http:// <br/>
 	 * In your wrapper page set allowscriptaccess: "always"<br/>
 	 * http://stackoverflow.com/questions/26921469/swf-sandbox-violation-error-2060-in-chrome
+	 * 
+	 * 
+	 * SecurityError (DOM Exception 18): The operation is insecure.
+	 * - when not running on the server in Safari
+	 * - also happens with some images copied to the clipboard in Safari
+	 * Upload project to server or set "Disable local file restrictions" in the browser Develop menu.
 	 * */
 	public class HTMLClipboardManager extends EventDispatcher implements IMXMLObject {
 		
@@ -81,13 +93,22 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 		public static const COPY:String = "copy";
 		public static const CUT:String = "cut";
 		
-		public static const APPLICATION_XV_XML:String = "data:application/xv+xml";
-		public static const TEXT_PLAIN:String = "data:text/plain";
-		public static const IMAGE_JPEG:String = "data:image/jpeg";
-		public static const IMAGE_JPG:String = "data:image/jpg";
-		public static const IMAGE_PNG:String = "data:image/png";
-		public static const IMAGE_GIF:String = "data:image/gif";
-		public static const IMAGE:String = "data:image/";
+		public static const DATA_APPLICATION_XV_XML:String = "data:application/xv+xml";
+		public static const DATA_TEXT_PLAIN:String = "data:text/plain";
+		public static const DATA_IMAGE_TIFF:String = "data:image/tiff";
+		public static const DATA_IMAGE_JPEG:String = "data:image/jpeg";
+		public static const DATA_IMAGE_JPG:String = "data:image/jpg";
+		public static const DATA_IMAGE_PNG:String = "data:image/png";
+		public static const DATA_IMAGE_GIF:String = "data:image/gif";
+		public static const DATA_IMAGE:String = "data:image/";
+		public static const APPLICATION_XV_XML:String = "application/xv+xml";
+		public static const TEXT_PLAIN:String = "text/plain";
+		public static const IMAGE_TIFF:String = "image/tiff";
+		public static const IMAGE_JPEG:String = "image/jpeg";
+		public static const IMAGE_JPG:String = "image/jpg";
+		public static const IMAGE_PNG:String = "image/png";
+		public static const IMAGE_GIF:String = "image/gif";
+		public static const IMAGE:String = "image/";
 		//public static const IMAGE_SWF:String = "data:image/";
 		
 		/**
@@ -109,6 +130,8 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 		[Embed(source="./supportClasses/clipboardFunction.js", mimeType="application/octet-stream")]
 		public var imageFunction:Class;
 		public var imageFunctionValue:String;
+		
+		public var contentEditableStyle:String = "outline:1px dashed blue; border:none;";
 		
 		/**
 		 * Create byte array from base 64 when available
@@ -162,6 +185,119 @@ public function htmlPasteHandler(event:HTMLDragEvent):void {
 			removeHandlers();
 			elementIdentity = id;
 			removeHandlers();
+		}
+		
+		/**
+		 * Pass in the id for the element to display and rectangle of location and size
+		 * 
+		 *
+<pre>
+public var elementIdentity:String;
+
+public function createPasteZone():void {
+	var rectangle:Rectangle;
+	
+	if (elementIdentity==null) {
+		elementIdentity = NameUtil.createUniqueName(this);
+	}
+	
+	if (debug) {
+		ExternalInterface.marshallExceptions = false;
+		ExternalInterface.marshallExceptions = true;
+	}
+	
+	// create content editable area to paste images into
+	if (ExternalInterface.available) {
+		rectangle = DisplayObjectUtils.getBounds(myBorderContainer, myBorderContainer.parent);
+ 
+		htmlClipboardManager.addElement(elementIdentity, rectangle);
+
+		// listen for paste event on content editable area
+		htmlClipboardManager.enableElement(elementIdentity);
+	}
+	
+}
+</pre> 
+		 **/
+		public function addElement(id:String, rectangle:Rectangle):void {
+			
+			// create content editable area to paste images into
+			if (ExternalInterface.available) {
+				var string:String = <xml><![CDATA[
+					function(id, rectangle, style) {
+						var division = document.createElement('div');
+						division.id = id;
+						division.style.left = rectangle.x + "px";
+						division.style.top = rectangle.y + "px";
+						division.style.width  = rectangle.width + "px";
+						division.style.height = rectangle.height + "px";
+						division.style.position = "absolute";
+						division.style.overflow = "auto";
+						division.contentEditable = true;
+						
+						document.body.appendChild(division);
+						
+						var addRule = function(sheet, selector, styles) {
+							if (sheet.insertRule) return sheet.insertRule(selector + " {" + styles + "}", sheet.cssRules.length);
+							if (sheet.addRule) return sheet.addRule(selector, styles);
+						};
+						
+						addRule(document.styleSheets[0], '[contenteditable="true"]:focus', style);
+						
+						return true;
+					}]]>
+					</xml>;
+				var results:Boolean;
+				results = ExternalInterface.call(string, id, rectangle, contentEditableStyle);
+			}
+		}
+		
+		/**
+		 * Remove element
+		 **/
+		public function removeElement(id:String):void {
+			
+			if (ExternalInterface.available) {
+				var string:String = <xml><![CDATA[
+					function(id) {
+						var element = document.getElementById(id);
+
+						if (element) {
+							element.parentNode.removeChild(element);
+						}
+
+						return true;
+					}]]>
+					</xml>;
+				var results:Boolean;
+				results = ExternalInterface.call(string, id);
+			}
+		}
+		
+		/**
+		 * Update element position
+		 **/
+		public function updateElement(id:String, rectangle:Rectangle):void {
+			
+			// create content editable area to paste images into
+			if (ExternalInterface.available) {
+				var string:String = <xml><![CDATA[
+					function(id, rectangle) {
+						var element = document.getElementById(id);
+						
+						if (element) {
+							element.style.left = rectangle.x + "px";
+							element.style.top = rectangle.y + "px";
+							element.style.width  = rectangle.width + "px";
+							element.style.height = rectangle.height + "px";
+						}
+
+						return true;
+					}]]>
+					</xml>;
+				var results:Boolean;
+				results = ExternalInterface.call(string, elementIdentity, rectangle);
+			}
 		}
 		
 		/**

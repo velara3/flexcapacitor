@@ -142,6 +142,10 @@ package com.flexcapacitor.model
 		 **/
 		public var value:String;
 		
+		/**
+		 * When data pasted is invalid. Check the error property and log for more info. 
+		 **/
+		public var invalid:Boolean;
 		
 		private var byteArray:ByteArray;
 		
@@ -185,6 +189,7 @@ package com.flexcapacitor.model
 			origin = object.origin;
 			
 			value = object.value;
+			invalid = object.invalid;
 		}
 		
 		/**

@@ -129,6 +129,16 @@ package com.flexcapacitor.model {
 		public var isSeparator:Boolean;
 
 		/**
+		 * Specifies if it's to be used as a spacer
+		 * */
+		public var isSpacer:Boolean;
+
+		/**
+		 * If used as a spacer then this is the spacer height
+		 * */
+		public var spacerHeight:int = 4;
+
+		/**
 		 * Specifies if it's supported
 		 * From NativeMenu
 		 * */

@@ -493,8 +493,8 @@ public function dragDropHandler(event:HTMLDragEvent):void {
 									fileObject.name = loadedFile.name;
 									fileObject.type = loadedFile.type;
 									
-									if (debug) console.log( "Modifiers ctrl:" + event.ctrlKey + ", shift:" + event.shiftKey + ", alt:" + event.altKey + ", meta:" + event.metaKey);
-									if (debug) console.log( "File loaded:" + fileObject.name);
+									if (debug) console.log("Modifiers ctrl:" + event.ctrlKey + ", shift:" + event.shiftKey + ", alt:" + event.altKey + ", meta:" + event.metaKey);
+									if (debug) console.log("File loaded:" + fileObject.name);
 									if (debug) console.log(" Calling:"+callbackName);
 
 									application[callbackName](fileObject, event.ctrlKey, event.shiftKey, event.altKey, event.metaKey);
