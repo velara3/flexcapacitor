@@ -8,7 +8,6 @@ package com.flexcapacitor.utils
 	import flash.net.URLRequest;
 	import flash.utils.Dictionary;
 	
-	import mx.events.FlexEvent;
 	import mx.rpc.xml.SchemaTypeRegistry;
 	
 	/**

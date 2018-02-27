@@ -22,8 +22,9 @@ package com.flexcapacitor.controls
 			super();
 		}
 		
-		
 		override protected function createChildren():void {
+			super.createChildren();
+			/*
 			var eventListenerNeeded:Boolean;
 			
 			if (textInput==null) {
@@ -40,6 +41,24 @@ package com.flexcapacitor.controls
 			if (eventListenerNeeded && swatch.textInput) {
 				swatch.textInput.addEventListener(ClearButtonTextInput.CLEAR_TEXT, clearTextHandler, false, 0, true);
 			}
+			*/
+		}
+		
+		override mx_internal function getDropdown():SwatchPanel {
+			var swatch:SwatchPanel = super.getDropdown();
+			
+			if (textInput) {
+				
+				if (!swatch.textInput.hasEventListener(FlexEvent.CHANGING)) {
+					swatch.textInput.addEventListener(FlexEvent.CHANGING, changingEventHandler);
+				}
+				
+				if (swatch.textInput) {
+					swatch.textInput.addEventListener(ClearButtonTextInput.CLEAR_TEXT, clearTextHandler, false, 0, true);
+				}
+			}
+			
+			return swatch;
 		}
 		
 		/**
@@ -65,15 +84,12 @@ package com.flexcapacitor.controls
 			return c.toUpperCase();
 		}
 		
-		protected function changingEventHandler(event:Event):void
-		{
+		protected function changingEventHandler(event:Event):void {
 			// set it to max characters of 8
 			// allow room for "123456", "#234567", "0x345678" before paste truncates it
 			// change event handler in SwatchPanel will set it back to 8, 7 or 6 max chars
 			if (event is TextOperationEvent) {
 				dropdown.textInput.maxChars = 8;
-				//text = TextOperationEvent(event).operation.textFlow.getText();
-				//trace("changing to: " + text);
 			}
 		}
 	}

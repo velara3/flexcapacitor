@@ -3646,7 +3646,7 @@ trace(size); // {width = 200, height = 100}
 		 * If you pass in the mouse event the position returned is 10x10. It is relative to it's container.
 		 * If you pass in a container then the position returned is 10x10 relative to the container.
 		 * */
-		public static function getDisplayObjectPosition(source:DisplayObject, offset:Object = null, translate:Boolean = false, offsetScrollbars:Boolean = false):Point {
+		public static function getDisplayObjectPosition(source:DisplayObject, offset:Object = null, translate:Boolean = false, offsetScrollbars:Boolean = false, scale:Number = 1):Point {
 			var absolutePosition:Point;
 			var point:Point;
 			var stagePoint:Point;
@@ -3687,6 +3687,10 @@ trace(size); // {width = 200, height = 100}
 				//sourceDifference.y -= Scroller(source).verticalScrollBar.value;
 			}
 			
+			if (scale!=1) {
+				absolutePosition.setTo(absolutePosition.x*scale, absolutePosition.y*scale);
+			}
+			
 			return absolutePosition;
 		}
 		
@@ -3698,7 +3702,7 @@ trace(size); // {width = 200, height = 100}
 		 * There seems to be some issues when inside a scroller and rapid updates. 
 		 * Scroll positions may not be updated yet. 
 		 * */
-		public static function getDistanceBetweenDisplayObjects(source:Object, target:Object, offsetScrollbars:Boolean = false):Point {
+		public static function getDistanceBetweenDisplayObjects(source:Object, target:Object, offsetScrollbars:Boolean = false, scale:Number = 1):Point {
 			var sourceRelativePoint:Point;
 			var sourceLocalToGlobalPoint:Point;
 			var containerLocalToGlobalPoint:Point;
@@ -3716,6 +3720,10 @@ trace(size); // {width = 200, height = 100}
 				sourceDifference.y -= Scroller(source).viewport.verticalScrollPosition;
 				//sourceDifference.x -= Scroller(source).horizontalScrollBar.value;
 				//sourceDifference.y -= Scroller(source).verticalScrollBar.value;
+			}
+			
+			if (scale!=1) {
+				sourceDifference.setTo(sourceDifference.x/scale, sourceDifference.y/scale);
 			}
 			
 			return sourceDifference;

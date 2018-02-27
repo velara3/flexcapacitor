@@ -3,21 +3,22 @@ package com.flexcapacitor.model {
 	import flash.events.EventDispatcher;
 
 	/**
-	 * Embeds the file and and gets the string value
+	 * Embeds the file for databinding and getting the string value
 	 * 
 	 * Use the following in the attribute:   
 <pre>
 &lt;fx:Declarations>
 	&lt;model:EmbeddedFile id="embeddedFile" file="@Embed('./test.txt',mimeType='application/octet-stream')"/>
-	&lt;fx:Object id="test" value="{embeddedFile.value}"/>
 &lt;/fx:Declarations>
+ 
+&lt;s:Label text="{embeddedFile.value}"/>
 </pre>
  	 * 
 	 * */
 	public class EmbeddedFile extends EventDispatcher {
 		
-		public function EmbeddedFile()
-		{
+		public function EmbeddedFile() {
+			
 		}
 		
 		/**
@@ -25,8 +26,13 @@ package com.flexcapacitor.model {
 		 *
 		 * Use the following in the attribute:   
 <pre>
-@Embed(source="./path/to/file.txt",mimeType="application/octet-stream")
+&lt;fx:Declarations>
+	&lt;model:EmbeddedFile id="embeddedFile" file="@Embed('./test.txt',mimeType='application/octet-stream')"/>
+&lt;/fx:Declarations>
+ * 
+&lt;s:Label text="{embeddedFile.value}"/>
 </pre>
+		 * 
 		 * */
 		public var file:Class;
 		

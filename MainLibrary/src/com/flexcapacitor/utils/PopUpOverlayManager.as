@@ -296,6 +296,7 @@ package com.flexcapacitor.utils
 			var isOver:Boolean;
 			var isToolTip:Boolean;
 			var ancestorsVisible:Boolean;
+			var containsPopUp:Boolean;
 			
 			// trace("3. popup hide overlap objects");
 			
@@ -324,7 +325,20 @@ package com.flexcapacitor.utils
 					if (overlay.stage!=null && overlay.visible==true) {
 						// trace("6. is not tool tip");
 						var numberOfChildren:int = systemManager.rawChildren.numChildren;
-						var index:int = systemManager.rawChildren.getChildIndex(popUp);
+						// ArgumentError: Error #2025: The supplied DisplayObject must be a child of the caller.
+						// 	at flash.display::DisplayObjectContainer/getChildIndex()
+						// when opening mx.controls.Menu component
+						
+						var index:int;
+						try {
+							containsPopUp = systemManager.contains(popUp);
+							if (containsPopUp) {
+								index = systemManager.rawChildren.getChildIndex(popUp);
+							}
+						}
+						catch (e:Error) {
+							
+						}
 						
 						if ("isPopUp" in popUp && UIComponent(popUp).isPopUp==true) {
 							if (UIComponent(popUp).owner is PopUpAnchor && PopUpAnchor(UIComponent(popUp).owner).isModal) {
