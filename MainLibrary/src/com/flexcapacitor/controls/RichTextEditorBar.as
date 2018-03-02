@@ -131,7 +131,7 @@ package com.flexcapacitor.controls
 			textFlow = new TextFlow(); 
 		}
 		
-		public var debug:Boolean = true;
+		public var debug:Boolean = false;
 		
 		public static var APPLY:String = "apply";
 		public static var CANCEL:String = "cancel";
@@ -1009,6 +1009,9 @@ package com.flexcapacitor.controls
 			
 		}
 		
+		/**
+		 * Adding click event listeners to images to select on click during editing 
+		 **/
 		public function updateImageClickHandlers(textFlow:TextFlow):void {
 			var images:Array = [];
 			var inlineGraphicElement:InlineGraphicElement;
@@ -1016,8 +1019,8 @@ package com.flexcapacitor.controls
 			images = TextFlowUtils.getElementsByType(textFlow, InlineGraphicElement);
 			
 			if (debug) {
-				trace("updateImageClickHandlers");
-				trace("images found: " + images.length);
+				trace("Update Image Click Handlers");
+				trace("Images found: " + images.length);
 			}
 			
 			for (var i:int = 0; i < images.length; i++) {
