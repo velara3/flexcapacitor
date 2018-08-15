@@ -29,8 +29,12 @@ package com.flexcapacitor.controls
 	import com.flexcapacitor.controls.richTextEditorClasses.ImageDetailsView;
 	import com.flexcapacitor.controls.richTextEditorClasses.ImageTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.ItalicTool;
+	import com.flexcapacitor.controls.richTextEditorClasses.LineHeightTool;
+	import com.flexcapacitor.controls.richTextEditorClasses.LineHeightView;
 	import com.flexcapacitor.controls.richTextEditorClasses.LinkButtonTool;
 	import com.flexcapacitor.controls.richTextEditorClasses.LinkDetailsView;
+	import com.flexcapacitor.controls.richTextEditorClasses.TrackingTool;
+	import com.flexcapacitor.controls.richTextEditorClasses.TrackingView;
 	import com.flexcapacitor.controls.richTextEditorClasses.UnderlineTool;
 	import com.flexcapacitor.utils.TextFlowUtils;
 	
@@ -62,6 +66,7 @@ package com.flexcapacitor.controls
 	import mx.events.FlexEvent;
 	
 	import spark.components.Button;
+	import spark.components.NumericStepper;
 	import spark.components.RichEditableText;
 	import spark.components.TextSelectionHighlighting;
 	import spark.components.ToggleButton;
@@ -99,12 +104,14 @@ package com.flexcapacitor.controls
 	use namespace mx_internal;
 	use namespace tlf_internal;
 	
-	[Event(name = FlexEvent.Change, type = "mx.events.FlexEvent")]
 	[Event(name = LINK_SELECTED_CHANGE, type = "flash.events.Event")]
 	[Event(name = IMAGE_ICON_CLICKED, type = "flash.events.Event")]
 	[Event(name = LINK_ICON_CLICKED, type = "flash.events.Event")]
+	[Event(name = LINE_HEIGHT_CLICKED, type = "flash.events.Event")]
+	[Event(name = TRACKING_CLICKED, type = "flash.events.Event")]
 	[Event(name = CANCEL, type = "flash.events.Event")]
 	[Event(name = APPLY, type = "flash.events.Event")]
+	[Event(name = CHANGE, type = "mx.events.FlexEvent")]
 	
 	[Style(name = "backgroundAlpha", type="Number", inherit="no", max="1", min="0")]
 	[Style(name = "backgroundColor", type="uint", format="Color", inherit="no")]
@@ -120,7 +127,7 @@ package com.flexcapacitor.controls
 	/**
 	 * Component used to apply rich text formatting to a rich editable text component or Spark text area.
 	 * Based on RichTextAreaBar in Apache Flex experimental components
-	 * To change the look or styles modify the RichTextEditorBarSkin. 
+	 * To change the button images, look or styles modify the RichTextEditorBarSkin. 
 	 * */
 	public class RichTextEditorBar extends SkinnableComponent {
 		
@@ -135,9 +142,14 @@ package com.flexcapacitor.controls
 		
 		public static var APPLY:String = "apply";
 		public static var CANCEL:String = "cancel";
+		public static var CHANGE:String = "change";
 		public static var LINK_VIEW:String = "linkView";
 		public static var IMAGE_VIEW:String = "imageView";
 		public static var NORMAL_VIEW:String = "normal";
+		public static var LINE_HEIGHT_VIEW:String = "lineHeightView";
+		public static var LINE_HEIGHT_CLICKED:String = "lineHeightClicked";
+		public static var TRACKING_VIEW:String = "trackingView";
+		public static var TRACKING_CLICKED:String = "trackingClicked";
 		
 		public function get originalTextFlow():TextFlow
 		{
@@ -198,6 +210,7 @@ package com.flexcapacitor.controls
 		public const LINK_SELECTED_CHANGE:String = "linkSelectedChange";
 		public const IMAGE_ICON_CLICKED:String = "imageIconClicked";
 		public const LINK_ICON_CLICKED:String = "linkIconClicked";
+		public const LINE_HEIGHT_CLICKED:String = "lineHeightClicked";
 		
 		private var _htmlText:String;
 		private var _htmlTextChanged:Boolean = false;
@@ -224,6 +237,11 @@ package com.flexcapacitor.controls
 		 * After selecting a font size set the focus to the text component
 		 **/
 		public var focusOnTextAfterFontSizeChange:Boolean = true;
+		
+		/**
+		 * After changing the tracking set the focus to the text component
+		 **/
+		public var focusOnTextAfterTrackingChange:Boolean = false;
 		
 		/**
 		 * Invert the font size to increase when up key is pressed in font size combo box
@@ -276,6 +294,23 @@ package com.flexcapacitor.controls
 		
 		[SkinPart(required="false")]
 		public var linkButton:LinkButtonTool;
+		
+		[SkinPart(required="false")]
+		public var lineHeightTool:LineHeightTool;
+		
+		[SkinPart(required="false")]
+		public var lineHeightView:LineHeightView;
+		
+		[SkinPart(required="false")]
+		public var trackingTool:TrackingTool;
+		
+		[SkinPart(required="false")]
+		public var trackingView:TrackingView;
+		
+		public var trackingLeft:NumericStepper;
+		public var trackingRight:NumericStepper;
+		public var trackingLeftClear:Button;
+		public var trackingRightClear:Button;
 		
 		[SkinPart(required="false")]
 		public var cancelButton:Button;
@@ -519,9 +554,46 @@ package com.flexcapacitor.controls
 				clearFormattingTool.toolTip = "Clear Common Formatting";
 			}
 			
+			if (instance == lineHeightTool) {
+				lineHeightTool.addEventListener(MouseEvent.CLICK, showLineHeightDialogClick, false, 0, true);
+				lineHeightTool.toolTip = "Set Line Height";
+				
+				if (instance is ToggleButton) {
+					toggles.push(instance);
+				}
+			}
+			
+			if (instance == lineHeightView) {
+				lineHeightView.numericStepper.addEventListener(Event.CHANGE, handleLineHeightChange, false, 0, true);
+				
+				lineHeightView.clearButton.addEventListener(MouseEvent.CLICK, handleLineHeightReset, false, 0, true);
+			}
+			
+			if (instance == trackingTool) {
+				trackingTool.addEventListener(MouseEvent.CLICK, showTrackingDialogClick, false, 0, true);
+				trackingTool.toolTip = "Set Tracking";
+				
+				if (instance is ToggleButton) {
+					toggles.push(instance);
+				}
+			}
+			
+			if (instance == trackingView) {
+				trackingLeft = trackingView.numericStepperLeft;
+				trackingRight = trackingView.numericStepperRight;
+				trackingLeftClear = trackingView.clearLeftButton;
+				trackingRightClear = trackingView.clearRightButton;
+				
+				trackingLeft.addEventListener(Event.CHANGE, handleTrackingChange, false, 0, true);
+				trackingRight.addEventListener(Event.CHANGE, handleTrackingChange, false, 0, true);
+				
+				trackingLeftClear.addEventListener(MouseEvent.CLICK, handleTrackingReset, false, 0, true);
+				trackingRightClear.addEventListener(MouseEvent.CLICK, handleTrackingReset, false, 0, true);
+			}
+			
 			if (instance == linkButton) {
 				linkButton.addEventListener(MouseEvent.CLICK, showLinkDialogClick, false, 0, true);
-				linkButton.toolTip = "Show Link";
+				linkButton.toolTip = "Set Link";
 				
 				if (instance is ToggleButton) {
 					toggles.push(instance);
@@ -622,6 +694,29 @@ package com.flexcapacitor.controls
 			
 			if (instance == orderedBulletTool) {
 				orderedBulletTool.removeEventListener(MouseEvent.CLICK, handleBulletClick);
+			}
+			
+			if (instance == lineHeightTool) {
+				lineHeightTool.removeEventListener(MouseEvent.CLICK, handleBulletClick);
+			}
+			
+			if (instance == lineHeightView) {
+				lineHeightView.numericStepper.removeEventListener(Event.CHANGE, handleLineHeightChange);
+				
+				lineHeightView.clearButton.removeEventListener(MouseEvent.CLICK, handleLineHeightReset);
+			}
+			
+			if (instance == trackingView) {
+				trackingLeft.removeEventListener(Event.CHANGE, handleTrackingChange);
+				trackingRight.removeEventListener(Event.CHANGE, handleTrackingChange);
+				
+				trackingLeftClear.removeEventListener(MouseEvent.CLICK, handleTrackingReset);
+				trackingRightClear.removeEventListener(MouseEvent.CLICK, handleTrackingReset);
+				
+				trackingLeft = null;
+				trackingRight = null;
+				trackingLeftClear = null;
+				trackingRightClear = null;
 			}
 			
 			if (instance == linkDetailsView) {
@@ -789,6 +884,111 @@ package com.flexcapacitor.controls
 			}
 		}
 		
+		protected function handleLineHeightChange(event:Event):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
+			
+			newFormat = new TextLayoutFormat();
+			
+			currentFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			newFormat.lineHeight = lineHeightView.numericStepper.value + "%";
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			richEditableText.setFocus();
+			richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
+			setEditorFocus();
+		}
+		
+		protected function handleLineHeightReset(event:Event):void {
+			var newFormat:TextLayoutFormat;
+			var selectionStart:int;
+			var selectionEnd:int;
+			var operationState:SelectionState;
+			var editManager:IEditManager;
+			var elementRange:ElementRange;
+			
+			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
+				editManager = IEditManager(richEditableText.textFlow.interactionManager);
+				
+				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				
+				if (operationState == null) {
+					operationState = new SelectionState(richEditableText.textFlow, selectionStart, selectionEnd);
+				}
+				
+				elementRange = ElementRange.createElementRange(richEditableText.textFlow, selectionStart, selectionEnd);
+				newFormat = new TextLayoutFormat();
+				newFormat.lineHeight = 1;
+				
+				editManager.clearFormat(newFormat, null, null, operationState);
+				
+				setEditorFocus();
+				
+				updateEditor();
+			}
+		}
+		
+		protected function handleTrackingChange(event:Event):void {
+			var newFormat:TextLayoutFormat;
+			var currentFormat:TextLayoutFormat;
+			var stepper:NumericStepper = event.currentTarget as NumericStepper;
+			
+			newFormat = new TextLayoutFormat();
+			
+			currentFormat = richEditableText.getFormatOfRange(null, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			
+			if (event.currentTarget==trackingLeft) {
+				newFormat.trackingLeft = trackingView.numericStepperLeft.value;
+			}
+			else {
+				newFormat.trackingRight = trackingView.numericStepperRight.value;
+			}
+			
+			richEditableText.setFormatOfRange(newFormat, richEditableText.selectionAnchorPosition, richEditableText.selectionActivePosition);
+			richEditableText.setFocus();
+			richEditableText.dispatchEvent(new TextOperationEvent(TextOperationEvent.CHANGE));
+			
+			if (focusOnTextAfterTrackingChange) {
+				setEditorFocus();
+			}
+		}
+		
+		protected function handleTrackingReset(event:Event):void {
+			var newFormat:TextLayoutFormat;
+			var selectionStart:int;
+			var selectionEnd:int;
+			var operationState:SelectionState;
+			var editManager:IEditManager;
+			var elementRange:ElementRange;
+			
+			if (richEditableText.textFlow && richEditableText.textFlow.interactionManager is IEditManager) {
+				editManager = IEditManager(richEditableText.textFlow.interactionManager);
+				
+				selectionStart = Math.min(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				selectionEnd = Math.max(richEditableText.selectionActivePosition, richEditableText.selectionAnchorPosition);
+				
+				if (operationState == null) {
+					operationState = new SelectionState(richEditableText.textFlow, selectionStart, selectionEnd);
+				}
+				
+				elementRange = ElementRange.createElementRange(richEditableText.textFlow, selectionStart, selectionEnd);
+				newFormat = new TextLayoutFormat();
+				
+				if (event.currentTarget==trackingLeftClear) {
+					newFormat.trackingLeft = 1;
+				}
+				else {
+					newFormat.trackingRight = 1;
+				}
+				
+				editManager.clearFormat(newFormat, null, null, operationState);
+				
+				setEditorFocus();
+				
+				updateEditor();
+			}
+		}
+		
 		protected function showLinkDialogClick(event:MouseEvent):void {
 			var linkVisible:Boolean;
 			var iconClickedEvent:Event;
@@ -845,6 +1045,64 @@ package com.flexcapacitor.controls
 				}
 				
 				skin.currentState = IMAGE_VIEW;
+			}
+			else {
+				skin.currentState = NORMAL_VIEW;
+			}
+		}
+		
+		protected function showLineHeightDialogClick(event:MouseEvent):void {
+			var linkVisible:Boolean;
+			var lineHeightClickedEvent:Event;
+			
+			lineHeightClickedEvent = new Event(LINE_HEIGHT_CLICKED, false, true);
+			
+			dispatchEvent(lineHeightClickedEvent);
+			
+			if (event.isDefaultPrevented()) {
+				return;
+			}
+			
+			if (skin.currentState!=LINE_HEIGHT_VIEW) {
+				
+				// go to normal state first then go to image view
+				if (skin.currentState != NORMAL_VIEW) {
+					deferredState = LINE_HEIGHT_VIEW;
+					skin.currentState = NORMAL_VIEW;
+					deselectToggles(event.currentTarget);
+					return;
+				}
+				
+				skin.currentState = LINE_HEIGHT_VIEW;
+			}
+			else {
+				skin.currentState = NORMAL_VIEW;
+			}
+		}
+		
+		protected function showTrackingDialogClick(event:MouseEvent):void {
+			var linkVisible:Boolean;
+			var lineHeightClickedEvent:Event;
+			
+			lineHeightClickedEvent = new Event(TRACKING_CLICKED, false, true);
+			
+			dispatchEvent(lineHeightClickedEvent);
+			
+			if (event.isDefaultPrevented()) {
+				return;
+			}
+			
+			if (skin.currentState!=TRACKING_VIEW) {
+				
+				// go to normal state first then go to image view
+				if (skin.currentState != NORMAL_VIEW) {
+					deferredState = TRACKING_VIEW;
+					skin.currentState = NORMAL_VIEW;
+					deselectToggles(event.currentTarget);
+					return;
+				}
+				
+				skin.currentState = TRACKING_VIEW;
 			}
 			else {
 				skin.currentState = NORMAL_VIEW;
@@ -2121,39 +2379,68 @@ package com.flexcapacitor.controls
 					return;
 				}
 				
-				if (fontTool != null)
-				{ 
+				if (fontTool != null) {
 					fontTool.selectedFontFamily = format.fontFamily;
 				}
 				
-				if (fontSizeTool != null)
-				{ 
+				if (fontSizeTool != null) {
 					fontSizeTool.selectedFontSize = format.fontSize;
 				}
 				
-				if (boldTool != null)
-				{  
+				if (boldTool != null) {
 					boldTool.selectedFontWeight = format.fontWeight;
 				}
 				
-				if (italicTool != null)
-				{ 
+				if (italicTool != null) {
 					italicTool.selectedFontStyle = format.fontStyle;
 				}
 				
-				if (underlineTool != null)
-				{ 
+				if (underlineTool != null) {
 					underlineTool.selectedTextDecoration = format.textDecoration;
 				}
 				
-				if (colorTool != null)
-				{ 
+				if (colorTool != null) {
 					colorTool.selectedTextColor = format.color;
 				}
 				
-				if (alignTool != null)
-				{ 
+				if (alignTool != null) {
 					alignTool.selectedTextAlign = format.textAlign;
+				}
+				
+				if (lineHeightView != null) {
+					if (format.lineHeight!=undefined) {
+						
+						// can be percent or point size
+						if (format.lineHeight.indexOf("%")!=-1) {
+							lineHeightView.numericStepper.value = parseInt(format.lineHeight);
+						}
+						else {
+							lineHeightView.numericStepper.value = parseInt(format.lineHeight);
+						}
+					}
+				}
+				
+				if (trackingView != null) {
+					if (format.trackingLeft!=undefined) {
+						
+						// can be percent or point size
+						if (format.trackingLeft is String && format.trackingLeft.indexOf("%")!=-1) {
+							trackingLeft.value = parseInt(format.trackingLeft);
+						}
+						else {
+							trackingLeft.value = parseInt(format.trackingLeft);
+						}
+					}
+					
+					if (format.trackingRight!=undefined) {
+						
+						if (format.trackingRight is String && format.trackingRight.indexOf("%")!=-1) {
+							trackingRight.value = parseInt(format.trackingRight);
+						}
+						else {
+							trackingRight.value = parseInt(format.trackingRight);
+						}
+					}
 				}
 				
 				// BULLET LIST

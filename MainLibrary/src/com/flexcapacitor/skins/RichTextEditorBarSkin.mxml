@@ -118,53 +118,36 @@ limitations under the License.
 				<s:Fade target="{imageDetailsView}"/>
 			</s:Sequence>
 		</s:Transition>
-		<!--
-		<s:Transition fromState="normal" toState="*">
-			<s:Sequence duration="250">
+		
+		<s:Transition fromState="normal" toState="trackingView" interruptionBehavior="stop" autoReverse="true">
+			<s:Sequence duration="{duration}">
 				<s:Resize target="{this}"/>
-				<s:AddAction target="{linkDetailsTool}"/>
-				<s:Fade target="{linkDetailsTool}"/>
+				<s:AddAction target="{trackingView}"/>
+				<s:Fade target="{trackingView}"/>
 			</s:Sequence>
 		</s:Transition>
 		
-		<s:Transition fromState="linkView" toState="*">
-			<s:Sequence duration="250">
-				<s:Fade target="{linkDetailsTool}"/>
+		<s:Transition fromState="normal" toState="lineHeightView" interruptionBehavior="stop" autoReverse="true">
+			<s:Sequence duration="{duration}">
 				<s:Resize target="{this}"/>
+				<s:AddAction target="{lineHeightView}"/>
+				<s:Fade target="{lineHeightView}"/>
 			</s:Sequence>
 		</s:Transition>
-		
-		<s:Transition fromState="imageView" toState="*">
-			<s:Sequence duration="250">
-				<s:Fade target="{showImageTool}"/>
-				<s:Resize target="{this}"/>
-			</s:Sequence>
-		</s:Transition>-->
 	</s:transitions>
 	
 	<s:states>
 		<s:State name="normal"/>
 		<s:State name="linkView"/>
 		<s:State name="imageView"/>
+		<s:State name="lineHeightView"/>
+		<s:State name="trackingView"/>
 	</s:states>
-	
-	<!-- SkinParts
-	name=textArea, type=spark.components.TextArea, required=true
-	name=fontTool, type=spark.components.richTextEditorClasses.FontTool, required=false
-	name=sizeTool, type=spark.components.richTextEditorClasses.SizeTool, required=false
-	name=boldTool, type=spark.components.richTextEditorClasses.BoldTool, required=false
-	name=italicTool, type=spark.components.richTextEditorClasses.ItalicTool, required=true
-	name=underlineTool, type=spark.components.richTextEditorClasses.UnderlineTool, required=true
-	name=colorTool, type=spark.components.richTextEditorClasses.ColorTool, required=false
-	name=alignTool, type=spark.components.richTextEditorClasses.AlignTool, required=false
-	name=bulletTool, type=spark.components.richTextEditorClasses.BulletTool, required=false
-	name=linkTool, type=spark.components.richTextEditorClasses.LinkTool, required=false
-	-->
 	
 	<!-- 
 	kludge to make relatedObject of a focusOut event contain a part of the editor 
 	when focus out of the rich text field.  
-	tried numerous workarounds inc border container, group, rect etc
+	tried numerous workarounds including border container, group, rect etc
 	-->
 	<s:Button id="backgroundHitArea" 
 			  alpha="0"
@@ -210,6 +193,15 @@ limitations under the License.
 					<s:SolidColorStroke color="#B3C2B8"/>
 				</s:stroke>
 			</s:Line>
+			<r:LineHeightTool id="lineHeightTool" width="23" 
+								   icon="@Embed('richTextEditorClasses/icons/lineHeight.png')"/>
+			<r:TrackingTool id="trackingTool" width="23" 
+								   icon="@Embed('richTextEditorClasses/icons/tracking.png')"/>
+			<s:Line height="100%">
+				<s:stroke>
+					<s:SolidColorStroke color="#B3C2B8"/>
+				</s:stroke>
+			</s:Line>
 			<r:LinkButtonTool id="linkButton" width="23" icon="@Embed('richTextEditorClasses/icons/link.png')"/>
 			<s:Line height="100%">
 				<s:stroke>
@@ -240,6 +232,16 @@ limitations under the License.
 		
 		<r:ImageDetailsView id="imageDetailsView" 
 							includeIn="imageView" 
+							itemCreationPolicy="immediate"
+							width="100%"/>
+		
+		<r:LineHeightView id="lineHeightView" 
+							includeIn="lineHeightView" 
+							itemCreationPolicy="immediate"
+							width="100%"/>
+		
+		<r:TrackingView id="trackingView" 
+							includeIn="trackingView" 
 							itemCreationPolicy="immediate"
 							width="100%"/>
 	</s:VGroup>

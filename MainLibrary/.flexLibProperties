@@ -341,6 +341,7 @@
     <classEntry path="com.flexcapacitor.effects.window.CenterWindow"/>
     <classEntry path="com.flexcapacitor.effects.window.supportClasses.CenterWindowInstance"/>
     <classEntry path="com.flexcapacitor.events.AceEvent"/>
+    <classEntry path="com.flexcapacitor.events.BitmapDataEvent"/>
     <classEntry path="com.flexcapacitor.events.EffectEvent"/>
     <classEntry path="com.flexcapacitor.events.HTMLClipboardEvent"/>
     <classEntry path="com.flexcapacitor.events.HTMLDragEvent"/>
@@ -359,6 +360,7 @@
     <classEntry path="com.flexcapacitor.form.vo.FormElement"/>
     <classEntry path="com.flexcapacitor.form.vo.ItemElement"/>
     <classEntry path="com.flexcapacitor.formatters.HTMLFormatterTLF"/>
+    <classEntry path="com.flexcapacitor.graphics.LayoutLines"/>
     <classEntry path="com.flexcapacitor.handlers.Condition"/>
     <classEntry path="com.flexcapacitor.handlers.EventHandler"/>
     <classEntry path="com.flexcapacitor.handlers.EventHandlerBase"/>
@@ -536,6 +538,7 @@
     <classEntry path="com.flexcapacitor.utils.supportClasses.getCurrentFunctionName"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.getCurrentLocation"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.getStackArray"/>
+    <classEntry path="com.flexcapacitor.utils.supportClasses.isNumber"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.log"/>
     <classEntry path="com.flexcapacitor.utils.supportClasses.logTarget"/>
     <classEntry path="com.flexcapacitor.validators.BitmapDataValidator"/>

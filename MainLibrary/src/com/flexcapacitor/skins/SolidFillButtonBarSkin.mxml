@@ -54,6 +54,7 @@
             @see spark.skins.spark.ButtonBarFirstButtonSkin
         -->
         <fx:Component id="firstButton">
+            <!--<s:ButtonBarButton toolTip="{data.toolTip}" skinClass="com.flexcapacitor.skins.solidFillSupportClasses.FirstButtonSkin" />-->
             <s:ButtonBarButton skinClass="com.flexcapacitor.skins.solidFillSupportClasses.FirstButtonSkin" />
         </fx:Component>
 
